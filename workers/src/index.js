@@ -10,7 +10,7 @@
 
 import { renderBlocks } from "./blocks.js";
 import { tokensAsCSS } from "./tokens.js";
-import { siteStyles } from "./site-styles.js";
+import { siteStyles, dynamicFormStyles } from "./site-styles.js";
 
 async function supabaseFetch(env, path, init = {}) {
   const res = await fetch(`${env.SUPABASE_URL}/rest/v1/${path}`, {
@@ -64,12 +64,37 @@ async function getSiteSettings(env) {
   }
 }
 
+// Fetches one published form (with its sections and questions nested) for
+// the dynamic_form block. `.order=position` on the embedded resources asks
+// PostgREST to order them server-side; sorted again client-side in blocks.js
+// as a belt-and-suspenders in case that embed-ordering syntax isn't honoured
+// on this PostgREST version.
+async function getForm(env, key) {
+  if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) return null;
+  try {
+    const q = `forms?key=eq.${encodeURIComponent(key)}&status=eq.published` +
+      `&select=*,form_sections(id,title,description,position,form_questions(*))` +
+      `&form_sections.order=position.asc&form_sections.form_questions.order=position.asc`;
+    const res = await supabaseFetch(env, q);
+    if (!res.ok) { console.error("getForm failed:", await res.text()); return null; }
+    const rows = await res.json();
+    return rows[0] || null;
+  } catch (err) {
+    console.error("getForm threw:", err.message);
+    return null;
+  }
+}
+
 // Fetches live MLS data for the 3 block types that need it, plus site
-// settings for header_nav/footer. Called by renderBlocks() via the
-// dataFetcher param — see blocks.js's DATA_BLOCK_TYPES.
+// settings for header_nav/footer and a form definition for dynamic_form.
+// Called by renderBlocks() via the dataFetcher param — see blocks.js's
+// DATA_BLOCK_TYPES.
 async function fetchBlockData(type, props, env) {
   if (type === "header_nav" || type === "footer") {
     return getSiteSettings(env);
+  }
+  if (type === "dynamic_form") {
+    return getForm(env, props.formKey || "general_contact");
   }
   if (!env.MLS_SUPABASE_URL || !env.MLS_SUPABASE_SERVICE_ROLE_KEY) {
     console.error(`fetchBlockData(${type}): MLS_SUPABASE_URL or MLS_SUPABASE_SERVICE_ROLE_KEY is missing from env`);
@@ -147,7 +172,7 @@ function pageShell({ title, description, bodyHtml }) {
   <meta name="description" content="${description || ""}" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <style>${tokensAsCSS()}${siteStyles}</style>
+  <style>${tokensAsCSS()}${siteStyles}${dynamicFormStyles}</style>
 </head>
 <body>
   ${bodyHtml}
@@ -201,6 +226,16 @@ async function handleListingDetailRequest(listingKey, env) {
   );
 }
 
+// Handles two submission shapes:
+//  1. Old static forms (contact_form/valuation_form/vip_buyer_form in
+//     blocks.js) — a native <form method="POST"> submit, fields directly
+//     on the body, expects a 303 redirect to /thank-you.
+//  2. The new dynamic_form block — submits JSON `{form_key, answers,
+//     source_page}` via fetch() from the client, expects a JSON response
+//     so it can show an inline success message instead of navigating away.
+// Both end up writing to the same contacts/leads/activity_log tables, so
+// every submission — old or new — shows up together in the admin's
+// existing Leads tab.
 async function handleLeadSubmission(request, env) {
   const contentType = request.headers.get("content-type") || "";
   let data = {};
@@ -211,16 +246,29 @@ async function handleLeadSubmission(request, env) {
     data = Object.fromEntries(form.entries());
   }
 
-  const formType = data.form_type || "contact";
+  const isDynamic = data.answers && typeof data.answers === "object";
+  const answers = isDynamic ? data.answers : data;
+  const formType = data.form_key || data.form_type || "contact";
+
+  // firstName/lastName is the convention dynamic forms use (see 0008's
+  // seeded general_contact form); fall back to a single "name" field for
+  // anything simpler, or the old static forms' plain "name" field.
+  const name = answers.name ||
+    [answers.firstName, answers.lastName].filter(Boolean).join(" ") ||
+    data.name || "";
+
+  const contactType = ["vip_buyer", "buyer_intake"].includes(formType) ? "buyer"
+    : ["valuation", "home_evaluation", "seller_intake"].includes(formType) ? "seller"
+    : "lead";
 
   const contactRes = await supabaseFetch(env, "contacts", {
     method: "POST",
     headers: { Prefer: "return=representation" },
     body: JSON.stringify({
-      name: data.name,
-      email: data.email,
-      phone: data.phone,
-      type: formType === "vip_buyer" ? "buyer" : formType === "valuation" ? "seller" : "lead",
+      name,
+      email: answers.email || data.email,
+      phone: answers.phone || data.phone,
+      type: contactType,
       source: data.source_page || "unknown",
     }),
   });
@@ -232,7 +280,7 @@ async function handleLeadSubmission(request, env) {
     body: JSON.stringify({
       contact_id: contactId,
       form_type: formType,
-      payload: data,
+      payload: isDynamic ? answers : data,
     }),
   });
 
@@ -248,6 +296,11 @@ async function handleLeadSubmission(request, env) {
     });
   }
 
+  if (isDynamic) {
+    return new Response(JSON.stringify({ ok: true }), {
+      headers: { "content-type": "application/json", ...CORS_HEADERS },
+    });
+  }
   return Response.redirect(new URL("/thank-you", request.url).toString(), 303);
 }
 
