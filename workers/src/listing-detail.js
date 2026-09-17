@@ -8,8 +8,11 @@
 // Data contract (confirmed from the real pages, not guessed):
 //   ListingKey, UnparsedAddress, City, Province, PostalCode, OfficeName,
 //   ListPrice, TotalActualRent, BedroomsTotal, BathroomsTotalInteger,
-//   ParkingTotal, AboveGradeFinishedArea, PublicRemarks, Media (array of
-//   {MediaURL, Order}), PhotosCount, OriginalEntryTimestamp.
+//   ParkingTotal, AboveGradeFinishedArea, PublicRemarks, OriginalEntryTimestamp.
+//   `property` table's Media is an array of {MediaURL, Caption, PreferredPhotoYN}
+//   (confirmed via listings-images.js). The `grid` table (used for similar
+//   listings) is different — Media there is a single thumbnail URL string,
+//   plus a separate PhotosCount int (confirmed via listings-similar-grid.js).
 // Sale vs rent: ListPrice present -> sale; else TotalActualRent -> rent.
 //
 // Two things on the real page are NOT stored in either Supabase project —
@@ -345,9 +348,18 @@ function renderPoiSection(listing) {
     </div>`;
 }
 
+// Confirmed from the real listings-similar-grid.js: same `grid` table, but
+// it filters on an EXACT City match (not a wildcard/ilike), excludes the
+// current property by address (not by ListingKey — grid rows are keyed
+// differently), and — importantly — filters by the SAME status as the
+// listing being viewed (a for-sale page never shows for-rent "similar"
+// listings, and vice versa). We were missing that status filter before.
 async function fetchSimilar(listing, env, mlsFetch) {
   if (!listing.City) return [];
-  const q = `grid?select=*&City=ilike.*${encodeURIComponent(listing.City)}*&ListingKey=neq.${encodeURIComponent(listing.ListingKey || "")}&limit=4`;
+  const sale = isSale(listing);
+  const statusFilter = sale ? "&ListPrice=not.is.null" : "&TotalActualRent=not.is.null";
+  const q = `grid?select=*,Media,PhotosCount&City=eq.${encodeURIComponent(listing.City)}` +
+    `&UnparsedAddress=neq.${encodeURIComponent(listing.UnparsedAddress || "")}${statusFilter}&limit=4`;
   try {
     const res = await mlsFetch(env, q);
     if (!res.ok) return [];
@@ -359,10 +371,17 @@ async function fetchSimilar(listing, env, mlsFetch) {
 
 function renderSimilarCard(row) {
   const photos = mediaUrls(row.Media);
-  const price = isSale(row) ? fmtMoney(row.ListPrice) : (row.TotalActualRent ? (fmtMoney(row.TotalActualRent) || "") + "/mo" : "Price on request");
+  const sale = isSale(row);
+  const price = sale ? fmtMoney(row.ListPrice) : (row.TotalActualRent ? (fmtMoney(row.TotalActualRent) || "") + "/mo" : "Price on request");
+  // grid.PhotosCount — confirmed from listings-similar-grid.js (same field
+  // used there for its "N Photos" badge).
+  const photoCount = row.PhotosCount || 0;
   return `
     <a class="ld-similar-card" href="/listings/${esc(row.ListingKey || "")}">
-      <div class="ld-similar-thumb" style="background-image:url('${esc(photos[0] || "")}')"></div>
+      <div class="ld-similar-thumb" style="background-image:url('${esc(photos[0] || "")}')">
+        <span class="ld-similar-status ${sale ? "sale" : "rent"}">${sale ? "For Sale" : "For Rent"}</span>
+        ${photoCount > 0 ? `<span class="ld-similar-photocount">${photoCount} Photos</span>` : ""}
+      </div>
       <div class="ld-similar-body">
         <div class="ld-similar-price">${esc(price)}</div>
         <div class="ld-similar-addr">${esc(row.UnparsedAddress || "")}</div>
@@ -574,7 +593,11 @@ export async function renderListingDetail(props, data, env, mlsFetch) {
     @media (max-width:600px) { .ld-similar-grid { grid-template-columns:repeat(2,1fr); gap:8px; } }
     .ld-similar-card { display:block; text-decoration:none; color:inherit; border:1px solid ${tokens.color.line}; border-radius:12px; overflow:hidden; transition:transform .18s; }
     .ld-similar-card:hover { transform:translateY(-2px); }
-    .ld-similar-thumb { height:110px; background-size:cover; background-position:center; background-color:${tokens.color.surface}; }
+    .ld-similar-thumb { position:relative; height:110px; background-size:cover; background-position:center; background-color:${tokens.color.surface}; }
+    .ld-similar-status { position:absolute; top:8px; left:8px; padding:3px 8px; border-radius:4px; font-size:9.5px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:#fff; }
+    .ld-similar-status.sale { background:${tokens.color.ink}; }
+    .ld-similar-status.rent { background:${tokens.color.warning}; }
+    .ld-similar-photocount { position:absolute; bottom:8px; right:8px; background:rgba(11,11,13,0.65); color:#fff; font-size:9.5px; font-weight:600; padding:2px 7px; border-radius:4px; }
     .ld-similar-body { padding:10px 12px; }
     .ld-similar-price { font-weight:700; font-size:14px; color:${tokens.color.blue}; }
     .ld-similar-addr { font-size:12px; margin-top:2px; }
@@ -644,31 +667,56 @@ export async function renderListingDetail(props, data, env, mlsFetch) {
       recalc();
     }
 
-    // HPI market trends — same public JSON the live site uses, fetched client-side
+    // HPI market trends — same public JSON the live site uses, fetched
+    // client-side. Confirmed real shape (was wrong before): top-level key
+    // is `cities`, an OBJECT keyed by board slug (e.g. "oakville-milton"),
+    // not a `regions` array — each entry has name/slug/latest.{compositeBenchmark,
+    // momChange,yoyChange,marketCondition,propertyTypes}/history12m/peak.
+    //
+    // City -> board resolution: the real site does this via a separate
+    // ontario-hpi-mapping.js module (BOARD_CITIES / NEIGHBORHOODS lookup
+    // tables covering 28 Ontario boards) that I wasn't able to pull the
+    // full source of. This does a best-effort match instead — exact slug,
+    // then exact name, then a substring match for merged-board slugs like
+    // "oakville-milton" containing "Oakville" — which covers most single-
+    // city listings but won't be as precise as the real board mapping. If
+    // you can paste the real BOARD_CITIES table, I'll wire up an exact match.
     var hpiSection = document.getElementById('ld-hpi-section');
     if (hpiSection) {
       var city = hpiSection.getAttribute('data-city') || '';
+      var citySlug = city.trim().toLowerCase().replace(/\s+/g, '-');
       fetch('https://www.getsetsold.ca/ontario-housing-market/ontario-hpi-data.json')
         .then(function(r) { return r.json(); })
         .then(function(data) {
-          var region = (data && data.regions) ? data.regions.find(function(r) {
-            return r.cities && r.cities.some(function(c) { return c.toLowerCase() === city.toLowerCase(); });
-          }) : null;
+          var cities = (data && data.cities) || {};
+          var match = null;
+          if (citySlug && cities[citySlug]) {
+            match = cities[citySlug];
+          } else {
+            var keys = Object.keys(cities);
+            for (var i = 0; i < keys.length && !match; i++) {
+              var entry = cities[keys[i]];
+              if (entry && entry.name && entry.name.toLowerCase() === city.toLowerCase()) match = entry;
+            }
+            for (var j = 0; j < keys.length && !match; j++) {
+              if (keys[j].indexOf(citySlug) !== -1) match = cities[keys[j]];
+            }
+          }
           var loading = hpiSection.querySelector('.ld-hpi-loading');
-          if (!region || !region.latest) {
+          if (!match || !match.latest) {
             if (loading) loading.textContent = 'Market trend data not available for this area.';
             return;
           }
-          var l = region.latest;
+          var l = match.latest;
           function fmtChg(n) {
             var cls = n > 0 ? 'up' : n < 0 ? 'down' : '';
             return '<span class="' + cls + '">' + (n > 0 ? '+' : '') + n.toFixed(1) + '%</span>';
           }
-          hpiSection.innerHTML = '<div class="ld-section-title">Local Market Trends</div>' +
+          hpiSection.innerHTML = '<div class="ld-section-title">Local Market Trends' + (match.name ? ' — ' + match.name : '') + '</div>' +
             '<div class="ld-hpi-stats">' +
               '<div class="ld-hpi-stat"><div class="ld-hpi-stat-label">Benchmark Price</div><div class="ld-hpi-stat-value">$' + Math.round(l.compositeBenchmark || 0).toLocaleString('en-CA') + '</div></div>' +
-              '<div class="ld-hpi-stat"><div class="ld-hpi-stat-label">Month over Month</div><div class="ld-hpi-stat-value ' + (l.mom > 0 ? 'up' : 'down') + '">' + fmtChg(l.mom || 0) + '</div></div>' +
-              '<div class="ld-hpi-stat"><div class="ld-hpi-stat-label">Year over Year</div><div class="ld-hpi-stat-value ' + (l.yoy > 0 ? 'up' : 'down') + '">' + fmtChg(l.yoy || 0) + '</div></div>' +
+              '<div class="ld-hpi-stat"><div class="ld-hpi-stat-label">Month over Month</div><div class="ld-hpi-stat-value ' + (l.momChange > 0 ? 'up' : 'down') + '">' + fmtChg(l.momChange || 0) + '</div></div>' +
+              '<div class="ld-hpi-stat"><div class="ld-hpi-stat-label">Year over Year</div><div class="ld-hpi-stat-value ' + (l.yoyChange > 0 ? 'up' : 'down') + '">' + fmtChg(l.yoyChange || 0) + '</div></div>' +
             '</div>';
         })
         .catch(function() {
