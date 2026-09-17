@@ -232,12 +232,21 @@ function renderFeatures(listing) {
     </div>`;
 }
 
+// This is the listing page's Affordability Calculator — it lives in the
+// right (sticky) panel next to the contact card, matching the real site's
+// #afford-widget placement. Previously titled "Mortgage Calculator" with no
+// id, so the hero's "Affordability Calculator" button (which links to
+// #ld-mortgage-calc) pointed at nothing. Fixed: real id, real label, and it
+// stays wired to THIS listing's price via data-price (read by the ld-calc
+// script below), which is the actual connection between the calculator and
+// the listing being viewed.
 function renderMortgageCalc(listing) {
   if (!isSale(listing)) return "";
   const price = Number(listing.ListPrice) || 0;
   return `
-    <div class="ld-card">
-      <div class="ld-card-title">Mortgage Calculator</div>
+    <div class="ld-card" id="ld-mortgage-calc">
+      <div class="ld-card-title">Affordability Calculator</div>
+      <div class="ld-card-subtitle">Based on this property's list price of ${esc(fmtMoney(price) || "$0")}</div>
       <div class="ld-calc" data-price="${price}">
         <label>Down payment (%)
           <input type="number" class="ld-calc-down" value="20" min="0" max="100">
@@ -256,10 +265,18 @@ function renderMortgageCalc(listing) {
     </div>`;
 }
 
-function renderContactCard(listing) {
+function renderContactCard(listing, settings = {}) {
   const price = priceDisplay(listing);
+  const agentName = settings.agent_name || "";
+  const agentImage = settings.agent_image_url || "";
+  const phoneDisplay = settings.phone || "416-605-7488";
   return `
     <div class="ld-card ld-contact-card">
+      ${agentImage ? `
+      <div class="ld-contact-agent">
+        <img src="${esc(agentImage)}" alt="${esc(agentName || "Listing agent")}" class="ld-contact-agent-photo">
+        ${agentName ? `<div class="ld-contact-agent-name">${esc(agentName)}</div>` : ""}
+      </div>` : agentName ? `<div class="ld-contact-agent-name ld-contact-agent-name-noimg">${esc(agentName)}</div>` : ""}
       <div class="ld-contact-price">${esc(price)}</div>
       <div class="ld-contact-office">${esc(listing.OfficeName || "Lombard Group Real Estate Inc., Brokerage")}</div>
       <form class="ld-contact-form" data-form-type="listing_inquiry" action="/api/leads" method="POST">
@@ -271,7 +288,7 @@ function renderContactCard(listing) {
         <textarea name="message" placeholder="I'm interested in this property...">I'm interested in ${esc(listing.UnparsedAddress || "this property")}.</textarea>
         <button type="submit" class="ld-btn-primary">Request Info</button>
       </form>
-      <a class="ld-btn-secondary" href="tel:+14166057488">Call 416-605-7488</a>
+      <a class="ld-btn-secondary" href="tel:+1${esc(String(phoneDisplay).replace(/\D/g, ""))}">Call ${esc(phoneDisplay)}</a>
     </div>`;
 }
 
@@ -354,12 +371,16 @@ function renderPoiSection(listing) {
 // differently), and — importantly — filters by the SAME status as the
 // listing being viewed (a for-sale page never shows for-rent "similar"
 // listings, and vice versa). We were missing that status filter before.
+// Fetches up to 12 (not just the first 4) so the "Load more" button in the
+// full-width Similar Listings section below has real rows to reveal instead
+// of needing a second round trip — see renderListingDetail's SIMILAR_INITIAL/
+// SIMILAR_FETCH_LIMIT split.
 async function fetchSimilar(listing, env, mlsFetch) {
   if (!listing.City) return [];
   const sale = isSale(listing);
   const statusFilter = sale ? "&ListPrice=not.is.null" : "&TotalActualRent=not.is.null";
   const q = `grid?select=*,Media,PhotosCount&City=eq.${encodeURIComponent(listing.City)}` +
-    `&UnparsedAddress=neq.${encodeURIComponent(listing.UnparsedAddress || "")}${statusFilter}&limit=4`;
+    `&UnparsedAddress=neq.${encodeURIComponent(listing.UnparsedAddress || "")}${statusFilter}&limit=12`;
   try {
     const res = await mlsFetch(env, q);
     if (!res.ok) return [];
@@ -369,7 +390,12 @@ async function fetchSimilar(listing, env, mlsFetch) {
   }
 }
 
-function renderSimilarCard(row) {
+// Shown right away, before "Load more" reveals the rest — matches 4/row on
+// desktop (see .ld-similar-grid), so a page can open with a full first row
+// even though the grid narrows to 3 then 1 column on smaller screens.
+const SIMILAR_INITIAL_COUNT = 4;
+
+function renderSimilarCard(row, hidden = false) {
   const photos = mediaUrls(row.Media);
   const sale = isSale(row);
   const price = sale ? fmtMoney(row.ListPrice) : (row.TotalActualRent ? (fmtMoney(row.TotalActualRent) || "") + "/mo" : "Price on request");
@@ -377,7 +403,7 @@ function renderSimilarCard(row) {
   // used there for its "N Photos" badge).
   const photoCount = row.PhotosCount || 0;
   return `
-    <a class="ld-similar-card" href="/listings/${esc(row.ListingKey || "")}">
+    <a class="ld-similar-card${hidden ? " ld-hidden" : ""}" href="/listings/${esc(row.ListingKey || "")}">
       <div class="ld-similar-thumb" style="background-image:url('${esc(photos[0] || "")}')">
         <span class="ld-similar-status ${sale ? "sale" : "rent"}">${sale ? "For Sale" : "For Rent"}</span>
         ${photoCount > 0 ? `<span class="ld-similar-photocount">${photoCount} Photos</span>` : ""}
@@ -450,19 +476,42 @@ export async function renderListingDetail(props, data, env, mlsFetch) {
           <div class="ld-section-title">Local Market Trends</div>
           <div class="ld-hpi-loading">Loading market data…</div>
         </div>` : ""}
-
-        ${similar.length ? `
-        <div class="ld-section">
-          <div class="ld-section-title">Similar Listings</div>
-          <div class="ld-similar-grid">${similar.map(renderSimilarCard).join("")}</div>
-        </div>` : ""}
       </div>
 
       <div class="ld-side">
-        ${renderContactCard(listing)}
+        ${renderContactCard(listing, data?.settings || {})}
         ${props.showMortgageCalc !== false ? renderMortgageCalc(listing) : ""}
       </div>
     </div>
+
+    ${similar.length ? `
+    <!-- Similar Listings — full width, below BOTH the left and right panel
+         (not inside .ld-main on the left, which is where this used to live).
+         4/row desktop, 3/row tablet, 1/row mobile (see .ld-similar-grid
+         breakpoints); "Load more" reveals the rest of what fetchSimilar
+         already pulled (up to 12) without a second request. -->
+    <div class="ld-section ld-similar-section" id="ld-similar-section">
+      <div class="ld-section-title">Similar Listings</div>
+      <div class="ld-similar-grid">
+        ${similar.map((row, i) => renderSimilarCard(row, i >= SIMILAR_INITIAL_COUNT)).join("")}
+      </div>
+      ${similar.length > SIMILAR_INITIAL_COUNT ? `
+      <button type="button" class="ld-btn-secondary ld-similar-load-more" id="ld-similar-load-more">
+        Load More Listings
+      </button>` : ""}
+    </div>
+    <script>
+      (function() {
+        var btn = document.getElementById('ld-similar-load-more');
+        var section = document.getElementById('ld-similar-section');
+        if (!btn || !section) return;
+        btn.addEventListener('click', function() {
+          var hidden = section.querySelectorAll('.ld-similar-card.ld-hidden');
+          for (var i = 0; i < hidden.length; i++) hidden[i].classList.remove('ld-hidden');
+          btn.remove();
+        });
+      })();
+    </script>` : ""}
   </div>
 
   <style>
@@ -592,9 +641,15 @@ export async function renderListingDetail(props, data, env, mlsFetch) {
     .ld-hpi-stat-value.up { color:${tokens.color.success}; }
     .ld-hpi-stat-value.down { color:#c0362c; }
 
+    /* Similar Listings is a full-width section below .ld-layout (not inside
+       .ld-main), so it isn't bound by .ld-main's narrower column width —
+       4/row desktop, 3/row tablet (<=900px), 1/row mobile (<=600px). */
+    .ld-similar-section { max-width:none; }
     .ld-similar-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
     @media (max-width:900px) { .ld-similar-grid { grid-template-columns:repeat(3,1fr); } }
-    @media (max-width:600px) { .ld-similar-grid { grid-template-columns:repeat(2,1fr); gap:8px; } }
+    @media (max-width:600px) { .ld-similar-grid { grid-template-columns:1fr; gap:10px; } }
+    .ld-similar-card.ld-hidden { display:none; }
+    .ld-similar-load-more { max-width:280px; margin:18px auto 0; }
     .ld-similar-card { display:block; text-decoration:none; color:inherit; border:1px solid ${tokens.color.line}; border-radius:12px; overflow:hidden; transition:transform .18s; }
     .ld-similar-card:hover { transform:translateY(-2px); }
     .ld-similar-thumb { position:relative; height:110px; background-size:cover; background-position:center; background-color:${tokens.color.surface}; }
@@ -608,6 +663,11 @@ export async function renderListingDetail(props, data, env, mlsFetch) {
     .ld-similar-city { font-size:11px; color:${tokens.color.ink45}; }
 
     .ld-card-title { font-family:${tokens.font.display}; font-size:1rem; font-weight:600; margin-bottom:14px; }
+    .ld-card-subtitle { font-size:12px; color:${tokens.color.ink45}; margin-top:-8px; margin-bottom:14px; }
+    .ld-contact-agent { display:flex; align-items:center; gap:12px; margin-bottom:14px; }
+    .ld-contact-agent-photo { width:52px; height:52px; border-radius:50%; object-fit:cover; flex-shrink:0; background:${tokens.color.surface}; }
+    .ld-contact-agent-name { font-family:${tokens.font.display}; font-size:14.5px; font-weight:600; }
+    .ld-contact-agent-name-noimg { margin-bottom:6px; }
     .ld-contact-price { font-family:${tokens.font.display}; font-size:1.5rem; font-weight:600; }
     .ld-contact-office { font-size:12px; color:${tokens.color.ink45}; margin-bottom:14px; }
     .ld-contact-form input, .ld-contact-form textarea { width:100%; padding:10px 12px; border:1px solid ${tokens.color.line}; border-radius:8px; font-family:${tokens.font.body}; font-size:13px; margin-bottom:8px; box-sizing:border-box; }
