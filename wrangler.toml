@@ -1,5 +1,5 @@
 name = "cms"
-main = "workers/src/index.js"
+main = "index.js"
 compatibility_date = "2026-09-01"
 
 # Set these via `wrangler secret put` — never commit real values:
@@ -14,4 +14,18 @@ compatibility_date = "2026-09-01"
 #
 # [vars] section is for non-secret config only.
 [vars]
-SITE_NAME = "getsetsold.ca"
+SITE_NAME = "GetSetSold.ca"
+
+# Enables live logs (Cloudflare dashboard -> Workers & Pages -> cms -> Logs,
+# or `npx wrangler tail` from workers/src) so we can see the real error
+# instead of guessing why listings aren't rendering.
+[observability.logs]
+enabled = true
+head_sampling_rate = 1
+invocation_logs = true
+persist = true
+
+[observability.traces]
+enabled = false
+head_sampling_rate = 1
+persist = true
