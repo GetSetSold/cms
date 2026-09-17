@@ -38,9 +38,39 @@ async function mlsFetch(env, path, init = {}) {
   return res;
 }
 
-// Fetches live MLS data for the 3 block types that need it. Called by
-// renderBlocks() via the dataFetcher param — see blocks.js's DATA_BLOCK_TYPES.
+// Site-wide config (branding, contact info, social links, notification/
+// email settings) — one row in the CRM project, managed from the admin
+// app's Settings tab. Cached per-isolate for a minute so every block on
+// every page request isn't a separate round trip; a cold isolate just
+// re-fetches. Falls back to {} on any failure so a broken/missing row
+// never takes the whole site down — callers just see fewer overrides.
+let settingsCache = null;
+let settingsCacheAt = 0;
+const SETTINGS_CACHE_MS = 60_000;
+
+async function getSiteSettings(env) {
+  if (settingsCache && Date.now() - settingsCacheAt < SETTINGS_CACHE_MS) return settingsCache;
+  if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) return {};
+  try {
+    const res = await supabaseFetch(env, "site_settings?id=eq.1&select=*");
+    if (!res.ok) { console.error("getSiteSettings failed:", await res.text()); return settingsCache || {}; }
+    const rows = await res.json();
+    settingsCache = rows[0] || {};
+    settingsCacheAt = Date.now();
+    return settingsCache;
+  } catch (err) {
+    console.error("getSiteSettings threw:", err.message);
+    return settingsCache || {};
+  }
+}
+
+// Fetches live MLS data for the 3 block types that need it, plus site
+// settings for header_nav/footer. Called by renderBlocks() via the
+// dataFetcher param — see blocks.js's DATA_BLOCK_TYPES.
 async function fetchBlockData(type, props, env) {
+  if (type === "header_nav" || type === "footer") {
+    return getSiteSettings(env);
+  }
   if (!env.MLS_SUPABASE_URL || !env.MLS_SUPABASE_SERVICE_ROLE_KEY) {
     console.error(`fetchBlockData(${type}): MLS_SUPABASE_URL or MLS_SUPABASE_SERVICE_ROLE_KEY is missing from env`);
     return type === "listing_grid" ? { listings: [], total: 0 } : type === "map_split_search" ? { listings: [] } : [];
