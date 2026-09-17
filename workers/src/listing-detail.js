@@ -58,18 +58,34 @@ function daysOnMarket(timestamp) {
   return Math.max(0, Math.floor((Date.now() - entry.getTime()) / 86400000));
 }
 
-function mediaUrls(media) {
+// Field names confirmed from the real listings-images.js: listing.Media is
+// an array of { MediaURL, Caption, PreferredPhotoYN } — no "Order" field.
+// The hero photo is whichever item has PreferredPhotoYN true (falls back
+// to the first valid item), not a sort order. Returns [{url, caption}].
+function mediaItems(media) {
   if (!media) return [];
   let arr = media;
   if (typeof media === "string") {
-    try { arr = JSON.parse(media); } catch { return media.startsWith("http") ? [media] : []; }
+    try { arr = JSON.parse(media); } catch { return media.startsWith("http") ? [{ url: media, caption: "" }] : []; }
   }
   if (!Array.isArray(arr)) return [];
-  return arr
-    .slice()
-    .sort((a, b) => (a?.Order ?? 0) - (b?.Order ?? 0))
-    .map((m) => (typeof m === "string" ? m : m?.MediaURL || m?.Media))
-    .filter(Boolean);
+  const valid = arr.filter((m) => m && (m.MediaURL || (typeof m === "string" && m)));
+  const items = valid.map((m) => ({
+    url: typeof m === "string" ? m : m.MediaURL,
+    caption: typeof m === "string" ? "" : m.Caption || "",
+    preferred: typeof m === "string" ? false : !!m.PreferredPhotoYN,
+  }));
+  const preferredIdx = items.findIndex((m) => m.preferred);
+  if (preferredIdx > 0) {
+    const [preferred] = items.splice(preferredIdx, 1);
+    items.unshift(preferred);
+  }
+  return items;
+}
+
+// Back-compat helper for callers that just want URLs (similar-listing cards, etc.)
+function mediaUrls(media) {
+  return mediaItems(media).map((m) => m.url);
 }
 
 function statPill(label, value) {
@@ -83,22 +99,31 @@ function statPill(label, value) {
 // less thing for us to maintain. Each photo is wrapped in an
 // <a data-fancybox="gallery" href="{full photo}">, matching the real
 // site's markup convention, and Fancybox.bind() picks all of them up.
-function renderGallery(photos, address) {
-  if (!photos.length) {
+// items: [{url, caption, preferred}] from mediaItems() — already ordered
+// with the preferred/hero photo first. We keep our 2x2 thumbnail grid
+// (rather than the real site's full thumbnail strip) for visual fit with
+// the rest of the brand, but every photo stays reachable: the "+N more"
+// tile and hidden anchors keep the FULL set navigable inside Fancybox,
+// same as clicking through all photos on the real site.
+function renderGallery(items) {
+  if (!items.length) {
     return `<div class="ld-hero-img ld-hero-empty">No photos available</div>`;
   }
-  const [hero, ...rest] = photos;
+  const [hero, ...rest] = items;
+  const photoCount = items.length;
   const thumbs = rest.slice(0, 4).map(
-    (url, i) => `<a data-fancybox="gallery" href="${esc(url)}" class="ld-thumb" style="background-image:url('${esc(url)}')"></a>`
+    (m) => `<a data-fancybox="gallery" href="${esc(m.url)}" data-caption="${esc(m.caption)}" class="ld-thumb" style="background-image:url('${esc(m.url)}')"></a>`
   ).join("");
-  const extraCount = photos.length > 5 ? photos.length - 5 : 0;
+  const extraCount = items.length > 5 ? items.length - 5 : 0;
   const extra = extraCount
-    ? `<a data-fancybox="gallery" href="${esc(photos[5])}" class="ld-thumb-more">+${extraCount} more</a>` +
-      photos.slice(6).map((url) => `<a data-fancybox="gallery" href="${esc(url)}" style="display:none;"></a>`).join("")
+    ? `<a data-fancybox="gallery" href="${esc(items[5].url)}" data-caption="${esc(items[5].caption)}" class="ld-thumb-more">+${extraCount} more</a>` +
+      items.slice(6).map((m) => `<a data-fancybox="gallery" href="${esc(m.url)}" data-caption="${esc(m.caption)}" style="display:none;"></a>`).join("")
     : "";
   return `
     <div class="ld-gallery">
-      <a data-fancybox="gallery" href="${esc(hero)}" class="ld-hero-img" style="background-image:url('${esc(hero)}')"></a>
+      <a data-fancybox="gallery" href="${esc(hero.url)}" data-caption="${esc(hero.caption)}" class="ld-hero-img" style="background-image:url('${esc(hero.url)}')">
+        ${photoCount > 1 ? `<span class="ld-photo-count">+${photoCount - 1}</span>` : ""}
+      </a>
       <div class="ld-thumb-grid">${thumbs}${extra}</div>
     </div>`;
 }
@@ -299,7 +324,7 @@ function renderSimilarCard(row) {
 
 export async function renderListingDetail(props, data, env, mlsFetch) {
   const listing = data?.listing || {};
-  const photos = mediaUrls(listing.Media);
+  const photos = mediaItems(listing.Media);
   const dom = daysOnMarket(listing.OriginalEntryTimestamp);
   const sale = isSale(listing);
 
@@ -316,7 +341,7 @@ export async function renderListingDetail(props, data, env, mlsFetch) {
   <div class="ld-wrap">
     <div class="ld-breadcrumb"><a href="/">Home</a> / <a href="/listings">Listings</a> / ${esc(listing.City || "")}</div>
 
-    ${renderGallery(photos, listing.UnparsedAddress)}
+    ${renderGallery(photos)}
 
     <div class="ld-layout">
       <div class="ld-main">
@@ -379,11 +404,12 @@ export async function renderListingDetail(props, data, env, mlsFetch) {
     .ld-breadcrumb a { color: ${tokens.color.blue}; text-decoration: none; }
 
     .ld-gallery { display: grid; grid-template-columns: 2fr 1fr; gap: 8px; border-radius: 16px; overflow: hidden; margin-bottom: 20px; height: 420px; }
-    .ld-hero-img { display:block; background-size: cover; background-position: center; border-radius: 16px 0 0 16px; cursor: zoom-in; }
+    .ld-hero-img { position:relative; display:block; background-size: cover; background-position: center; border-radius: 16px 0 0 16px; cursor: zoom-in; }
     .ld-hero-empty { display:flex; align-items:center; justify-content:center; background:${tokens.color.surface}; color:${tokens.color.ink45}; }
     .ld-thumb-grid { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 8px; height: 100%; }
     .ld-thumb, .ld-thumb-more { display:block; background-size: cover; background-position: center; cursor: zoom-in; border-radius: 4px; background-color: ${tokens.color.surface}; }
     .ld-thumb-more { display:flex; align-items:center; justify-content:center; background: ${tokens.color.ink}; color:#fff; font-weight:600; font-size:13px; text-decoration:none; }
+    .ld-photo-count { position:absolute; right:12px; bottom:12px; background: rgba(20,20,20,0.72); color:#fff; font-size:13px; font-weight:600; padding:5px 10px; border-radius: 6px; line-height:1; }
     @media (max-width: 760px) { .ld-gallery { grid-template-columns: 1fr; height: auto; } .ld-hero-img { height: 260px; border-radius:16px; } .ld-thumb-grid { display:none; } }
 
     .ld-layout { display:grid; grid-template-columns: 1fr 340px; gap: 32px; align-items:start; }
