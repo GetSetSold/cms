@@ -2,19 +2,23 @@ name = "cms"
 main = "index.js"
 compatibility_date = "2026-09-01"
 
-# Set these via `wrangler secret put` — never commit real values:
-#   SUPABASE_URL                    (pre-con/CRM project: atmrjimfcydgjonlxzvr)
+# Only the two SERVICE ROLE KEYS are actually sensitive — set those via
+# `wrangler secret put` (never commit them):
 #   SUPABASE_SERVICE_ROLE_KEY       (server-side only — pages/blocks_library/leads/contacts)
-#   MLS_SUPABASE_URL                (MLS/DDF project: nkjxlwuextxzpeohutxz)
 #   MLS_SUPABASE_SERVICE_ROLE_KEY   (server-side only — reads grid/property for listing blocks)
+#
+# The project URLs are not secret (they're public Supabase project refs),
+# so they live here in [vars] instead of as dashboard secrets — this is the
+# fix for the "deploy wipes my variables" problem: [vars] is committed to
+# the repo and is the actual source of truth wrangler deploy uses, so
+# nothing here can be silently lost the way dashboard-only entries can be.
 #
 # These are two SEPARATE Supabase projects (separate databases, no cross-project
 # joins) — see the earlier discussion on why MLS sync and CRM/pages are split.
-# Both sets of secrets are required for index.js to render real-estate blocks.
-#
-# [vars] section is for non-secret config only.
 [vars]
 SITE_NAME = "Rohit Sharma Real Estate"
+SUPABASE_URL = "https://atmrjimfcydgjonlxzvr.supabase.co"
+MLS_SUPABASE_URL = "https://nkjxlwuextxzpeohutxz.supabase.co"
 
 # Enables live logs (Cloudflare dashboard -> Workers & Pages -> cms -> Logs,
 # or `npx wrangler tail` from workers/src) so we can see the real error
