@@ -5,112 +5,247 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>GetSetSold Admin — CRM + Page Builder</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  :root { --black:#0a0a0a; --white:#fff; --blue:#2563eb; --blue-dark:#1d4ed8; --grey:#f5f5f5; --border:#d4d4d4; }
+  :root {
+    --ink:#0B0B0D; --ink-70:#4B4B52; --ink-45:#84848C;
+    --paper:#FFFFFF; --surface:#F5F5F7; --surface-2:#EDEDF0; --line:#E4E4E8;
+    --blue:#2451E0; --blue-dim:#EDF1FD;
+    --success:#1B7F5C; --success-dim:#EAF6EF;
+    --danger:#C0362C; --danger-dim:#FBEAE8;
+    --radius:10px;
+  }
   * { box-sizing: border-box; }
-  body { font-family: system-ui, sans-serif; margin:0; color: var(--black); background: var(--grey); }
-  header { background: var(--black); color: var(--white); padding: 1rem 1.5rem; display:flex; justify-content:space-between; align-items:center; }
-  header h1 { font-size: 1.1rem; margin:0; }
-  nav { display:flex; gap: 1rem; }
-  nav button { background:none; border:none; color:var(--white); cursor:pointer; font-size:0.95rem; padding: 0.4rem 0.8rem; border-radius:6px; }
-  nav button.active, nav button:hover { background: var(--blue); }
-  main { padding: 1.5rem; max-width: 1000px; margin: 0 auto; }
-  .card { background:var(--white); border:1px solid var(--border); border-radius:8px; padding:1rem; margin-bottom:1rem; }
-  table { width:100%; border-collapse: collapse; }
-  th, td { text-align:left; padding: 0.5rem; border-bottom:1px solid var(--border); font-size:0.9rem; }
-  .btn { background: var(--blue); color:#fff; border:none; padding:0.5rem 1rem; border-radius:6px; cursor:pointer; }
-  .btn:hover { background: var(--blue-dark); }
-  .btn-outline { background:transparent; border:1px solid var(--black); color:var(--black); }
-  input, select, textarea { width:100%; padding:0.5rem; margin-bottom:0.5rem; border:1px solid var(--border); border-radius:6px; font-family:inherit; }
-  .status-badge { padding: 0.15rem 0.5rem; border-radius: 4px; font-size:0.75rem; }
-  .status-new { background:#dbeafe; color:#1d4ed8; }
-  .status-contacted { background:#fef3c7; color:#92400e; }
-  .status-qualified { background:#d1fae5; color:#065f46; }
-  .status-won { background:#059669; color:#fff; }
-  .status-lost { background:#e5e5e5; color:#525252; }
-  #login-view { max-width: 360px; margin: 4rem auto; }
-  .block-row { display:flex; justify-content:space-between; align-items:center; padding:0.5rem; border:1px solid var(--border); border-radius:6px; margin-bottom:0.5rem; }
-  .hidden { display:none; }
-  .field-hint { font-size:0.75rem; color:#525252; margin:-0.35rem 0 0.5rem; }
+  body { font-family:'Manrope',sans-serif; margin:0; color:var(--ink); background:var(--surface); font-size:14px; }
+  h1,h2,h3 { font-family:'Fraunces',serif; margin:0; font-weight:600; letter-spacing:-0.01em; }
+  a { color:inherit; }
+
+  /* ---- shell ---- */
+  .shell { display:flex; min-height:100vh; }
+  .sidebar { width:220px; flex:0 0 auto; background:var(--ink); color:#fff; display:flex; flex-direction:column; padding:20px 0; }
+  .sidebar .brand { font-family:'Fraunces',serif; font-size:18px; font-weight:600; padding:0 20px 20px; border-bottom:1px solid rgba(255,255,255,.12); margin-bottom:12px; }
+  .sidebar nav { display:flex; flex-direction:column; gap:2px; padding:0 12px; }
+  .sidebar button.nav-btn { text-align:left; background:none; border:none; color:rgba(255,255,255,.7); padding:10px 12px; border-radius:8px; cursor:pointer; font-size:13.5px; font-weight:600; font-family:inherit; }
+  .sidebar button.nav-btn:hover { background:rgba(255,255,255,.08); color:#fff; }
+  .sidebar button.nav-btn.active { background:var(--blue); color:#fff; }
+  .sidebar .spacer { flex:1; }
+  .sidebar .logout { margin:0 12px; }
+  .sidebar .logout button { width:100%; text-align:left; background:none; border:1px solid rgba(255,255,255,.2); color:rgba(255,255,255,.8); padding:9px 12px; border-radius:8px; cursor:pointer; font-family:inherit; font-size:13px; }
+
+  .content { flex:1 1 auto; padding:32px 40px; max-width:1080px; }
+  .page-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; }
+  .page-head h1 { font-size:24px; }
+  .page-head .sub { font-size:12.5px; color:var(--ink-45); margin-top:2px; }
+
+  /* ---- card / table ---- */
+  .card { background:var(--paper); border:1px solid var(--line); border-radius:var(--radius); padding:20px; margin-bottom:20px; }
+  table { width:100%; border-collapse:collapse; }
+  th { text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-45); padding:0 10px 10px; border-bottom:1px solid var(--line); }
+  td { padding:12px 10px; border-bottom:1px solid var(--line); font-size:13.5px; vertical-align:middle; }
+  tr:last-child td { border-bottom:none; }
+  tr:hover td { background:var(--surface); }
+
+  /* ---- buttons / inputs ---- */
+  .btn { background:var(--blue); color:#fff; border:none; padding:9px 16px; border-radius:999px; cursor:pointer; font-weight:700; font-size:12.5px; font-family:inherit; }
+  .btn:hover { background:var(--ink); }
+  .btn-outline { background:transparent; border:1px solid var(--line); color:var(--ink); padding:8px 15px; border-radius:999px; cursor:pointer; font-weight:700; font-size:12.5px; font-family:inherit; }
+  .btn-outline:hover { border-color:var(--ink); }
+  .btn-ghost { background:none; border:none; color:var(--ink-45); cursor:pointer; font-size:12px; font-family:inherit; padding:4px 8px; }
+  .btn-ghost:hover { color:var(--danger); }
+  .btn-sm { padding:5px 10px; font-size:11.5px; }
+  .btn:disabled, .btn-outline:disabled { opacity:.4; cursor:not-allowed; }
+
+  label.field-label { display:block; font-size:12px; font-weight:700; color:var(--ink-70); margin:0 0 5px; }
+  .field-hint { font-size:11.5px; color:var(--ink-45); margin:-3px 0 8px; }
+  input[type=text], input[type=email], input[type=password], input[type=number], select, textarea {
+    width:100%; padding:9px 11px; border:1px solid var(--line); border-radius:8px; font-family:inherit; font-size:13px; color:var(--ink); background:#fff;
+  }
+  input:focus, select:focus, textarea:focus { outline:none; border-color:var(--blue); box-shadow:0 0 0 3px var(--blue-dim); }
+  .field { margin-bottom:14px; }
+  .checkbox-row { display:flex; align-items:center; gap:8px; }
+  .checkbox-row input { width:auto; }
+
+  .status-badge { padding:3px 10px; border-radius:999px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.02em; }
+  .status-published { background:var(--success-dim); color:var(--success); }
+  .status-draft { background:var(--surface-2); color:var(--ink-45); }
+  .status-new { background:var(--blue-dim); color:var(--blue); }
+  .status-contacted { background:#FEF3C7; color:#92400E; }
+  .status-qualified { background:var(--success-dim); color:var(--success); }
+  .status-won { background:var(--success); color:#fff; }
+  .status-lost { background:var(--surface-2); color:var(--ink-45); }
+
+  /* ---- login ---- */
+  #login-view { max-width:360px; margin:10vh auto; }
+  #login-view .card { padding:28px; }
+  #login-view h2 { font-size:20px; margin-bottom:18px; }
+  .login-error { color:var(--danger); font-size:12.5px; margin-top:8px; }
+
+  .hidden { display:none !important; }
+
+  /* ---- page editor ---- */
+  .editor-grid { display:grid; grid-template-columns:1fr 260px; gap:20px; align-items:start; }
+  .editor-main { min-width:0; }
+  .editor-side { position:sticky; top:32px; }
+
+  .block-card { background:#fff; border:1px solid var(--line); border-radius:var(--radius); margin-bottom:14px; overflow:hidden; }
+  .block-card-head { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:var(--surface); border-bottom:1px solid var(--line); }
+  .block-card-head .block-title { font-weight:700; font-size:13px; }
+  .block-card-head .block-type-tag { font-size:10.5px; color:var(--ink-45); background:var(--surface-2); padding:2px 8px; border-radius:999px; margin-left:8px; }
+  .block-card-actions { display:flex; gap:4px; }
+  .block-card-body { padding:16px; }
+  .block-card-body.collapsed { display:none; }
+
+  .list-repeater { border:1px dashed var(--line); border-radius:8px; padding:12px; margin-bottom:6px; }
+  .list-item { background:var(--surface); border-radius:8px; padding:12px; margin-bottom:10px; position:relative; }
+  .list-item:last-child { margin-bottom:0; }
+  .list-item-remove { position:absolute; top:8px; right:8px; }
+  .list-add-btn { margin-top:4px; }
+
+  .layout-row { display:flex; gap:10px; }
+  .layout-row .field { flex:1; }
+
+  .add-block-row { display:flex; gap:8px; align-items:center; margin-top:4px; }
+  .add-block-row select { flex:1; }
+
+  .empty-state { text-align:center; padding:40px 20px; color:var(--ink-45); font-size:13px; }
+
+  .save-bar { display:flex; gap:10px; align-items:center; }
+  .save-status { font-size:12px; color:var(--ink-45); }
 </style>
 </head>
 <body>
 
-<div id="login-view" class="card hidden">
-  <h2>GetSetSold Admin Login</h2>
-  <input id="login-email" type="email" placeholder="Email" />
-  <input id="login-password" type="password" placeholder="Password" />
-  <button class="btn" onclick="login()">Log In</button>
-  <p id="login-error" style="color:red;"></p>
+<div id="login-view" class="hidden">
+  <div class="card">
+    <h2>GetSetSold Admin</h2>
+    <div class="field">
+      <label class="field-label">Email</label>
+      <input id="login-email" type="email" placeholder="you@getsetsold.ca" />
+    </div>
+    <div class="field">
+      <label class="field-label">Password</label>
+      <input id="login-password" type="password" placeholder="••••••••" />
+    </div>
+    <button class="btn" style="width:100%;" onclick="login()">Log In</button>
+    <p id="login-error" class="login-error"></p>
+  </div>
 </div>
 
-<div id="app-view" class="hidden">
-  <header>
-    <h1>GetSetSold — CRM + Page Builder</h1>
+<div id="app-view" class="hidden shell">
+  <aside class="sidebar">
+    <div class="brand">GetSetSold</div>
     <nav>
-      <button data-tab="leads" class="active">Leads</button>
-      <button data-tab="pages">Pages</button>
-      <button class="btn-outline" onclick="logout()" style="color:#fff;">Log Out</button>
+      <button class="nav-btn active" data-tab="leads" onclick="switchTab('leads')">Leads</button>
+      <button class="nav-btn" data-tab="pages" onclick="switchTab('pages')">Pages</button>
     </nav>
-  </header>
-  <main>
+    <div class="spacer"></div>
+    <div class="logout"><button onclick="logout()">Log Out</button></div>
+  </aside>
+
+  <div class="content">
     <section id="tab-leads">
-      <div class="card">
-        <h2>Leads</h2>
+      <div class="page-head">
+        <div>
+          <h1>Leads</h1>
+          <div class="sub">Contact + valuation + VIP buyer submissions, newest first</div>
+        </div>
+      </div>
+      <div class="card" style="padding:0;">
         <table>
           <thead><tr><th>Name</th><th>Contact</th><th>Type</th><th>Status</th><th>Received</th></tr></thead>
-          <tbody id="leads-table-body"><tr><td colspan="5">Loading...</td></tr></tbody>
+          <tbody id="leads-table-body"><tr><td colspan="5" class="empty-state">Loading…</td></tr></tbody>
         </table>
       </div>
     </section>
 
     <section id="tab-pages" class="hidden">
-      <div class="card">
-        <h2>Pages</h2>
-        <button class="btn" onclick="createPage()">+ New Page</button>
-        <table>
-          <thead><tr><th>Title</th><th>Slug</th><th>Type</th><th>Status</th><th></th></tr></thead>
-          <tbody id="pages-table-body"><tr><td colspan="5">Loading...</td></tr></tbody>
-        </table>
+      <div id="pages-list-view">
+        <div class="page-head">
+          <div>
+            <h1>Pages</h1>
+            <div class="sub">Every page is a stack of blocks, rendered live from this data</div>
+          </div>
+          <button class="btn" onclick="createPage()">+ New Page</button>
+        </div>
+        <div class="card" style="padding:0;">
+          <table>
+            <thead><tr><th>Title</th><th>Slug</th><th>Type</th><th>Status</th><th></th></tr></thead>
+            <tbody id="pages-table-body"><tr><td colspan="5" class="empty-state">Loading…</td></tr></tbody>
+          </table>
+        </div>
       </div>
 
-      <div class="card hidden" id="page-editor">
-        <h2>Edit Page</h2>
-        <input id="editor-title" placeholder="Page title" />
-        <input id="editor-slug" placeholder="/url-slug (e.g. /sell, or / for the homepage)" />
-        <p class="field-hint">Slugs are full URL paths, always starting with "/" — normalized automatically on save.</p>
-        <select id="editor-status"><option value="draft">Draft</option><option value="published">Published</option></select>
-        <h3>Blocks</h3>
-        <div id="editor-blocks"></div>
-        <select id="add-block-type"></select>
-        <button class="btn-outline" onclick="addBlock()">+ Add Block</button>
-        <p style="font-size:0.8rem;color:#525252;">v1: edit each block's props as JSON below its type. A structured per-field form (driven by each block's prop_schema, already in blocks_library) is a planned next iteration — ask if you want that built now instead.</p>
-        <div style="margin-top:1rem;">
-          <button class="btn" onclick="savePage()">Save Page</button>
+      <div id="page-editor-view" class="hidden">
+        <div class="page-head">
+          <div>
+            <button class="btn-ghost" style="padding-left:0;" onclick="backToPagesList()">&larr; All pages</button>
+            <h1 style="margin-top:4px;">Edit Page</h1>
+          </div>
+          <div class="save-bar">
+            <span id="save-status" class="save-status"></span>
+            <button class="btn" onclick="savePage()">Save Page</button>
+          </div>
+        </div>
+
+        <div class="editor-grid">
+          <div class="editor-main">
+            <div class="card">
+              <div class="field">
+                <label class="field-label">Page title</label>
+                <input id="editor-title" type="text" placeholder="Sell Your Home — GetSetSold" />
+              </div>
+              <div class="field">
+                <label class="field-label">Slug (URL path)</label>
+                <input id="editor-slug" type="text" placeholder="/sell" />
+                <div class="field-hint">Always starts with "/" — normalized automatically on save. Use "/" for the homepage.</div>
+              </div>
+              <div class="field">
+                <label class="field-label">Status</label>
+                <select id="editor-status">
+                  <option value="draft">Draft (not publicly visible)</option>
+                  <option value="published">Published (live)</option>
+                </select>
+              </div>
+            </div>
+
+            <h3 style="font-size:15px; margin:20px 0 12px;">Blocks</h3>
+            <div id="editor-blocks"></div>
+
+            <div class="card add-block-row">
+              <select id="add-block-type"></select>
+              <button class="btn-outline" onclick="addBlock()">+ Add Block</button>
+            </div>
+          </div>
+
+          <div class="editor-side">
+            <div class="card">
+              <div class="field-label" style="margin-bottom:8px;">Preview</div>
+              <div class="field-hint" style="margin-bottom:10px;">Opens the live rendered page in a new tab (only works once published).</div>
+              <a id="preview-link" class="btn-outline" style="display:block; text-align:center; text-decoration:none;" href="#" target="_blank">Open live page &rarr;</a>
+            </div>
+          </div>
         </div>
       </div>
     </section>
-  </main>
+  </div>
 </div>
 
 <script>
   // ---- Config: pre-con/CRM Supabase project (atmrjimfcydgjonlxzvr) ----
-  // Anon key only — safe to ship client-side, RLS is what actually restricts
-  // access (see the confirmed policies: public read on published pages/
-  // blocks_library, authenticated full access on everything, checked earlier
-  // in this project). Never put the service-role key in this file.
+  // Anon key only — RLS is what actually restricts access. Never put the
+  // service-role key in this file.
   const SUPABASE_URL = "https://atmrjimfcydgjonlxzvr.supabase.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF0bXJqaW1mY3lkZ2pvbmx4enZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk5ODkzODQsImV4cCI6MjA4NTU2NTM4NH0.MBg3k5iYPQxfqh8-5vEKyr-H4JEvOf_wFlIU7nqCDeM";
+  // Where published pages actually render — used only to build the "Open
+  // live page" preview link. Update if the Worker's domain changes.
+  const SITE_ORIGIN = "https://cms.rohit-910.workers.dev";
   // ------------------------------------------------------------------------
 
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   let currentPage = null;
-  let blocksLibrary = [];
+  let blocksLibrary = {}; // id -> {id, label, category, prop_schema}
 
-  // Slugs are stored as full URL paths ("/", "/sell", "/listings/map") — see
-  // render.js/index.js, which look up pages by the raw request path. This
-  // normalizes whatever an admin types into that same shape, so a typo like
-  // "sell" or "/sell/" doesn't silently create a page nothing will ever match.
   function normalizeSlug(raw) {
     let s = (raw || "").trim();
     if (!s) return "/";
@@ -120,14 +255,20 @@
     return s;
   }
 
+  function esc(s = "") {
+    return String(s).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
+  }
+
+  // ---- auth ----
   async function checkSession() {
     const { data: { session } } = await sb.auth.getSession();
     if (session) {
       document.getElementById("login-view").classList.add("hidden");
       document.getElementById("app-view").classList.remove("hidden");
       loadLeads();
-      loadBlocksLibrary();
+      loadBlocksLibrary().then(() => loadPages());
     } else {
+      document.getElementById("app-view").classList.add("hidden");
       document.getElementById("login-view").classList.remove("hidden");
     }
   }
@@ -145,16 +286,15 @@
     checkSession();
   }
 
-  document.querySelectorAll("nav button[data-tab]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      document.querySelectorAll("nav button[data-tab]").forEach((b) => b.classList.remove("active"));
-      btn.classList.add("active");
-      document.querySelectorAll("main > section").forEach((s) => s.classList.add("hidden"));
-      document.getElementById("tab-" + btn.dataset.tab).classList.remove("hidden");
-      if (btn.dataset.tab === "pages") loadPages();
-    });
-  });
+  // ---- tabs ----
+  function switchTab(tab) {
+    document.querySelectorAll(".sidebar .nav-btn").forEach((b) => b.classList.toggle("active", b.dataset.tab === tab));
+    document.querySelectorAll(".content > section").forEach((s) => s.classList.add("hidden"));
+    document.getElementById("tab-" + tab).classList.remove("hidden");
+    if (tab === "pages") backToPagesList();
+  }
 
+  // ---- leads ----
   async function loadLeads() {
     const { data, error } = await sb
       .from("leads")
@@ -162,93 +302,323 @@
       .order("created_at", { ascending: false })
       .limit(50);
     const body = document.getElementById("leads-table-body");
-    if (error) { body.innerHTML = `<tr><td colspan="5">${error.message}</td></tr>`; return; }
+    if (error) { body.innerHTML = `<tr><td colspan="5" class="empty-state">${esc(error.message)}</td></tr>`; return; }
     body.innerHTML = data.map((l) => `
       <tr>
-        <td>${l.contacts?.name || "—"}</td>
-        <td>${l.contacts?.email || ""} ${l.contacts?.phone || ""}</td>
-        <td>${l.form_type}</td>
-        <td><span class="status-badge status-${l.status}">${l.status}</span></td>
+        <td>${esc(l.contacts?.name || "—")}</td>
+        <td>${esc(l.contacts?.email || "")} ${esc(l.contacts?.phone || "")}</td>
+        <td>${esc(l.form_type)}</td>
+        <td><span class="status-badge status-${esc(l.status)}">${esc(l.status)}</span></td>
         <td>${new Date(l.created_at).toLocaleDateString()}</td>
-      </tr>`).join("") || `<tr><td colspan="5">No leads yet.</td></tr>`;
+      </tr>`).join("") || `<tr><td colspan="5" class="empty-state">No leads yet.</td></tr>`;
   }
 
+  // ---- blocks library ----
   async function loadBlocksLibrary() {
-    const { data } = await sb.from("blocks_library").select("id, label").order("category");
-    blocksLibrary = data || [];
+    const { data, error } = await sb.from("blocks_library").select("id, label, category, prop_schema").order("category");
+    if (error) { console.error("blocks_library load failed:", error.message); return; }
+    blocksLibrary = {};
+    (data || []).forEach((b) => { blocksLibrary[b.id] = b; });
     const select = document.getElementById("add-block-type");
-    select.innerHTML = blocksLibrary.map((b) => `<option value="${b.id}">${b.label}</option>`).join("");
+    select.innerHTML = (data || []).map((b) => `<option value="${esc(b.id)}">${esc(b.label)} — ${esc(b.category)}</option>`).join("");
   }
 
+  // ---- pages list ----
   async function loadPages() {
     const { data, error } = await sb.from("pages").select("*").order("updated_at", { ascending: false });
     const body = document.getElementById("pages-table-body");
-    if (error) { body.innerHTML = `<tr><td colspan="5">${error.message}</td></tr>`; return; }
+    if (error) { body.innerHTML = `<tr><td colspan="5" class="empty-state">${esc(error.message)}</td></tr>`; return; }
     body.innerHTML = data.map((p) => `
       <tr>
-        <td>${p.title}</td>
-        <td>${p.slug}</td>
-        <td>${p.type}</td>
-        <td><span class="status-badge status-${p.status === 'published' ? 'qualified' : 'new'}">${p.status}</span></td>
-        <td><button class="btn-outline" onclick='editPage(${JSON.stringify(p)})'>Edit</button></td>
-      </tr>`).join("") || `<tr><td colspan="5">No pages yet.</td></tr>`;
+        <td><strong>${esc(p.title || "(untitled)")}</strong></td>
+        <td><code>${esc(p.slug)}</code></td>
+        <td>${esc(p.type)}</td>
+        <td><span class="status-badge status-${p.status === 'published' ? 'published' : 'draft'}">${esc(p.status)}</span></td>
+        <td><button class="btn-outline btn-sm" onclick='openPageEditor(${JSON.stringify(p).replace(/'/g, "&#39;")})'>Edit</button></td>
+      </tr>`).join("") || `<tr><td colspan="5" class="empty-state">No pages yet — click "+ New Page" to create one.</td></tr>`;
+  }
+
+  function backToPagesList() {
+    document.getElementById("page-editor-view").classList.add("hidden");
+    document.getElementById("pages-list-view").classList.remove("hidden");
+    loadPages();
   }
 
   function createPage() {
-    editPage({ title: "New Page", slug: "/", type: "freeform", status: "draft", blocks: [] });
+    openPageEditor({ title: "", slug: "/", type: "freeform", status: "draft", blocks: [] });
   }
 
-  function editPage(page) {
-    currentPage = page;
-    document.getElementById("page-editor").classList.remove("hidden");
-    document.getElementById("editor-title").value = page.title || "";
-    document.getElementById("editor-slug").value = page.slug || "";
-    document.getElementById("editor-status").value = page.status || "draft";
-    renderBlockEditors();
+  function openPageEditor(page) {
+    currentPage = JSON.parse(JSON.stringify(page)); // deep clone, never mutate the row we read
+    currentPage.blocks = currentPage.blocks || [];
+    document.getElementById("pages-list-view").classList.add("hidden");
+    document.getElementById("page-editor-view").classList.remove("hidden");
+    document.getElementById("editor-title").value = currentPage.title || "";
+    document.getElementById("editor-slug").value = currentPage.slug || "/";
+    document.getElementById("editor-status").value = currentPage.status || "draft";
+    document.getElementById("save-status").textContent = "";
+    updatePreviewLink();
+    renderBlockCards();
   }
 
-  function renderBlockEditors() {
+  function updatePreviewLink() {
+    const slug = normalizeSlug(document.getElementById("editor-slug").value);
+    document.getElementById("preview-link").href = SITE_ORIGIN + slug;
+  }
+
+  // ---- structured block editor (prop_schema-driven) ----
+  function fieldId(blockIndex, path) {
+    return `field_${blockIndex}_${path.replace(/[\[\]\.]/g, "_")}`;
+  }
+
+  // Renders one field's input given its schema entry. `schema` can be a
+  // string shorthand ("text") or a full {type, label, ...} object.
+  function renderField(blockIndex, key, schema, value) {
+    const spec = typeof schema === "string" ? { type: schema } : (schema || { type: "text" });
+    const type = spec.type || "text";
+    const label = spec.label || key;
+    const id = fieldId(blockIndex, key);
+    const v = value ?? spec.default ?? "";
+
+    if (type === "boolean") {
+      return `
+        <div class="field checkbox-row">
+          <input type="checkbox" id="${id}" data-key="${esc(key)}" data-type="boolean" ${v ? "checked" : ""} onchange="markDirty()">
+          <label class="field-label" style="margin:0;" for="${id}">${esc(label)}</label>
+        </div>`;
+    }
+
+    if (type === "textarea") {
+      return `
+        <div class="field">
+          <label class="field-label" for="${id}">${esc(label)}</label>
+          <textarea id="${id}" data-key="${esc(key)}" data-type="textarea" rows="3" onchange="markDirty()">${esc(v)}</textarea>
+        </div>`;
+    }
+
+    if (type === "int" || type === "float") {
+      const step = type === "float" ? "any" : "1";
+      const minAttr = spec.min != null ? `min="${spec.min}"` : "";
+      const maxAttr = spec.max != null ? `max="${spec.max}"` : "";
+      return `
+        <div class="field">
+          <label class="field-label" for="${id}">${esc(label)}</label>
+          <input type="number" step="${step}" ${minAttr} ${maxAttr} id="${id}" data-key="${esc(key)}" data-type="${type}" value="${esc(v)}" onchange="markDirty()">
+        </div>`;
+    }
+
+    if (type === "enum") {
+      const opts = spec.options || [];
+      return `
+        <div class="field">
+          <label class="field-label" for="${id}">${esc(label)}</label>
+          <select id="${id}" data-key="${esc(key)}" data-type="enum" onchange="markDirty()">
+            ${opts.map((o) => `<option value="${esc(o)}" ${o === v ? "selected" : ""}>${esc(o)}</option>`).join("")}
+          </select>
+        </div>`;
+    }
+
+    if (type === "list") {
+      const itemSchema = spec.item || {};
+      const items = Array.isArray(v) ? v : [];
+      const repeaterId = id + "_repeater";
+      const itemsHtml = items.map((item, i) => renderListItem(blockIndex, key, itemSchema, item, i)).join("");
+      return `
+        <div class="field">
+          <label class="field-label">${esc(label)}</label>
+          <div class="list-repeater" id="${repeaterId}" data-key="${esc(key)}" data-type="list" data-item-schema='${esc(JSON.stringify(itemSchema))}'>
+            ${itemsHtml || `<div class="field-hint">No items yet.</div>`}
+          </div>
+          <button type="button" class="btn-outline btn-sm list-add-btn" onclick="addListItem('${repeaterId}')">+ Add item</button>
+        </div>`;
+    }
+
+    // default: text
+    return `
+      <div class="field">
+        <label class="field-label" for="${id}">${esc(label)}</label>
+        <input type="text" id="${id}" data-key="${esc(key)}" data-type="text" value="${esc(v)}" onchange="markDirty()">
+      </div>`;
+  }
+
+  function renderListItem(blockIndex, listKey, itemSchema, itemValue, index) {
+    const fieldsHtml = Object.entries(itemSchema).map(([subKey, subSchema]) => {
+      const spec = typeof subSchema === "string" ? { type: subSchema } : subSchema;
+      const val = itemValue?.[subKey];
+      if (spec.type === "enum") {
+        const opts = spec.options || [];
+        return `
+          <div class="field">
+            <label class="field-label">${esc(spec.label || subKey)}</label>
+            <select data-sub-key="${esc(subKey)}" onchange="markDirty()">
+              ${opts.map((o) => `<option value="${esc(o)}" ${o === val ? "selected" : ""}>${esc(o)}</option>`).join("")}
+            </select>
+          </div>`;
+      }
+      if (spec.type === "textarea") {
+        return `
+          <div class="field">
+            <label class="field-label">${esc(spec.label || subKey)}</label>
+            <textarea rows="2" data-sub-key="${esc(subKey)}" onchange="markDirty()">${esc(val || "")}</textarea>
+          </div>`;
+      }
+      return `
+        <div class="field">
+          <label class="field-label">${esc(spec.label || subKey)}</label>
+          <input type="text" data-sub-key="${esc(subKey)}" value="${esc(val || "")}" onchange="markDirty()">
+        </div>`;
+    }).join("");
+    return `
+      <div class="list-item" data-index="${index}">
+        <button type="button" class="btn-ghost list-item-remove" onclick="this.closest('.list-item').remove(); markDirty();">Remove</button>
+        ${fieldsHtml}
+      </div>`;
+  }
+
+  function addListItem(repeaterId) {
+    const repeater = document.getElementById(repeaterId);
+    const itemSchema = JSON.parse(repeater.dataset.itemSchema || "{}");
+    const blockIndex = repeaterId.split("_")[1];
+    const emptyHint = repeater.querySelector(".field-hint");
+    if (emptyHint) emptyHint.remove();
+    const index = repeater.querySelectorAll(".list-item").length;
+    repeater.insertAdjacentHTML("beforeend", renderListItem(blockIndex, null, itemSchema, {}, index));
+    markDirty();
+  }
+
+  // Reads the current DOM state of one block's fields back into a props object.
+  function collectBlockProps(blockIndex, propSchema) {
+    const container = document.getElementById(`block-body-${blockIndex}`);
+    const props = {};
+    Object.entries(propSchema || {}).forEach(([key, schema]) => {
+      const spec = typeof schema === "string" ? { type: schema } : schema;
+      const type = spec.type || "text";
+
+      if (type === "list") {
+        const repeater = container.querySelector(`[data-key="${CSS.escape(key)}"][data-type="list"]`);
+        const items = [];
+        repeater?.querySelectorAll(".list-item").forEach((itemEl) => {
+          const item = {};
+          itemEl.querySelectorAll("[data-sub-key]").forEach((el) => {
+            item[el.dataset.subKey] = el.value;
+          });
+          items.push(item);
+        });
+        props[key] = items;
+        return;
+      }
+
+      const el = container.querySelector(`[data-key="${CSS.escape(key)}"]`);
+      if (!el) return;
+      if (type === "boolean") props[key] = el.checked;
+      else if (type === "int") props[key] = el.value === "" ? null : parseInt(el.value, 10);
+      else if (type === "float") props[key] = el.value === "" ? null : parseFloat(el.value);
+      else props[key] = el.value;
+    });
+    return props;
+  }
+
+  function renderBlockCards() {
     const container = document.getElementById("editor-blocks");
-    container.innerHTML = (currentPage.blocks || []).map((b, i) => `
-      <div class="block-row" style="flex-direction:column;align-items:stretch;">
-        <strong>${b.block_type}</strong>
-        <textarea rows="3" onchange="updateBlockProps(${i}, this.value)">${JSON.stringify(b.props || {})}</textarea>
-        <button class="btn-outline" onclick="removeBlock(${i})">Remove</button>
-      </div>`).join("");
+    if (!currentPage.blocks.length) {
+      container.innerHTML = `<div class="card empty-state">No blocks yet — add one below to start building this page.</div>`;
+      return;
+    }
+    container.innerHTML = currentPage.blocks.map((b, i) => {
+      const def = blocksLibrary[b.block_type];
+      const label = def?.label || b.block_type;
+      const schema = def?.prop_schema || {};
+      const fieldsHtml = Object.keys(schema).length
+        ? Object.entries(schema).map(([key, s]) => renderField(i, key, s, b.props?.[key])).join("")
+        : `<div class="field-hint">This block type isn't in the block registry — showing nothing to edit. Check blocks_library.</div>`;
+      return `
+        <div class="block-card">
+          <div class="block-card-head">
+            <div>
+              <span class="block-title">${esc(label)}</span>
+              <span class="block-type-tag">${esc(b.block_type)}</span>
+            </div>
+            <div class="block-card-actions">
+              <button class="btn-ghost btn-sm" onclick="moveBlock(${i}, -1)" ${i === 0 ? "disabled" : ""}>↑</button>
+              <button class="btn-ghost btn-sm" onclick="moveBlock(${i}, 1)" ${i === currentPage.blocks.length - 1 ? "disabled" : ""}>↓</button>
+              <button class="btn-ghost btn-sm" onclick="toggleBlockCollapse(${i})">Collapse</button>
+              <button class="btn-ghost btn-sm" onclick="removeBlock(${i})">Remove</button>
+            </div>
+          </div>
+          <div class="block-card-body" id="block-body-${i}">${fieldsHtml}</div>
+        </div>`;
+    }).join("");
   }
 
-  function updateBlockProps(index, jsonStr) {
-    try { currentPage.blocks[index].props = JSON.parse(jsonStr); } catch (e) { alert("Invalid JSON"); }
+  function toggleBlockCollapse(index) {
+    document.getElementById(`block-body-${index}`).classList.toggle("collapsed");
+  }
+
+  function moveBlock(index, delta) {
+    syncBlocksFromDom();
+    const target = index + delta;
+    if (target < 0 || target >= currentPage.blocks.length) return;
+    const [moved] = currentPage.blocks.splice(index, 1);
+    currentPage.blocks.splice(target, 0, moved);
+    renderBlockCards();
+    markDirty();
   }
 
   function removeBlock(index) {
+    syncBlocksFromDom();
     currentPage.blocks.splice(index, 1);
-    renderBlockEditors();
+    renderBlockCards();
+    markDirty();
   }
 
   function addBlock() {
     const type = document.getElementById("add-block-type").value;
-    currentPage.blocks = currentPage.blocks || [];
+    if (!type) return;
+    syncBlocksFromDom();
     currentPage.blocks.push({ block_type: type, props: {} });
-    renderBlockEditors();
+    renderBlockCards();
+    markDirty();
   }
 
+  // Pulls the DOM's current field values back into currentPage.blocks before
+  // any structural change (reorder/remove/add), so in-progress edits aren't lost.
+  function syncBlocksFromDom() {
+    currentPage.blocks.forEach((b, i) => {
+      const def = blocksLibrary[b.block_type];
+      if (!def) return;
+      b.props = collectBlockProps(i, def.prop_schema || {});
+    });
+  }
+
+  function markDirty() {
+    document.getElementById("save-status").textContent = "Unsaved changes";
+  }
+
+  document.getElementById("editor-slug")?.addEventListener("input", updatePreviewLink);
+
   async function savePage() {
+    syncBlocksFromDom();
     const payload = {
       title: document.getElementById("editor-title").value,
       slug: normalizeSlug(document.getElementById("editor-slug").value),
       status: document.getElementById("editor-status").value,
       type: currentPage.type || "freeform",
-      blocks: currentPage.blocks || [],
+      blocks: currentPage.blocks,
       updated_at: new Date().toISOString(),
     };
+    document.getElementById("save-status").textContent = "Saving…";
+    let error;
     if (currentPage.id) {
-      await sb.from("pages").update(payload).eq("id", currentPage.id);
+      ({ error } = await sb.from("pages").update(payload).eq("id", currentPage.id));
     } else {
-      await sb.from("pages").insert(payload);
+      ({ error } = await sb.from("pages").insert(payload));
     }
-    document.getElementById("page-editor").classList.add("hidden");
-    loadPages();
+    if (error) {
+      document.getElementById("save-status").textContent = "Error: " + error.message;
+      return;
+    }
+    document.getElementById("save-status").textContent = "Saved.";
+    setTimeout(backToPagesList, 500);
   }
 
   checkSession();
