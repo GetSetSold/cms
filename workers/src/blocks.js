@@ -19,16 +19,20 @@ function esc(s = "") {
 export const renderers = {
   // `settings` (2nd arg) comes from the site_settings singleton row, via
   // header_nav being in blocks.js's DATA_BLOCK_TYPES — see index.js's
-  // fetchBlockData. Block props still win when set explicitly, so a page
-  // that wants a different logo/phone for one header can still override it.
+  // fetchBlockData. Menu items and footer links are managed centrally in
+  // the admin's Menu & Footer tab (settings.nav_items/footer_links), which
+  // is the single source of truth — settings wins whenever it has items, so
+  // editing that tab actually changes every page's header/footer instead of
+  // being silently shadowed by stale per-page block props from before that
+  // tab existed. A page's own props.nav_items is only used as a fallback
+  // for a page that predates the site-wide menu and has never been re-saved.
   header_nav(props, settings = {}) {
-    // Menu items: page-level props.nav_items wins if a page explicitly set
-    // its own, otherwise falls back to the site-wide menu built in the
-    // admin's Menu & Footer tab (settings.nav_items).
-    const navItems = (props.nav_items && props.nav_items.length) ? props.nav_items : (settings.nav_items || []);
-    const items = navItems.map(
-      (i) => `<a href="${esc(i.href)}" class="nav-link">${esc(i.label)}</a>`
-    ).join("");
+    // preview_nav_items (only ever set by the admin's Menu & Footer live
+    // preview) always wins — it's how unsaved edits show up in that
+    // preview even though settings otherwise beats a page's own props.
+    const navItems = Array.isArray(props.preview_nav_items) ? props.preview_nav_items
+      : (settings.nav_items && settings.nav_items.length) ? settings.nav_items
+      : (props.nav_items || []);
     const logoText = props.logo_text || settings.business_name || "GetSetSold";
     const logoUrl = props.logo_url || settings.logo_url;
     const phone = props.phone || settings.phone || "416-605-7488";
@@ -36,15 +40,33 @@ export const renderers = {
     const nameStyle = !logoUrl && settings.business_name_font_size
       ? ` style="font-size:${parseInt(settings.business_name_font_size, 10)}px;"`
       : "";
+    // 3 mobile menu styles, picked in Menu & Footer: 'overlay' (default —
+    // fullscreen slide-down panel), 'accordion' (dropdown list where items
+    // with sub-links get a +/- collapse toggle), 'simple' (no hamburger —
+    // a horizontally-scrollable pill strip under the header, always visible).
+    const mobileStyle = props.preview_mobile_menu_style || settings.mobile_menu_style || "overlay";
+    const items = navItems.map((item, i) => {
+      const children = Array.isArray(item.children) ? item.children : [];
+      if (mobileStyle === "accordion" && children.length) {
+        const subLinks = children.map((c) => `<a href="${esc(c.href)}" class="nav-sublink">${esc(c.label)}</a>`).join("");
+        return `
+          <div class="nav-item-group">
+            <button type="button" class="nav-link nav-item-toggle" data-nav-group="${i}">${esc(item.label)}<span class="nav-toggle-sign">+</span></button>
+            <div class="nav-submenu" id="nav-submenu-${i}">${subLinks}</div>
+          </div>`;
+      }
+      return `<a href="${esc(item.href)}" class="nav-link">${esc(item.label)}</a>`;
+    }).join("");
     return `
       <header class="site-header">
         <a class="logo" href="/"${nameStyle}>${logoUrl ? `<img src="${esc(logoUrl)}" alt="${esc(logoText)}" class="logo-img" />` : esc(logoText)}</a>
-        <nav class="main-nav" id="main-nav">${items}</nav>
+        <nav class="main-nav main-nav-${esc(mobileStyle)}" id="main-nav">${items}</nav>
         <div class="header-actions">
           <a class="btn btn-accent" href="${esc(phoneHref)}">Call Now</a>
+          ${mobileStyle !== "simple" ? `
           <button class="nav-toggle" id="nav-toggle" aria-label="Menu" aria-expanded="false">
             <span></span><span></span><span></span>
-          </button>
+          </button>` : ""}
         </div>
       </header>
       <script>
@@ -56,6 +78,15 @@ export const renderers = {
               var open = nav.classList.toggle('open');
               btn.classList.toggle('open', open);
               btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+            });
+          }
+          var toggles = document.querySelectorAll('.nav-item-toggle');
+          for (var i = 0; i < toggles.length; i++) {
+            toggles[i].addEventListener('click', function() {
+              var group = this.parentElement;
+              var open = group.classList.toggle('open');
+              var sign = this.querySelector('.nav-toggle-sign');
+              if (sign) sign.textContent = open ? '−' : '+';
             });
           }
         })();
@@ -161,9 +192,11 @@ export const renderers = {
       .filter((k) => social[k])
       .map((k) => `<a href="${esc(social[k])}" class="footer-social-link" target="_blank" rel="noopener">${esc(k.charAt(0).toUpperCase() + k.slice(1))}</a>`)
       .join("");
-    // Footer links: built in the admin's Menu & Footer tab, same
-    // props-first / settings-fallback pattern as everything else here.
-    const footerLinksSrc = (props.footer_links && props.footer_links.length) ? props.footer_links : (settings.footer_links || []);
+    // Footer links: built in the admin's Menu & Footer tab — settings wins
+    // over stale per-page props, same precedence as header_nav above.
+    const footerLinksSrc = Array.isArray(props.preview_footer_links) ? props.preview_footer_links
+      : (settings.footer_links && settings.footer_links.length) ? settings.footer_links
+      : (props.footer_links || []);
     const footerLinks = footerLinksSrc.map((l) => `<a href="${esc(l.href)}" class="footer-link">${esc(l.label)}</a>`).join("");
     return `
       <footer class="site-footer">
