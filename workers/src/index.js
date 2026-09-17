@@ -210,6 +210,33 @@ function pageShell({ title, description, bodyHtml }) {
 // "/listings", "/listings/map") — keeping that as the real convention (it's
 // what's already stored, and what the DB fix in 0004 assumes) rather than
 // rewriting stored data a second time.
+// Every full page (a `pages` row, a listing detail, a standalone form, or
+// the admin's live preview) should show the SAME header/footer, driven
+// solely by the Menu & Footer admin tab — that's the whole point of that
+// tab existing. Previously each render path built its own header_nav/
+// footer blocks (or, for the listing detail page, none at all — it had no
+// header or footer whatsoever), so pages could drift out of sync with each
+// other and with Menu & Footer settings. wrapWithChrome() is the single
+// place that decides header/footer for anything rendered as a full page:
+// it strips any header_nav/footer blocks already present in the list (so
+// old per-page rows with their own copies don't double up) and rebuilds
+// exactly one of each, carrying over any props the caller passed for them
+// (e.g. the admin's live-preview overrides) so nothing is lost.
+function wrapWithChrome(blocks = []) {
+  const isChrome = (b) => {
+    const t = b.block_type ?? b.block;
+    return t === "header_nav" || t === "footer";
+  };
+  const headerBlock = blocks.find((b) => (b.block_type ?? b.block) === "header_nav");
+  const footerBlock = blocks.find((b) => (b.block_type ?? b.block) === "footer");
+  const rest = blocks.filter((b) => !isChrome(b));
+  return [
+    { block_type: "header_nav", props: (headerBlock && headerBlock.props) || {} },
+    ...rest,
+    { block_type: "footer", props: (footerBlock && footerBlock.props) || {} },
+  ];
+}
+
 async function handlePageRequest(pathname, env) {
   const res = await supabaseFetch(
     env,
@@ -221,7 +248,7 @@ async function handlePageRequest(pathname, env) {
 
   if (rows.length) {
     const page = rows[0];
-    const bodyHtml = await renderBlocks(page.blocks || [], dataFetcher);
+    const bodyHtml = await renderBlocks(wrapWithChrome(page.blocks || []), dataFetcher);
     const html = pageShell({
       title: page.seo?.title || page.title,
       description: page.seo?.description || "",
@@ -269,17 +296,24 @@ async function handleListingDetailRequest(listingKey, env) {
   if (!property) return new Response("Listing not found", { status: 404 });
 
   const { renderers } = await import("./blocks.js");
-  const html = await renderers.listing_detail(
+  const listingHtml = await renderers.listing_detail(
     { showMortgageCalc: true, showHpi: true },
     { listing: property, officeName: property.OfficeName },
     env,
     mlsFetch
   );
+  // Listing detail previously had NO header or footer at all — it rendered
+  // renderers.listing_detail directly rather than going through
+  // renderBlocks()/wrapWithChrome() like every other page. Fixed so it
+  // gets the same site-wide header/footer as everything else.
+  const settings = await getSiteSettings(env);
+  const headerHtml = renderers.header_nav({}, settings);
+  const footerHtml = renderers.footer({}, settings);
   return new Response(
     pageShell({
       title: `${property.UnparsedAddress || listingKey} — GetSetSold`,
       description: (property.PublicRemarks || "").slice(0, 155),
-      bodyHtml: html,
+      bodyHtml: headerHtml + listingHtml + footerHtml,
     }),
     { headers: { "content-type": "text/html;charset=UTF-8" } }
   );
@@ -363,6 +397,102 @@ async function handleLeadSubmission(request, env) {
   return Response.redirect(new URL("/thank-you", request.url).toString(), 303);
 }
 
+// ─── Public listings search API ──────────────────────────────────────────
+// Backs the client-side interactivity in the listing_grid and
+// map_split_search blocks (city/type/beds/price filtering, pagination, the
+// map's marker set) — modeled on the real listings.html/map-search.html's
+// city+filter toolbar, but proxied server-side through mlsFetch instead of
+// exposing a Supabase key to the browser like those reference pages do.
+// GET-only, read-only, no auth needed (same trust level as the public site).
+async function handleListingsSearchRequest(url, env) {
+  const params = url.searchParams;
+  const city = params.get("city") || "";
+  const type = params.get("type") || "all"; // all | sale | rent
+  const beds = parseInt(params.get("beds"), 10) || 0;
+  const priceMin = parseInt(params.get("priceMin"), 10) || 0;
+  const priceMax = parseInt(params.get("priceMax"), 10) || 0;
+  const needsCoords = params.get("mapOnly") === "1";
+  const page = Math.max(1, parseInt(params.get("page"), 10) || 1);
+  const pageSize = Math.min(48, parseInt(params.get("pageSize"), 10) || 12);
+
+  if (!env.MLS_SUPABASE_URL || !env.MLS_SUPABASE_SERVICE_ROLE_KEY) {
+    return new Response(JSON.stringify({ listings: [], total: 0 }), {
+      headers: { "content-type": "application/json", ...CORS_HEADERS },
+    });
+  }
+
+  let q = "grid?select=*";
+  if (city) q += `&City=eq.${encodeURIComponent(city)}`;
+  if (type === "sale") q += "&ListPrice=not.is.null";
+  if (type === "rent") q += "&ListPrice=is.null&TotalActualRent=not.is.null";
+  if (beds) q += `&BedroomsTotal=gte.${beds}`;
+  if (needsCoords) q += "&Latitude=not.is.null&Longitude=not.is.null";
+  q += "&order=OriginalEntryTimestamp.desc";
+
+  if (needsCoords) {
+    // Map view wants every matching pin in one shot, not a page at a time.
+    q += "&limit=500";
+    const res = await mlsFetch(env, q);
+    if (!res.ok) return new Response(JSON.stringify({ listings: [] }), { headers: { "content-type": "application/json", ...CORS_HEADERS } });
+    let listings = await res.json();
+    // Price filtering happens here (not in the query) since it's an OR
+    // across ListPrice/TotalActualRent depending on sale vs rent.
+    if (priceMin || priceMax) {
+      listings = listings.filter((l) => {
+        const p = l.ListPrice || l.TotalActualRent || 0;
+        return (!priceMin || p >= priceMin) && (!priceMax || p <= priceMax);
+      });
+    }
+    return new Response(JSON.stringify({ listings }), { headers: { "content-type": "application/json", ...CORS_HEADERS } });
+  }
+
+  q += `&limit=${pageSize}&offset=${(page - 1) * pageSize}`;
+  const res = await mlsFetch(env, q, { headers: { Prefer: "count=exact" } });
+  if (!res.ok) {
+    console.error("handleListingsSearchRequest failed:", await res.text());
+    return new Response(JSON.stringify({ listings: [], total: 0 }), { headers: { "content-type": "application/json", ...CORS_HEADERS } });
+  }
+  let listings = await res.json();
+  let total = Number(res.headers.get("content-range")?.split("/")[1] ?? listings.length);
+  // Same client-side price filter caveat as above — applied post-fetch, so
+  // `total`/pagination can be approximate when a price range is active
+  // (acceptable for this list; exact counts aren't worth a second round trip).
+  if (priceMin || priceMax) {
+    listings = listings.filter((l) => {
+      const p = l.ListPrice || l.TotalActualRent || 0;
+      return (!priceMin || p >= priceMin) && (!priceMax || p <= priceMax);
+    });
+  }
+  return new Response(JSON.stringify({ listings, total, page, pageSize }), {
+    headers: { "content-type": "application/json", ...CORS_HEADERS },
+  });
+}
+
+let citiesCache = null;
+let citiesCacheAt = 0;
+const CITIES_CACHE_MS = 5 * 60_000;
+
+async function handleCitiesRequest(env) {
+  if (citiesCache && Date.now() - citiesCacheAt < CITIES_CACHE_MS) {
+    return new Response(JSON.stringify({ cities: citiesCache }), { headers: { "content-type": "application/json", ...CORS_HEADERS } });
+  }
+  if (!env.MLS_SUPABASE_URL || !env.MLS_SUPABASE_SERVICE_ROLE_KEY) {
+    return new Response(JSON.stringify({ cities: [] }), { headers: { "content-type": "application/json", ...CORS_HEADERS } });
+  }
+  const res = await mlsFetch(env, "grid?select=City&limit=5000");
+  if (!res.ok) return new Response(JSON.stringify({ cities: [] }), { headers: { "content-type": "application/json", ...CORS_HEADERS } });
+  const rows = await res.json();
+  const seen = new Set();
+  const cities = [];
+  for (const r of rows) {
+    if (r.City && !seen.has(r.City)) { seen.add(r.City); cities.push(r.City); }
+  }
+  cities.sort();
+  citiesCache = cities;
+  citiesCacheAt = Date.now();
+  return new Response(JSON.stringify({ cities }), { headers: { "content-type": "application/json", ...CORS_HEADERS } });
+}
+
 // Stateless preview: renders whatever `blocks` array the admin app sends
 // through the SAME renderBlocks()/pageShell() code the real site uses —
 // no separate preview-only rendering path to drift out of sync, and
@@ -377,7 +507,14 @@ async function handlePreviewRequest(request, env) {
   }
   const blocks = Array.isArray(body.blocks) ? body.blocks : [];
   const dataFetcher = (type, props) => fetchBlockData(type, props, env);
-  const bodyHtml = await renderBlocks(blocks, dataFetcher);
+  // wrapChrome: true for anything meant to preview as a full page (Pages
+  // editor, Menu & Footer editor, Forms "Standalone" preview) — same
+  // header/footer logic as the real site via wrapWithChrome(). Left false
+  // only for the Forms builder's "In Page" preview, which deliberately
+  // shows just the block in isolation, chrome-free, the way it'd look
+  // dropped into an arbitrary page.
+  const finalBlocks = body.wrapChrome ? wrapWithChrome(blocks) : blocks;
+  const bodyHtml = await renderBlocks(finalBlocks, dataFetcher);
   const html = pageShell({
     title: body.title || "Preview",
     description: body.seo?.description || "",
@@ -409,6 +546,16 @@ export default {
     if (url.pathname === "/api/preview") {
       if (request.method === "OPTIONS") return new Response(null, { headers: CORS_HEADERS });
       if (request.method === "POST") return handlePreviewRequest(request, env);
+    }
+
+    if (url.pathname === "/api/listings-search") {
+      if (request.method === "OPTIONS") return new Response(null, { headers: CORS_HEADERS });
+      return handleListingsSearchRequest(url, env);
+    }
+
+    if (url.pathname === "/api/cities") {
+      if (request.method === "OPTIONS") return new Response(null, { headers: CORS_HEADERS });
+      return handleCitiesRequest(env);
     }
 
     const listingMatch = url.pathname.match(/^\/listings\/([A-Za-z0-9-]+)$/);
