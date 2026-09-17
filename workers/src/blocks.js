@@ -45,6 +45,24 @@ export const renderers = {
     // with sub-links get a +/- collapse toggle), 'simple' (no hamburger —
     // a horizontally-scrollable pill strip under the header, always visible).
     const mobileStyle = props.preview_mobile_menu_style || settings.mobile_menu_style || "overlay";
+    // 3 pre-styled desktop header layouts (settings.header_style, same
+    // props-preview/settings precedence as everything else here):
+    // 'classic' (logo left / nav centered / actions right — the original
+    // layout), 'centered' (logo, then nav, stacked and centered), 'minimal'
+    // (compact height, nav left-aligned next to the logo). These only
+    // reflow the desktop (>900px) header — the mobile hamburger/dropdown
+    // behavior below is identical no matter which one is picked.
+    const headerStyle = props.preview_header_style || settings.header_style || "classic";
+    // Independent "fixed header" toggles for desktop vs mobile — sticks the
+    // header to the top of the viewport on scroll for that breakpoint only.
+    const fixedDesktop = props.preview_header_fixed_desktop ?? settings.header_fixed_desktop;
+    const fixedMobile = props.preview_header_fixed_mobile ?? settings.header_fixed_mobile;
+    const headerClasses = [
+      "site-header",
+      `site-header-${esc(headerStyle)}`,
+      fixedDesktop ? "header-fixed-desktop" : "",
+      fixedMobile ? "header-fixed-mobile" : "",
+    ].filter(Boolean).join(" ");
     const items = navItems.map((item, i) => {
       const children = Array.isArray(item.children) ? item.children : [];
       if (mobileStyle === "accordion" && children.length) {
@@ -58,7 +76,7 @@ export const renderers = {
       return `<a href="${esc(item.href)}" class="nav-link">${esc(item.label)}</a>`;
     }).join("");
     return `
-      <header class="site-header">
+      <header class="${headerClasses}">
         <a class="logo" href="/"${nameStyle}>${logoUrl ? `<img src="${esc(logoUrl)}" alt="${esc(logoText)}" class="logo-img" />` : esc(logoText)}</a>
         <nav class="main-nav main-nav-${esc(mobileStyle)}" id="main-nav">${items}</nav>
         <div class="header-actions">
@@ -198,12 +216,22 @@ export const renderers = {
       : (settings.footer_links && settings.footer_links.length) ? settings.footer_links
       : (props.footer_links || []);
     const footerLinks = footerLinksSrc.map((l) => `<a href="${esc(l.href)}" class="footer-link">${esc(l.label)}</a>`).join("");
+    // 3 pre-styled footer layouts (settings.footer_style): 'simple' (the
+    // original stacked layout — info, links, social all in one left-aligned
+    // column), 'columns' (info / links / social as 3 side-by-side columns),
+    // 'centered' (everything centered, for a lighter-weight footer). The
+    // markup is the same 3 column divs in every case — only the CSS for
+    // .site-footer-<style> changes how they're arranged, so nothing here
+    // needs to branch on footerStyle beyond the class name.
+    const footerStyle = props.preview_footer_style || settings.footer_style || "simple";
     return `
-      <footer class="site-footer">
-        <p>${esc(brokerage)}</p>
-        <p>${esc(agentName)} — ${esc(phone)}${email ? ` — ${esc(email)}` : ""}</p>
-        ${footerLinks ? `<p class="footer-links">${footerLinks}</p>` : ""}
-        ${socialLinks ? `<p class="footer-social">${socialLinks}</p>` : ""}
+      <footer class="site-footer site-footer-${esc(footerStyle)}">
+        <div class="footer-col footer-col-info">
+          <p>${esc(brokerage)}</p>
+          <p>${esc(agentName)} — ${esc(phone)}${email ? ` — ${esc(email)}` : ""}</p>
+        </div>
+        ${footerLinks ? `<div class="footer-col footer-col-links"><p class="footer-links">${footerLinks}</p></div>` : ""}
+        ${socialLinks ? `<div class="footer-col footer-col-social"><p class="footer-social">${socialLinks}</p></div>` : ""}
         ${settings.license_text ? `<p class="footer-license">${esc(settings.license_text)}</p>` : ""}
       </footer>`;
   },
