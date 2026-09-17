@@ -221,12 +221,52 @@ async function handleLeadSubmission(request, env) {
   return Response.redirect(new URL("/thank-you", request.url).toString(), 303);
 }
 
+// Stateless preview: renders whatever `blocks` array the admin app sends
+// through the SAME renderBlocks()/pageShell() code the real site uses —
+// no separate preview-only rendering path to drift out of sync, and
+// nothing is written to the database. The admin app calls this on every
+// edit (debounced) and puts the returned HTML into an iframe via srcdoc.
+async function handlePreviewRequest(request, env) {
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return new Response("Bad request body", { status: 400, headers: CORS_HEADERS });
+  }
+  const blocks = Array.isArray(body.blocks) ? body.blocks : [];
+  const dataFetcher = (type, props) => fetchBlockData(type, props, env);
+  const bodyHtml = await renderBlocks(blocks, dataFetcher);
+  const html = pageShell({
+    title: body.title || "Preview",
+    description: body.seo?.description || "",
+    bodyHtml,
+  });
+  return new Response(html, {
+    headers: { "content-type": "text/html;charset=UTF-8", ...CORS_HEADERS },
+  });
+}
+
+// The admin app (admin.rohit-910.workers.dev) calls /api/preview on this
+// Worker (cms.rohit-910.workers.dev) — different origins, so this needs
+// CORS. The endpoint only renders whatever block JSON it's given and never
+// touches the database, so an open origin is fine here.
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
+};
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
     if (url.pathname === "/api/leads" && request.method === "POST") {
       return handleLeadSubmission(request, env);
+    }
+
+    if (url.pathname === "/api/preview") {
+      if (request.method === "OPTIONS") return new Response(null, { headers: CORS_HEADERS });
+      if (request.method === "POST") return handlePreviewRequest(request, env);
     }
 
     const listingMatch = url.pathname.match(/^\/listings\/([A-Za-z0-9-]+)$/);
