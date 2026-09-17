@@ -1,0 +1,17 @@
+name = "getsetsold-site"
+main = "src/index.js"
+compatibility_date = "2026-09-01"
+
+# Set these via `wrangler secret put` — never commit real values:
+#   SUPABASE_URL                    (pre-con/CRM project: atmrjimfcydgjonlxzvr)
+#   SUPABASE_SERVICE_ROLE_KEY       (server-side only — pages/blocks_library/leads/contacts)
+#   MLS_SUPABASE_URL                (MLS/DDF project: nkjxlwuextxzpeohutxz)
+#   MLS_SUPABASE_SERVICE_ROLE_KEY   (server-side only — reads grid/property for listing blocks)
+#
+# These are two SEPARATE Supabase projects (separate databases, no cross-project
+# joins) — see the earlier discussion on why MLS sync and CRM/pages are split.
+# Both sets of secrets are required for index.js to render real-estate blocks.
+#
+# [vars] section is for non-secret config only.
+[vars]
+SITE_NAME = "GetSetSold.ca"
