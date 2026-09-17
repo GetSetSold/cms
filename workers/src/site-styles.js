@@ -234,5 +234,41 @@ img{ max-width:100%; display:block; }
   .agent-card{ padding:18px; }
 
   .site-footer{ padding:28px 18px; }
+
+  .df-grid{ grid-template-columns:1fr; }
+  .df-field.df-half{ grid-column:auto; }
 }
+`;
+
+/* Dynamic lead-capture forms (dynamic_form block, see dynamic-form.js /
+   0008_lead_forms.sql) — appended here rather than inlined per-block since
+   this can appear on any page and should look consistent everywhere. */
+export const dynamicFormStyles = `
+.df-wrap{ max-width:640px; }
+.df-heading{ margin-bottom:20px; }
+.df-section{ margin-bottom:28px; }
+.df-section:last-of-type{ margin-bottom:20px; }
+.df-section-title{ font-family:var(--font-display); font-size:16px; margin:0 0 6px; }
+.df-section-desc{ font-size:13px; color:var(--ink-45); margin:0 0 14px; }
+.df-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:16px; }
+.df-field{ display:flex; flex-direction:column; gap:6px; }
+.df-field.df-full{ grid-column:1 / -1; }
+.df-label{ font-size:12.5px; font-weight:700; color:var(--ink-70); }
+.df-header-field{ margin-top:6px; }
+.df-header-label{ font-family:var(--font-display); font-size:15px; margin:0 0 4px; }
+.df-field input[type=text], .df-field input[type=email], .df-field input[type=tel],
+.df-field input[type=number], .df-field input[type=date], .df-field select, .df-field textarea{
+  padding:11px 13px; border:1px solid var(--line); border-radius:10px; font-family:inherit; font-size:13.5px; background:#fff; color:var(--ink);
+}
+.df-field textarea{ min-height:90px; resize:vertical; }
+.df-field input:focus, .df-field select:focus, .df-field textarea:focus{ outline:none; border-color:var(--blue); }
+.df-choice-group{ display:flex; flex-direction:column; gap:8px; }
+.df-radio, .df-checkbox{ display:flex; align-items:center; gap:8px; font-size:13.5px; font-weight:normal; color:var(--ink); cursor:pointer; }
+.df-help{ font-size:11.5px; color:var(--ink-45); }
+.df-submit{ margin-top:8px; background:var(--ink); color:#fff; border:none; border-radius:999px; padding:13px 26px; font-weight:700; font-size:13.5px; cursor:pointer; }
+.df-submit:hover{ background:var(--blue); }
+.df-submit:disabled{ opacity:.5; cursor:not-allowed; }
+.df-error{ color:#C0362C; font-size:12.5px; margin-top:8px; }
+.df-success{ font-size:15px; font-weight:600; padding:20px 0; }
+.df-missing{ padding:24px; background:var(--surface); border-radius:12px; color:var(--ink-45); font-size:13.5px; }
 `;
