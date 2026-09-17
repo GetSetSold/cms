@@ -29,7 +29,10 @@ function fieldName(q) {
   return q.field_key ? q.field_key : `q_${q.id}`;
 }
 
-function renderQuestion(q) {
+// nameOverride/qidOverride let renderQuestion double as the renderer for a
+// repeater instance's child fields, where the real `name`/`data-qid` need an
+// index baked in (see renderRepeater below) instead of the plain field key.
+function renderQuestion(q, nameOverride, qidOverride) {
   if (q.type === "section_header") {
     return `
       <div class="df-field df-full df-header-field">
@@ -37,37 +40,39 @@ function renderQuestion(q) {
         ${q.help_text ? `<p class="df-help">${esc(q.help_text)}</p>` : ""}
       </div>`;
   }
+  if (q.type === "repeater") return "";
 
-  const name = fieldName(q);
+  const name = nameOverride || fieldName(q);
+  const qid = qidOverride || q.id;
   const required = q.required ? "required" : "";
   const options = Array.isArray(q.options) ? q.options : [];
   let inputHtml = "";
 
   if (q.type === "multi_line") {
-    inputHtml = `<textarea name="${escAttr(name)}" data-qid="${q.id}" placeholder="${escAttr(q.placeholder || "")}" ${required}></textarea>`;
+    inputHtml = `<textarea name="${escAttr(name)}" data-qid="${qid}" placeholder="${escAttr(q.placeholder || "")}" ${required}></textarea>`;
   } else if (q.type === "dropdown") {
     const opts = options.map((o) => `<option value="${escAttr(o.value)}">${esc(o.label)}</option>`).join("");
-    inputHtml = `<select name="${escAttr(name)}" data-qid="${q.id}" ${required}><option value="">Select…</option>${opts}</select>`;
+    inputHtml = `<select name="${escAttr(name)}" data-qid="${qid}" ${required}><option value="">Select…</option>${opts}</select>`;
   } else if (q.type === "radio" || q.type === "yesno") {
     const opts = q.type === "yesno" ? [{ label: "Yes", value: "Yes" }, { label: "No", value: "No" }] : options;
     inputHtml = `<div class="df-choice-group">${opts.map((o) =>
-      `<label class="df-radio"><input type="radio" name="${escAttr(name)}" value="${escAttr(o.value)}" data-qid="${q.id}" ${required}> ${esc(o.label)}</label>`
+      `<label class="df-radio"><input type="radio" name="${escAttr(name)}" value="${escAttr(o.value)}" data-qid="${qid}" ${required}> ${esc(o.label)}</label>`
     ).join("")}</div>`;
   } else if (q.type === "multicheck") {
     inputHtml = `<div class="df-choice-group">${options.map((o) =>
-      `<label class="df-checkbox"><input type="checkbox" name="${escAttr(name)}[]" value="${escAttr(o.value)}" data-qid="${q.id}"> ${esc(o.label)}</label>`
+      `<label class="df-checkbox"><input type="checkbox" name="${escAttr(name)}[]" value="${escAttr(o.value)}" data-qid="${qid}"> ${esc(o.label)}</label>`
     ).join("")}</div>`;
   } else if (q.type === "checkbox") {
     // Single boolean checkbox — the question's own label doubles as the
     // checkbox text, so we skip the separate <label class="df-label"> below.
-    inputHtml = `<label class="df-checkbox"><input type="checkbox" name="${escAttr(name)}" value="true" data-qid="${q.id}"> ${esc(q.label)}</label>`;
+    inputHtml = `<label class="df-checkbox"><input type="checkbox" name="${escAttr(name)}" value="true" data-qid="${qid}"> ${esc(q.label)}</label>`;
   } else if (q.type === "range") {
     const opts = options && !Array.isArray(options) ? options : {};
     const min = opts.min ?? 0, max = opts.max ?? 100, step = opts.step ?? 1;
-    inputHtml = `<input type="range" name="${escAttr(name)}" data-qid="${q.id}" min="${min}" max="${max}" step="${step}">`;
+    inputHtml = `<input type="range" name="${escAttr(name)}" data-qid="${qid}" min="${min}" max="${max}" step="${step}">`;
   } else {
     // single_line / email / phone / date / number
-    inputHtml = `<input type="${INPUT_TYPE[q.type] || "text"}" name="${escAttr(name)}" data-qid="${q.id}" placeholder="${escAttr(q.placeholder || "")}" ${required}>`;
+    inputHtml = `<input type="${INPUT_TYPE[q.type] || "text"}" name="${escAttr(name)}" data-qid="${qid}" placeholder="${escAttr(q.placeholder || "")}" ${required}>`;
   }
 
   const widthClass = q.column_width === "1col" ? "df-half" : "df-full";
@@ -77,10 +82,41 @@ function renderQuestion(q) {
   const showLabel = q.type !== "checkbox";
 
   return `
-    <div class="df-field ${widthClass}" data-question-id="${q.id}" ${conditional}>
+    <div class="df-field ${widthClass}" data-question-id="${qid}" ${conditional}>
       ${showLabel ? `<label class="df-label">${esc(q.label)}${q.required ? " *" : ""}</label>` : ""}
       ${inputHtml}
       ${q.help_text && showLabel ? `<div class="df-help">${esc(q.help_text)}</div>` : ""}
+    </div>`;
+}
+
+// A repeater is a question with type:'repeater'. Its children are other
+// questions in the SAME form (any section) with parent_question_id === the
+// repeater's id — they are pulled out of normal section rendering and
+// rendered only inside the repeater's repeating template. options holds
+// { source_question_id, min, max }: when source_question_id is set, the
+// instance count tracks that (numeric) question's live value; otherwise the
+// user manually adds/removes rows within [min, max].
+function renderRepeater(q, children) {
+  const opts = q.options && !Array.isArray(q.options) ? q.options : {};
+  const min = Number.isFinite(opts.min) ? opts.min : 0;
+  const max = Number.isFinite(opts.max) ? opts.max : 10;
+  const sourceId = opts.source_question_id || "";
+
+  // __IDX__ is replaced client-side with the instance number when a new
+  // repeated row is rendered.
+  const templateFields = children
+    .slice()
+    .sort((a, b) => (a.position || 0) - (b.position || 0))
+    .map((child) => renderQuestion(child, `rep_${q.id}__IDX__${fieldName(child)}`, `${child.id}__IDX__`))
+    .join("");
+
+  return `
+    <div class="df-field df-full df-repeater" data-repeater-id="${q.id}" data-repeater-source="${escAttr(sourceId)}" data-repeater-min="${min}" data-repeater-max="${max}">
+      <label class="df-label">${esc(q.label)}${q.required ? " *" : ""}</label>
+      ${q.help_text ? `<div class="df-help">${esc(q.help_text)}</div>` : ""}
+      <template class="df-repeater-template">${templateFields}</template>
+      <div class="df-repeater-items"></div>
+      ${!sourceId ? `<button type="button" class="df-repeater-add">+ Add another</button>` : ""}
     </div>`;
 }
 
@@ -90,13 +126,28 @@ export function renderDynamicForm(props = {}, form) {
   }
   const settings = form.settings || {};
   const sections = (form.form_sections || []).slice().sort((a, b) => (a.position || 0) - (b.position || 0));
+  const allQuestions = sections.flatMap((sec) => sec.form_questions || []);
+  const childrenByParent = {};
+  for (const q of allQuestions) {
+    if (q.parent_question_id) {
+      (childrenByParent[q.parent_question_id] ||= []).push(q);
+    }
+  }
   const sectionsHtml = sections.map((sec) => {
-    const questions = (sec.form_questions || []).slice().sort((a, b) => (a.position || 0) - (b.position || 0));
+    // Repeater children are rendered only inside their repeater's template,
+    // never inline in the section they happen to live in.
+    const questions = (sec.form_questions || [])
+      .filter((q) => !q.parent_question_id)
+      .slice()
+      .sort((a, b) => (a.position || 0) - (b.position || 0));
+    const fieldsHtml = questions
+      .map((q) => (q.type === "repeater" ? renderRepeater(q, childrenByParent[q.id] || []) : renderQuestion(q)))
+      .join("");
     return `
       <div class="df-section">
         ${sec.title ? `<h3 class="df-section-title">${esc(sec.title)}</h3>` : ""}
         ${sec.description ? `<p class="df-section-desc">${esc(sec.description)}</p>` : ""}
-        <div class="df-grid">${questions.map(renderQuestion).join("")}</div>
+        <div class="df-grid">${fieldsHtml}</div>
       </div>`;
   }).join("");
 
@@ -146,12 +197,100 @@ export function renderDynamicForm(props = {}, form) {
       form.addEventListener('change', updateConditions);
       updateConditions();
 
+      // --- Repeater groups (e.g. "How Many Employed" -> N repeated
+      // {Employer, Job Title, Income} blocks) ---
+      var repeaters = form.querySelectorAll('.df-repeater');
+      Array.prototype.forEach.call(repeaters, function(rep) {
+        var templateEl = rep.querySelector('.df-repeater-template');
+        var itemsEl = rep.querySelector('.df-repeater-items');
+        var template = templateEl ? templateEl.innerHTML : '';
+        var min = parseInt(rep.getAttribute('data-repeater-min'), 10) || 0;
+        var max = parseInt(rep.getAttribute('data-repeater-max'), 10) || 10;
+        var sourceQid = rep.getAttribute('data-repeater-source');
+        var count = 0;
+
+        function renderCount(n) {
+          n = Math.max(min, Math.min(max, n || 0));
+          while (count < n) {
+            var row = document.createElement('div');
+            row.className = 'df-repeater-row';
+            row.innerHTML = template.split('__IDX__').join(String(count));
+            var removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'df-repeater-remove';
+            removeBtn.textContent = 'Remove';
+            (function(rowEl) {
+              removeBtn.addEventListener('click', function() {
+                rowEl.remove();
+                count--;
+                updateConditions();
+              });
+            })(row);
+            if (!sourceQid) row.appendChild(removeBtn);
+            itemsEl.appendChild(row);
+            count++;
+          }
+          while (count > n) {
+            var last = itemsEl.lastElementChild;
+            if (!last) break;
+            last.remove();
+            count--;
+          }
+          updateConditions();
+        }
+
+        if (sourceQid) {
+          var sourceEl = form.querySelector('[data-qid="' + sourceQid + '"]');
+          if (sourceEl) {
+            var sync = function() {
+              var n = parseInt(sourceEl.value, 10);
+              renderCount(isNaN(n) ? min : n);
+            };
+            sourceEl.addEventListener('input', sync);
+            sourceEl.addEventListener('change', sync);
+            sync();
+          } else {
+            renderCount(min);
+          }
+        } else {
+          renderCount(min);
+          var addBtn = rep.querySelector('.df-repeater-add');
+          if (addBtn) addBtn.addEventListener('click', function() { renderCount(count + 1); });
+        }
+      });
+
       form.addEventListener('submit', function(e) {
         e.preventDefault();
         var answers = {};
         var seenChecks = {};
+        var repeaterAnswers = {};
         Array.prototype.forEach.call(form.elements, function(el) {
           if (!el.name || el.disabled || el.type === 'submit') return;
+          if (el.name.indexOf('rep_') === 0) {
+            // rep_<repeaterId>__<idx>__<childFieldName>[]
+            var parts = el.name.split('__');
+            var repKey = parts[0];
+            var idx = parts[1];
+            var childKey = parts.slice(2).join('__');
+            var isMulti = /\\[\\]$/.test(childKey);
+            if (isMulti) childKey = childKey.replace(/\\[\\]$/, '');
+            if (!repeaterAnswers[repKey]) repeaterAnswers[repKey] = [];
+            if (!repeaterAnswers[repKey][idx]) repeaterAnswers[repKey][idx] = {};
+            var row = repeaterAnswers[repKey][idx];
+            if (el.type === 'checkbox') {
+              if (isMulti) {
+                if (!row[childKey]) row[childKey] = [];
+                if (el.checked) row[childKey].push(el.value);
+              } else {
+                row[childKey] = el.checked;
+              }
+            } else if (el.type === 'radio') {
+              if (el.checked) row[childKey] = el.value;
+            } else {
+              row[childKey] = el.value;
+            }
+            return;
+          }
           if (el.type === 'checkbox') {
             var key = el.name.replace(/\\[\\]$/, '');
             if (!seenChecks[key]) seenChecks[key] = [];
@@ -162,6 +301,9 @@ export function renderDynamicForm(props = {}, form) {
           } else {
             answers[el.name] = el.value;
           }
+        });
+        Object.keys(repeaterAnswers).forEach(function(k) {
+          answers[k] = repeaterAnswers[k].filter(function(row) { return row; });
         });
 
         var errorEl = form.querySelector('.df-error');
