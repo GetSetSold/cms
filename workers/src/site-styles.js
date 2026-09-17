@@ -285,6 +285,14 @@ export const dynamicFormStyles = `
 .df-submit{ margin-top:8px; background:var(--ink); color:#fff; border:none; border-radius:999px; padding:13px 26px; font-weight:700; font-size:13.5px; cursor:pointer; }
 .df-submit:hover{ background:var(--blue); }
 .df-submit:disabled{ opacity:.5; cursor:not-allowed; }
+.df-repeater{ border:1px solid #e2e2e6; border-radius:14px; padding:16px; background:#fafafa; }
+.df-repeater-items{ display:flex; flex-direction:column; gap:14px; margin-top:10px; }
+.df-repeater-row{ display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:14px; background:#fff; border:1px solid #ececef; border-radius:10px; position:relative; }
+.df-repeater-row .df-field{ margin:0; }
+.df-repeater-remove{ grid-column:1/-1; justify-self:end; background:none; border:none; color:#b3261e; font-size:12.5px; font-weight:600; cursor:pointer; padding:2px 4px; }
+.df-repeater-add{ margin-top:10px; background:#fff; border:1.5px solid var(--ink); color:var(--ink); border-radius:999px; padding:9px 18px; font-weight:700; font-size:13px; cursor:pointer; }
+.df-repeater-add:hover{ background:var(--ink); color:#fff; }
+@media (max-width:600px){ .df-repeater-row{ grid-template-columns:1fr; } }
 .df-error{ color:#C0362C; font-size:12.5px; margin-top:8px; }
 .df-success{ font-size:15px; font-weight:600; padding:20px 0; }
 .df-missing{ padding:24px; background:var(--surface); border-radius:12px; color:var(--ink-45); font-size:13.5px; }
