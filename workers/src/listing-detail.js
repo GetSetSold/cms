@@ -97,6 +97,20 @@ function renderGallery(photos, address) {
     </div>`;
 }
 
+// Field names confirmed from the real rooms-metrics.js on getsetsold.ca:
+// listing.Rooms is an array of { RoomLevel, RoomType, RoomDimensions,
+// RoomLength, RoomWidth, RoomLengthWidthUnits }. RoomDimensions is a
+// pre-formatted string when present; otherwise we build "L x W units"
+// from RoomLength/RoomWidth/RoomLengthWidthUnits the same way that script does.
+function roomDimensions(r) {
+  if (r.RoomDimensions) return r.RoomDimensions;
+  if (r.RoomLength && r.RoomWidth) {
+    const units = r.RoomLengthWidthUnits || "";
+    return `${r.RoomLength} x ${r.RoomWidth}${units ? " " + units : ""}`;
+  }
+  return null;
+}
+
 function renderRooms(listing) {
   let rooms = listing.Rooms;
   if (typeof rooms === "string") {
@@ -105,9 +119,9 @@ function renderRooms(listing) {
   if (!Array.isArray(rooms) || !rooms.length) return "";
   const rows = rooms.map((r) => `
     <div class="ld-room-row">
-      <div class="ld-room-col"><div class="ld-room-label">Room</div><div>${esc(r.RoomType || r.room || "—")}</div></div>
-      <div class="ld-room-col"><div class="ld-room-label">Level</div><div>${esc(r.Level || r.level || "—")}</div></div>
-      <div class="ld-room-col"><div class="ld-room-label">Dimensions</div><div>${esc(r.Dimensions || r.dimensions || "—")}</div></div>
+      <div class="ld-room-col"><div class="ld-room-label">Room</div><div>${esc(r.RoomType || "—")}</div></div>
+      <div class="ld-room-col"><div class="ld-room-label">Level</div><div>${esc(r.RoomLevel || "—")}</div></div>
+      <div class="ld-room-col"><div class="ld-room-label">Dimensions</div><div>${esc(roomDimensions(r) || "—")}</div></div>
     </div>`).join("");
   return `
     <div class="ld-section">
@@ -178,6 +192,46 @@ function renderContactCard(listing) {
     </div>`;
 }
 
+// Directions/map — matches your real listings-directions.js: same MapTiler
+// key, a small map centered on the listing, and a button that just opens
+// Google Maps with the coordinates as the destination (no routing API).
+const MAPTILER_KEY = "Zr8EXulAyt75JJibE0ol";
+
+function renderMapDirections(listing) {
+  const lat = parseFloat(listing.Latitude);
+  const lng = parseFloat(listing.Longitude);
+  if (!lat || !lng) return "";
+  return `
+    <div class="ld-section">
+      <div class="ld-section-title">Location &amp; Directions</div>
+      <div id="ld-map" class="ld-map" data-lat="${lat}" data-lng="${lng}"></div>
+      <a class="ld-btn-secondary" style="margin-top:12px;" target="_blank"
+         href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}">Get Directions</a>
+    </div>`;
+}
+
+// Nearby places — your live site uses the Mapbox Search API for this, which
+// needs a genuine Mapbox token (different service from MapTiler, which is
+// what we actually have a key for). Since there's no Mapbox token, this
+// uses the Overpass API (OpenStreetMap) instead: free, no key required,
+// and consistent with MapTiler's own OSM-based map data. Same three
+// categories as the live site (schools, restaurants, grocery).
+function renderPoiSection(listing) {
+  const lat = parseFloat(listing.Latitude);
+  const lng = parseFloat(listing.Longitude);
+  if (!lat || !lng) return "";
+  return `
+    <div class="ld-section" id="ld-poi-section" data-lat="${lat}" data-lng="${lng}">
+      <div class="ld-section-title">What's Nearby</div>
+      <div class="ld-poi-tabs">
+        <button type="button" class="ld-poi-tab active" data-cat="school">Schools</button>
+        <button type="button" class="ld-poi-tab" data-cat="restaurant">Restaurants</button>
+        <button type="button" class="ld-poi-tab" data-cat="grocery">Grocery</button>
+      </div>
+      <div class="ld-poi-list" id="ld-poi-list"><div class="ld-hpi-loading">Loading nearby places…</div></div>
+    </div>`;
+}
+
 async function fetchSimilar(listing, env, mlsFetch) {
   if (!listing.City) return [];
   const q = `grid?select=*&City=ilike.*${encodeURIComponent(listing.City)}*&ListingKey=neq.${encodeURIComponent(listing.ListingKey || "")}&limit=4`;
@@ -244,6 +298,8 @@ export async function renderListingDetail(props, data, env, mlsFetch) {
 
         ${renderFeatures(listing)}
         ${renderRooms(listing)}
+        ${props.showMap !== false ? renderMapDirections(listing) : ""}
+        ${props.showPoi !== false ? renderPoiSection(listing) : ""}
 
         ${props.showHpi !== false ? `
         <div class="ld-section" id="ld-hpi-section" data-city="${esc(listing.City || "")}">
@@ -324,6 +380,17 @@ export async function renderListingDetail(props, data, env, mlsFetch) {
     .ld-room-col { padding:12px; border-right:1px solid ${tokens.color.line}; }
     .ld-room-col:last-child { border-right:none; }
     .ld-room-label { font-size:9px; text-transform:uppercase; letter-spacing:0.06em; color:${tokens.color.ink45}; margin-bottom:2px; }
+
+    .ld-map { height:280px; border-radius:12px; background:${tokens.color.surface}; overflow:hidden; }
+
+    .ld-poi-tabs { display:flex; gap:8px; margin-bottom:14px; }
+    .ld-poi-tab { padding:7px 14px; border-radius:999px; border:1px solid ${tokens.color.line}; background:#fff; font-family:${tokens.font.body}; font-size:12.5px; font-weight:600; color:${tokens.color.ink70}; cursor:pointer; }
+    .ld-poi-tab.active { background:${tokens.color.ink}; color:#fff; border-color:${tokens.color.ink}; }
+    .ld-poi-item { display:flex; justify-content:space-between; gap:12px; padding:12px 0; border-bottom:1px solid ${tokens.color.line}; font-size:13px; }
+    .ld-poi-item:last-child { border-bottom:none; }
+    .ld-poi-name { font-weight:600; }
+    .ld-poi-addr { font-size:12px; color:${tokens.color.ink45}; margin-top:2px; }
+    .ld-poi-dist { font-size:12.5px; color:${tokens.color.blue}; font-weight:700; white-space:nowrap; flex-shrink:0; }
 
     .ld-hpi-loading { font-size:13px; color:${tokens.color.ink45}; padding:20px; text-align:center; }
     .ld-hpi-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
@@ -431,6 +498,94 @@ export async function renderListingDetail(props, data, env, mlsFetch) {
           var loading = hpiSection.querySelector('.ld-hpi-loading');
           if (loading) loading.textContent = 'Market trend data unavailable.';
         });
+    }
+
+    // Directions map — same MapTiler key/style your live site uses
+    var mapEl = document.getElementById('ld-map');
+    if (mapEl) {
+      var lat = parseFloat(mapEl.getAttribute('data-lat'));
+      var lng = parseFloat(mapEl.getAttribute('data-lng'));
+      var mlScript = document.createElement('script');
+      mlScript.src = 'https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js';
+      var mlCss = document.createElement('link');
+      mlCss.rel = 'stylesheet';
+      mlCss.href = 'https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css';
+      document.head.appendChild(mlCss);
+      mlScript.onload = function() {
+        var map = new maplibregl.Map({
+          container: 'ld-map',
+          style: 'https://api.maptiler.com/maps/streets-v4/style.json?key=${MAPTILER_KEY}',
+          center: [lng, lat],
+          zoom: 14,
+          interactive: false,
+        });
+        map.addControl(new maplibregl.NavigationControl({ showCompass: false }));
+        new maplibregl.Marker({ color: '${tokens.color.blue}' }).setLngLat([lng, lat]).addTo(map);
+      };
+      document.head.appendChild(mlScript);
+    }
+
+    // Nearby places — Overpass API (OpenStreetMap), no key required
+    var poiSection = document.getElementById('ld-poi-section');
+    if (poiSection) {
+      var pLat = parseFloat(poiSection.getAttribute('data-lat'));
+      var pLng = parseFloat(poiSection.getAttribute('data-lng'));
+      var poiList = document.getElementById('ld-poi-list');
+      var OVERPASS_TAGS = {
+        school: '["amenity"~"school|college|university"]',
+        restaurant: '["amenity"~"restaurant|cafe|fast_food"]',
+        grocery: '["shop"~"supermarket|grocery|convenience"]',
+      };
+      var poiCache = {};
+
+      function haversineKm(la1, lo1, la2, lo2) {
+        var R = 6371, r = function(d) { return d * Math.PI / 180; };
+        var a = Math.sin(r(la2 - la1) / 2) ** 2 + Math.cos(r(la1)) * Math.cos(r(la2)) * Math.sin(r(lo2 - lo1) / 2) ** 2;
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      }
+
+      function loadPoi(cat) {
+        if (poiCache[cat]) { renderPoiList(poiCache[cat]); return; }
+        poiList.innerHTML = '<div class="ld-hpi-loading">Loading nearby places\\u2026</div>';
+        var radius = 3000; // meters
+        var q = '[out:json][timeout:15];(node' + OVERPASS_TAGS[cat] + '(around:' + radius + ',' + pLat + ',' + pLng + '););out center 20;';
+        fetch('https://overpass-api.de/api/interpreter', { method: 'POST', body: q })
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            var items = (data.elements || []).map(function(el) {
+              var tags = el.tags || {};
+              var d = haversineKm(pLat, pLng, el.lat, el.lon);
+              return {
+                name: tags.name || 'Unnamed',
+                addr: [tags['addr:housenumber'], tags['addr:street']].filter(Boolean).join(' ') || tags['addr:city'] || '',
+                dist: d,
+              };
+            }).sort(function(a, b) { return a.dist - b.dist; }).slice(0, 8);
+            poiCache[cat] = items;
+            renderPoiList(items);
+          })
+          .catch(function() {
+            poiList.innerHTML = '<div class="ld-hpi-loading">Nearby places unavailable right now.</div>';
+          });
+      }
+
+      function renderPoiList(items) {
+        if (!items.length) { poiList.innerHTML = '<div class="ld-hpi-loading">Nothing found nearby.</div>'; return; }
+        poiList.innerHTML = items.map(function(p) {
+          return '<div class="ld-poi-item"><div><div class="ld-poi-name">' + p.name + '</div>' +
+            (p.addr ? '<div class="ld-poi-addr">' + p.addr + '</div>' : '') + '</div>' +
+            '<div class="ld-poi-dist">' + p.dist.toFixed(1) + ' km</div></div>';
+        }).join('');
+      }
+
+      poiSection.querySelectorAll('.ld-poi-tab').forEach(function(tab) {
+        tab.addEventListener('click', function() {
+          poiSection.querySelectorAll('.ld-poi-tab').forEach(function(t) { t.classList.remove('active'); });
+          tab.classList.add('active');
+          loadPoi(tab.getAttribute('data-cat'));
+        });
+      });
+      loadPoi('school');
     }
   })();
   </script>`;
