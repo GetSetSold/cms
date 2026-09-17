@@ -71,11 +71,38 @@ export function tokensAsCSS() {
     .site-header .logo { font-family: var(--font-display); font-size:22px; font-weight:600; text-decoration:none; color:var(--color-ink); }
     .main-nav { display:flex; gap:28px; }
     .nav-link { font-size:14px; color: var(--color-ink-70); text-decoration:none; }
+    .header-actions { display:flex; align-items:center; gap:14px; }
+    .nav-toggle { display:none; flex-direction:column; justify-content:center; gap:5px; width:36px; height:36px; border:1px solid var(--color-line); border-radius:8px; background:transparent; cursor:pointer; padding:0; }
+    .nav-toggle span { display:block; height:2px; width:18px; margin:0 auto; background:var(--color-ink); transition:transform .2s, opacity .2s; }
+    .nav-toggle.open span:nth-child(1) { transform:translateY(7px) rotate(45deg); }
+    .nav-toggle.open span:nth-child(2) { opacity:0; }
+    .nav-toggle.open span:nth-child(3) { transform:translateY(-7px) rotate(-45deg); }
     .hero { background-size:cover; background-position:center; padding: var(--space-xl) var(--space-lg); color: var(--color-paper); }
     .stats-row { display:flex; gap: var(--space-lg); flex-wrap:wrap; }
     .stat strong { display:block; font-size: 1.5rem; font-family:var(--font-display); }
     .lead-form { display:flex; flex-direction:column; gap: var(--space-xs); max-width: 480px; }
     .lead-form input, .lead-form textarea { padding: 0.75rem; border:1px solid var(--color-line); border-radius: var(--radius-sm); font-family:inherit; }
     .site-footer { padding: var(--space-lg); background: var(--color-ink); color: var(--color-paper); text-align:center; }
+
+    /* ═══ Responsive — shell/header/footer ═══ */
+    @media (max-width: 900px) {
+      .site-header { padding: var(--space-xs) var(--space-sm); flex-wrap:wrap; }
+      .nav-toggle { display:flex; }
+      .main-nav {
+        display:none; position:absolute; top:100%; left:0; right:0;
+        flex-direction:column; gap:0; background:var(--color-paper);
+        border-bottom:1px solid var(--color-line); padding: var(--space-xs) var(--space-sm);
+        box-shadow:0 8px 20px rgba(11,11,13,0.08); z-index:40;
+      }
+      .main-nav.open { display:flex; }
+      .main-nav .nav-link { padding:12px 4px; border-bottom:1px solid var(--color-line); }
+      .main-nav .nav-link:last-child { border-bottom:none; }
+      .site-header { position:relative; }
+    }
+    @media (max-width: 600px) {
+      .site-header .logo { font-size:18px; }
+      .hero { padding: var(--space-lg) var(--space-sm); }
+      .header-actions .btn-accent { padding:8px 14px; font-size:12px; }
+    }
   `;
 }
