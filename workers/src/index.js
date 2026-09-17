@@ -407,7 +407,11 @@ async function handleLeadSubmission(request, env) {
 async function handleListingsSearchRequest(url, env) {
   const params = url.searchParams;
   const city = params.get("city") || "";
-  const type = params.get("type") || "all"; // all | sale | rent
+  // `listingType` (sale | lease) is the real param name used site-wide in
+  // your URLs (?city=Hamilton&listingType=lease) — `type` (all|sale|rent)
+  // is kept as a fallback for anything still calling the old shape.
+  const listingType = params.get("listingType") || (params.get("type") === "rent" ? "lease" : params.get("type")) || "";
+  const type = listingType === "lease" ? "rent" : listingType === "sale" ? "sale" : "all";
   const beds = parseInt(params.get("beds"), 10) || 0;
   const priceMin = parseInt(params.get("priceMin"), 10) || 0;
   const priceMax = parseInt(params.get("priceMax"), 10) || 0;
