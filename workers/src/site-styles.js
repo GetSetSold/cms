@@ -14,7 +14,12 @@ export const siteStyles = `
   --blue:#2451E0; --blue-dim:#EDF1FD;
 }
 *{box-sizing:border-box;}
-body{ margin:0; font-family:'Manrope',sans-serif; color:var(--ink); background:var(--paper); }
+html{ height:100%; }
+/* Sticky footer: body is a column flex container so a short page's footer
+   still sits at the bottom of the viewport (margin-top:auto on the footer
+   below fills the remaining space) instead of leaving a gap of background
+   under it, while a tall page just flows normally with no extra space. */
+body{ margin:0; min-height:100vh; display:flex; flex-direction:column; font-family:'Manrope',sans-serif; color:var(--ink); background:var(--paper); }
 h1,h2,h3{ font-family:'Fraunces',serif; margin:0; font-weight:500; letter-spacing:-0.01em; }
 a{ color:inherit; text-decoration:none; }
 button, input{ font-family:inherit; }
@@ -50,7 +55,7 @@ img{ max-width:100%; display:block; }
 .nav-sublink{ color:var(--ink-45); font-size:13.5px; font-weight:600; padding:8px 0; text-decoration:none; }
 .nav-sublink:hover{ color:var(--blue); }
 
-.site-footer{ padding:40px 56px; border-top:1px solid var(--line); font-size:12.5px; color:var(--ink-45); }
+.site-footer{ padding:40px 56px; border-top:1px solid var(--line); font-size:12.5px; color:var(--ink-45); margin-top:auto; }
 .logo-img{ height:32px; width:auto; display:block; }
 .footer-links{ margin-top:8px; display:flex; flex-wrap:wrap; gap:14px; }
 .footer-link{ color:var(--ink-70); text-decoration:none; font-weight:600; font-size:13px; }
@@ -142,6 +147,18 @@ img{ max-width:100%; display:block; }
 .filter-bar{ display:flex; gap:10px; padding:14px 18px; background:var(--surface); border-radius:14px; margin-bottom:24px; }
 .filter-pill{ padding:8px 16px; border-radius:999px; font-size:12.5px; font-weight:600; border:none; background:transparent; color:var(--ink-70); cursor:pointer; }
 .filter-pill.active{ background:var(--ink); color:#fff; }
+.filter-select, .filter-input{ padding:9px 14px; border-radius:10px; border:1px solid var(--line); background:#fff; font-size:13px; color:var(--ink); font-family:inherit; }
+.filter-select:focus, .filter-input:focus{ outline:none; border-color:var(--ink-45); }
+.filter-input{ width:110px; }
+.btn-outline-sm{ padding:8px 16px; border-radius:999px; border:1px solid var(--line); background:#fff; color:var(--ink-70); font-size:12.5px; font-weight:600; cursor:pointer; }
+.btn-outline-sm:hover{ border-color:var(--ink-45); color:var(--ink); }
+.pagination-row{ display:flex; justify-content:center; align-items:center; gap:6px; margin:32px 0; flex-wrap:wrap; }
+.page-btn{ min-width:38px; height:38px; padding:0 10px; border-radius:10px; border:1px solid var(--line); background:#fff; color:var(--ink-70); font-size:13px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; }
+.page-btn:hover{ border-color:var(--ink-45); color:var(--ink); }
+.page-btn.active{ background:var(--ink); color:#fff; border-color:var(--ink); }
+.page-btn:disabled{ opacity:.4; cursor:not-allowed; }
+.page-ellipsis{ padding:0 6px; color:var(--ink-45); font-size:13px; }
+.empty-state{ text-align:center; padding:60px 20px; color:var(--ink-45); font-size:14px; }
 
 /* map_split_search */
 .map-split{ display:flex; height:820px; padding:0; max-width:none; }
