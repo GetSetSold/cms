@@ -41,6 +41,10 @@ async function mlsFetch(env, path, init = {}) {
 // Fetches live MLS data for the 3 block types that need it. Called by
 // renderBlocks() via the dataFetcher param — see blocks.js's DATA_BLOCK_TYPES.
 async function fetchBlockData(type, props, env) {
+  if (!env.MLS_SUPABASE_URL || !env.MLS_SUPABASE_SERVICE_ROLE_KEY) {
+    console.error(`fetchBlockData(${type}): MLS_SUPABASE_URL or MLS_SUPABASE_SERVICE_ROLE_KEY is missing from env`);
+    return type === "listing_grid" ? { listings: [], total: 0 } : type === "map_split_search" ? { listings: [] } : [];
+  }
   if (type === "featured_listings") {
     const count = props.count || 3;
 
@@ -89,9 +93,17 @@ async function fetchBlockData(type, props, env) {
 }
 
 async function fetchListingDetail(listingKey, env) {
+  if (!env.MLS_SUPABASE_URL || !env.MLS_SUPABASE_SERVICE_ROLE_KEY) {
+    console.error("fetchListingDetail: MLS_SUPABASE_URL or MLS_SUPABASE_SERVICE_ROLE_KEY is missing from env");
+    return null;
+  }
   const res = await mlsFetch(env, `property?ListingKey=eq.${encodeURIComponent(listingKey)}&select=*`);
-  if (!res.ok) return null;
+  if (!res.ok) {
+    console.error("fetchListingDetail failed:", res.status, await res.text());
+    return null;
+  }
   const rows = await res.json();
+  if (!rows.length) console.error("fetchListingDetail: no property row for ListingKey", listingKey);
   return rows[0] || null;
 }
 
