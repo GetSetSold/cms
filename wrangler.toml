@@ -1,5 +1,5 @@
 name = "cms"
-main = "src/index.js"
+main = "workers/src/index.js"
 compatibility_date = "2026-09-01"
 
 # Set these via `wrangler secret put` — never commit real values:
