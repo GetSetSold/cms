@@ -29,6 +29,11 @@ img{ max-width:100%; display:block; }
 .btn-primary{ background:var(--blue); width:100%; margin-bottom:10px; text-align:center; }
 .btn-outline{ background:transparent; border:1px solid var(--line); color:var(--ink); width:100%; text-align:center; }
 .site-footer{ padding:40px 56px; border-top:1px solid var(--line); font-size:12.5px; color:var(--ink-45); }
+.logo-img{ height:32px; width:auto; display:block; }
+.footer-social{ margin-top:8px; display:flex; gap:14px; }
+.footer-social-link{ color:var(--ink-45); text-decoration:none; font-weight:600; }
+.footer-social-link:hover{ color:var(--blue); }
+.footer-license{ margin-top:8px; font-size:11px; color:var(--ink-45); }
 
 /* Shared block scaffolding */
 .block{ padding:56px; max-width:1440px; margin:0 auto; }
