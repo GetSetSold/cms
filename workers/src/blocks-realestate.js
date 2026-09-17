@@ -232,7 +232,7 @@ export function listing_grid(props, data) {
   const defaultType = props.defaultType || 'all';
 
   return `
-  <section class="block listing-grid-page" id="${id}">
+  <section class="block-full listing-grid-page" id="${id}">
     <div class="section-head">
       <div>
         <h1>${props.heading || 'Listings'}</h1>
