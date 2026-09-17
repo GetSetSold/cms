@@ -21,13 +21,35 @@ button, input{ font-family:inherit; }
 img{ max-width:100%; display:block; }
 
 /* Header / footer */
-.site-header{ height:76px; display:flex; align-items:center; justify-content:space-between; padding:0 56px; border-bottom:1px solid var(--line); }
-.logo{ font-family:'Fraunces',serif; font-size:22px; font-weight:600; }
-.site-nav{ display:flex; gap:28px; font-size:14px; color:var(--ink-70); }
+.site-header{ height:76px; display:flex; align-items:center; justify-content:space-between; padding:0 56px; border-bottom:1px solid var(--line); gap:20px; position:relative; z-index:40; background:#fff; }
+.logo{ font-family:'Fraunces',serif; font-size:22px; font-weight:600; flex-shrink:0; }
+.main-nav{ display:flex; align-items:center; gap:26px; font-size:14px; color:var(--ink-70); flex:1; justify-content:center; }
+.nav-link{ color:var(--ink-70); text-decoration:none; font-weight:600; background:none; border:none; font-size:14px; font-family:inherit; cursor:pointer; padding:0; display:flex; align-items:center; gap:4px; }
+.nav-link:hover{ color:var(--ink); }
+.header-actions{ display:flex; align-items:center; gap:14px; flex-shrink:0; }
 .btn{ border:none; border-radius:999px; padding:11px 22px; font-size:13px; font-weight:600; cursor:pointer; display:inline-block; }
 .btn-dark, .btn-primary{ background:var(--ink); color:#fff; }
 .btn-primary{ background:var(--blue); width:100%; margin-bottom:10px; text-align:center; }
 .btn-outline{ background:transparent; border:1px solid var(--line); color:var(--ink); width:100%; text-align:center; }
+.btn-accent{ background:var(--blue); color:#fff; padding:10px 20px; }
+.btn-accent:hover{ background:var(--ink); }
+
+/* Mobile hamburger (3-bar, animates to X when open) */
+.nav-toggle{ display:none; flex-direction:column; justify-content:center; gap:5px; width:36px; height:36px; background:none; border:none; cursor:pointer; padding:0; }
+.nav-toggle span{ display:block; height:2px; width:22px; background:var(--ink); border-radius:2px; transition:transform .2s ease, opacity .2s ease; }
+.nav-toggle.open span:nth-child(1){ transform:translateY(7px) rotate(45deg); }
+.nav-toggle.open span:nth-child(2){ opacity:0; }
+.nav-toggle.open span:nth-child(3){ transform:translateY(-7px) rotate(-45deg); }
+
+/* Accordion-style submenu (mobile_menu_style: 'accordion') — items with
+   children render as a +/- collapsible group instead of a plain link. */
+.nav-item-toggle{ justify-content:space-between; width:100%; }
+.nav-toggle-sign{ font-size:16px; font-weight:400; color:var(--ink-45); }
+.nav-submenu{ display:none; flex-direction:column; gap:2px; padding-left:14px; }
+.nav-item-group.open .nav-submenu{ display:flex; }
+.nav-sublink{ color:var(--ink-45); font-size:13.5px; font-weight:600; padding:8px 0; text-decoration:none; }
+.nav-sublink:hover{ color:var(--blue); }
+
 .site-footer{ padding:40px 56px; border-top:1px solid var(--line); font-size:12.5px; color:var(--ink-45); }
 .logo-img{ height:32px; width:auto; display:block; }
 .footer-links{ margin-top:8px; display:flex; flex-wrap:wrap; gap:14px; }
@@ -179,6 +201,31 @@ img{ max-width:100%; display:block; }
   .block{ padding:40px 28px; }
   .cta-band{ margin:32px 28px; padding:36px; }
 
+  /* Header nav: 3 mobile styles picked in the admin's Menu & Footer tab
+     (settings.mobile_menu_style). 'simple' has no hamburger — see the
+     non-.main-nav-simple rule right after, which only hides+collapses the
+     other two styles. */
+  .site-header{ padding:0 20px; flex-wrap:wrap; height:auto; min-height:76px; }
+  .nav-toggle{ display:flex; }
+  .main-nav-overlay, .main-nav-accordion{
+    position:absolute; top:76px; left:0; right:0; background:#fff; border-bottom:1px solid var(--line);
+    flex-direction:column; align-items:stretch; gap:0; max-height:0; overflow:hidden; transition:max-height .25s ease;
+  }
+  .main-nav-overlay.open, .main-nav-accordion.open{ max-height:80vh; overflow-y:auto; }
+  .main-nav-overlay .nav-link, .main-nav-accordion .nav-link{ padding:14px 20px; border-bottom:1px solid var(--line); }
+  .main-nav-accordion .nav-item-group{ border-bottom:1px solid var(--line); }
+  .main-nav-accordion .nav-item-toggle{ padding:14px 20px; border-bottom:none; }
+  .main-nav-accordion .nav-submenu{ padding:0 20px 10px 32px; }
+
+  /* 'simple': always-visible horizontally scrollable pill strip, no
+     hamburger — flows in normal document order (not overlaid) so it pushes
+     the page content down instead of covering it. */
+  .main-nav-simple{
+    order:3; width:100%; flex-basis:100%;
+    display:flex; flex-wrap:nowrap; justify-content:flex-start; gap:8px; padding:12px 0 4px; margin:0 -20px; padding-left:20px; overflow-x:auto;
+  }
+  .main-nav-simple .nav-link{ flex-shrink:0; background:var(--surface); padding:8px 14px; border-radius:999px; white-space:nowrap; }
+
   .hero-search{ padding:64px 28px 48px; }
   .hero-search h1{ font-size:38px; }
   .search-bar{ width:100%; }
@@ -261,6 +308,7 @@ img{ max-width:100%; display:block; }
      collapses to one column regardless of the section's configured count. */
   .df-grid{ grid-template-columns:1fr !important; }
   .df-field{ grid-column:1 / -1 !important; }
+  .df-wrap{ padding:22px 18px; border-radius:12px; }
 }
 `;
 
@@ -268,8 +316,9 @@ img{ max-width:100%; display:block; }
    0008_lead_forms.sql) — appended here rather than inlined per-block since
    this can appear on any page and should look consistent everywhere. */
 export const dynamicFormStyles = `
-.df-wrap{ max-width:640px; }
-.df-heading{ margin-bottom:20px; }
+.df-block{ background:var(--surface); }
+.df-wrap{ max-width:640px; margin:0 auto; background:#fff; border:1px solid var(--line); border-radius:16px; padding:32px 36px; }
+.df-heading{ margin-bottom:20px; font-size:22px; }
 .df-section{ margin-bottom:28px; }
 .df-section:last-of-type{ margin-bottom:20px; }
 .df-section-title{ font-family:var(--font-display); font-size:16px; margin:0 0 6px; }
