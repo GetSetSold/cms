@@ -32,10 +32,20 @@ function fieldName(q) {
 // nameOverride/qidOverride let renderQuestion double as the renderer for a
 // repeater instance's child fields, where the real `name`/`data-qid` need an
 // index baked in (see renderRepeater below) instead of the plain field key.
-function renderQuestion(q, nameOverride, qidOverride) {
+// spanFor(): how many of the section's grid columns this question occupies.
+// column_width is '1col' (occupies one column), '2col' (occupies two,
+// clamped to however many the section actually has), or 'full' (spans every
+// column in the section — always a full row on its own).
+function spanFor(columnWidth, sectionColumns) {
+  if (columnWidth === "full" || !columnWidth) return sectionColumns;
+  if (columnWidth === "2col") return Math.min(2, sectionColumns);
+  return 1; // '1col'
+}
+
+function renderQuestion(q, nameOverride, qidOverride, sectionColumns = 2) {
   if (q.type === "section_header") {
     return `
-      <div class="df-field df-full df-header-field">
+      <div class="df-field df-header-field" style="grid-column:span ${sectionColumns};">
         <h4 class="df-header-label">${esc(q.label)}</h4>
         ${q.help_text ? `<p class="df-help">${esc(q.help_text)}</p>` : ""}
       </div>`;
@@ -75,14 +85,17 @@ function renderQuestion(q, nameOverride, qidOverride) {
     inputHtml = `<input type="${INPUT_TYPE[q.type] || "text"}" name="${escAttr(name)}" data-qid="${qid}" placeholder="${escAttr(q.placeholder || "")}" ${required}>`;
   }
 
-  const widthClass = q.column_width === "1col" ? "df-half" : "df-full";
-  const conditional = q.show_if_question_id
-    ? `data-show-if-q="${q.show_if_question_id}" data-show-if-v="${escAttr(q.show_if_value || "")}" style="display:none;"`
-    : "";
+  const span = spanFor(q.column_width, sectionColumns);
+  // grid-column and display:none (for a conditional field, hidden until its
+  // trigger question matches) both need to land in the same style attr.
+  const spanStyle = `grid-column:span ${span};`;
+  const styleAttr = q.show_if_question_id
+    ? `style="${spanStyle}display:none;" data-show-if-q="${q.show_if_question_id}" data-show-if-v="${escAttr(q.show_if_value || "")}"`
+    : `style="${spanStyle}"`;
   const showLabel = q.type !== "checkbox";
 
   return `
-    <div class="df-field ${widthClass}" data-question-id="${qid}" ${conditional}>
+    <div class="df-field" data-question-id="${qid}" ${styleAttr}>
       ${showLabel ? `<label class="df-label">${esc(q.label)}${q.required ? " *" : ""}</label>` : ""}
       ${inputHtml}
       ${q.help_text && showLabel ? `<div class="df-help">${esc(q.help_text)}</div>` : ""}
@@ -96,22 +109,24 @@ function renderQuestion(q, nameOverride, qidOverride) {
 // { source_question_id, min, max }: when source_question_id is set, the
 // instance count tracks that (numeric) question's live value; otherwise the
 // user manually adds/removes rows within [min, max].
-function renderRepeater(q, children) {
+function renderRepeater(q, children, sectionColumns = 2) {
   const opts = q.options && !Array.isArray(q.options) ? q.options : {};
   const min = Number.isFinite(opts.min) ? opts.min : 0;
   const max = Number.isFinite(opts.max) ? opts.max : 10;
   const sourceId = opts.source_question_id || "";
 
   // __IDX__ is replaced client-side with the instance number when a new
-  // repeated row is rendered.
+  // repeated row is rendered. Repeater children always render 2-up inside
+  // their own row regardless of the parent section's column count (see
+  // .df-repeater-row in site-styles.js), so they get a fixed span of 1.
   const templateFields = children
     .slice()
     .sort((a, b) => (a.position || 0) - (b.position || 0))
-    .map((child) => renderQuestion(child, `rep_${q.id}__IDX__${fieldName(child)}`, `${child.id}__IDX__`))
+    .map((child) => renderQuestion(child, `rep_${q.id}__IDX__${fieldName(child)}`, `${child.id}__IDX__`, 2))
     .join("");
 
   return `
-    <div class="df-field df-full df-repeater" data-repeater-id="${q.id}" data-repeater-source="${escAttr(sourceId)}" data-repeater-min="${min}" data-repeater-max="${max}">
+    <div class="df-field df-repeater" style="grid-column:span ${sectionColumns};" data-repeater-id="${q.id}" data-repeater-source="${escAttr(sourceId)}" data-repeater-min="${min}" data-repeater-max="${max}">
       <label class="df-label">${esc(q.label)}${q.required ? " *" : ""}</label>
       ${q.help_text ? `<div class="df-help">${esc(q.help_text)}</div>` : ""}
       <template class="df-repeater-template">${templateFields}</template>
@@ -140,14 +155,15 @@ export function renderDynamicForm(props = {}, form) {
       .filter((q) => !q.parent_question_id)
       .slice()
       .sort((a, b) => (a.position || 0) - (b.position || 0));
+    const sectionColumns = Number.isFinite(sec.columns) && sec.columns >= 1 && sec.columns <= 3 ? sec.columns : 2;
     const fieldsHtml = questions
-      .map((q) => (q.type === "repeater" ? renderRepeater(q, childrenByParent[q.id] || []) : renderQuestion(q)))
+      .map((q) => (q.type === "repeater" ? renderRepeater(q, childrenByParent[q.id] || [], sectionColumns) : renderQuestion(q, undefined, undefined, sectionColumns)))
       .join("");
     return `
       <div class="df-section">
         ${sec.title ? `<h3 class="df-section-title">${esc(sec.title)}</h3>` : ""}
         ${sec.description ? `<p class="df-section-desc">${esc(sec.description)}</p>` : ""}
-        <div class="df-grid">${fieldsHtml}</div>
+        <div class="df-grid" style="grid-template-columns:repeat(${sectionColumns}, 1fr);">${fieldsHtml}</div>
       </div>`;
   }).join("");
 
