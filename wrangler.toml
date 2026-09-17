@@ -14,4 +14,4 @@ compatibility_date = "2026-09-01"
 #
 # [vars] section is for non-secret config only.
 [vars]
-SITE_NAME = "GetSetSold.ca"
+SITE_NAME = "getsetsold.ca"
