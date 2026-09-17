@@ -291,6 +291,28 @@ async function tryRenderStandaloneForm(pathname, env, dataFetcher) {
   return new Response(html, { headers: { "content-type": "text/html;charset=UTF-8" } });
 }
 
+// Serves the calculators.html hub byte-for-byte from static_pages (key
+// 'calculators') — not wrapped in our own pageShell/header_nav/footer,
+// because the file already ships its own complete <html>/<head> (fonts,
+// SEO meta, JSON-LD, its own header/footer includes) and wrapping it a
+// second time would nest two documents. The file's own JS reads
+// window.location.pathname to open the right calculator tab for any
+// /calculators/<slug>, so this handler doesn't need to know the 14 slugs
+// itself — see calculators-catalog.js for the human-readable list used in
+// the admin UI and the Menu & Footer link picker instead.
+async function handleCalculatorsRequest(env) {
+  const res = await supabaseFetch(env, `static_pages?key=eq.calculators&select=html&limit=1`);
+  if (!res.ok) return new Response("Error loading calculators page", { status: 500 });
+  const rows = await res.json();
+  if (!rows.length || !rows[0].html) {
+    return new Response(
+      "Calculators hub isn't set up yet — paste the calculators.html source into Admin → Calculators and save.",
+      { status: 404, headers: { "content-type": "text/plain;charset=UTF-8" } }
+    );
+  }
+  return new Response(rows[0].html, { headers: { "content-type": "text/html;charset=UTF-8" } });
+}
+
 async function handleListingDetailRequest(listingKey, env) {
   const property = await fetchListingDetail(listingKey, env);
   if (!property) return new Response("Listing not found", { status: 404 });
@@ -563,6 +585,16 @@ export default {
     if (url.pathname === "/api/cities") {
       if (request.method === "OPTIONS") return new Response(null, { headers: CORS_HEADERS });
       return handleCitiesRequest(env);
+    }
+
+    // Calculators hub — served as a single static HTML page (see
+    // 0014_static_pages.sql / the admin's Calculators tab), not CMS blocks:
+    // the uploaded calculators.html already has its own routing baked in
+    // (it reads /calculators/<slug> itself and opens the matching tab), so
+    // /calculators and every /calculators/<slug> both just need the exact
+    // same bytes served back — no per-slug lookup needed here.
+    if (url.pathname === "/calculators" || url.pathname.startsWith("/calculators/")) {
+      return handleCalculatorsRequest(env);
     }
 
     const listingMatch = url.pathname.match(/^\/listings\/([A-Za-z0-9-]+)$/);
