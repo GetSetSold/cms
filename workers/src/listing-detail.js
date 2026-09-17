@@ -93,6 +93,24 @@ function statPill(label, value) {
   return `<div class="ld-stat"><div class="ld-stat-value">${esc(String(value))}</div><div class="ld-stat-label">${esc(label)}</div></div>`;
 }
 
+// Small inline icon set for the hero header's stat grid — ported concept
+// from hero-container.js's Material Icons grid (bed/bath/parking/sqft/dom/
+// type), redrawn as inline SVGs so we're not pulling in a Material Icons
+// font just for six glyphs.
+const HERO_ICONS = {
+  bed: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 18v-7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v7M3 18v2M21 18v2M3 13h18M6 13v-2a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`,
+  bath: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 12h16v2a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5v-2ZM4 12V6a2 2 0 0 1 2-2 2 2 0 0 1 2 2M2 19h20"/></svg>`,
+  parking: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 16V7h3.5a2.5 2.5 0 0 1 0 5H9"/></svg>`,
+  sqft: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 8V3h5M21 8V3h-5M3 16v5h5M21 16v5h-5"/></svg>`,
+  dom: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>`,
+  type: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11 12 3l9 8M5 10v10h14V10"/></svg>`,
+};
+
+function heroStat(icon, value, label) {
+  if (value == null || value === "") return "";
+  return `<span class="ld-hero-stat"><i>${HERO_ICONS[icon] || ""}</i><span class="ld-hero-stat-value">${esc(String(value))}</span><span class="ld-hero-stat-label">${esc(label)}</span></span>`;
+}
+
 // Gallery — uses Fancybox (same library/CDN as your real
 // listings-thumbnail-fancybox.js) instead of a hand-rolled lightbox: real
 // pinch-zoom, a proper toolbar (zoom/fullscreen/download/close), and one
@@ -330,11 +348,13 @@ export async function renderListingDetail(props, data, env, mlsFetch) {
 
   const similar = mlsFetch ? await fetchSimilar(listing, env, mlsFetch) : [];
 
-  const statsHtml = [
-    statPill("Beds", listing.BedroomsTotal),
-    statPill("Baths", listing.BathroomsTotalInteger),
-    statPill("Parking", listing.ParkingTotal),
-    statPill("Sqft", listing.AboveGradeFinishedArea ? Number(listing.AboveGradeFinishedArea).toLocaleString() : null),
+  const heroStatsHtml = [
+    heroStat("bed", listing.BedroomsTotal, "Beds"),
+    heroStat("bath", listing.BathroomsTotalInteger, "Baths"),
+    heroStat("parking", listing.ParkingTotal, "Parking"),
+    heroStat("sqft", listing.AboveGradeFinishedArea ? Number(listing.AboveGradeFinishedArea).toLocaleString() : null, "Sqft"),
+    heroStat("dom", dom != null ? dom : null, dom === 1 ? "Day on Market" : "Days on Market"),
+    heroStat("type", listing.StructureType || listing.PropertySubType, "Type"),
   ].join("");
 
   return `
@@ -345,16 +365,19 @@ export async function renderListingDetail(props, data, env, mlsFetch) {
 
     <div class="ld-layout">
       <div class="ld-main">
-        <div class="ld-price-hero">
-          <div class="ld-status-tag ${sale ? "sale" : "rent"}">${sale ? "For Sale" : "For Rent"}</div>
-          <div class="ld-price">${esc(priceDisplay(listing))}</div>
-          <div class="ld-address">${esc(listing.UnparsedAddress || "")}${listing.City ? ", " + esc(listing.City) : ""}${listing.Province ? ", " + esc(listing.Province) : ""} ${esc(listing.PostalCode || "")}</div>
-          ${dom != null ? `<div class="ld-dom">Listed ${dom}${dom === 1 ? " day" : " days"} ago</div>` : ""}
+        <div class="ld-hero-header">
+          <div class="ld-hero-left">
+            <span class="ld-status-tag ${sale ? "sale" : "rent"}">${sale ? "For Sale" : "For Rent"}</span>
+            <div class="ld-price">${esc(priceDisplay(listing))}</div>
+            <div class="ld-address">${esc(listing.UnparsedAddress || "")}${listing.City ? ", " + esc(listing.City) : ""}</div>
+            <div class="ld-mls">MLS® ${esc(listing.ListingKey || listing.ListingId || "")}${listing.OfficeName ? " | " + esc(listing.OfficeName) : ""}</div>
+          </div>
+          <div class="ld-hero-right">
+            <div class="ld-hero-stats">${heroStatsHtml}</div>
+          </div>
         </div>
 
         ${props.showCashback !== false ? renderCashbackBanner(listing) : ""}
-
-        <div class="ld-stats-bar">${statsHtml}</div>
 
         ${listing.PublicRemarks ? `
         <div class="ld-section">
@@ -391,10 +414,12 @@ export async function renderListingDetail(props, data, env, mlsFetch) {
     .ld-wrap { max-width: 1180px; margin: 0 auto; padding: 20px 16px 60px; font-family: ${tokens.font.body}; color: ${tokens.color.ink}; }
     @media (max-width: 600px) {
       .ld-wrap { padding: 14px 12px 40px; }
-      .ld-price-hero, .ld-card, .ld-section { padding: 16px 16px; }
+      .ld-card, .ld-section { padding: 16px 16px; }
       .ld-price { font-size: 1.5rem; }
-      .ld-stats-bar { grid-template-columns: repeat(2,1fr); }
-      .ld-stat { padding: 12px 8px; border-bottom: 1px solid ${tokens.color.line}; }
+      .ld-hero-header { flex-direction: column; align-items: stretch; padding: 18px 16px; }
+      .ld-hero-left, .ld-hero-right { flex: 0 0 100%; width: 100%; }
+      .ld-hero-stats { grid-template-columns: repeat(3,1fr); gap: 8px; margin-top: 16px; }
+      .ld-hero-stat { padding: 8px 4px 10px; }
       .ld-features-grid { grid-template-columns: 1fr; }
       .ld-room-row { grid-template-columns: 1fr; }
       .ld-room-col { border-right: none; border-bottom: 1px solid ${tokens.color.line}; }
@@ -415,19 +440,29 @@ export async function renderListingDetail(props, data, env, mlsFetch) {
     .ld-layout { display:grid; grid-template-columns: 1fr 340px; gap: 32px; align-items:start; }
     @media (max-width: 900px) { .ld-layout { grid-template-columns: 1fr; } }
 
-    .ld-price-hero, .ld-card, .ld-section { background:#fff; border:1px solid ${tokens.color.line}; border-radius:16px; padding:20px 22px; margin-bottom:16px; }
-    .ld-status-tag { display:inline-block; padding:3px 10px; border-radius:4px; font-size:11px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; margin-bottom:10px; color:#fff; }
-    .ld-status-tag.sale { background:${tokens.color.blue}; }
-    .ld-status-tag.rent { background:${tokens.color.ink}; }
-    .ld-price { font-family:${tokens.font.display}; font-size:2rem; font-weight:600; margin-bottom:6px; }
-    .ld-address { font-size:15px; color:${tokens.color.ink70}; }
-    .ld-dom { font-size:12px; color:${tokens.color.ink45}; margin-top:10px; padding-top:10px; border-top:1px solid ${tokens.color.line}; }
+    .ld-card, .ld-section { background:#fff; border:1px solid ${tokens.color.line}; border-radius:16px; padding:20px 22px; margin-bottom:16px; }
 
-    .ld-stats-bar { display:grid; grid-template-columns:repeat(4,1fr); background:#fff; border:1px solid ${tokens.color.line}; border-radius:16px; overflow:hidden; margin-bottom:16px; }
-    .ld-stat { padding:16px 10px; text-align:center; border-right:1px solid ${tokens.color.line}; }
-    .ld-stat:last-child { border-right:none; }
-    .ld-stat-value { font-family:${tokens.font.display}; font-size:1.1rem; font-weight:600; color:${tokens.color.blue}; }
-    .ld-stat-label { font-size:10px; text-transform:uppercase; letter-spacing:0.06em; color:${tokens.color.ink45}; margin-top:2px; }
+    /* Hero header — concept ported from your real hero-container.js /
+       hero-header.css (dark banner, price+address left / stat-icon grid
+       right, 3-per-row on mobile), redrawn in our brand tokens (ink/blue,
+       Fraunces/Manrope) instead of the old navy/Roboto theme. */
+    .ld-hero-header { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:20px; background:${tokens.color.ink}; color:#fff; border-radius:16px; padding:26px 28px; margin-bottom:16px; }
+    .ld-hero-left { flex:1 1 320px; }
+    .ld-status-tag { display:inline-block; padding:4px 11px; border-radius:4px; font-size:11px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; margin-bottom:12px; color:#fff; }
+    .ld-status-tag.sale { background:${tokens.color.success}; }
+    .ld-status-tag.rent { background:${tokens.color.warning}; }
+    .ld-price { font-family:${tokens.font.display}; font-size:2.1rem; font-weight:600; margin-bottom:6px; color:#fff; }
+    .ld-address { font-size:16px; color:#fff; opacity:0.92; margin-bottom:10px; }
+    .ld-mls { font-size:12px; color:#fff; opacity:0.7; }
+
+    .ld-hero-right { flex:1 1 320px; }
+    .ld-hero-stats { display:grid; grid-template-columns:repeat(6,1fr); gap:6px; }
+    .ld-hero-stat { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; background:rgba(255,255,255,0.08); border-radius:8px; padding:10px 4px 12px; text-align:center; }
+    .ld-hero-stat i { display:flex; width:22px; height:22px; color:#fff; opacity:0.85; }
+    .ld-hero-stat i svg { width:100%; height:100%; }
+    .ld-hero-stat-value { font-family:${tokens.font.display}; font-size:0.95rem; font-weight:700; color:${tokens.color.blue}; }
+    .ld-hero-stat-label { font-size:10px; text-transform:uppercase; letter-spacing:0.04em; color:#fff; opacity:0.75; }
+    @media (min-width: 1024px) { .ld-hero-stats { justify-content:center; } }
 
     .ld-section-title { font-family:${tokens.font.display}; font-size:1.1rem; font-weight:600; margin-bottom:14px; padding-bottom:10px; border-bottom:1px solid ${tokens.color.line}; }
     .ld-description { font-size:14px; line-height:1.75; color:${tokens.color.ink70}; white-space:pre-line; }
