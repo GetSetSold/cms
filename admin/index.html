@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>GetSetSold Admin — CRM + Page Builder</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+  :root { --black:#0a0a0a; --white:#fff; --blue:#2563eb; --blue-dark:#1d4ed8; --grey:#f5f5f5; --border:#d4d4d4; }
+  * { box-sizing: border-box; }
+  body { font-family: system-ui, sans-serif; margin:0; color: var(--black); background: var(--grey); }
+  header { background: var(--black); color: var(--white); padding: 1rem 1.5rem; display:flex; justify-content:space-between; align-items:center; }
+  header h1 { font-size: 1.1rem; margin:0; }
+  nav { display:flex; gap: 1rem; }
+  nav button { background:none; border:none; color:var(--white); cursor:pointer; font-size:0.95rem; padding: 0.4rem 0.8rem; border-radius:6px; }
+  nav button.active, nav button:hover { background: var(--blue); }
+  main { padding: 1.5rem; max-width: 1000px; margin: 0 auto; }
+  .card { background:var(--white); border:1px solid var(--border); border-radius:8px; padding:1rem; margin-bottom:1rem; }
+  table { width:100%; border-collapse: collapse; }
+  th, td { text-align:left; padding: 0.5rem; border-bottom:1px solid var(--border); font-size:0.9rem; }
+  .btn { background: var(--blue); color:#fff; border:none; padding:0.5rem 1rem; border-radius:6px; cursor:pointer; }
+  .btn:hover { background: var(--blue-dark); }
+  .btn-outline { background:transparent; border:1px solid var(--black); color:var(--black); }
+  input, select, textarea { width:100%; padding:0.5rem; margin-bottom:0.5rem; border:1px solid var(--border); border-radius:6px; font-family:inherit; }
+  .status-badge { padding: 0.15rem 0.5rem; border-radius: 4px; font-size:0.75rem; }
+  .status-new { background:#dbeafe; color:#1d4ed8; }
+  .status-contacted { background:#fef3c7; color:#92400e; }
+  .status-qualified { background:#d1fae5; color:#065f46; }
+  .status-won { background:#059669; color:#fff; }
+  .status-lost { background:#e5e5e5; color:#525252; }
+  #login-view { max-width: 360px; margin: 4rem auto; }
+  .block-row { display:flex; justify-content:space-between; align-items:center; padding:0.5rem; border:1px solid var(--border); border-radius:6px; margin-bottom:0.5rem; }
+  .hidden { display:none; }
+  .field-hint { font-size:0.75rem; color:#525252; margin:-0.35rem 0 0.5rem; }
+</style>
+</head>
+<body>
+
+<div id="login-view" class="card hidden">
+  <h2>GetSetSold Admin Login</h2>
+  <input id="login-email" type="email" placeholder="Email" />
+  <input id="login-password" type="password" placeholder="Password" />
+  <button class="btn" onclick="login()">Log In</button>
+  <p id="login-error" style="color:red;"></p>
+</div>
+
+<div id="app-view" class="hidden">
+  <header>
+    <h1>GetSetSold — CRM + Page Builder</h1>
+    <nav>
+      <button data-tab="leads" class="active">Leads</button>
+      <button data-tab="pages">Pages</button>
+      <button class="btn-outline" onclick="logout()" style="color:#fff;">Log Out</button>
+    </nav>
+  </header>
+  <main>
+    <section id="tab-leads">
+      <div class="card">
+        <h2>Leads</h2>
+        <table>
+          <thead><tr><th>Name</th><th>Contact</th><th>Type</th><th>Status</th><th>Received</th></tr></thead>
+          <tbody id="leads-table-body"><tr><td colspan="5">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="tab-pages" class="hidden">
+      <div class="card">
+        <h2>Pages</h2>
+        <button class="btn" onclick="createPage()">+ New Page</button>
+        <table>
+          <thead><tr><th>Title</th><th>Slug</th><th>Type</th><th>Status</th><th></th></tr></thead>
+          <tbody id="pages-table-body"><tr><td colspan="5">Loading...</td></tr></tbody>
+        </table>
+      </div>
+
+      <div class="card hidden" id="page-editor">
+        <h2>Edit Page</h2>
+        <input id="editor-title" placeholder="Page title" />
+        <input id="editor-slug" placeholder="/url-slug (e.g. /sell, or / for the homepage)" />
+        <p class="field-hint">Slugs are full URL paths, always starting with "/" — normalized automatically on save.</p>
+        <select id="editor-status"><option value="draft">Draft</option><option value="published">Published</option></select>
+        <h3>Blocks</h3>
+        <div id="editor-blocks"></div>
+        <select id="add-block-type"></select>
+        <button class="btn-outline" onclick="addBlock()">+ Add Block</button>
+        <p style="font-size:0.8rem;color:#525252;">v1: edit each block's props as JSON below its type. A structured per-field form (driven by each block's prop_schema, already in blocks_library) is a planned next iteration — ask if you want that built now instead.</p>
+        <div style="margin-top:1rem;">
+          <button class="btn" onclick="savePage()">Save Page</button>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+  // ---- Config: pre-con/CRM Supabase project (atmrjimfcydgjonlxzvr) ----
+  // Anon key only — safe to ship client-side, RLS is what actually restricts
+  // access (see the confirmed policies: public read on published pages/
+  // blocks_library, authenticated full access on everything, checked earlier
+  // in this project). Never put the service-role key in this file.
+  const SUPABASE_URL = "https://atmrjimfcydgjonlxzvr.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF0bXJqaW1mY3lkZ2pvbmx4enZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk5ODkzODQsImV4cCI6MjA4NTU2NTM4NH0.MBg3k5iYPQxfqh8-5vEKyr-H4JEvOf_wFlIU7nqCDeM";
+  // ------------------------------------------------------------------------
+
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  let currentPage = null;
+  let blocksLibrary = [];
+
+  // Slugs are stored as full URL paths ("/", "/sell", "/listings/map") — see
+  // render.js/index.js, which look up pages by the raw request path. This
+  // normalizes whatever an admin types into that same shape, so a typo like
+  // "sell" or "/sell/" doesn't silently create a page nothing will ever match.
+  function normalizeSlug(raw) {
+    let s = (raw || "").trim();
+    if (!s) return "/";
+    if (!s.startsWith("/")) s = "/" + s;
+    s = s.replace(/\/+/g, "/");
+    if (s.length > 1) s = s.replace(/\/$/, "");
+    return s;
+  }
+
+  async function checkSession() {
+    const { data: { session } } = await sb.auth.getSession();
+    if (session) {
+      document.getElementById("login-view").classList.add("hidden");
+      document.getElementById("app-view").classList.remove("hidden");
+      loadLeads();
+      loadBlocksLibrary();
+    } else {
+      document.getElementById("login-view").classList.remove("hidden");
+    }
+  }
+
+  async function login() {
+    const email = document.getElementById("login-email").value;
+    const password = document.getElementById("login-password").value;
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) document.getElementById("login-error").textContent = error.message;
+    else checkSession();
+  }
+
+  async function logout() {
+    await sb.auth.signOut();
+    checkSession();
+  }
+
+  document.querySelectorAll("nav button[data-tab]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll("nav button[data-tab]").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      document.querySelectorAll("main > section").forEach((s) => s.classList.add("hidden"));
+      document.getElementById("tab-" + btn.dataset.tab).classList.remove("hidden");
+      if (btn.dataset.tab === "pages") loadPages();
+    });
+  });
+
+  async function loadLeads() {
+    const { data, error } = await sb
+      .from("leads")
+      .select("id, form_type, status, created_at, contacts(name, email, phone)")
+      .order("created_at", { ascending: false })
+      .limit(50);
+    const body = document.getElementById("leads-table-body");
+    if (error) { body.innerHTML = `<tr><td colspan="5">${error.message}</td></tr>`; return; }
+    body.innerHTML = data.map((l) => `
+      <tr>
+        <td>${l.contacts?.name || "—"}</td>
+        <td>${l.contacts?.email || ""} ${l.contacts?.phone || ""}</td>
+        <td>${l.form_type}</td>
+        <td><span class="status-badge status-${l.status}">${l.status}</span></td>
+        <td>${new Date(l.created_at).toLocaleDateString()}</td>
+      </tr>`).join("") || `<tr><td colspan="5">No leads yet.</td></tr>`;
+  }
+
+  async function loadBlocksLibrary() {
+    const { data } = await sb.from("blocks_library").select("id, label").order("category");
+    blocksLibrary = data || [];
+    const select = document.getElementById("add-block-type");
+    select.innerHTML = blocksLibrary.map((b) => `<option value="${b.id}">${b.label}</option>`).join("");
+  }
+
+  async function loadPages() {
+    const { data, error } = await sb.from("pages").select("*").order("updated_at", { ascending: false });
+    const body = document.getElementById("pages-table-body");
+    if (error) { body.innerHTML = `<tr><td colspan="5">${error.message}</td></tr>`; return; }
+    body.innerHTML = data.map((p) => `
+      <tr>
+        <td>${p.title}</td>
+        <td>${p.slug}</td>
+        <td>${p.type}</td>
+        <td><span class="status-badge status-${p.status === 'published' ? 'qualified' : 'new'}">${p.status}</span></td>
+        <td><button class="btn-outline" onclick='editPage(${JSON.stringify(p)})'>Edit</button></td>
+      </tr>`).join("") || `<tr><td colspan="5">No pages yet.</td></tr>`;
+  }
+
+  function createPage() {
+    editPage({ title: "New Page", slug: "/", type: "freeform", status: "draft", blocks: [] });
+  }
+
+  function editPage(page) {
+    currentPage = page;
+    document.getElementById("page-editor").classList.remove("hidden");
+    document.getElementById("editor-title").value = page.title || "";
+    document.getElementById("editor-slug").value = page.slug || "";
+    document.getElementById("editor-status").value = page.status || "draft";
+    renderBlockEditors();
+  }
+
+  function renderBlockEditors() {
+    const container = document.getElementById("editor-blocks");
+    container.innerHTML = (currentPage.blocks || []).map((b, i) => `
+      <div class="block-row" style="flex-direction:column;align-items:stretch;">
+        <strong>${b.block_type}</strong>
+        <textarea rows="3" onchange="updateBlockProps(${i}, this.value)">${JSON.stringify(b.props || {})}</textarea>
+        <button class="btn-outline" onclick="removeBlock(${i})">Remove</button>
+      </div>`).join("");
+  }
+
+  function updateBlockProps(index, jsonStr) {
+    try { currentPage.blocks[index].props = JSON.parse(jsonStr); } catch (e) { alert("Invalid JSON"); }
+  }
+
+  function removeBlock(index) {
+    currentPage.blocks.splice(index, 1);
+    renderBlockEditors();
+  }
+
+  function addBlock() {
+    const type = document.getElementById("add-block-type").value;
+    currentPage.blocks = currentPage.blocks || [];
+    currentPage.blocks.push({ block_type: type, props: {} });
+    renderBlockEditors();
+  }
+
+  async function savePage() {
+    const payload = {
+      title: document.getElementById("editor-title").value,
+      slug: normalizeSlug(document.getElementById("editor-slug").value),
+      status: document.getElementById("editor-status").value,
+      type: currentPage.type || "freeform",
+      blocks: currentPage.blocks || [],
+      updated_at: new Date().toISOString(),
+    };
+    if (currentPage.id) {
+      await sb.from("pages").update(payload).eq("id", currentPage.id);
+    } else {
+      await sb.from("pages").insert(payload);
+    }
+    document.getElementById("page-editor").classList.add("hidden");
+    loadPages();
+  }
+
+  checkSession();
+</script>
+</body>
+</html>
