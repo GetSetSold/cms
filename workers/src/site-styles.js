@@ -30,6 +30,9 @@ img{ max-width:100%; display:block; }
 .btn-outline{ background:transparent; border:1px solid var(--line); color:var(--ink); width:100%; text-align:center; }
 .site-footer{ padding:40px 56px; border-top:1px solid var(--line); font-size:12.5px; color:var(--ink-45); }
 .logo-img{ height:32px; width:auto; display:block; }
+.footer-links{ margin-top:8px; display:flex; flex-wrap:wrap; gap:14px; }
+.footer-link{ color:var(--ink-70); text-decoration:none; font-weight:600; font-size:13px; }
+.footer-link:hover{ color:var(--blue); }
 .footer-social{ margin-top:8px; display:flex; gap:14px; }
 .footer-social-link{ color:var(--ink-45); text-decoration:none; font-weight:600; }
 .footer-social-link:hover{ color:var(--blue); }
@@ -252,8 +255,12 @@ img{ max-width:100%; display:block; }
 
   .site-footer{ padding:28px 18px; }
 
-  .df-grid{ grid-template-columns:1fr; }
-  .df-field.df-half{ grid-column:auto; }
+  /* !important: sections set their own grid-template-columns / field spans
+     as inline styles (see dynamic-form.js's spanFor()/sectionColumns), which
+     otherwise beats this stylesheet rule on specificity — mobile always
+     collapses to one column regardless of the section's configured count. */
+  .df-grid{ grid-template-columns:1fr !important; }
+  .df-field{ grid-column:1 / -1 !important; }
 }
 `;
 
