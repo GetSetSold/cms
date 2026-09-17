@@ -77,23 +77,29 @@ function statPill(label, value) {
   return `<div class="ld-stat"><div class="ld-stat-value">${esc(String(value))}</div><div class="ld-stat-label">${esc(label)}</div></div>`;
 }
 
+// Gallery — uses Fancybox (same library/CDN as your real
+// listings-thumbnail-fancybox.js) instead of a hand-rolled lightbox: real
+// pinch-zoom, a proper toolbar (zoom/fullscreen/download/close), and one
+// less thing for us to maintain. Each photo is wrapped in an
+// <a data-fancybox="gallery" href="{full photo}">, matching the real
+// site's markup convention, and Fancybox.bind() picks all of them up.
 function renderGallery(photos, address) {
   if (!photos.length) {
     return `<div class="ld-hero-img ld-hero-empty">No photos available</div>`;
   }
   const [hero, ...rest] = photos;
   const thumbs = rest.slice(0, 4).map(
-    (url, i) => `<div class="ld-thumb" style="background-image:url('${esc(url)}')" data-idx="${i + 1}"></div>`
+    (url, i) => `<a data-fancybox="gallery" href="${esc(url)}" class="ld-thumb" style="background-image:url('${esc(url)}')"></a>`
   ).join("");
-  const extra = photos.length > 5 ? `<div class="ld-thumb-more" data-idx="5">+${photos.length - 5} more</div>` : "";
+  const extraCount = photos.length > 5 ? photos.length - 5 : 0;
+  const extra = extraCount
+    ? `<a data-fancybox="gallery" href="${esc(photos[5])}" class="ld-thumb-more">+${extraCount} more</a>` +
+      photos.slice(6).map((url) => `<a data-fancybox="gallery" href="${esc(url)}" style="display:none;"></a>`).join("")
+    : "";
   return `
-    <div class="ld-gallery" data-photos='${esc(JSON.stringify(photos))}'>
-      <div class="ld-hero-img" style="background-image:url('${esc(hero)}')" data-idx="0"></div>
+    <div class="ld-gallery">
+      <a data-fancybox="gallery" href="${esc(hero)}" class="ld-hero-img" style="background-image:url('${esc(hero)}')"></a>
       <div class="ld-thumb-grid">${thumbs}${extra}</div>
-    </div>
-    <div class="ld-lightbox" id="ld-lightbox">
-      <button class="ld-lightbox-close" id="ld-lightbox-close">&times;</button>
-      <div class="ld-lightbox-scroll" id="ld-lightbox-scroll"></div>
     </div>`;
 }
 
@@ -189,6 +195,39 @@ function renderContactCard(listing) {
         <button type="submit" class="ld-btn-primary">Request Info</button>
       </form>
       <a class="ld-btn-secondary" href="tel:+14166057488">Call 416-605-7488</a>
+    </div>`;
+}
+
+// Cashback banner — matches your real cashback-banner.js: sale listings get
+// a cashback offer (0.25% of list price, capped at $5,000), rentals get a
+// "free service to tenants" message instead. Same two CTAs: call, and
+// share (native share sheet with a clipboard-copy fallback).
+function renderCashbackBanner(listing) {
+  const sale = isSale(listing);
+  const shareUrl = `/listings/${encodeURIComponent(listing.ListingKey || "")}`;
+  if (sale) {
+    const price = Number(listing.ListPrice) || 0;
+    const cashback = Math.min(price * 0.0025, 5000);
+    return `
+      <div class="ld-cashback sale">
+        <div class="ld-cashback-pill">Cashback Offer</div>
+        <div class="ld-cashback-headline">Get <em>$${Math.round(cashback).toLocaleString()}</em> cash back when you buy this home</div>
+        <div class="ld-cashback-sub">Purchase this property with us and receive up to <strong>$${Math.round(cashback).toLocaleString()}</strong> back at closing &mdash; no catches, just more money in your pocket.</div>
+        <div class="ld-cashback-actions">
+          <a class="ld-cashback-cta primary" href="tel:+14166057488">Enquire Now</a>
+          <button type="button" class="ld-cashback-cta secondary" data-share-url="${esc(shareUrl)}">Share</button>
+        </div>
+      </div>`;
+  }
+  return `
+    <div class="ld-cashback rent">
+      <div class="ld-cashback-pill">Free Service</div>
+      <div class="ld-cashback-headline">Free rental service for <em>tenants</em></div>
+      <div class="ld-cashback-sub">We'll help you secure this rental at no cost to you &mdash; our fee is covered by the landlord.</div>
+      <div class="ld-cashback-actions">
+        <a class="ld-cashback-cta primary" href="tel:+14166057488">Enquire Now</a>
+        <button type="button" class="ld-cashback-cta secondary" data-share-url="${esc(shareUrl)}">Share</button>
+      </div>
     </div>`;
 }
 
@@ -288,6 +327,8 @@ export async function renderListingDetail(props, data, env, mlsFetch) {
           ${dom != null ? `<div class="ld-dom">Listed ${dom}${dom === 1 ? " day" : " days"} ago</div>` : ""}
         </div>
 
+        ${props.showCashback !== false ? renderCashbackBanner(listing) : ""}
+
         <div class="ld-stats-bar">${statsHtml}</div>
 
         ${listing.PublicRemarks ? `
@@ -338,18 +379,12 @@ export async function renderListingDetail(props, data, env, mlsFetch) {
     .ld-breadcrumb a { color: ${tokens.color.blue}; text-decoration: none; }
 
     .ld-gallery { display: grid; grid-template-columns: 2fr 1fr; gap: 8px; border-radius: 16px; overflow: hidden; margin-bottom: 20px; height: 420px; }
-    .ld-hero-img { background-size: cover; background-position: center; border-radius: 16px 0 0 16px; cursor: zoom-in; }
+    .ld-hero-img { display:block; background-size: cover; background-position: center; border-radius: 16px 0 0 16px; cursor: zoom-in; }
     .ld-hero-empty { display:flex; align-items:center; justify-content:center; background:${tokens.color.surface}; color:${tokens.color.ink45}; }
     .ld-thumb-grid { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 8px; height: 100%; }
-    .ld-thumb, .ld-thumb-more { background-size: cover; background-position: center; cursor: zoom-in; border-radius: 4px; background-color: ${tokens.color.surface}; }
-    .ld-thumb-more { display:flex; align-items:center; justify-content:center; background: ${tokens.color.ink}; color:#fff; font-weight:600; font-size:13px; }
+    .ld-thumb, .ld-thumb-more { display:block; background-size: cover; background-position: center; cursor: zoom-in; border-radius: 4px; background-color: ${tokens.color.surface}; }
+    .ld-thumb-more { display:flex; align-items:center; justify-content:center; background: ${tokens.color.ink}; color:#fff; font-weight:600; font-size:13px; text-decoration:none; }
     @media (max-width: 760px) { .ld-gallery { grid-template-columns: 1fr; height: auto; } .ld-hero-img { height: 260px; border-radius:16px; } .ld-thumb-grid { display:none; } }
-
-    .ld-lightbox { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.94); z-index:9999; flex-direction:column; align-items:center; }
-    .ld-lightbox.open { display:flex; }
-    .ld-lightbox-close { position:fixed; top:14px; right:20px; width:40px; height:40px; border-radius:50%; border:none; background:rgba(255,255,255,0.15); color:#fff; font-size:22px; cursor:pointer; z-index:2; }
-    .ld-lightbox-scroll { width:100%; max-width:900px; height:100vh; overflow-y:auto; padding:60px 16px; display:flex; flex-direction:column; gap:10px; align-items:center; }
-    .ld-lightbox-scroll img { max-width:100%; max-height:80vh; border-radius:8px; }
 
     .ld-layout { display:grid; grid-template-columns: 1fr 340px; gap: 32px; align-items:start; }
     @media (max-width: 900px) { .ld-layout { grid-template-columns: 1fr; } }
@@ -380,6 +415,19 @@ export async function renderListingDetail(props, data, env, mlsFetch) {
     .ld-room-col { padding:12px; border-right:1px solid ${tokens.color.line}; }
     .ld-room-col:last-child { border-right:none; }
     .ld-room-label { font-size:9px; text-transform:uppercase; letter-spacing:0.06em; color:${tokens.color.ink45}; margin-bottom:2px; }
+
+    .ld-cashback { border-radius:16px; overflow:hidden; margin-bottom:16px; padding:22px 24px; position:relative; }
+    .ld-cashback.sale { background:linear-gradient(135deg, ${tokens.color.ink} 0%, #1a1a1f 60%, ${tokens.color.blue} 140%); }
+    .ld-cashback.rent { background:linear-gradient(135deg, #0d2b1f 0%, #1a4532 60%, ${tokens.color.success} 140%); }
+    .ld-cashback-pill { display:inline-flex; padding:4px 12px; border-radius:20px; font-size:10px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; margin-bottom:10px; background:rgba(255,255,255,.18); color:#fff; }
+    .ld-cashback-headline { font-family:${tokens.font.display}; font-size:1.35rem; font-weight:600; color:#fff; line-height:1.25; margin-bottom:6px; }
+    .ld-cashback-headline em { font-style:italic; color:${tokens.color.blueDim}; }
+    .ld-cashback-sub { font-size:13px; color:rgba(255,255,255,.75); line-height:1.55; margin-bottom:16px; max-width:520px; }
+    .ld-cashback-actions { display:flex; gap:10px; flex-wrap:wrap; }
+    .ld-cashback-cta { padding:10px 18px; border-radius:999px; font-size:12.5px; font-weight:700; text-decoration:none; cursor:pointer; border:none; }
+    .ld-cashback-cta.primary { background:#fff; color:${tokens.color.ink}; }
+    .ld-cashback-cta.secondary { background:rgba(255,255,255,.15); color:#fff; border:1px solid rgba(255,255,255,.3); }
+    @media (max-width:600px) { .ld-cashback { padding:18px; } .ld-cashback-headline { font-size:1.1rem; } }
 
     .ld-map { height:280px; border-radius:12px; background:${tokens.color.surface}; overflow:hidden; }
 
@@ -429,24 +477,26 @@ export async function renderListingDetail(props, data, env, mlsFetch) {
 
   <script>
   (function() {
-    // Gallery lightbox
-    var galleryEl = document.querySelector('.ld-gallery');
-    var lightbox = document.getElementById('ld-lightbox');
-    var scrollEl = document.getElementById('ld-lightbox-scroll');
-    var closeBtn = document.getElementById('ld-lightbox-close');
-    if (galleryEl && lightbox) {
-      var photos = JSON.parse(galleryEl.getAttribute('data-photos') || '[]');
-      galleryEl.addEventListener('click', function(e) {
-        var t = e.target.closest('[data-idx]');
-        if (!t) return;
-        scrollEl.innerHTML = photos.map(function(u) { return '<img src="' + u + '" loading="lazy">'; }).join('');
-        lightbox.classList.add('open');
-        var idx = parseInt(t.getAttribute('data-idx'), 10) || 0;
-        var imgs = scrollEl.querySelectorAll('img');
-        if (imgs[idx]) imgs[idx].scrollIntoView();
-      });
+    // Gallery — Fancybox, same CDN/library your real
+    // listings-thumbnail-fancybox.js uses. Loaded once per page; binds to
+    // every [data-fancybox="gallery"] anchor the gallery markup rendered.
+    if (document.querySelector('[data-fancybox="gallery"]')) {
+      var fbCss = document.createElement('link');
+      fbCss.rel = 'stylesheet';
+      fbCss.href = 'https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.css';
+      document.head.appendChild(fbCss);
+      var fbScript = document.createElement('script');
+      fbScript.src = 'https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.umd.js';
+      fbScript.onload = function() {
+        if (window.Fancybox) {
+          Fancybox.bind('[data-fancybox="gallery"]', {
+            Thumbs: { autoStart: false },
+            Toolbar: { display: ['zoom', 'fullscreen', 'download', 'close'] },
+          });
+        }
+      };
+      document.head.appendChild(fbScript);
     }
-    if (closeBtn) closeBtn.addEventListener('click', function() { lightbox.classList.remove('open'); });
 
     // Mortgage calculator
     var calc = document.querySelector('.ld-calc');
@@ -499,6 +549,22 @@ export async function renderListingDetail(props, data, env, mlsFetch) {
           if (loading) loading.textContent = 'Market trend data unavailable.';
         });
     }
+
+    // Cashback banner share button
+    document.querySelectorAll('.ld-cashback-cta.secondary[data-share-url]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var url = location.origin + btn.getAttribute('data-share-url');
+        if (navigator.share) {
+          navigator.share({ url: url }).catch(function() {});
+        } else if (navigator.clipboard) {
+          navigator.clipboard.writeText(url).then(function() {
+            var old = btn.textContent;
+            btn.textContent = 'Copied!';
+            setTimeout(function() { btn.textContent = old; }, 1800);
+          });
+        }
+      });
+    });
 
     // Directions map — same MapTiler key/style your live site uses
     var mapEl = document.getElementById('ld-map');
