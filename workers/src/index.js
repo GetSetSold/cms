@@ -85,6 +85,27 @@ async function getForm(env, key) {
   }
 }
 
+// Same as getForm(), but by id and WITHOUT the status=eq.published filter —
+// used only by the admin Forms builder's live preview (via /api/preview's
+// dynamic_form -> props.previewFormId), so a form still being drafted (no
+// sections/questions saved as "published" yet) can be previewed before
+// it's ready to go live. Never used for real page rendering.
+async function getFormPreview(env, id) {
+  if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) return null;
+  try {
+    const q = `forms?id=eq.${encodeURIComponent(id)}` +
+      `&select=*,form_sections(id,title,description,position,form_questions(*))` +
+      `&form_sections.order=position.asc&form_sections.form_questions.order=position.asc`;
+    const res = await supabaseFetch(env, q);
+    if (!res.ok) { console.error("getFormPreview failed:", await res.text()); return null; }
+    const rows = await res.json();
+    return rows[0] || null;
+  } catch (err) {
+    console.error("getFormPreview threw:", err.message);
+    return null;
+  }
+}
+
 // Fetches live MLS data for the 3 block types that need it, plus site
 // settings for header_nav/footer and a form definition for dynamic_form.
 // Called by renderBlocks() via the dataFetcher param — see blocks.js's
@@ -94,6 +115,10 @@ async function fetchBlockData(type, props, env) {
     return getSiteSettings(env);
   }
   if (type === "dynamic_form") {
+    // The admin Forms builder's live preview passes previewFormId to look up
+    // a form by id, ignoring publish status, so drafts preview correctly —
+    // see getFormPreview()'s doc comment. Real pages always use formKey.
+    if (props.previewFormId) return getFormPreview(env, props.previewFormId);
     return getForm(env, props.formKey || "general_contact");
   }
   if (!env.MLS_SUPABASE_URL || !env.MLS_SUPABASE_SERVICE_ROLE_KEY) {
