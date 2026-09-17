@@ -67,6 +67,12 @@ img{ max-width:100%; display:block; }
 
 /* Shared block scaffolding */
 .block{ padding:56px; max-width:1440px; margin:0 auto; }
+/* Full-bleed variant: same 56px edge padding as .site-header/.site-footer
+   (so the page reads as one consistent width top to bottom) but no
+   max-width cap — for toolbar-style sections (listing grid, map search)
+   that should span edge-to-edge like the header/footer do, instead of
+   being boxed narrower in the middle of the viewport. */
+.block-full{ padding:56px; max-width:none; margin:0; width:100%; }
 .badge{ font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.03em; padding:5px 10px; border-radius:999px; }
 .section-head{ display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:24px; }
 .see-all{ font-size:13px; font-weight:700; color:var(--blue); }
@@ -129,7 +135,11 @@ img{ max-width:100%; display:block; }
 
 /* Listing cards (shared: featured_listings, listing_grid) */
 .listing-grid{ display:grid; gap:24px; }
-.grid-3{ grid-template-columns:repeat(3,minmax(0,1fr)); }
+/* Was a fixed 3 columns, which either cramped on medium screens or, once
+   .listing-grid-page went full-bleed, stretched into 3 oversized cards on
+   wide monitors. auto-fill + a sane min card width keeps cards a readable
+   size and adds columns as the viewport grows instead. */
+.grid-3{ grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); }
 .listing-card{ border:1px solid var(--line); border-radius:14px; overflow:hidden; display:block; }
 .listing-photo{ height:190px; background-size:cover; background-position:center; position:relative; }
 .listing-photo .badge{ position:absolute; top:12px; left:12px; }
@@ -161,7 +171,7 @@ img{ max-width:100%; display:block; }
 .empty-state{ text-align:center; padding:60px 20px; color:var(--ink-45); font-size:14px; }
 
 /* map_split_search */
-.map-split{ display:flex; height:820px; padding:0; max-width:none; }
+.map-split{ display:flex; height:820px; padding:0; max-width:none; width:100%; }
 .map-list-panel{ width:460px; flex:0 0 auto; border-right:1px solid var(--line); display:flex; flex-direction:column; }
 .panel-head{ padding:18px 20px; border-bottom:1px solid var(--line); font-size:13px; }
 .map-list-scroll{ flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:12px; }
