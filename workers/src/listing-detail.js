@@ -267,6 +267,17 @@ export async function renderListingDetail(props, data, env, mlsFetch) {
 
   <style>
     .ld-wrap { max-width: 1180px; margin: 0 auto; padding: 20px 16px 60px; font-family: ${tokens.font.body}; color: ${tokens.color.ink}; }
+    @media (max-width: 600px) {
+      .ld-wrap { padding: 14px 12px 40px; }
+      .ld-price-hero, .ld-card, .ld-section { padding: 16px 16px; }
+      .ld-price { font-size: 1.5rem; }
+      .ld-stats-bar { grid-template-columns: repeat(2,1fr); }
+      .ld-stat { padding: 12px 8px; border-bottom: 1px solid ${tokens.color.line}; }
+      .ld-features-grid { grid-template-columns: 1fr; }
+      .ld-room-row { grid-template-columns: 1fr; }
+      .ld-room-col { border-right: none; border-bottom: 1px solid ${tokens.color.line}; }
+      .ld-hpi-stats { grid-template-columns: 1fr; }
+    }
     .ld-breadcrumb { font-size: 12px; color: ${tokens.color.ink45}; margin-bottom: 14px; }
     .ld-breadcrumb a { color: ${tokens.color.blue}; text-decoration: none; }
 
@@ -323,7 +334,8 @@ export async function renderListingDetail(props, data, env, mlsFetch) {
     .ld-hpi-stat-value.down { color:#c0362c; }
 
     .ld-similar-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
-    @media (max-width:760px) { .ld-similar-grid { grid-template-columns:repeat(2,1fr); } }
+    @media (max-width:900px) { .ld-similar-grid { grid-template-columns:repeat(3,1fr); } }
+    @media (max-width:600px) { .ld-similar-grid { grid-template-columns:repeat(2,1fr); gap:8px; } }
     .ld-similar-card { display:block; text-decoration:none; color:inherit; border:1px solid ${tokens.color.line}; border-radius:12px; overflow:hidden; transition:transform .18s; }
     .ld-similar-card:hover { transform:translateY(-2px); }
     .ld-similar-thumb { height:110px; background-size:cover; background-position:center; background-color:${tokens.color.surface}; }
