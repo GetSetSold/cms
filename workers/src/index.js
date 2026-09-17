@@ -296,9 +296,13 @@ async function handleListingDetailRequest(listingKey, env) {
   if (!property) return new Response("Listing not found", { status: 404 });
 
   const { renderers } = await import("./blocks.js");
+  // Fetched once, up front, and passed into listing_detail too (not just
+  // header/footer) — the brokerage contact card needs settings.agent_name/
+  // agent_image_url/phone, same singleton row as everywhere else.
+  const settings = await getSiteSettings(env);
   const listingHtml = await renderers.listing_detail(
     { showMortgageCalc: true, showHpi: true },
-    { listing: property, officeName: property.OfficeName },
+    { listing: property, officeName: property.OfficeName, settings },
     env,
     mlsFetch
   );
@@ -306,7 +310,6 @@ async function handleListingDetailRequest(listingKey, env) {
   // renderers.listing_detail directly rather than going through
   // renderBlocks()/wrapWithChrome() like every other page. Fixed so it
   // gets the same site-wide header/footer as everything else.
-  const settings = await getSiteSettings(env);
   const headerHtml = renderers.header_nav({}, settings);
   const footerHtml = renderers.footer({}, settings);
   return new Response(
