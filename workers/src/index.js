@@ -43,10 +43,24 @@ async function mlsFetch(env, path, init = {}) {
 async function fetchBlockData(type, props, env) {
   if (type === "featured_listings") {
     const count = props.count || 3;
-    let q = `grid?select=*&limit=${count}`;
-    if (props.filter === "office_only") q += `&ListOfficeKey=eq.291890`;
+
+    // Lombard Group's own listings live in `property` (ownership/brokerage
+    // data), same as mls-search.html's loadFeatured(). Everything else
+    // (area/city listings) comes from `grid`, the lighter public table.
+    // filter: "office_only" -> property table, office's own listings.
+    if (props.filter === "office_only") {
+      const q = `property?select=*&OfficeName=eq.${encodeURIComponent("LOMBARD GROUP REAL ESTATE INC.")}&order=OriginalEntryTimestamp.desc&limit=${count}`;
+      const res = await mlsFetch(env, q);
+      if (!res.ok) { console.error("featured_listings (property) fetch failed:", await res.text()); return []; }
+      const rows = await res.json();
+      if (rows.length) return rows;
+      // fall through to grid if the office has nothing active right now
+    }
+
+    let q = `grid?select=*&order=OriginalEntryTimestamp.desc&limit=${count}`;
     if (props.filter === "for_lease") q += `&TotalActualRent=not.is.null`;
-    if (props.filter === "for_sale") q += `&TotalActualRent=is.null`;
+    if (props.filter === "for_sale") q += `&ListPrice=not.is.null`;
+    if (props.defaultArea) q += `&City=ilike.*${encodeURIComponent(props.defaultArea)}*`;
     const res = await mlsFetch(env, q);
     if (!res.ok) { console.error("featured_listings fetch failed:", await res.text()); return []; }
     return res.json();
@@ -129,9 +143,11 @@ async function handleListingDetailRequest(listingKey, env) {
   if (!property) return new Response("Listing not found", { status: 404 });
 
   const { renderers } = await import("./blocks.js");
-  const html = renderers.listing_detail(
-    { showMortgageCalc: true, showAgentCard: true },
-    { listing: property, officeName: property.OfficeName }
+  const html = await renderers.listing_detail(
+    { showMortgageCalc: true, showHpi: true },
+    { listing: property, officeName: property.OfficeName },
+    env,
+    mlsFetch
   );
   return new Response(
     pageShell({
