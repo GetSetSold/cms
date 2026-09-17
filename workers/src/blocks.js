@@ -6,6 +6,7 @@
 import { tokens } from "./tokens.js";
 import { registry as realEstateRegistry } from "./blocks-realestate.js";
 import { renderListingDetail } from "./listing-detail.js";
+import { renderDynamicForm } from "./dynamic-form.js";
 
 function esc(s = "") {
   return String(s)
@@ -170,11 +171,16 @@ export const renderers = {
   // trends) ported from the real getsetsold.ca listing page — replaces the
   // simpler listing_detail stub that was in blocks-realestate.js.
   listing_detail: renderListingDetail,
+
+  // Dynamic lead-capture form (see 0008_lead_forms.sql / the admin's Forms
+  // tab) — one block type that renders whatever form `props.formKey`
+  // points at, built from sections + questions stored in the CRM DB.
+  dynamic_form: renderDynamicForm,
 };
 
 // Block types that need a live data fetch before rendering (see render.js /
 // index.js for the actual fetch — this list is just what to await for).
-export const DATA_BLOCK_TYPES = new Set(["featured_listings", "listing_grid", "map_split_search", "header_nav", "footer"]);
+export const DATA_BLOCK_TYPES = new Set(["featured_listings", "listing_grid", "map_split_search", "header_nav", "footer", "dynamic_form"]);
 
 // `block.block_type` is the real, original convention from this scaffold.
 // `0003_blocks_and_pages.sql` originally inserted pages.blocks using the key
