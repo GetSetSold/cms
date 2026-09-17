@@ -30,7 +30,7 @@ function normalizeListing(row) {
     address: row.UnparsedAddress,
     city: row.City,
     priceLabel: forLease ? `${money(row.TotalActualRent)}/mo` : money(row.ListPrice),
-    status: forLease ? 'For Lease' : 'For Sale',
+    status: forLease ? 'For Rent' : 'For Sale',
     beds: row.BedroomsTotal,
     baths: row.BathroomsTotalInteger,
     parking: row.ParkingTotal,
@@ -44,7 +44,7 @@ function normalizeListing(row) {
 }
 
 const statusBadge = (status) => {
-  const lease = status === 'For Lease';
+  const lease = status === 'For Rent';
   return `background:${lease ? COLOR.blueDim : COLOR.successDim}; color:${lease ? COLOR.blue : COLOR.success};`;
 };
 
@@ -229,13 +229,20 @@ export function listing_grid(props, data) {
   const pageSize = props.pageSize || 12;
   const cards = listings.map(listingCardHtml).join('');
   const defaultCity = props.defaultArea || '';
-  const defaultType = props.defaultType || 'all';
+  // listingType is the real param/value name used across your site
+  // (?city=Hamilton&listingType=lease vs listingType=sale) — 'sale' | 'lease'
+  // | '' (both). Kept `defaultType` as an accepted legacy prop name too.
+  const defaultListingType = props.defaultListingType || (props.defaultType === 'rent' ? 'lease' : props.defaultType) || '';
+  // Each page's own default city becomes the heading unless the page
+  // supplies an explicit override — "Listings" alone on a page that's
+  // scoped to e.g. Hamilton was the "generic on every page" bug.
+  const defaultHeading = defaultCity ? `${defaultCity} Listings` : 'Listings';
 
   return `
   <section class="block-full listing-grid-page" id="${id}">
     <div class="section-head">
       <div>
-        <h1>${props.heading || 'Listings'}</h1>
+        <h1 id="${id}-heading">${props.heading || defaultHeading}</h1>
         <div class="result-count" id="${id}-count">${total} active listings</div>
       </div>
       <div class="view-toggle">
@@ -247,9 +254,9 @@ export function listing_grid(props, data) {
       <select class="filter-select" id="${id}-city">
         <option value="">All Cities</option>
       </select>
-      <button class="filter-pill${defaultType === 'all' ? ' active' : ''}" data-type="all">All</button>
-      <button class="filter-pill${defaultType === 'sale' ? ' active' : ''}" data-type="sale">For Sale</button>
-      <button class="filter-pill${defaultType === 'rent' ? ' active' : ''}" data-type="rent">For Rent</button>
+      <button class="filter-pill${defaultListingType === '' ? ' active' : ''}" data-type="">All</button>
+      <button class="filter-pill${defaultListingType === 'sale' ? ' active' : ''}" data-type="sale">For Sale</button>
+      <button class="filter-pill${defaultListingType === 'lease' ? ' active' : ''}" data-type="lease">For Rent</button>
       <select class="filter-select" id="${id}-beds">
         <option value="0">Any beds</option>
         <option value="1">1+ bd</option>
@@ -276,14 +283,23 @@ export function listing_grid(props, data) {
       var countEl = document.getElementById('${id}-count');
       var pagEl = document.getElementById('${id}-pagination');
       var pageSize = ${pageSize};
-      var state = { city: '${defaultCity.replace(/'/g, "\\'")}', type: '${defaultType}', beds: 0, priceMin: 0, priceMax: 0, page: 1 };
+      var headingEl = document.getElementById('${id}-heading');
+      var cityLabel = ${JSON.stringify(defaultCity)};
+      // state.listingType: '' (all) | 'sale' | 'lease' — matches the real
+      // ?listingType= values used site-wide, not an internal-only code.
+      var state = { city: '${defaultCity.replace(/'/g, "\\'")}', listingType: '${defaultListingType}', beds: 0, priceMin: 0, priceMax: 0, page: 1 };
+
+      function updateHeading() {
+        if (!headingEl) return;
+        headingEl.textContent = (state.city || cityLabel || '') ? (state.city || cityLabel) + ' Listings' : 'Listings';
+      }
 
       function esc(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
       function money(n) { return '$' + Number(n).toLocaleString(); }
 
       function cardHtml(l) {
         var forLease = !!l.TotalActualRent && !l.ListPrice;
-        var status = forLease ? 'For Lease' : 'For Sale';
+        var status = forLease ? 'For Rent' : 'For Sale';
         var badgeStyle = forLease ? 'background:${COLOR.blueDim};color:${COLOR.blue};' : 'background:${COLOR.successDim};color:${COLOR.success};';
         var price = forLease ? money(l.TotalActualRent) + '/mo' : money(l.ListPrice);
         var photo = l.Media || '';
@@ -325,7 +341,7 @@ export function listing_grid(props, data) {
         gridEl.style.opacity = '0.5';
         var qs = new URLSearchParams();
         if (state.city) qs.set('city', state.city);
-        if (state.type !== 'all') qs.set('type', state.type);
+        if (state.listingType) qs.set('listingType', state.listingType);
         if (state.beds) qs.set('beds', state.beds);
         if (state.priceMin) qs.set('priceMin', state.priceMin);
         if (state.priceMax) qs.set('priceMax', state.priceMax);
@@ -339,9 +355,18 @@ export function listing_grid(props, data) {
             gridEl.style.opacity = '1';
             countEl.textContent = (data.total || listings.length) + ' active listings';
             renderPagination(data.total || listings.length);
+            updateHeading();
+            // Every filter that actually affects results lives in the URL,
+            // matching the real site's shareable-link behaviour, e.g.
+            // ?city=Hamilton&listingType=sale&priceMin=500000&priceMax=750000
             var url = new URL(window.location);
             if (state.city) url.searchParams.set('city', state.city); else url.searchParams.delete('city');
-            if (state.type !== 'all') url.searchParams.set('type', state.type); else url.searchParams.delete('type');
+            if (state.listingType) url.searchParams.set('listingType', state.listingType); else url.searchParams.delete('listingType');
+            if (state.beds) url.searchParams.set('beds', state.beds); else url.searchParams.delete('beds');
+            if (state.priceMin) url.searchParams.set('priceMin', state.priceMin); else url.searchParams.delete('priceMin');
+            if (state.priceMax) url.searchParams.set('priceMax', state.priceMax); else url.searchParams.delete('priceMax');
+            url.searchParams.delete('type');
+            if (state.page > 1) url.searchParams.set('page', state.page); else url.searchParams.delete('page');
             try { window.history.replaceState({}, '', url); } catch(e) {}
           })
           .catch(function() { gridEl.style.opacity = '1'; });
@@ -364,27 +389,36 @@ export function listing_grid(props, data) {
         btn.addEventListener('click', function() {
           Array.prototype.forEach.call(root.querySelectorAll('.filter-pill'), function(b) { b.classList.remove('active'); });
           btn.classList.add('active');
-          state.type = btn.dataset.type;
+          state.listingType = btn.dataset.type;
           state.page = 1;
           load();
         });
       });
       document.getElementById('${id}-reset').addEventListener('click', function() {
-        state = { city: '', type: 'all', beds: 0, priceMin: 0, priceMax: 0, page: 1 };
+        state = { city: '', listingType: '', beds: 0, priceMin: 0, priceMax: 0, page: 1 };
         citySel.value = ''; bedsSel.value = '0'; priceMinEl.value = ''; priceMaxEl.value = '';
-        Array.prototype.forEach.call(root.querySelectorAll('.filter-pill'), function(b) { b.classList.toggle('active', b.dataset.type === 'all'); });
+        Array.prototype.forEach.call(root.querySelectorAll('.filter-pill'), function(b) { b.classList.toggle('active', b.dataset.type === ''); });
         load();
       });
 
-      /* Restore state from URL on load (?city=&type=) */
+      /* Restore full filter state from the URL on load — city, listingType,
+         beds, priceMin, priceMax, page — so a shared link like
+         ?city=Hamilton&listingType=lease reproduces the same results
+         (also accepts the old ?type=sale|rent shape for any stale links). */
       var params = new URLSearchParams(window.location.search);
       if (params.get('city')) { state.city = params.get('city'); }
-      if (params.get('type') === 'sale' || params.get('type') === 'rent') {
-        state.type = params.get('type');
-        Array.prototype.forEach.call(root.querySelectorAll('.filter-pill'), function(b) { b.classList.toggle('active', b.dataset.type === state.type); });
+      var lt = params.get('listingType') || (params.get('type') === 'rent' ? 'lease' : params.get('type') === 'sale' ? 'sale' : '');
+      if (lt === 'sale' || lt === 'lease') {
+        state.listingType = lt;
+        Array.prototype.forEach.call(root.querySelectorAll('.filter-pill'), function(b) { b.classList.toggle('active', b.dataset.type === state.listingType); });
       }
+      if (params.get('beds')) { state.beds = parseInt(params.get('beds'), 10) || 0; bedsSel.value = String(state.beds); }
+      if (params.get('priceMin')) { state.priceMin = parseInt(params.get('priceMin'), 10) || 0; priceMinEl.value = state.priceMin; }
+      if (params.get('priceMax')) { state.priceMax = parseInt(params.get('priceMax'), 10) || 0; priceMaxEl.value = state.priceMax; }
+      if (params.get('page')) { state.page = parseInt(params.get('page'), 10) || 1; }
+      updateHeading();
       renderPagination(${total});
-      if (params.get('city') || params.get('type')) load();
+      if (params.get('city') || lt || params.get('beds') || params.get('priceMin') || params.get('priceMax') || params.get('page')) load();
     })();
     </script>
   </section>`;
@@ -490,7 +524,7 @@ export function map_split_search(props, data) {
       var bounds = new maplibregl.LngLatBounds();
       pins.forEach(function(p) {
         var el = document.createElement('div');
-        el.className = 'map-pin ' + (p.status === 'For Lease' ? 'lease' : 'sale');
+        el.className = 'map-pin ' + (p.status === 'For Rent' ? 'lease' : 'sale');
         el.textContent = p.price;
         el.addEventListener('click', function(e) { e.stopPropagation(); selectPin(p, marker, el); });
         var marker = new maplibregl.Marker({ element: el }).setLngLat([p.lng, p.lat]).addTo(map);
@@ -548,7 +582,7 @@ export function listing_detail(props, data) {
     </div>
     <div class="title-row">
       <div>
-        <span class="badge" style="${statusBadge(forLease ? 'For Lease' : 'For Sale')}">${forLease ? 'For Lease' : 'For Sale'}</span>
+        <span class="badge" style="${statusBadge(forLease ? 'For Rent' : 'For Sale')}">${forLease ? 'For Rent' : 'For Sale'}</span>
         <h1>${p.UnparsedAddress || ''}</h1>
         <div class="sub">${p.City || ''}, ${p.Province || 'ON'} &middot; ${p.PostalCode || ''}</div>
       </div>
