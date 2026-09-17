@@ -507,7 +507,11 @@ export async function renderListingDetail(props, data, env, mlsFetch) {
       .ld-gallery-cta { bottom:14px; }
     }
 
-    .ld-layout { display:grid; grid-template-columns: 1fr 340px; gap: 32px; align-items:start; }
+    /* Matches .ld-gallery's column split + gap exactly (1.6fr/1fr, 10px gap)
+       so the price/stats card lines up under the hero photo and the sidebar
+       lines up under the thumbnail grid — same grid math, same parent
+       width, so the seams land in the same place. */
+    .ld-layout { display:grid; grid-template-columns: 1.6fr 1fr; gap: 10px; align-items:start; }
     @media (max-width: 900px) { .ld-layout { grid-template-columns: 1fr; } }
 
     .ld-card, .ld-section { background:#fff; border:1px solid ${tokens.color.line}; border-radius:16px; padding:20px 22px; margin-bottom:16px; }
