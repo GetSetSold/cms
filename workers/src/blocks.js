@@ -22,16 +22,23 @@ export const renderers = {
   // fetchBlockData. Block props still win when set explicitly, so a page
   // that wants a different logo/phone for one header can still override it.
   header_nav(props, settings = {}) {
-    const items = (props.nav_items || []).map(
+    // Menu items: page-level props.nav_items wins if a page explicitly set
+    // its own, otherwise falls back to the site-wide menu built in the
+    // admin's Menu & Footer tab (settings.nav_items).
+    const navItems = (props.nav_items && props.nav_items.length) ? props.nav_items : (settings.nav_items || []);
+    const items = navItems.map(
       (i) => `<a href="${esc(i.href)}" class="nav-link">${esc(i.label)}</a>`
     ).join("");
     const logoText = props.logo_text || settings.business_name || "GetSetSold";
     const logoUrl = props.logo_url || settings.logo_url;
     const phone = props.phone || settings.phone || "416-605-7488";
     const phoneHref = "tel:+1" + String(phone).replace(/\D/g, "");
+    const nameStyle = !logoUrl && settings.business_name_font_size
+      ? ` style="font-size:${parseInt(settings.business_name_font_size, 10)}px;"`
+      : "";
     return `
       <header class="site-header">
-        <a class="logo" href="/">${logoUrl ? `<img src="${esc(logoUrl)}" alt="${esc(logoText)}" class="logo-img" />` : esc(logoText)}</a>
+        <a class="logo" href="/"${nameStyle}>${logoUrl ? `<img src="${esc(logoUrl)}" alt="${esc(logoText)}" class="logo-img" />` : esc(logoText)}</a>
         <nav class="main-nav" id="main-nav">${items}</nav>
         <div class="header-actions">
           <a class="btn btn-accent" href="${esc(phoneHref)}">Call Now</a>
@@ -154,10 +161,15 @@ export const renderers = {
       .filter((k) => social[k])
       .map((k) => `<a href="${esc(social[k])}" class="footer-social-link" target="_blank" rel="noopener">${esc(k.charAt(0).toUpperCase() + k.slice(1))}</a>`)
       .join("");
+    // Footer links: built in the admin's Menu & Footer tab, same
+    // props-first / settings-fallback pattern as everything else here.
+    const footerLinksSrc = (props.footer_links && props.footer_links.length) ? props.footer_links : (settings.footer_links || []);
+    const footerLinks = footerLinksSrc.map((l) => `<a href="${esc(l.href)}" class="footer-link">${esc(l.label)}</a>`).join("");
     return `
       <footer class="site-footer">
         <p>${esc(brokerage)}</p>
         <p>${esc(agentName)} — ${esc(phone)}${email ? ` — ${esc(email)}` : ""}</p>
+        ${footerLinks ? `<p class="footer-links">${footerLinks}</p>` : ""}
         ${socialLinks ? `<p class="footer-social">${socialLinks}</p>` : ""}
         ${settings.license_text ? `<p class="footer-license">${esc(settings.license_text)}</p>` : ""}
       </footer>`;
