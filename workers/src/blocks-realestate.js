@@ -239,11 +239,30 @@ export function listing_grid(props, data) {
   </section>`;
 }
 
+// Same MapTiler key used on the listing detail page's Location & Directions
+// map and confirmed from your real map-search.html (`const MBTOKEN = '...'`
+// passed as both the MapLibre style key AND assigned to mapboxgl.accessToken
+// — that second part is a no-op with MapLibre, which is all this needs).
+const MAPTILER_KEY = 'Zr8EXulAyt75JJibE0ol';
+
+// Unique-ish per-render id so two map_split_search blocks on the same page
+// (or the same block rendered twice, e.g. live preview + saved page) never
+// collide on a single hardcoded #map-canvas id.
+let mapBlockCounter = 0;
+
 // =====================================================
-// map_split_search — data: { listings } (same grid rows, with lat/lng)
+// map_split_search — data: { listings } (same grid rows, with lat/lng).
+// Previously this block only prepared listing+coordinate data and left
+// #map-canvas empty with a "mount a real map provider" comment — nothing
+// ever rendered a map. Wired up for real now: loads MapLibre GL + the same
+// MapTiler style your listings-directions.js/hero maps use, drops a price-
+// bubble marker per listing (same concept as your real map-search.html),
+// and syncs list-row <-> marker selection both ways.
 // =====================================================
 export function map_split_search(props, data) {
-  const listings = (data?.listings || []).map(normalizeListing);
+  const listings = (data?.listings || []).map(normalizeListing).filter((l) => l.lat && l.lng);
+  const mapId = 'map-canvas-' + (++mapBlockCounter);
+
   const rows = listings.map(l => `
     <div class="map-list-row" data-key="${l.key}">
       <div class="thumb" style="${l.photo ? `background-image:url('${l.photo}')` : 'background:' + COLOR.surface}"></div>
@@ -257,22 +276,104 @@ export function map_split_search(props, data) {
       </div>
     </div>`).join('');
 
-  // Pins are positioned client-side from lat/lng against whatever map provider
-  // is wired in (see note below) — this markup gives it a data attribute per pin.
-  const pinData = listings.map(l => `{"key":"${l.key}","lat":${l.lat},"lng":${l.lng},"price":"${l.priceLabel}"}`).join(',');
+  const pins = listings.map(l => ({
+    key: l.key, lat: l.lat, lng: l.lng, price: l.priceLabel, status: l.status,
+    address: l.address, beds: l.beds, baths: l.baths, photo: l.photo || '',
+    detailUrl: '/listings/' + encodeURIComponent(l.key || ''),
+  }));
 
   return `
-  <section class="block map-split" data-pins='[${pinData}]'>
+  <section class="block map-split">
     <div class="map-list-panel">
       <div class="panel-head"><strong>${listings.length}</strong> listings in view</div>
-      <div class="map-list-scroll">${rows}</div>
+      <div class="map-list-scroll" id="${mapId}-list">${rows || '<div class="map-empty">No listings with map coordinates in this area yet.</div>'}</div>
     </div>
-    <div class="map-panel" id="map-canvas">
-      <!-- NOTE: mounts a real map provider client-side (Mapbox GL or Google Maps) —
-           this block only prepares the listing+coordinate data; see Phase 3 decision
-           on which map provider before wiring the live pins. -->
-    </div>
-  </section>`;
+    <div class="map-panel" id="${mapId}"></div>
+  </section>
+  <script>
+  (function() {
+    var pins = ${JSON.stringify(pins)};
+    var mapEl = document.getElementById('${mapId}');
+    if (!mapEl || !pins.length) return;
+
+    function esc(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+    function init() {
+      var map = new maplibregl.Map({
+        container: '${mapId}',
+        style: 'https://api.maptiler.com/maps/streets-v4/style.json?key=${MAPTILER_KEY}',
+        center: [pins[0].lng, pins[0].lat],
+        zoom: 12,
+      });
+      map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-right');
+
+      var markers = {};
+      var activeEl = null;
+      var activePopup = null;
+
+      function closePopup() {
+        if (activePopup) { activePopup.remove(); activePopup = null; }
+        if (activeEl) { activeEl.classList.remove('active'); activeEl = null; }
+        document.querySelectorAll('#${mapId}-list .map-list-row.active').forEach(function(r) { r.classList.remove('active'); });
+      }
+      map.on('click', closePopup);
+
+      function selectPin(p, marker, markerEl) {
+        closePopup();
+        markerEl.classList.add('active');
+        activeEl = markerEl;
+        var row = document.querySelector('#${mapId}-list .map-list-row[data-key="' + p.key + '"]');
+        if (row) { row.classList.add('active'); row.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+        var img = p.photo ? '<img class="map-popup-img" src="' + esc(p.photo) + '" alt="">' : '';
+        var html = img +
+          '<div class="map-popup-body">' +
+            '<div class="map-popup-price">' + esc(p.price) + '</div>' +
+            '<div class="map-popup-addr">' + esc(p.address || '') + '</div>' +
+            '<div class="map-popup-specs">' + (p.beds ?? '–') + ' bd &middot; ' + (p.baths ?? '–') + ' ba</div>' +
+            '<a class="map-popup-link" href="' + esc(p.detailUrl) + '">View Details &rarr;</a>' +
+          '</div>';
+        activePopup = new maplibregl.Popup({ closeButton: false, closeOnClick: false, offset: [0, -8], maxWidth: '260px' })
+          .setLngLat([p.lng, p.lat]).setHTML(html).addTo(map);
+      }
+
+      var bounds = new maplibregl.LngLatBounds();
+      pins.forEach(function(p) {
+        var el = document.createElement('div');
+        el.className = 'map-pin ' + (p.status === 'For Lease' ? 'lease' : 'sale');
+        el.textContent = p.price;
+        el.addEventListener('click', function(e) { e.stopPropagation(); selectPin(p, marker, el); });
+        var marker = new maplibregl.Marker({ element: el }).setLngLat([p.lng, p.lat]).addTo(map);
+        markers[p.key] = { marker: marker, el: el };
+        bounds.extend([p.lng, p.lat]);
+      });
+      if (pins.length > 1) map.fitBounds(bounds, { padding: 60, maxZoom: 15, duration: 0 });
+
+      document.querySelectorAll('#${mapId}-list .map-list-row').forEach(function(row) {
+        row.addEventListener('click', function() {
+          var key = row.getAttribute('data-key');
+          var p = pins.find(function(x) { return x.key === key; });
+          var m = markers[key];
+          if (!p || !m) return;
+          map.flyTo({ center: [p.lng, p.lat], zoom: 15 });
+          selectPin(p, m.marker, m.el);
+        });
+      });
+    }
+
+    if (window.maplibregl) { init(); return; }
+    if (!document.querySelector('link[data-maplibre-css]')) {
+      var css = document.createElement('link');
+      css.rel = 'stylesheet';
+      css.href = 'https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css';
+      css.setAttribute('data-maplibre-css', '1');
+      document.head.appendChild(css);
+    }
+    var script = document.createElement('script');
+    script.src = 'https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js';
+    script.onload = init;
+    document.head.appendChild(script);
+  })();
+  </script>`;
 }
 
 // =====================================================
