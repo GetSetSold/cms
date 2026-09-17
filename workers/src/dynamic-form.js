@@ -103,15 +103,22 @@ export function renderDynamicForm(props = {}, form) {
   const successMessage = settings.successMessage || "Thanks — we'll be in touch shortly.";
   const submitLabel = settings.submitLabel || "Submit";
 
+  // Wrapped in <section class="block"> like every other block renderer
+  // (see blocks-realestate.js / site-styles.js's `.block{ padding:56px;
+  // max-width:1440px; margin:0 auto; }`) — without it this block had no
+  // side padding or max-width at all, so it ran edge-to-edge on every
+  // screen size instead of sitting in the page's normal content column.
   return `
-    <div class="df-wrap">
-      <form id="dform-${form.id}" class="dynamic-form" data-form-key="${escAttr(form.key)}" data-success="${escAttr(successMessage)}" ${settings.redirectUrl ? `data-redirect="${escAttr(settings.redirectUrl)}"` : ""}>
-        ${props.heading ? `<h2 class="df-heading">${esc(props.heading)}</h2>` : (form.name ? `<h2 class="df-heading">${esc(form.name)}</h2>` : "")}
-        ${sectionsHtml}
-        <div class="df-error" style="display:none;"></div>
-        <button type="submit" class="df-submit">${esc(submitLabel)}</button>
-      </form>
-    </div>
+    <section class="block df-block">
+      <div class="df-wrap">
+        <form id="dform-${form.id}" class="dynamic-form" data-form-key="${escAttr(form.key)}" data-success="${escAttr(successMessage)}" ${settings.redirectUrl ? `data-redirect="${escAttr(settings.redirectUrl)}"` : ""}>
+          ${props.heading ? `<h2 class="df-heading">${esc(props.heading)}</h2>` : (form.name ? `<h2 class="df-heading">${esc(form.name)}</h2>` : "")}
+          ${sectionsHtml}
+          <div class="df-error" style="display:none;"></div>
+          <button type="submit" class="df-submit">${esc(submitLabel)}</button>
+        </form>
+      </div>
+    </section>
     <script>
     (function() {
       var form = document.getElementById('dform-${form.id}');
