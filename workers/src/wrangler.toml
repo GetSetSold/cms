@@ -14,7 +14,7 @@ compatibility_date = "2026-09-01"
 #
 # [vars] section is for non-secret config only.
 [vars]
-SITE_NAME = "GetSetSold.ca"
+SITE_NAME = "Rohit Sharma Real Estate"
 
 # Enables live logs (Cloudflare dashboard -> Workers & Pages -> cms -> Logs,
 # or `npx wrangler tail` from workers/src) so we can see the real error
