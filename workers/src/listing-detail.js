@@ -669,8 +669,8 @@ export async function renderListingDetail(props, data, env, mlsFetch) {
 
     // HPI market trends — same public JSON the live site uses, fetched
     // client-side. Confirmed real shape (was wrong before): top-level key
-    // is `cities`, an OBJECT keyed by board slug (e.g. "oakville-milton"),
-    // not a `regions` array — each entry has name/slug/latest.{compositeBenchmark,
+    // is "cities", an OBJECT keyed by board slug (e.g. "oakville-milton"),
+    // not a "regions" array — each entry has name/slug/latest.{compositeBenchmark,
     // momChange,yoyChange,marketCondition,propertyTypes}/history12m/peak.
     //
     // City -> board resolution: the real site does this via a separate
