@@ -143,4 +143,91 @@ img{ max-width:100%; display:block; }
 .agent-name{ font-size:14px; font-weight:700; }
 .agent-office{ font-size:12px; color:var(--ink-45); margin-bottom:16px; }
 .mortgage-est{ margin-top:12px; padding-top:12px; border-top:1px solid var(--line); display:flex; justify-content:space-between; font-size:13px; }
+
+/* ═══════════════════════════════════════════════════════════════
+   RESPONSIVE — iPad (≤900px) and iPhone (≤600px) for every block.
+   Desktop styles above stay the base; these are overrides only.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Tablet / iPad (≤900px) ── */
+@media (max-width: 900px) {
+  .block{ padding:40px 28px; }
+  .cta-band{ margin:32px 28px; padding:36px; }
+
+  .hero-search{ padding:64px 28px 48px; }
+  .hero-search h1{ font-size:38px; }
+  .search-bar{ width:100%; }
+
+  .service-tiles{ grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .step-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); }
+
+  .grid-3{ grid-template-columns:repeat(2,minmax(0,1fr)); }
+
+  .map-split{ height:auto; flex-direction:column; }
+  .map-list-panel{ width:100%; border-right:none; border-bottom:1px solid var(--line); }
+  .map-list-scroll{ max-height:420px; }
+  .map-panel{ height:420px; }
+
+  .body-split{ flex-direction:column; }
+  .agent-card{ width:100%; }
+  .specs-row{ flex-wrap:wrap; gap:16px; justify-content:flex-start; }
+  .listing-detail .hero-photo{ height:320px; }
+  .listing-detail .title-row{ flex-direction:column; gap:10px; }
+  .listing-detail .title-row h1{ font-size:28px; }
+  .listing-detail .price{ font-size:30px; }
+
+  .testimonial{ padding:32px; }
+  .lead-form{ padding:32px; }
+}
+
+/* ── Mobile / iPhone (≤600px) ── */
+@media (max-width: 600px) {
+  .block{ padding:28px 18px; }
+  .cta-band{ margin:20px 18px; padding:26px 22px; flex-direction:column; align-items:flex-start; gap:18px; }
+  .cta-band .btn-primary{ width:100%; text-align:center; }
+
+  .section-head{ flex-direction:column; align-items:flex-start; gap:8px; }
+
+  .hero-search{ padding:48px 18px 36px; gap:16px; }
+  .hero-search h1{ font-size:28px; }
+  .hero-search .subcopy{ font-size:14px; }
+  .search-bar{ flex-direction:column; border-radius:14px; }
+  .search-bar button{ padding:12px; border-radius:8px; }
+  .stat-row{ gap:18px; flex-wrap:wrap; justify-content:center; }
+  .stat-value{ font-size:19px; }
+
+  .service-tiles{ grid-template-columns:1fr; }
+  .service-tile{ min-height:auto; padding:24px; }
+
+  .step-grid{ grid-template-columns:1fr; }
+
+  .stat-band{ flex-direction:column; gap:20px; padding:28px 24px; text-align:center; }
+
+  .testimonial{ flex-direction:column; text-align:center; padding:28px 22px; gap:18px; }
+  .testimonial .quote{ font-size:17px; }
+
+  .lead-form{ flex-direction:column; align-items:stretch; padding:28px 22px; }
+  .lead-copy{ max-width:none; }
+  .lead-fields{ flex-direction:column; }
+  .lead-fields input, .lead-fields button{ width:100%; box-sizing:border-box; }
+
+  .grid-3{ grid-template-columns:1fr; }
+  .listing-photo{ height:200px; }
+
+  .filter-bar{ flex-wrap:wrap; padding:12px; }
+  .view-toggle{ flex-wrap:wrap; }
+
+  .map-list-row{ flex-direction:row; }
+  .map-list-row .thumb{ width:72px; height:60px; }
+  .map-panel, .map-list-scroll{ max-height:320px; height:320px; }
+
+  .listing-detail .hero-photo{ height:220px; border-radius:12px; }
+  .listing-detail .title-row h1{ font-size:22px; }
+  .listing-detail .price{ font-size:24px; }
+  .specs-row{ padding:16px; gap:14px; }
+  .spec-value{ font-size:18px; }
+  .agent-card{ padding:18px; }
+
+  .site-footer{ padding:28px 18px; }
+}
 `;
