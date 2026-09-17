@@ -130,6 +130,23 @@ img{ max-width:100%; display:block; }
 .row-address{ font-size:12.5px; color:var(--ink-70); margin-top:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .row-specs{ font-size:11.5px; color:var(--ink-45); margin-top:6px; }
 .map-panel{ flex:1; position:relative; background:var(--surface); }
+.map-list-row.active{ background:var(--blue-dim); }
+.map-empty{ padding:24px 4px; font-size:13px; color:var(--ink-45); }
+
+/* map_split_search — live MapLibre markers + popup (see blocks-realestate.js) */
+.map-pin{ cursor:pointer; font-size:11px; font-weight:700; color:#fff; padding:5px 10px; border-radius:20px; white-space:nowrap; border:2px solid rgba(255,255,255,.85); box-shadow:0 2px 8px rgba(0,0,0,.22); transition:transform .15s; }
+.map-pin:hover{ transform:scale(1.08); }
+.map-pin.active{ transform:scale(1.15); }
+.map-pin.sale{ background:var(--ink); }
+.map-pin.lease{ background:var(--blue); }
+.maplibregl-popup-content{ padding:0 !important; border-radius:12px !important; overflow:hidden !important; box-shadow:0 12px 30px rgba(11,11,13,.18) !important; border:1px solid var(--line) !important; }
+.maplibregl-popup-tip{ display:none !important; }
+.map-popup-img{ width:100%; height:120px; object-fit:cover; display:block; background:var(--surface); }
+.map-popup-body{ padding:12px 14px 14px; }
+.map-popup-price{ font-family:'Fraunces',serif; font-size:16px; font-weight:600; }
+.map-popup-addr{ font-size:12px; color:var(--ink-70); margin:3px 0 6px; }
+.map-popup-specs{ font-size:11.5px; color:var(--ink-45); margin-bottom:10px; }
+.map-popup-link{ display:inline-block; font-size:12px; font-weight:700; color:var(--blue); }
 
 /* listing_detail */
 .listing-detail .hero-photo{ height:460px; border-radius:16px; background-size:cover; background-position:center; background-color:var(--surface); }
