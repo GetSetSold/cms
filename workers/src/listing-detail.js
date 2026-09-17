@@ -141,26 +141,39 @@ function heroStat(icon, value, label) {
 // the rest of the brand, but every photo stays reachable: the "+N more"
 // tile and hidden anchors keep the FULL set navigable inside Fancybox,
 // same as clicking through all photos on the real site.
+// Collage layout: big hero on the left, a 2x2 thumbnail grid on the right.
+// The last grid cell doubles as a "+N" counter (all remaining photos stay
+// reachable as hidden Fancybox anchors, same trick as before) and a pill
+// reading "Click to view gallery" floats centered over the seam between
+// hero and grid — every tile opens the same Fancybox lightbox. On mobile
+// the grid collapses and just the hero + pill remain (see the media query),
+// so the whole gallery collapses down to "tap the photo, see everything."
 function renderGallery(items) {
   if (!items.length) {
-    return `<div class="ld-hero-img ld-hero-empty">No photos available</div>`;
+    return `<div class="ld-gallery-empty">No photos available</div>`;
   }
   const [hero, ...rest] = items;
-  const photoCount = items.length;
-  const thumbs = rest.slice(0, 4).map(
-    (m) => `<a data-fancybox="gallery" href="${esc(m.url)}" data-caption="${esc(m.caption)}" class="ld-thumb" style="background-image:url('${esc(m.url)}')"></a>`
-  ).join("");
-  const extraCount = items.length > 5 ? items.length - 5 : 0;
-  const extra = extraCount
-    ? `<a data-fancybox="gallery" href="${esc(items[5].url)}" data-caption="${esc(items[5].caption)}" class="ld-thumb-more">+${extraCount} more</a>` +
-      items.slice(6).map((m) => `<a data-fancybox="gallery" href="${esc(m.url)}" data-caption="${esc(m.caption)}" style="display:none;"></a>`).join("")
+  const visible = rest.slice(0, 4);
+  const overflow = items.length > 5 ? items.length - 5 : 0;
+  const thumbs = visible.map((m, i) => {
+    const isLast = i === visible.length - 1;
+    const countBadge = isLast && overflow
+      ? `<span class="ld-gallery-count"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10.5" r="1.5"/><path d="m21 15-5-5L5 19"/></svg>+${overflow}</span>`
+      : "";
+    return `<a data-fancybox="gallery" href="${esc(m.url)}" data-caption="${esc(m.caption)}" class="ld-thumb" style="background-image:url('${esc(m.url)}')">${countBadge}</a>`;
+  }).join("");
+  const hiddenOverflow = overflow
+    ? items.slice(5).map((m) => `<a data-fancybox="gallery" href="${esc(m.url)}" data-caption="${esc(m.caption)}" style="display:none;"></a>`).join("")
     : "";
   return `
     <div class="ld-gallery">
-      <a data-fancybox="gallery" href="${esc(hero.url)}" data-caption="${esc(hero.caption)}" class="ld-hero-img" style="background-image:url('${esc(hero.url)}')">
-        ${photoCount > 1 ? `<span class="ld-photo-count">+${photoCount - 1}</span>` : ""}
+      <a data-fancybox="gallery" href="${esc(hero.url)}" data-caption="${esc(hero.caption)}" class="ld-hero-img" style="background-image:url('${esc(hero.url)}')"></a>
+      ${items.length > 1 ? `<div class="ld-thumb-grid">${thumbs}</div>` : ""}
+      ${hiddenOverflow}
+      <a data-fancybox="gallery" href="${esc(hero.url)}" data-caption="${esc(hero.caption)}" class="ld-gallery-cta">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10.5" r="1.5"/><path d="m21 15-5-5L5 19"/></svg>
+        Click to view gallery
       </a>
-      <div class="ld-thumb-grid">${thumbs}${extra}</div>
     </div>`;
 }
 
@@ -434,7 +447,8 @@ export async function renderListingDetail(props, data, env, mlsFetch) {
   </div>
 
   <style>
-    .ld-wrap { max-width: 1180px; margin: 0 auto; padding: 20px 16px 60px; font-family: ${tokens.font.body}; color: ${tokens.color.ink}; background: ${tokens.color.surface}; }
+    .ld-wrap { max-width: 1440px; margin: 0 auto; padding: 24px 56px 64px; font-family: ${tokens.font.body}; color: ${tokens.color.ink}; background: ${tokens.color.surface}; }
+    @media (max-width: 1100px) { .ld-wrap { padding: 20px 32px 48px; } }
     @media (max-width: 600px) {
       .ld-wrap { padding: 14px 12px 40px; }
       .ld-card, .ld-section, .ld-price-card { padding: 16px 16px; }
@@ -454,14 +468,25 @@ export async function renderListingDetail(props, data, env, mlsFetch) {
     .ld-breadcrumb { font-size: 12px; color: ${tokens.color.ink45}; margin-bottom: 14px; }
     .ld-breadcrumb a { color: ${tokens.color.blue}; text-decoration: none; }
 
-    .ld-gallery { display: grid; grid-template-columns: 2fr 1fr; gap: 8px; border-radius: 16px; overflow: hidden; margin-bottom: 20px; height: 420px; }
-    .ld-hero-img { position:relative; display:block; background-size: cover; background-position: center; border-radius: 16px 0 0 16px; cursor: zoom-in; }
-    .ld-hero-empty { display:flex; align-items:center; justify-content:center; background:${tokens.color.surface}; color:${tokens.color.ink45}; }
-    .ld-thumb-grid { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 8px; height: 100%; }
-    .ld-thumb, .ld-thumb-more { display:block; background-size: cover; background-position: center; cursor: zoom-in; border-radius: 4px; background-color: ${tokens.color.surface}; }
-    .ld-thumb-more { display:flex; align-items:center; justify-content:center; background: ${tokens.color.ink}; color:#fff; font-weight:600; font-size:13px; text-decoration:none; }
-    .ld-photo-count { position:absolute; right:12px; bottom:12px; background: rgba(20,20,20,0.72); color:#fff; font-size:13px; font-weight:600; padding:5px 10px; border-radius: 6px; line-height:1; }
-    @media (max-width: 760px) { .ld-gallery { grid-template-columns: 1fr; height: auto; } .ld-hero-img { height: 260px; border-radius:16px; } .ld-thumb-grid { display:none; } }
+    /* Gallery collage — big hero + 2x2 thumb grid, a floating "Click to
+       view gallery" pill over the seam (concept from your real-estate.html
+       gallery), all opening the same Fancybox lightbox. */
+    .ld-gallery { position:relative; display:grid; grid-template-columns: 1.6fr 1fr; gap:10px; border-radius:18px; overflow:hidden; margin-bottom:24px; height:460px; }
+    .ld-hero-img { position:relative; display:block; background-size:cover; background-position:center; border-radius:18px; cursor:zoom-in; background-color:${tokens.color.surface}; }
+    .ld-gallery-empty { display:flex; align-items:center; justify-content:center; height:280px; border-radius:18px; background:${tokens.color.surface}; color:${tokens.color.ink45}; }
+    .ld-thumb-grid { display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; gap:10px; height:100%; }
+    .ld-thumb { position:relative; display:block; background-size:cover; background-position:center; cursor:zoom-in; border-radius:14px; background-color:${tokens.color.surface}; }
+    .ld-gallery-count { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; background:rgba(11,11,13,0.58); color:#fff; font-weight:700; font-size:16px; border-radius:14px; }
+    .ld-gallery-count svg { width:22px; height:22px; }
+    .ld-gallery-cta { position:absolute; left:50%; bottom:18px; transform:translateX(-50%); display:flex; align-items:center; gap:8px; background:${tokens.color.ink}; color:#fff; font-size:12.5px; font-weight:700; padding:10px 18px; border-radius:999px; text-decoration:none; box-shadow:0 6px 20px rgba(11,11,13,0.3); }
+    .ld-gallery-cta svg { width:16px; height:16px; }
+    .ld-gallery-cta:hover { background:${tokens.color.blue}; }
+    @media (max-width: 760px) {
+      .ld-gallery { grid-template-columns:1fr; height:300px; border-radius:16px; }
+      .ld-hero-img { border-radius:16px; }
+      .ld-thumb-grid { display:none; }
+      .ld-gallery-cta { bottom:14px; }
+    }
 
     .ld-layout { display:grid; grid-template-columns: 1fr 340px; gap: 32px; align-items:start; }
     @media (max-width: 900px) { .ld-layout { grid-template-columns: 1fr; } }
@@ -484,11 +509,11 @@ export async function renderListingDetail(props, data, env, mlsFetch) {
     .ld-mls { font-size:13px; color:${tokens.color.ink45}; }
     .ld-mls strong { color:${tokens.color.ink70}; }
     .ld-hero-actions { display:flex; gap:10px; flex-wrap:wrap; }
-    .ld-hero-btn { display:inline-block; padding:10px 16px; border-radius:8px; font-size:13px; font-weight:700; text-decoration:none; }
+    .ld-hero-btn { display:inline-block; padding:11px 20px; border-radius:999px; font-size:13px; font-weight:700; text-decoration:none; }
     .ld-hero-btn-contact { background:${tokens.color.ink}; color:#fff; }
     .ld-hero-btn-contact:hover { background:${tokens.color.blue}; }
-    .ld-hero-btn-afford { background:${tokens.color.success}; color:#fff; }
-    .ld-hero-btn-afford:hover { opacity:0.9; }
+    .ld-hero-btn-afford { background:${tokens.color.blue}; color:#fff; }
+    .ld-hero-btn-afford:hover { background:${tokens.color.ink}; }
 
     .ld-hero-stats { display:grid; grid-template-columns:repeat(4,1fr); background:#fff; border:1px solid ${tokens.color.line}; border-radius:16px; overflow:hidden; margin-bottom:16px; }
     .ld-hero-stat { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; padding:20px 8px 18px; text-align:center; border-right:1px solid ${tokens.color.line}; border-bottom:1px solid ${tokens.color.line}; }
@@ -560,8 +585,10 @@ export async function renderListingDetail(props, data, env, mlsFetch) {
     .ld-contact-office { font-size:12px; color:${tokens.color.ink45}; margin-bottom:14px; }
     .ld-contact-form input, .ld-contact-form textarea { width:100%; padding:10px 12px; border:1px solid ${tokens.color.line}; border-radius:8px; font-family:${tokens.font.body}; font-size:13px; margin-bottom:8px; box-sizing:border-box; }
     .ld-contact-form textarea { min-height:70px; resize:vertical; }
-    .ld-btn-primary { width:100%; padding:12px; background:${tokens.color.blue}; color:#fff; border:none; border-radius:8px; font-weight:600; font-size:13px; cursor:pointer; }
-    .ld-btn-secondary { display:block; text-align:center; margin-top:10px; padding:10px; border:1px solid ${tokens.color.line}; border-radius:8px; text-decoration:none; color:${tokens.color.ink}; font-size:13px; font-weight:600; }
+    .ld-btn-primary { width:100%; padding:13px; background:${tokens.color.blue}; color:#fff; border:none; border-radius:999px; font-weight:700; font-size:13px; cursor:pointer; }
+    .ld-btn-primary:hover { background:${tokens.color.ink}; }
+    .ld-btn-secondary { display:block; text-align:center; margin-top:10px; padding:11px; border:1px solid ${tokens.color.ink}; border-radius:999px; text-decoration:none; color:${tokens.color.ink}; font-size:13px; font-weight:700; }
+    .ld-btn-secondary:hover { background:${tokens.color.ink}; color:#fff; }
 
     .ld-calc { display:flex; flex-direction:column; gap:10px; }
     .ld-calc label { font-size:12px; color:${tokens.color.ink70}; display:flex; flex-direction:column; gap:4px; }
@@ -585,8 +612,12 @@ export async function renderListingDetail(props, data, env, mlsFetch) {
       fbScript.src = 'https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.umd.js';
       fbScript.onload = function() {
         if (window.Fancybox) {
+          // autoStart:true so the lightbox always opens with the small
+          // thumbnail strip visible — on mobile this is exactly "main
+          // image on top, small gallery strip below" per Fancybox's own
+          // responsive Thumbs layout, no extra work needed for that case.
           Fancybox.bind('[data-fancybox="gallery"]', {
-            Thumbs: { autoStart: false },
+            Thumbs: { autoStart: true },
             Toolbar: { display: ['zoom', 'fullscreen', 'download', 'close'] },
           });
         }
