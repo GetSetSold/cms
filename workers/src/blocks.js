@@ -16,16 +16,24 @@ function esc(s = "") {
 
 // ---- your original Phase 1 renderers, unchanged ----
 export const renderers = {
-  header_nav(props) {
+  // `settings` (2nd arg) comes from the site_settings singleton row, via
+  // header_nav being in blocks.js's DATA_BLOCK_TYPES — see index.js's
+  // fetchBlockData. Block props still win when set explicitly, so a page
+  // that wants a different logo/phone for one header can still override it.
+  header_nav(props, settings = {}) {
     const items = (props.nav_items || []).map(
       (i) => `<a href="${esc(i.href)}" class="nav-link">${esc(i.label)}</a>`
     ).join("");
+    const logoText = props.logo_text || settings.business_name || "GetSetSold";
+    const logoUrl = props.logo_url || settings.logo_url;
+    const phone = props.phone || settings.phone || "416-605-7488";
+    const phoneHref = "tel:+1" + String(phone).replace(/\D/g, "");
     return `
       <header class="site-header">
-        <a class="logo" href="/">${esc(props.logo_text || "GetSetSold")}</a>
+        <a class="logo" href="/">${logoUrl ? `<img src="${esc(logoUrl)}" alt="${esc(logoText)}" class="logo-img" />` : esc(logoText)}</a>
         <nav class="main-nav" id="main-nav">${items}</nav>
         <div class="header-actions">
-          <a class="btn btn-accent" href="tel:+14166057488">Call Now</a>
+          <a class="btn btn-accent" href="${esc(phoneHref)}">Call Now</a>
           <button class="nav-toggle" id="nav-toggle" aria-label="Menu" aria-expanded="false">
             <span></span><span></span><span></span>
           </button>
@@ -135,11 +143,22 @@ export const renderers = {
       </form>`;
   },
 
-  footer(props) {
+  footer(props, settings = {}) {
+    const brokerage = props.brokerage || settings.brokerage_name || "Lombard Group Real Estate Inc., Brokerage";
+    const agentName = settings.agent_name || "Rohit K. Sharma, REALTOR®";
+    const phone = props.phone || settings.phone || "416-605-7488";
+    const email = settings.email;
+    const social = settings.social || {};
+    const socialLinks = ["facebook", "instagram", "youtube", "linkedin", "tiktok"]
+      .filter((k) => social[k])
+      .map((k) => `<a href="${esc(social[k])}" class="footer-social-link" target="_blank" rel="noopener">${esc(k.charAt(0).toUpperCase() + k.slice(1))}</a>`)
+      .join("");
     return `
       <footer class="site-footer">
-        <p>${esc(props.brokerage || "Lombard Group Real Estate Inc., Brokerage")}</p>
-        <p>Rohit K. Sharma, REALTOR® — 416-605-7488</p>
+        <p>${esc(brokerage)}</p>
+        <p>${esc(agentName)} — ${esc(phone)}${email ? ` — ${esc(email)}` : ""}</p>
+        ${socialLinks ? `<p class="footer-social">${socialLinks}</p>` : ""}
+        ${settings.license_text ? `<p class="footer-license">${esc(settings.license_text)}</p>` : ""}
       </footer>`;
   },
 
@@ -155,7 +174,7 @@ export const renderers = {
 
 // Block types that need a live data fetch before rendering (see render.js /
 // index.js for the actual fetch — this list is just what to await for).
-export const DATA_BLOCK_TYPES = new Set(["featured_listings", "listing_grid", "map_split_search"]);
+export const DATA_BLOCK_TYPES = new Set(["featured_listings", "listing_grid", "map_split_search", "header_nav", "footer"]);
 
 // `block.block_type` is the real, original convention from this scaffold.
 // `0003_blocks_and_pages.sql` originally inserted pages.blocks using the key
