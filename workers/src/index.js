@@ -129,17 +129,37 @@ async function fetchBlockData(type, props, env) {
     const count = props.count || 3;
 
     // Lombard Group's own listings live in `property` (ownership/brokerage
-    // data), same as mls-search.html's loadFeatured(). Everything else
-    // (area/city listings) comes from `grid`, the lighter public table.
-    // filter: "office_only" -> property table, office's own listings.
-    if (props.filter === "office_only") {
-      const q = `property?select=*&OfficeName=eq.${encodeURIComponent("LOMBARD GROUP REAL ESTATE INC.")}&order=OriginalEntryTimestamp.desc&limit=${count}`;
-      const res = await mlsFetch(env, q);
-      if (!res.ok) { console.error("featured_listings (property) fetch failed:", await res.text()); return []; }
-      const rows = await res.json();
-      if (rows.length) return rows;
-      // fall through to grid if the office has nothing active right now
-    }
+// data), same as mls-search.html's loadFeatured(). Everything else
+// (area/city listings) comes from `grid`, the lighter public table.
+//
+// filter: "office_only" -> property table, office's own active listings.
+if (props.filter === "office_only") {
+  const office = encodeURIComponent("LOMBARD GROUP REAL ESTATE INC.");
+  const limit = Math.min(Math.max(Number(count) || 6, 1), 50);
+
+  const q =
+    `property?select=*` +
+    `&OfficeName=eq.${office}` +
+    `&StandardStatus=eq.Active` +
+    `&order=OriginalEntryTimestamp.desc` +
+    `&limit=${limit}`;
+
+  const res = await mlsFetch(env, q);
+
+  if (!res.ok) {
+    console.error(
+      "featured_listings (property) fetch failed:",
+      await res.text()
+    );
+    return [];
+  }
+
+  const rows = await res.json();
+
+  if (rows.length) return rows;
+
+  // No active Lombard listings — fall through to grid.
+}
 
     let q = `grid?select=*&order=OriginalEntryTimestamp.desc&limit=${count}`;
     if (props.filter === "for_lease") q += `&TotalActualRent=not.is.null`;
