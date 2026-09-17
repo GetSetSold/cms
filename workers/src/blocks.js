@@ -23,9 +23,27 @@ export const renderers = {
     return `
       <header class="site-header">
         <a class="logo" href="/">${esc(props.logo_text || "GetSetSold")}</a>
-        <nav class="main-nav">${items}</nav>
-        <a class="btn btn-accent" href="tel:+14166057488">Call Now</a>
-      </header>`;
+        <nav class="main-nav" id="main-nav">${items}</nav>
+        <div class="header-actions">
+          <a class="btn btn-accent" href="tel:+14166057488">Call Now</a>
+          <button class="nav-toggle" id="nav-toggle" aria-label="Menu" aria-expanded="false">
+            <span></span><span></span><span></span>
+          </button>
+        </div>
+      </header>
+      <script>
+        (function() {
+          var btn = document.getElementById('nav-toggle');
+          var nav = document.getElementById('main-nav');
+          if (btn && nav) {
+            btn.addEventListener('click', function() {
+              var open = nav.classList.toggle('open');
+              btn.classList.toggle('open', open);
+              btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+            });
+          }
+        })();
+      </script>`;
   },
 
   hero(props) {
