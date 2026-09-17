@@ -5,6 +5,7 @@
 
 import { tokens } from "./tokens.js";
 import { registry as realEstateRegistry } from "./blocks-realestate.js";
+import { renderListingDetail } from "./listing-detail.js";
 
 function esc(s = "") {
   return String(s)
@@ -126,6 +127,12 @@ export const renderers = {
 
   // ---- real-estate blocks, merged in from blocks-realestate.js ----
   ...realEstateRegistry,
+
+  // Override: full single-listing page (price hero, stats, description,
+  // features, room details, gallery, mortgage calc, similar listings, HPI
+  // trends) ported from the real getsetsold.ca listing page — replaces the
+  // simpler listing_detail stub that was in blocks-realestate.js.
+  listing_detail: renderListingDetail,
 };
 
 // Block types that need a live data fetch before rendering (see render.js /
