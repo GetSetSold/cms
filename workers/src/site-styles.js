@@ -65,6 +65,39 @@ img{ max-width:100%; display:block; }
 .footer-social-link:hover{ color:var(--blue); }
 .footer-license{ margin-top:8px; font-size:11px; color:var(--ink-45); }
 
+/* Fixed/sticky header — independent desktop vs mobile toggles, picked in
+   Menu & Footer. position:sticky (not fixed) so it doesn't need body
+   padding to compensate for pulling the header out of the flow. */
+@media (min-width:901px){ .header-fixed-desktop{ position:sticky; top:0; z-index:60; } }
+@media (max-width:900px){ .header-fixed-mobile{ position:sticky; top:0; z-index:60; } }
+
+/* 3 pre-styled DESKTOP header layouts (settings.header_style). Scoped to
+   min-width:901px so every style falls back to the exact same mobile
+   hamburger/dropdown header below — the layout choice only affects how the
+   logo/nav/actions are arranged on a wide screen. 'classic' needs no rules
+   here — it's the default .site-header/.main-nav/.header-actions layout. */
+@media (min-width:901px){
+  .site-header-centered{ flex-wrap:wrap; justify-content:center; height:auto; padding-top:16px; padding-bottom:12px; row-gap:10px; }
+  .site-header-centered .logo{ order:1; width:100%; text-align:center; }
+  .site-header-centered .main-nav{ order:2; width:100%; justify-content:center; flex:none; }
+  .site-header-centered .header-actions{ order:3; width:100%; justify-content:center; }
+
+  .site-header-minimal{ height:64px; }
+  .site-header-minimal .main-nav{ justify-content:flex-start; gap:18px; margin-left:28px; }
+  .site-header-minimal .btn-accent{ padding:8px 16px; font-size:12px; }
+}
+
+/* 3 pre-styled footer layouts (settings.footer_style). Markup is always the
+   same 3 .footer-col divs (info / links / social) — 'simple' just stacks
+   them (the original look), 'columns' lays them out side by side,
+   'centered' stacks them but centers every line. */
+.footer-col + .footer-col{ margin-top:14px; }
+.site-footer-columns{ display:flex; flex-wrap:wrap; justify-content:space-between; align-items:flex-start; gap:28px; }
+.site-footer-columns .footer-col + .footer-col{ margin-top:0; }
+.site-footer-columns .footer-license{ flex-basis:100%; }
+.site-footer-centered{ text-align:center; }
+.site-footer-centered .footer-links, .site-footer-centered .footer-social{ justify-content:center; }
+
 /* Shared block scaffolding */
 .block{ padding:56px; max-width:1440px; margin:0 auto; }
 /* Full-bleed variant: same 56px edge padding as .site-header/.site-footer
