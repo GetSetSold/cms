@@ -195,47 +195,198 @@ export function featured_listings(props, data) {
 }
 
 // =====================================================
-// listing_grid — full Grid page with filter bar. data: { listings, total, page }
-// =====================================================
-export function listing_grid(props, data) {
-  const listings = (data?.listings || []).map(normalizeListing);
-  const cards = listings.map(l => `
+// listing_grid — full, client-interactive city listings page. data: the
+// FIRST page's { listings, total } (server-rendered for instant first paint
+// and SEO), then the client re-fetches from /api/listings-search on every
+// city/type/beds/price/page change via fetch(), matching the function of
+// the real listings.html reference (city dropdown, sale/rent pills, price &
+// beds filters, pagination) but styled in this site's own black/blue pill
+// system instead of its navy theme, and without exposing any Supabase key
+// client-side — /api/listings-search proxies mlsFetch server-side instead.
+let listingGridCounter = 0;
+
+function listingCardHtml(l) {
+  return `
     <a href="/listings/${l.key}" class="listing-card">
       <div class="listing-photo" style="${l.photo ? `background-image:url('${l.photo}')` : 'background:' + COLOR.surface}">
         <span class="badge" style="${statusBadge(l.status)}">${l.status}</span>
-        <span class="photo-count"></span>
       </div>
       <div class="listing-body">
         <div class="listing-price">${l.priceLabel}</div>
-        <div class="listing-address">${l.address}, ${l.city}</div>
+        <div class="listing-address">${l.address || ''}, ${l.city || ''}</div>
         <div class="listing-specs">
           <span>${l.beds ?? '–'} bd</span><span>${l.baths ?? '–'} ba</span>
           <span>${l.parking ?? '–'} pk</span><span>${l.sqft ? l.sqft.toLocaleString() : '–'} sqft</span>
         </div>
       </div>
-    </a>`).join('');
+    </a>`;
+}
+
+export function listing_grid(props, data) {
+  const id = `lg-${listingGridCounter++}`;
+  const listings = (data?.listings || []).map(normalizeListing);
+  const total = data?.total ?? listings.length;
+  const pageSize = props.pageSize || 12;
+  const cards = listings.map(listingCardHtml).join('');
+  const defaultCity = props.defaultArea || '';
+  const defaultType = props.defaultType || 'all';
 
   return `
-  <section class="block listing-grid-page">
+  <section class="block listing-grid-page" id="${id}">
     <div class="section-head">
       <div>
         <h1>${props.heading || 'Listings'}</h1>
-        <div class="result-count">${data?.total ?? listings.length} active listings</div>
+        <div class="result-count" id="${id}-count">${total} active listings</div>
       </div>
       <div class="view-toggle">
         <a class="active" href="#">Grid</a>
         <a href="/listings/map">Map</a>
       </div>
     </div>
-    ${props.showFilters ? `
-    <div class="filter-bar">
-      <button class="filter-pill active">All</button>
-      <button class="filter-pill">For Sale</button>
-      <button class="filter-pill">For Lease</button>
-      <button class="filter-pill">Single Family</button>
-      <button class="filter-pill">Condo</button>
-    </div>` : ''}
-    <div class="listing-grid grid-3">${cards}</div>
+    <div class="filter-bar" id="${id}-filters">
+      <select class="filter-select" id="${id}-city">
+        <option value="">All Cities</option>
+      </select>
+      <button class="filter-pill${defaultType === 'all' ? ' active' : ''}" data-type="all">All</button>
+      <button class="filter-pill${defaultType === 'sale' ? ' active' : ''}" data-type="sale">For Sale</button>
+      <button class="filter-pill${defaultType === 'rent' ? ' active' : ''}" data-type="rent">For Rent</button>
+      <select class="filter-select" id="${id}-beds">
+        <option value="0">Any beds</option>
+        <option value="1">1+ bd</option>
+        <option value="2">2+ bd</option>
+        <option value="3">3+ bd</option>
+        <option value="4">4+ bd</option>
+        <option value="5">5+ bd</option>
+      </select>
+      <input class="filter-input" type="number" id="${id}-price-min" placeholder="Min $">
+      <input class="filter-input" type="number" id="${id}-price-max" placeholder="Max $">
+      <button class="btn-outline-sm" id="${id}-reset" type="button">Reset</button>
+    </div>
+    <div class="listing-grid grid-3" id="${id}-grid">${cards}</div>
+    <div class="pagination-row" id="${id}-pagination"></div>
+    <script>
+    (function() {
+      var root = document.getElementById('${id}');
+      if (!root) return;
+      var citySel = document.getElementById('${id}-city');
+      var bedsSel = document.getElementById('${id}-beds');
+      var priceMinEl = document.getElementById('${id}-price-min');
+      var priceMaxEl = document.getElementById('${id}-price-max');
+      var gridEl = document.getElementById('${id}-grid');
+      var countEl = document.getElementById('${id}-count');
+      var pagEl = document.getElementById('${id}-pagination');
+      var pageSize = ${pageSize};
+      var state = { city: '${defaultCity.replace(/'/g, "\\'")}', type: '${defaultType}', beds: 0, priceMin: 0, priceMax: 0, page: 1 };
+
+      function esc(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+      function money(n) { return '$' + Number(n).toLocaleString(); }
+
+      function cardHtml(l) {
+        var forLease = !!l.TotalActualRent && !l.ListPrice;
+        var status = forLease ? 'For Lease' : 'For Sale';
+        var badgeStyle = forLease ? 'background:${COLOR.blueDim};color:${COLOR.blue};' : 'background:${COLOR.successDim};color:${COLOR.success};';
+        var price = forLease ? money(l.TotalActualRent) + '/mo' : money(l.ListPrice);
+        var photo = l.Media || '';
+        return '<a href="/listings/' + l.ListingKey + '" class="listing-card">' +
+          '<div class="listing-photo" style="' + (photo ? "background-image:url('" + photo + "')" : 'background:${COLOR.surface}') + '">' +
+            '<span class="badge" style="' + badgeStyle + '">' + status + '</span>' +
+          '</div>' +
+          '<div class="listing-body">' +
+            '<div class="listing-price">' + price + '</div>' +
+            '<div class="listing-address">' + esc(l.UnparsedAddress) + ', ' + esc(l.City) + '</div>' +
+            '<div class="listing-specs">' +
+              '<span>' + (l.BedroomsTotal != null ? l.BedroomsTotal : '–') + ' bd</span>' +
+              '<span>' + (l.BathroomsTotalInteger != null ? l.BathroomsTotalInteger : '–') + ' ba</span>' +
+              '<span>' + (l.ParkingTotal != null ? l.ParkingTotal : '–') + ' pk</span>' +
+              '<span>' + (l.AboveGradeFinishedArea ? Number(l.AboveGradeFinishedArea).toLocaleString() : '–') + ' sqft</span>' +
+            '</div>' +
+          '</div>' +
+        '</a>';
+      }
+
+      function renderPagination(total) {
+        var pages = Math.max(1, Math.ceil(total / pageSize));
+        if (pages <= 1) { pagEl.innerHTML = ''; return; }
+        var html = '';
+        for (var i = 1; i <= pages; i++) {
+          if (pages > 9 && i !== 1 && i !== pages && Math.abs(i - state.page) > 2) {
+            if (i === 2 || i === pages - 1) html += '<span class="page-ellipsis">…</span>';
+            continue;
+          }
+          html += '<button type="button" class="page-btn' + (i === state.page ? ' active' : '') + '" data-page="' + i + '">' + i + '</button>';
+        }
+        pagEl.innerHTML = html;
+        Array.prototype.forEach.call(pagEl.querySelectorAll('.page-btn'), function(btn) {
+          btn.addEventListener('click', function() { state.page = parseInt(btn.dataset.page, 10); load(); window.scrollTo({top: root.offsetTop - 20, behavior: 'smooth'}); });
+        });
+      }
+
+      function load() {
+        gridEl.style.opacity = '0.5';
+        var qs = new URLSearchParams();
+        if (state.city) qs.set('city', state.city);
+        if (state.type !== 'all') qs.set('type', state.type);
+        if (state.beds) qs.set('beds', state.beds);
+        if (state.priceMin) qs.set('priceMin', state.priceMin);
+        if (state.priceMax) qs.set('priceMax', state.priceMax);
+        qs.set('page', state.page);
+        qs.set('pageSize', pageSize);
+        fetch('/api/listings-search?' + qs.toString())
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            var listings = data.listings || [];
+            gridEl.innerHTML = listings.map(cardHtml).join('') || '<div class="empty-state">No listings match these filters.</div>';
+            gridEl.style.opacity = '1';
+            countEl.textContent = (data.total || listings.length) + ' active listings';
+            renderPagination(data.total || listings.length);
+            var url = new URL(window.location);
+            if (state.city) url.searchParams.set('city', state.city); else url.searchParams.delete('city');
+            if (state.type !== 'all') url.searchParams.set('type', state.type); else url.searchParams.delete('type');
+            try { window.history.replaceState({}, '', url); } catch(e) {}
+          })
+          .catch(function() { gridEl.style.opacity = '1'; });
+      }
+
+      fetch('/api/cities').then(function(r) { return r.json(); }).then(function(data) {
+        (data.cities || []).forEach(function(c) {
+          var opt = document.createElement('option');
+          opt.value = c; opt.textContent = c;
+          if (c === state.city) opt.selected = true;
+          citySel.appendChild(opt);
+        });
+      });
+
+      citySel.addEventListener('change', function() { state.city = citySel.value; state.page = 1; load(); });
+      bedsSel.addEventListener('change', function() { state.beds = parseInt(bedsSel.value, 10) || 0; state.page = 1; load(); });
+      priceMinEl.addEventListener('change', function() { state.priceMin = parseInt(priceMinEl.value, 10) || 0; state.page = 1; load(); });
+      priceMaxEl.addEventListener('change', function() { state.priceMax = parseInt(priceMaxEl.value, 10) || 0; state.page = 1; load(); });
+      Array.prototype.forEach.call(root.querySelectorAll('.filter-pill'), function(btn) {
+        btn.addEventListener('click', function() {
+          Array.prototype.forEach.call(root.querySelectorAll('.filter-pill'), function(b) { b.classList.remove('active'); });
+          btn.classList.add('active');
+          state.type = btn.dataset.type;
+          state.page = 1;
+          load();
+        });
+      });
+      document.getElementById('${id}-reset').addEventListener('click', function() {
+        state = { city: '', type: 'all', beds: 0, priceMin: 0, priceMax: 0, page: 1 };
+        citySel.value = ''; bedsSel.value = '0'; priceMinEl.value = ''; priceMaxEl.value = '';
+        Array.prototype.forEach.call(root.querySelectorAll('.filter-pill'), function(b) { b.classList.toggle('active', b.dataset.type === 'all'); });
+        load();
+      });
+
+      /* Restore state from URL on load (?city=&type=) */
+      var params = new URLSearchParams(window.location.search);
+      if (params.get('city')) { state.city = params.get('city'); }
+      if (params.get('type') === 'sale' || params.get('type') === 'rent') {
+        state.type = params.get('type');
+        Array.prototype.forEach.call(root.querySelectorAll('.filter-pill'), function(b) { b.classList.toggle('active', b.dataset.type === state.type); });
+      }
+      renderPagination(${total});
+      if (params.get('city') || params.get('type')) load();
+    })();
+    </script>
   </section>`;
 }
 
