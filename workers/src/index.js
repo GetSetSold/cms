@@ -245,6 +245,10 @@ async function tryRenderStandaloneForm(pathname, env, dataFetcher) {
   if (!key) return null;
   const form = await getForm(env, key);
   if (!form) return null;
+  // display_mode='in_page' means this form is only meant to be dropped in
+  // as a dynamic_form block on a page, not auto-routed to its own link —
+  // that block usage is untouched by this check, only this fallback route is.
+  if (form.display_mode === "in_page") return null;
 
   const blocks = [
     { block_type: "header_nav", props: {} },
