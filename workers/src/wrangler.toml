@@ -2,7 +2,7 @@ name = "cms"
 main = "index.js"
 compatibility_date = "2026-09-01"
 
-# Only the two SERVICE ROLE KEYS are actually sensitive — set those via
+# Only the two SERVICE ROLE KEYS are actually sensitive — set those via set
 # `wrangler secret put` (never commit them):
 #   SUPABASE_SERVICE_ROLE_KEY       (server-side only — pages/blocks_library/leads/contacts)
 #   MLS_SUPABASE_SERVICE_ROLE_KEY   (server-side only — reads grid/property for listing blocks)
