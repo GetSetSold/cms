@@ -217,14 +217,44 @@ async function handlePageRequest(pathname, env) {
   );
   if (!res.ok) return new Response("Error loading page", { status: 500 });
   const rows = await res.json();
-  if (!rows.length) return new Response("Not found", { status: 404 });
-
-  const page = rows[0];
   const dataFetcher = (type, props) => fetchBlockData(type, props, env);
-  const bodyHtml = await renderBlocks(page.blocks || [], dataFetcher);
+
+  if (rows.length) {
+    const page = rows[0];
+    const bodyHtml = await renderBlocks(page.blocks || [], dataFetcher);
+    const html = pageShell({
+      title: page.seo?.title || page.title,
+      description: page.seo?.description || "",
+      bodyHtml,
+    });
+    return new Response(html, { headers: { "content-type": "text/html;charset=UTF-8" } });
+  }
+
+  // No page at this slug — fall back to a published form with a matching
+  // key, so a form gets a working standalone link (e.g. /general-contact)
+  // without needing its own row in `pages`. A page-editor "dynamic_form"
+  // block still works exactly as before regardless of this fallback.
+  const formResponse = await tryRenderStandaloneForm(pathname, env, dataFetcher);
+  if (formResponse) return formResponse;
+
+  return new Response("Not found", { status: 404 });
+}
+
+async function tryRenderStandaloneForm(pathname, env, dataFetcher) {
+  const key = pathname.replace(/^\/+/, "");
+  if (!key) return null;
+  const form = await getForm(env, key);
+  if (!form) return null;
+
+  const blocks = [
+    { block_type: "header_nav", props: {} },
+    { block_type: "dynamic_form", props: { formKey: key } },
+    { block_type: "footer", props: {} },
+  ];
+  const bodyHtml = await renderBlocks(blocks, dataFetcher);
   const html = pageShell({
-    title: page.seo?.title || page.title,
-    description: page.seo?.description || "",
+    title: form.name || "Form",
+    description: form.settings?.seoDescription || "",
     bodyHtml,
   });
   return new Response(html, { headers: { "content-type": "text/html;charset=UTF-8" } });
