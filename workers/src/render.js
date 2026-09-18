@@ -33,7 +33,7 @@ async function fetchBlockData(blockName, props, clients) {
       return data;
     }
 
-    let query = clients.mls.from('grid').select('*').limit(props.count || 20);
+    let query = clients.mls.from('grid').select('*').limit(props.count || 3);
     if (props.filter === 'for_lease') query = query.not('TotalActualRent', 'is', null);
     if (props.filter === 'for_sale') query = query.is('TotalActualRent', null);
     const { data, error } = await query;
@@ -93,18 +93,45 @@ function pageShell({ title, description, bodyHtml }) {
 <body>
   <header class="site-header">
     <a href="/" class="logo">GetSetSold</a>
-    <nav class="site-nav">
-      <a href="/listings">Buy</a>
-      <a href="/sell">Sell</a>
-      <a href="/pre-construction">Pre-Construction</a>
-      <a href="/neighbourhoods">Neighbourhoods</a>
+    <!-- .main-nav matches the CSS's real class (site-styles.js only styles
+         .main-nav / .main-nav-overlay / .main-nav-accordion / .main-nav-simple).
+         This used to be "site-nav", which matched nothing in the stylesheet,
+         so the nav fell back to unstyled default <a> stacking on every
+         screen size — that's what looked like a "stuck on mobile" layout
+         even on desktop. -->
+    <nav class="main-nav" id="main-nav">
+      <a href="/listings" class="nav-link">Buy</a>
+      <a href="/sell" class="nav-link">Sell</a>
+      <a href="/pre-construction" class="nav-link">Pre-Construction</a>
+      <a href="/neighbourhoods" class="nav-link">Neighbourhoods</a>
     </nav>
-    <a href="/contact" class="btn btn-dark">Book a Consultation</a>
+    <div class="header-actions">
+      <a href="/contact" class="btn btn-dark">Book a Consultation</a>
+      <!-- Hamburger for ≤900px. The CSS already fully styles .nav-toggle
+           (3-bar → X animation) and the ≤900px collapse of .main-nav, but
+           no markup ever emitted this button, so mobile had no way to open
+           the menu either. -->
+      <button class="nav-toggle" id="nav-toggle" aria-label="Toggle menu" aria-expanded="false" aria-controls="main-nav">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
   </header>
   <main>${bodyHtml}</main>
   <footer class="site-footer">
     <div>© ${new Date().getFullYear()} GetSetSold — Rohit Sharma, Lombard Group Real Estate Inc.</div>
   </footer>
+  <script>
+  (function() {
+    var toggle = document.getElementById('nav-toggle');
+    var nav = document.getElementById('main-nav');
+    if (!toggle || !nav) return;
+    toggle.addEventListener('click', function() {
+      var open = nav.classList.toggle('open');
+      toggle.classList.toggle('open', open);
+      toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+  })();
+  </script>
 </body>
 </html>`;
 }
