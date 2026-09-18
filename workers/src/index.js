@@ -133,7 +133,7 @@ async function fetchBlockData(type, props, env) {
     // (area/city listings) comes from `grid`, the lighter public table.
     // filter: "office_only" -> property table, office's own listings.
     if (props.filter === "office_only") {
-      const q = `property?select=*&OfficeName=eq.${encodeURIComponent("LOMBARD GROUP REAL ESTATE INC")}&order=OriginalEntryTimestamp.desc&limit=${count}`;
+      const q = `property?select=*&OfficeName=eq.${encodeURIComponent("LOMBARD GROUP REAL ESTATE INC.")}&order=OriginalEntryTimestamp.desc&limit=${count}`;
       const res = await mlsFetch(env, q);
       if (!res.ok) { console.error("featured_listings (property) fetch failed:", await res.text()); return []; }
       const rows = await res.json();
