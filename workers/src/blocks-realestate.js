@@ -35,7 +35,13 @@ function normalizeListing(row) {
     baths: row.BathroomsTotalInteger,
     parking: row.ParkingTotal,
     sqft: row.AboveGradeFinishedArea ?? row.LivingArea ?? null,
-    photo: row.Media || null, // first-photo URL, already flattened by ddf-sync.js
+    // `grid` rows have Media already flattened to a plain URL string by
+    // ddf-sync.js. `property` rows (used by the office_only filter) keep
+    // Media as the raw DDF shape: an array of objects with a MediaURL
+    // field — same shape listing_detail() already reads directly
+    // (p.Media?.[0]?.MediaURL). Handle both here so featured_listings
+    // photos work regardless of which table the row came from.
+    photo: typeof row.Media === 'string' ? row.Media : (row.Media?.[0]?.MediaURL || null),
     officeKey: row.ListOfficeKey,
     officeName: row.OfficeName,
     lat: row.Latitude,
