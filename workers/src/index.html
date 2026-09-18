@@ -1,0 +1,1982 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>GetSetSold Admin — CRM + Page Builder</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink:#0B0B0D; --ink-70:#4B4B52; --ink-45:#84848C;
+    --paper:#FFFFFF; --surface:#F5F5F7; --surface-2:#EDEDF0; --line:#E4E4E8;
+    --blue:#2451E0; --blue-dim:#EDF1FD;
+    --success:#1B7F5C; --success-dim:#EAF6EF;
+    --danger:#C0362C; --danger-dim:#FBEAE8;
+    --radius:10px;
+  }
+  * { box-sizing: border-box; }
+  body { font-family:'Manrope',sans-serif; margin:0; color:var(--ink); background:var(--surface); font-size:14px; }
+  h1,h2,h3 { font-family:'Fraunces',serif; margin:0; font-weight:600; letter-spacing:-0.01em; }
+  a { color:inherit; }
+
+  /* ---- shell ---- */
+  .shell { display:flex; min-height:100vh; }
+  .sidebar { width:220px; flex:0 0 auto; background:var(--ink); color:#fff; display:flex; flex-direction:column; padding:20px 0; }
+  .sidebar .brand { font-family:'Fraunces',serif; font-size:18px; font-weight:600; padding:0 20px 20px; border-bottom:1px solid rgba(255,255,255,.12); margin-bottom:12px; }
+  .sidebar nav { display:flex; flex-direction:column; gap:2px; padding:0 12px; }
+  .sidebar button.nav-btn { text-align:left; background:none; border:none; color:rgba(255,255,255,.7); padding:10px 12px; border-radius:8px; cursor:pointer; font-size:13.5px; font-weight:600; font-family:inherit; }
+  .sidebar button.nav-btn:hover { background:rgba(255,255,255,.08); color:#fff; }
+  .sidebar button.nav-btn.active { background:var(--blue); color:#fff; }
+  .sidebar .spacer { flex:1; }
+  .sidebar .logout { margin:0 12px; }
+  .sidebar .logout button { width:100%; text-align:left; background:none; border:1px solid rgba(255,255,255,.2); color:rgba(255,255,255,.8); padding:9px 12px; border-radius:8px; cursor:pointer; font-family:inherit; font-size:13px; }
+
+  .content { flex:1 1 auto; padding:32px 40px; max-width:1080px; }
+  .page-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; }
+  .page-head h1 { font-size:24px; }
+  .page-head .sub { font-size:12.5px; color:var(--ink-45); margin-top:2px; }
+
+  /* ---- card / table ---- */
+  .card { background:var(--paper); border:1px solid var(--line); border-radius:var(--radius); padding:20px; margin-bottom:20px; }
+  table { width:100%; border-collapse:collapse; }
+  .table-card { padding:0; overflow:hidden; }
+  thead th { text-align:left; font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:#fff; background:#0a0a0c; padding:12px 10px; border-bottom:none; }
+  thead th:first-child { padding-left:16px; }
+  thead th:last-child { padding-right:16px; }
+  td { padding:12px 10px; border-bottom:1px solid var(--line); font-size:13.5px; vertical-align:middle; }
+  td:first-child { padding-left:16px; }
+  td:last-child { padding-right:16px; }
+  tr:last-child td { border-bottom:none; }
+  tr:hover td { background:var(--surface); }
+
+  /* ---- buttons / inputs ---- */
+  .btn { background:var(--blue); color:#fff; border:none; padding:9px 16px; border-radius:999px; cursor:pointer; font-weight:700; font-size:12.5px; font-family:inherit; }
+  .btn:hover { background:var(--ink); }
+  .btn-outline { background:transparent; border:1px solid var(--line); color:var(--ink); padding:8px 15px; border-radius:999px; cursor:pointer; font-weight:700; font-size:12.5px; font-family:inherit; }
+  .btn-outline:hover { border-color:var(--ink); }
+  .btn-ghost { background:none; border:none; color:var(--ink-45); cursor:pointer; font-size:12px; font-family:inherit; padding:4px 8px; }
+  .btn-ghost:hover { color:var(--danger); }
+  .btn-sm { padding:5px 10px; font-size:11.5px; }
+  .btn:disabled, .btn-outline:disabled { opacity:.4; cursor:not-allowed; }
+
+  label.field-label { display:block; font-size:12px; font-weight:700; color:var(--ink-70); margin:0 0 5px; }
+  .field-hint { font-size:11.5px; color:var(--ink-45); margin:-3px 0 8px; }
+  input[type=text], input[type=email], input[type=password], input[type=number], select, textarea {
+    width:100%; padding:9px 11px; border:1px solid var(--line); border-radius:8px; font-family:inherit; font-size:13px; color:var(--ink); background:#fff;
+  }
+  input:focus, select:focus, textarea:focus { outline:none; border-color:var(--blue); box-shadow:0 0 0 3px var(--blue-dim); }
+  .field { margin-bottom:14px; }
+  .checkbox-row { display:flex; align-items:center; gap:8px; }
+  .checkbox-row input { width:auto; }
+
+  .status-badge { padding:3px 10px; border-radius:999px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.02em; }
+  .status-published { background:var(--success-dim); color:var(--success); }
+  .status-draft { background:var(--surface-2); color:var(--ink-45); }
+  .status-new { background:var(--blue-dim); color:var(--blue); }
+  .status-contacted { background:#FEF3C7; color:#92400E; }
+  .status-qualified { background:var(--success-dim); color:var(--success); }
+  .status-won { background:var(--success); color:#fff; }
+  .status-lost { background:var(--surface-2); color:var(--ink-45); }
+
+  /* ---- login ---- */
+  #login-view { max-width:360px; margin:10vh auto; }
+  #login-view .card { padding:28px; }
+  #login-view h2 { font-size:20px; margin-bottom:18px; }
+  .login-error { color:var(--danger); font-size:12.5px; margin-top:8px; }
+
+  .hidden { display:none !important; }
+
+  /* ---- page editor ---- */
+  .editor-grid { display:grid; grid-template-columns:420px 1fr; gap:20px; align-items:start; }
+  .editor-main { min-width:0; }
+  .editor-side { position:sticky; top:32px; min-width:0; }
+  @media (max-width:1100px) { .editor-grid { grid-template-columns:1fr; } .editor-side { position:static; } }
+
+  /* ---- live preview pane ---- */
+  .preview-pane { background:#fff; border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; }
+  .preview-toolbar { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 14px; border-bottom:1px solid var(--line); background:var(--surface); }
+  .device-tabs { display:flex; gap:4px; }
+  .device-btn { background:none; border:1px solid var(--line); color:var(--ink-70); padding:6px 10px; border-radius:8px; cursor:pointer; font-family:inherit; font-size:12px; font-weight:600; }
+  .device-btn.active { background:var(--ink); color:#fff; border-color:var(--ink); }
+  .preview-open-link { font-size:12px; font-weight:700; color:var(--blue); text-decoration:none; white-space:nowrap; }
+  .preview-frame-wrap { background:var(--surface-2); padding:20px; display:flex; justify-content:center; overflow:auto; max-height:calc(100vh - 200px); }
+  #preview-iframe, #form-preview-iframe, #menu-preview-iframe { border:none; background:#fff; width:100%; height:900px; max-width:100%; transition:width .18s ease; box-shadow:0 1px 3px rgba(0,0,0,.06); }
+  .preview-status { font-size:11.5px; color:var(--ink-45); padding:8px 14px; border-top:1px solid var(--line); }
+
+  .block-card { background:#fff; border:1px solid var(--line); border-radius:var(--radius); margin-bottom:14px; overflow:hidden; }
+  .block-card-head { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:var(--surface); border-bottom:1px solid var(--line); }
+  .block-card-head .block-title { font-weight:700; font-size:13px; }
+  .block-card-head .block-type-tag { font-size:10.5px; color:var(--ink-45); background:var(--surface-2); padding:2px 8px; border-radius:999px; margin-left:8px; }
+  .block-card-actions { display:flex; gap:4px; }
+  .block-card-body { padding:16px; }
+  .block-card-body.collapsed { display:none; }
+
+  .list-repeater { border:1px dashed var(--line); border-radius:8px; padding:12px; margin-bottom:6px; }
+  .list-item { background:var(--surface); border-radius:8px; padding:12px; margin-bottom:10px; position:relative; }
+  .list-item:last-child { margin-bottom:0; }
+  .list-item-remove { position:absolute; top:8px; right:8px; }
+  .list-add-btn { margin-top:4px; }
+
+  .layout-row { display:flex; gap:10px; }
+  .layout-row .field { flex:1; }
+
+  .add-block-row { display:flex; gap:8px; align-items:center; margin-top:4px; }
+  .add-block-row select { flex:1; }
+
+  /* ---- forms builder ---- */
+  .fb-section-card { background:#fff; border:1px solid var(--line); border-radius:var(--radius); margin-bottom:16px; overflow:hidden; }
+  .fb-section-head { display:flex; align-items:center; gap:10px; padding:14px 16px; background:var(--surface); border-bottom:1px solid var(--line); }
+  .fb-section-head input { flex:1; border:none; background:transparent; font-weight:700; font-size:14px; padding:4px 2px; }
+  .fb-section-head input:focus { outline:none; background:#fff; border-radius:6px; box-shadow:0 0 0 2px var(--blue-dim); }
+  .fb-question-row { display:flex; align-items:center; gap:10px; padding:11px 16px; border-bottom:1px solid var(--line); }
+  .fb-question-row:last-child { border-bottom:none; }
+  .fb-q-label { flex:1; font-size:13.5px; font-weight:600; }
+  .fb-q-type-tag { font-size:10.5px; color:var(--ink-45); background:var(--surface-2); padding:2px 8px; border-radius:999px; }
+  .fb-q-required { font-size:10.5px; color:var(--danger); font-weight:700; }
+  .fb-q-conditional { font-size:10.5px; color:var(--blue); }
+  .fb-q-actions { display:flex; gap:4px; }
+  .fb-add-question-row { padding:10px 16px; }
+  .fb-empty { padding:16px; font-size:12.5px; color:var(--ink-45); }
+
+  /* ---- modal ---- */
+  .modal-overlay { position:fixed; inset:0; background:rgba(11,11,13,.45); display:flex; align-items:flex-start; justify-content:center; z-index:1000; overflow-y:auto; padding:40px 16px; }
+  .modal-panel { background:#fff; border-radius:14px; width:100%; max-width:640px; max-height:calc(100vh - 80px); display:flex; flex-direction:column; }
+  .modal-header { display:flex; align-items:center; justify-content:space-between; padding:18px 22px; border-bottom:1px solid var(--line); flex:0 0 auto; }
+  .modal-header h2 { font-size:19px; }
+  .modal-close { background:none; border:none; font-size:22px; line-height:1; color:var(--ink-45); cursor:pointer; padding:2px 6px; }
+  .modal-body { padding:22px; overflow-y:auto; }
+  .modal-footer { display:flex; justify-content:flex-end; gap:10px; padding:16px 22px; border-top:1px solid var(--line); flex:0 0 auto; }
+
+  .fb-move-box { background:var(--success-dim); border:1px solid var(--success); border-radius:10px; padding:16px; margin-bottom:20px; }
+  .fb-move-box h4 { font-size:14px; color:var(--success); margin-bottom:10px; }
+  .fb-move-box .field-hint { margin-top:8px; }
+
+  .type-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:20px; }
+  .type-btn { display:flex; align-items:center; gap:8px; padding:12px 14px; border-radius:8px; border:2px solid transparent; background:var(--surface); cursor:pointer; font-family:inherit; font-size:13px; font-weight:700; text-align:left; color:var(--ink-70); }
+  .type-btn.active { background:var(--success-dim); border-color:var(--success); color:var(--success); }
+
+  .col-width-row { display:flex; gap:18px; align-items:center; margin-bottom:16px; }
+  .col-width-row label { display:flex; align-items:center; gap:6px; font-size:13px; font-weight:600; cursor:pointer; }
+
+  .fb-options-list { border:1px dashed var(--line); border-radius:8px; padding:10px; margin-bottom:16px; }
+  .fb-option-row { display:flex; gap:8px; margin-bottom:8px; align-items:center; }
+  .fb-option-row input { flex:1; }
+  .fb-option-remove { flex:0 0 auto; }
+
+  .fb-followups { background:var(--surface); border:1px solid var(--line); border-radius:10px; margin-bottom:6px; overflow:hidden; }
+  .fb-followups-head { padding:14px 16px; border-bottom:1px solid var(--line); }
+  .fb-followups-head .sub { margin-top:3px; }
+  .fb-followup-group { padding:14px 16px; border-bottom:1px solid var(--line); }
+  .fb-followup-group:last-child { border-bottom:none; }
+  .fb-followup-group-title { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.03em; color:var(--ink-45); margin-bottom:10px; }
+  .fb-followup-field { display:flex; align-items:center; justify-content:space-between; background:#fff; border:1px solid var(--line); border-radius:8px; padding:10px 12px; margin-bottom:8px; font-size:13px; }
+  .fb-followup-field .type-label { color:var(--ink-45); font-size:11.5px; }
+  .fb-followup-field button { background:none; border:none; color:var(--ink-45); font-size:16px; cursor:pointer; line-height:1; }
+  .fb-followup-add-row { display:flex; gap:8px; align-items:center; }
+  .fb-followup-add-row select { flex:1; }
+
+  .empty-state { text-align:center; padding:40px 20px; color:var(--ink-45); font-size:13px; }
+
+  .save-bar { display:flex; gap:10px; align-items:center; }
+  .save-status { font-size:12px; color:var(--ink-45); }
+</style>
+</head>
+<body>
+
+<div id="login-view" class="hidden">
+  <div class="card">
+    <h2>GetSetSold Admin</h2>
+    <div class="field">
+      <label class="field-label">Email</label>
+      <input id="login-email" type="email" placeholder="you@getsetsold.ca" />
+    </div>
+    <div class="field">
+      <label class="field-label">Password</label>
+      <input id="login-password" type="password" placeholder="••••••••" />
+    </div>
+    <button class="btn" style="width:100%;" onclick="login()">Log In</button>
+    <p id="login-error" class="login-error"></p>
+  </div>
+</div>
+
+<div id="app-view" class="hidden shell">
+  <aside class="sidebar">
+    <div class="brand">GetSetSold</div>
+    <nav>
+      <button class="nav-btn active" data-tab="leads" onclick="switchTab('leads')">Leads</button>
+      <button class="nav-btn" data-tab="pages" onclick="switchTab('pages')">Pages</button>
+      <button class="nav-btn" data-tab="forms" onclick="switchTab('forms')">Forms</button>
+      <button class="nav-btn" data-tab="menu" onclick="switchTab('menu')">Menu &amp; Footer</button>
+      <button class="nav-btn" data-tab="calculators" onclick="switchTab('calculators')">Calculators</button>
+      <button class="nav-btn" data-tab="settings" onclick="switchTab('settings')">Settings</button>
+    </nav>
+    <div class="spacer"></div>
+    <div class="logout"><button onclick="logout()">Log Out</button></div>
+  </aside>
+
+  <div class="content">
+    <section id="tab-leads">
+      <div class="page-head">
+        <div>
+          <h1>Leads</h1>
+          <div class="sub">Contact + valuation + VIP buyer submissions, newest first</div>
+        </div>
+      </div>
+      <div class="card table-card">
+        <table>
+          <thead><tr><th>Name</th><th>Contact</th><th>Type</th><th>Status</th><th>Received</th></tr></thead>
+          <tbody id="leads-table-body"><tr><td colspan="5" class="empty-state">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="tab-pages" class="hidden">
+      <div id="pages-list-view">
+        <div class="page-head">
+          <div>
+            <h1>Pages</h1>
+            <div class="sub">Every page is a stack of blocks, rendered live from this data</div>
+          </div>
+          <button class="btn" onclick="createPage()">+ New Page</button>
+        </div>
+        <div class="card table-card">
+          <table>
+            <thead><tr><th>Title</th><th>Slug</th><th>Type</th><th>Status</th><th></th></tr></thead>
+            <tbody id="pages-table-body"><tr><td colspan="5" class="empty-state">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="page-editor-view" class="hidden">
+        <div class="page-head">
+          <div>
+            <button class="btn-ghost" style="padding-left:0;" onclick="backToPagesList()">&larr; All pages</button>
+            <h1 style="margin-top:4px;">Edit Page</h1>
+          </div>
+          <div class="save-bar">
+            <span id="save-status" class="save-status"></span>
+            <button class="btn" onclick="savePage()">Save Page</button>
+          </div>
+        </div>
+
+        <div class="editor-grid">
+          <div class="editor-main">
+            <div class="card">
+              <div class="field">
+                <label class="field-label">Page title</label>
+                <input id="editor-title" type="text" placeholder="Sell Your Home — GetSetSold" />
+              </div>
+              <div class="field">
+                <label class="field-label">Slug (URL path)</label>
+                <input id="editor-slug" type="text" placeholder="/sell" />
+                <div class="field-hint">Always starts with "/" — normalized automatically on save. Use "/" for the homepage.</div>
+              </div>
+              <div class="field">
+                <label class="field-label">Status</label>
+                <select id="editor-status">
+                  <option value="draft">Draft (not publicly visible)</option>
+                  <option value="published">Published (live)</option>
+                </select>
+              </div>
+            </div>
+
+            <h3 style="font-size:15px; margin:20px 0 12px;">Blocks</h3>
+            <div id="editor-blocks"></div>
+
+            <div class="card add-block-row">
+              <select id="add-block-type"></select>
+              <button class="btn-outline" onclick="addBlock()">+ Add Block</button>
+            </div>
+          </div>
+
+          <div class="editor-side">
+            <div class="preview-pane">
+              <div class="preview-toolbar">
+                <div class="device-tabs">
+                  <button type="button" class="device-btn active" data-width="100%" onclick="setPreviewDevice(this)">Desktop</button>
+                  <button type="button" class="device-btn" data-width="768px" onclick="setPreviewDevice(this)">iPad</button>
+                  <button type="button" class="device-btn" data-width="390px" onclick="setPreviewDevice(this)">iPhone</button>
+                </div>
+                <a id="preview-link" class="preview-open-link" href="#" target="_blank">Open live page &rarr;</a>
+              </div>
+              <div class="preview-frame-wrap">
+                <iframe id="preview-iframe" title="Page preview"></iframe>
+              </div>
+              <div class="preview-status" id="preview-status">This renders through the same code as the live site &mdash; updates as you edit, nothing is saved until you click Save Page.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-forms" class="hidden">
+      <div id="forms-list-view">
+        <div class="page-head">
+          <div>
+            <h1>Forms</h1>
+            <div class="sub">Lead-capture forms — one General Contact form for site-wide use, plus specific ones (Home Evaluation, Buyer, Seller, Tenant, Landlord…)</div>
+          </div>
+          <button class="btn" onclick="createForm()">+ New Form</button>
+        </div>
+        <div class="card table-card">
+          <table>
+            <thead><tr><th>Name</th><th>Key</th><th>Status</th><th>Availability</th><th>Sections / Questions</th><th></th></tr></thead>
+            <tbody id="forms-table-body"><tr><td colspan="6" class="empty-state">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="form-builder-view" class="hidden">
+        <div class="page-head">
+          <div>
+            <button class="btn-ghost" style="padding-left:0;" onclick="backToFormsList()">&larr; All forms</button>
+            <h1 style="margin-top:4px;" id="fb-title">Edit Form</h1>
+          </div>
+          <div class="save-bar">
+            <span id="fb-save-status" class="save-status"></span>
+            <button class="btn" onclick="saveFormSettings()">Save Settings</button>
+          </div>
+        </div>
+
+        <div class="editor-grid">
+          <div class="editor-main">
+            <div class="card">
+              <div class="layout-row">
+                <div class="field">
+                  <label class="field-label">Form name</label>
+                  <input id="fb-name" type="text" oninput="scheduleFormPreviewUpdate()" />
+                </div>
+                <div class="field">
+                  <label class="field-label">Form key</label>
+                  <input id="fb-key" type="text" />
+                  <div class="field-hint">Used by the "Lead Capture Form (Dynamic)" block's Form Key prop, and stored on every submission.</div>
+                </div>
+              </div>
+              <div class="layout-row">
+                <div class="field">
+                  <label class="field-label">Status</label>
+                  <select id="fb-status" onchange="updateFormLinkDisplay()">
+                    <option value="draft">Draft (not renderable on the site yet)</option>
+                    <option value="published">Published (live)</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label class="field-label">Availability</label>
+                  <select id="fb-display-mode" onchange="updateFormLinkDisplay()">
+                    <option value="both">Both — standalone link + usable as a block</option>
+                    <option value="standalone">Standalone only (own link, e.g. a Home Evaluation page)</option>
+                    <option value="in_page">In-page only (block only, no standalone link)</option>
+                  </select>
+                </div>
+              </div>
+              <div class="field" id="fb-link-row" style="display:none;">
+                <label class="field-label">Available at</label>
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <code id="fb-link-url" style="font-size:12.5px; background:var(--surface); padding:6px 10px; border-radius:8px;"></code>
+                  <a id="fb-link-open" href="#" target="_blank" class="preview-open-link">Open &rarr;</a>
+                </div>
+              </div>
+              <div class="layout-row">
+                <div class="field">
+                  <label class="field-label">Submit button label</label>
+                  <input id="fb-submit-label" type="text" placeholder="Submit" oninput="scheduleFormPreviewUpdate()" />
+                </div>
+                <div class="field">
+                  <label class="field-label">Redirect URL (optional)</label>
+                  <input id="fb-redirect-url" type="text" placeholder="/thank-you" />
+                </div>
+              </div>
+              <div class="field">
+                <label class="field-label">Success message (shown inline if no redirect)</label>
+                <input id="fb-success-message" type="text" placeholder="Thanks — we'll be in touch shortly." />
+              </div>
+            </div>
+
+            <h3 style="font-size:15px; margin:20px 0 12px;">Sections</h3>
+            <div id="fb-sections"></div>
+            <div class="card" style="display:flex; gap:8px; align-items:center;">
+              <input id="fb-new-section-title" type="text" placeholder="New section title (e.g. Property Details)" style="flex:1;" />
+              <button class="btn-outline" onclick="addSection()">+ Add Section</button>
+            </div>
+          </div>
+
+          <div class="editor-side">
+            <div class="preview-pane">
+              <div class="preview-toolbar">
+                <div class="device-tabs">
+                  <button type="button" class="device-btn active" data-width="100%" onclick="setFormPreviewDevice(this)">Desktop</button>
+                  <button type="button" class="device-btn" data-width="768px" onclick="setFormPreviewDevice(this)">iPad</button>
+                  <button type="button" class="device-btn" data-width="390px" onclick="setFormPreviewDevice(this)">iPhone</button>
+                </div>
+                <div class="device-tabs">
+                  <button type="button" class="device-btn active" data-mode="standalone" onclick="setFormPreviewMode(this)">Standalone</button>
+                  <button type="button" class="device-btn" data-mode="in_page" onclick="setFormPreviewMode(this)">In Page</button>
+                </div>
+              </div>
+              <div class="preview-frame-wrap">
+                <iframe id="form-preview-iframe" title="Form preview"></iframe>
+              </div>
+              <div class="preview-status" id="form-preview-status">Standalone shows this form as its own link/page (e.g. a "Home Evaluation" page); In Page shows it embedded the way it looks dropped into any other page's Blocks list.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Question editor modal -->
+    <div id="question-modal" class="modal-overlay hidden">
+      <div class="modal-panel">
+        <div class="modal-header">
+          <h2>Edit Question</h2>
+          <button class="modal-close" onclick="closeQuestionModal()">&times;</button>
+        </div>
+        <div class="modal-body" id="question-modal-body"></div>
+        <div class="modal-footer">
+          <button class="btn-outline" onclick="closeQuestionModal()">Cancel</button>
+          <button class="btn" onclick="saveQuestionFromModal()">Save Question</button>
+        </div>
+      </div>
+    </div>
+
+    <section id="tab-menu" class="hidden">
+      <div class="page-head">
+        <div>
+          <h1>Menu &amp; Footer</h1>
+          <div class="sub">Site-wide header navigation and footer links — this is the single source of truth for every page's header and footer.</div>
+        </div>
+        <div class="save-bar">
+          <span id="menu-save-status" class="save-status"></span>
+          <button class="btn" onclick="saveMenuFooter()">Save</button>
+        </div>
+      </div>
+
+      <div class="editor-grid">
+        <div class="editor-main">
+          <div class="card">
+            <h3 style="font-size:15px; margin-bottom:4px;">Header Layout</h3>
+            <div class="field-hint" style="margin-bottom:14px;">3 pre-styled desktop layouts — the mobile hamburger menu below is identical no matter which one you pick.</div>
+            <select id="menu-header-style" onchange="scheduleMenuPreviewUpdate()">
+              <option value="classic">Classic — logo left, menu centered, actions right</option>
+              <option value="centered">Centered — logo on top, menu centered underneath</option>
+              <option value="minimal">Minimal — compact height, menu left-aligned next to the logo</option>
+            </select>
+            <div class="layout-row" style="margin-top:14px;">
+              <label class="field-hint" style="display:flex; align-items:center; gap:8px; font-size:13px; color:var(--ink);">
+                <input type="checkbox" id="menu-header-fixed-desktop" onchange="scheduleMenuPreviewUpdate()" /> Fixed header on desktop (stays visible on scroll)
+              </label>
+              <label class="field-hint" style="display:flex; align-items:center; gap:8px; font-size:13px; color:var(--ink);">
+                <input type="checkbox" id="menu-header-fixed-mobile" onchange="scheduleMenuPreviewUpdate()" /> Fixed header on mobile (stays visible on scroll)
+              </label>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3 style="font-size:15px; margin-bottom:4px;">Mobile Menu Style</h3>
+            <div class="field-hint" style="margin-bottom:14px;">How the header menu behaves on phone/tablet widths. Collapsed by default in every style except Simple, which has no hamburger.</div>
+            <select id="menu-mobile-style" onchange="scheduleMenuPreviewUpdate()">
+              <option value="overlay">Overlay — hamburger opens a fullscreen dropdown</option>
+              <option value="accordion">Accordion — hamburger opens a list; items with sub-links get a +/- toggle</option>
+              <option value="simple">Simple — no hamburger, links shown as an always-visible scrollable strip</option>
+            </select>
+          </div>
+
+          <div class="card">
+            <h3 style="font-size:15px; margin-bottom:4px;">Footer Layout</h3>
+            <div class="field-hint" style="margin-bottom:14px;">3 pre-styled footer layouts.</div>
+            <select id="menu-footer-style" onchange="scheduleMenuPreviewUpdate()">
+              <option value="simple">Simple — info, links and social stacked in one column</option>
+              <option value="columns">Columns — info, links and social side by side</option>
+              <option value="centered">Centered — everything centered</option>
+            </select>
+          </div>
+
+          <div class="card">
+            <h3 style="font-size:15px; margin-bottom:4px;">Header Menu</h3>
+            <div class="field-hint" style="margin-bottom:14px;">Links shown in the site header, left to right. Pick "Page" or "Form" to link to something already in the CMS, or "Custom" for any URL.</div>
+            <div id="menu-nav-items"></div>
+            <div class="layout-row" style="align-items:flex-end;">
+              <div class="field"><label class="field-label">Link to</label><select id="menu-new-item-type"><option value="custom">Custom URL</option><option value="page">A page…</option><option value="form">A form…</option><option value="calculator">A calculator…</option></select></div>
+              <button class="btn-outline btn-sm" style="margin-bottom:14px;" onclick="addMenuItem()">+ Add Link</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3 style="font-size:15px; margin-bottom:4px;">Footer Links</h3>
+            <div class="field-hint" style="margin-bottom:14px;">Extra links shown in the footer, above the social icons (business info, social links, and license text are set on the Settings tab).</div>
+            <div id="menu-footer-items"></div>
+            <div class="layout-row" style="align-items:flex-end;">
+              <div class="field"><label class="field-label">Link to</label><select id="menu-new-footer-type"><option value="custom">Custom URL</option><option value="page">A page…</option><option value="form">A form…</option><option value="calculator">A calculator…</option></select></div>
+              <button class="btn-outline btn-sm" style="margin-bottom:14px;" onclick="addFooterItem()">+ Add Link</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="editor-side">
+          <div class="preview-pane">
+            <div class="preview-toolbar">
+              <div class="device-tabs">
+                <button type="button" class="device-btn active" data-width="100%" onclick="setMenuPreviewDevice(this)">Desktop</button>
+                <button type="button" class="device-btn" data-width="768px" onclick="setMenuPreviewDevice(this)">iPad</button>
+                <button type="button" class="device-btn" data-width="390px" onclick="setMenuPreviewDevice(this)">iPhone</button>
+              </div>
+            </div>
+            <div class="preview-frame-wrap">
+              <iframe id="menu-preview-iframe" title="Menu &amp; footer preview"></iframe>
+            </div>
+            <div class="preview-status" id="menu-preview-status">Shows the header and footer as they'll look on any page that doesn't override them — updates as you edit, nothing is saved until you click Save.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-calculators" class="hidden">
+      <div class="page-head">
+        <div>
+          <h1>Calculators</h1>
+          <div class="sub">Your 14-calculator hub (affordability, mortgage payment, LTT, HST rebate, and more) is one self-contained file with its own routing — paste its HTML below to publish it at /calculators, and each one below gets its own landing page automatically.</div>
+        </div>
+        <div class="save-bar">
+          <span id="calc-save-status" class="save-status"></span>
+          <button class="btn" onclick="saveCalculatorsPage()">Save</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 style="font-size:15px; margin-bottom:4px;">Hub HTML</h3>
+        <div class="field-hint" style="margin-bottom:14px;">Paste the full contents of calculators.html here. When you get an updated version of the file from your source, replace it here and save — no code deploy needed. <span id="calc-live-link"></span></div>
+        <textarea id="calc-html" rows="14" style="width:100%; box-sizing:border-box; font-family:monospace; font-size:12px;" placeholder="<html>...(paste the full calculators.html source here)...</html>"></textarea>
+      </div>
+
+      <div class="card">
+        <h3 style="font-size:15px; margin-bottom:4px;">The 14 Calculators</h3>
+        <div class="field-hint" style="margin-bottom:14px;">Each of these is its own landing page (the hub file opens the matching tab for its URL) — pick "A calculator…" in the Menu &amp; Footer link picker to add any of them to your header or footer.</div>
+        <div id="calc-list" class="table-card"></div>
+      </div>
+    </section>
+
+    <section id="tab-settings" class="hidden">
+      <div class="page-head">
+        <div>
+          <h1>Settings</h1>
+          <div class="sub">Branding, contact info, and the config the auto-email / edge functions will read</div>
+        </div>
+        <div class="save-bar">
+          <span id="settings-save-status" class="save-status"></span>
+          <button class="btn" onclick="saveSettings()">Save Settings</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 style="font-size:15px; margin-bottom:16px;">Branding</h3>
+        <div class="layout-row">
+          <div class="field">
+            <label class="field-label">Business name</label>
+            <input id="set-business-name" type="text" placeholder="GetSetSold.ca" />
+          </div>
+          <div class="field" style="max-width:160px;">
+            <label class="field-label">Name font size</label>
+            <input id="set-business-name-font-size" type="number" min="10" max="72" placeholder="20" />
+            <div class="field-hint">px. Only applies when there's no logo image (text logo).</div>
+          </div>
+          <div class="field">
+            <label class="field-label">Brokerage name</label>
+            <input id="set-brokerage-name" type="text" placeholder="Lombard Group Real Estate Inc., Brokerage" />
+          </div>
+        </div>
+        <div class="layout-row">
+          <div class="field">
+            <label class="field-label">Logo URL</label>
+            <input id="set-logo-url" type="text" placeholder="https://.../logo.svg" />
+            <div class="field-hint">Shown in the site header. Leave blank to use the business name as text.</div>
+          </div>
+          <div class="field">
+            <label class="field-label">Favicon URL</label>
+            <input id="set-favicon-url" type="text" placeholder="https://.../favicon.png" />
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 style="font-size:15px; margin-bottom:16px;">Contact Info</h3>
+        <div class="layout-row">
+          <div class="field">
+            <label class="field-label">Phone</label>
+            <input id="set-phone" type="text" placeholder="416-605-7488" />
+          </div>
+          <div class="field">
+            <label class="field-label">Email</label>
+            <input id="set-email" type="email" placeholder="rohit@getsetsold.ca" />
+          </div>
+        </div>
+        <div class="layout-row">
+          <div class="field">
+            <label class="field-label">Agent name</label>
+            <input id="set-agent-name" type="text" placeholder="Rohit K. Sharma, REALTOR®" />
+          </div>
+          <div class="field">
+            <label class="field-label">Agent photo URL</label>
+            <input id="set-agent-image-url" type="text" placeholder="https://.../rohit.jpg" />
+            <div class="field-hint">Shown on the "Contact For More Details" card on every listing page.</div>
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-label">Office address</label>
+          <input id="set-address" type="text" placeholder="123 Main St, Grimsby, ON" />
+        </div>
+        <div class="field">
+          <label class="field-label">License / disclaimer text</label>
+          <textarea id="set-license-text" rows="2" placeholder="Not intended to solicit buyers or sellers currently under contract."></textarea>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 style="font-size:15px; margin-bottom:16px;">Social Links</h3>
+        <div class="layout-row">
+          <div class="field">
+            <label class="field-label">Facebook</label>
+            <input id="set-social-facebook" type="text" placeholder="https://facebook.com/..." />
+          </div>
+          <div class="field">
+            <label class="field-label">Instagram</label>
+            <input id="set-social-instagram" type="text" placeholder="https://instagram.com/..." />
+          </div>
+        </div>
+        <div class="layout-row">
+          <div class="field">
+            <label class="field-label">YouTube</label>
+            <input id="set-social-youtube" type="text" placeholder="https://youtube.com/..." />
+          </div>
+          <div class="field">
+            <label class="field-label">LinkedIn</label>
+            <input id="set-social-linkedin" type="text" placeholder="https://linkedin.com/..." />
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-label">TikTok</label>
+          <input id="set-social-tiktok" type="text" placeholder="https://tiktok.com/..." />
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 style="font-size:15px; margin-bottom:4px;">Notifications &amp; Auto-Email</h3>
+        <div class="field-hint" style="margin-bottom:14px;">Non-secret addressing config only — the actual email-provider API key is set as a Worker/edge-function secret, never stored here.</div>
+        <div class="field checkbox-row">
+          <input type="checkbox" id="set-lead-notify-enabled" />
+          <label class="field-label" style="margin:0;" for="set-lead-notify-enabled">Email me when a new lead comes in</label>
+        </div>
+        <div class="field">
+          <label class="field-label">Lead notification email</label>
+          <input id="set-lead-notify-email" type="email" placeholder="rohit@getsetsold.ca" />
+        </div>
+        <div class="field checkbox-row">
+          <input type="checkbox" id="set-auto-reply-enabled" />
+          <label class="field-label" style="margin:0;" for="set-auto-reply-enabled">Send an automatic reply to the lead</label>
+        </div>
+        <div class="layout-row">
+          <div class="field">
+            <label class="field-label">"From" name</label>
+            <input id="set-from-name" type="text" placeholder="GetSetSold.ca" />
+          </div>
+          <div class="field">
+            <label class="field-label">"From" email</label>
+            <input id="set-from-email" type="email" placeholder="noreply@getsetsold.ca" />
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-label">Reply-to email</label>
+          <input id="set-reply-to" type="email" placeholder="rohit@getsetsold.ca" />
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script>
+  // ---- Config: pre-con/CRM Supabase project (atmrjimfcydgjonlxzvr) ----
+  // Anon key only — RLS is what actually restricts access. Never put the
+  // service-role key in this file.
+  const SUPABASE_URL = "https://atmrjimfcydgjonlxzvr.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF0bXJqaW1mY3lkZ2pvbmx4enZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk5ODkzODQsImV4cCI6MjA4NTU2NTM4NH0.MBg3k5iYPQxfqh8-5vEKyr-H4JEvOf_wFlIU7nqCDeM";
+  // Where published pages actually render — used only to build the "Open
+  // live page" preview link. Update if the Worker's domain changes.
+  const SITE_ORIGIN = "https://cms.rohit-910.workers.dev";
+  // ------------------------------------------------------------------------
+
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  let currentPage = null;
+  let blocksLibrary = {}; // id -> {id, label, category, prop_schema}
+
+  function normalizeSlug(raw) {
+    let s = (raw || "").trim();
+    if (!s) return "/";
+    if (!s.startsWith("/")) s = "/" + s;
+    s = s.replace(/\/+/g, "/");
+    if (s.length > 1) s = s.replace(/\/$/, "");
+    return s;
+  }
+
+  function esc(s = "") {
+    return String(s).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
+  }
+
+  // ---- auth ----
+  async function checkSession() {
+    const { data: { session } } = await sb.auth.getSession();
+    if (session) {
+      document.getElementById("login-view").classList.add("hidden");
+      document.getElementById("app-view").classList.remove("hidden");
+      loadLeads();
+      loadBlocksLibrary().then(() => loadPages());
+    } else {
+      document.getElementById("app-view").classList.add("hidden");
+      document.getElementById("login-view").classList.remove("hidden");
+    }
+  }
+
+  async function login() {
+    const email = document.getElementById("login-email").value;
+    const password = document.getElementById("login-password").value;
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) document.getElementById("login-error").textContent = error.message;
+    else checkSession();
+  }
+
+  async function logout() {
+    await sb.auth.signOut();
+    checkSession();
+  }
+
+  // ---- tabs ----
+  function switchTab(tab) {
+    document.querySelectorAll(".sidebar .nav-btn").forEach((b) => b.classList.toggle("active", b.dataset.tab === tab));
+    document.querySelectorAll(".content > section").forEach((s) => s.classList.add("hidden"));
+    document.getElementById("tab-" + tab).classList.remove("hidden");
+    if (tab === "pages") backToPagesList();
+    if (tab === "settings") loadSettings();
+    if (tab === "forms") backToFormsList();
+    if (tab === "menu") loadMenuFooter();
+    if (tab === "calculators") loadCalculatorsTab();
+  }
+
+  // ---- Calculators (static_pages, key='calculators') ----
+  // Same 14 slugs as calculators-catalog.js on the Worker side — kept in
+  // sync manually since this file has no build step to import it from;
+  // these only drive this tab's list + the Menu & Footer link picker, not
+  // the calculators themselves (those live entirely in the pasted HTML).
+  const CALCULATORS = [
+    { slug: "affordability-calculator", title: "Affordability Calculator" },
+    { slug: "mortgage-payment-calculator", title: "Mortgage Payment Calculator" },
+    { slug: "purchase-cost-calculator", title: "Purchase Cost Calculator" },
+    { slug: "maximum-mortgage-calculator", title: "Maximum Mortgage Calculator" },
+    { slug: "required-income-calculator", title: "Required Income Calculator" },
+    { slug: "mortgage-renewal-calculator", title: "Mortgage Renewal Calculator" },
+    { slug: "compare-mortgage-rates", title: "Mortgage Comparison Calculator" },
+    { slug: "land-transfer-tax-calculator-ontario", title: "Land Transfer Tax Calculator" },
+    { slug: "closing-costs-calculator-canada", title: "Closing Costs Calculator" },
+    { slug: "ontario-hst-rebate-calculator", title: "Ontario HST Rebate Calculator" },
+    { slug: "down-payment-comparison-calculator", title: "Down Payment Comparison Calculator" },
+    { slug: "buy-vs-rent-calculator", title: "Buy vs Rent Calculator" },
+    { slug: "net-proceeds-calculator", title: "Net Proceeds Calculator" },
+    { slug: "rental-investment-forecast-calculator", title: "Rental Investment Forecast Calculator" },
+  ];
+
+  async function loadCalculatorsTab() {
+    const status = document.getElementById("calc-save-status");
+    if (status) status.textContent = "";
+    const { data, error } = await sb.from("static_pages").select("html").eq("key", "calculators").maybeSingle();
+    if (error) { if (status) status.textContent = "Error loading: " + error.message; }
+    document.getElementById("calc-html").value = (data && data.html) || "";
+    document.getElementById("calc-live-link").innerHTML = data && data.html
+      ? `<a href="${SITE_ORIGIN}/calculators" target="_blank">View live →</a>`
+      : "Nothing published yet.";
+    renderCalculatorsList();
+  }
+
+  function renderCalculatorsList() {
+    document.getElementById("calc-list").innerHTML = `
+      <table>
+        <thead><tr><th>Calculator</th><th>Landing page</th><th></th></tr></thead>
+        <tbody>
+          ${CALCULATORS.map((c) => `
+            <tr>
+              <td>${esc(c.title)}</td>
+              <td><code>/calculators/${esc(c.slug)}</code></td>
+              <td><a href="${SITE_ORIGIN}/calculators/${esc(c.slug)}" target="_blank" class="btn-ghost btn-sm">Open</a></td>
+            </tr>`).join("")}
+        </tbody>
+      </table>`;
+  }
+
+  async function saveCalculatorsPage() {
+    const status = document.getElementById("calc-save-status");
+    const html = document.getElementById("calc-html").value;
+    if (!html.trim()) { status.textContent = "Paste the calculators.html source first."; return; }
+    status.textContent = "Saving…";
+    const { error } = await sb.from("static_pages").upsert({ key: "calculators", title: "Calculators Hub", html, updated_at: new Date().toISOString() }, { onConflict: "key" });
+    if (error) { status.textContent = "Error: " + error.message; return; }
+    status.textContent = "Saved.";
+    setTimeout(() => { status.textContent = ""; }, 2000);
+    document.getElementById("calc-live-link").innerHTML = `<a href="${SITE_ORIGIN}/calculators" target="_blank">View live →</a>`;
+  }
+
+  // ---- leads ----
+  async function loadLeads() {
+    const { data, error } = await sb
+      .from("leads")
+      .select("id, form_type, status, created_at, contacts(name, email, phone)")
+      .order("created_at", { ascending: false })
+      .limit(50);
+    const body = document.getElementById("leads-table-body");
+    if (error) { body.innerHTML = `<tr><td colspan="5" class="empty-state">${esc(error.message)}</td></tr>`; return; }
+    body.innerHTML = data.map((l) => `
+      <tr>
+        <td>${esc(l.contacts?.name || "—")}</td>
+        <td>${esc(l.contacts?.email || "")} ${esc(l.contacts?.phone || "")}</td>
+        <td>${esc(l.form_type)}</td>
+        <td><span class="status-badge status-${esc(l.status)}">${esc(l.status)}</span></td>
+        <td>${new Date(l.created_at).toLocaleDateString()}</td>
+      </tr>`).join("") || `<tr><td colspan="5" class="empty-state">No leads yet.</td></tr>`;
+  }
+
+  // ---- blocks library ----
+  async function loadBlocksLibrary() {
+    const { data, error } = await sb.from("blocks_library").select("id, label, category, prop_schema").order("category");
+    if (error) { console.error("blocks_library load failed:", error.message); return; }
+    blocksLibrary = {};
+    (data || []).forEach((b) => { blocksLibrary[b.id] = b; });
+    const select = document.getElementById("add-block-type");
+    select.innerHTML = (data || []).map((b) => `<option value="${esc(b.id)}">${esc(b.label)} — ${esc(b.category)}</option>`).join("");
+  }
+
+  // ---- pages list ----
+  async function loadPages() {
+    const { data, error } = await sb.from("pages").select("*").order("updated_at", { ascending: false });
+    const body = document.getElementById("pages-table-body");
+    if (error) { body.innerHTML = `<tr><td colspan="5" class="empty-state">${esc(error.message)}</td></tr>`; return; }
+    body.innerHTML = data.map((p) => `
+      <tr>
+        <td><strong>${esc(p.title || "(untitled)")}</strong></td>
+        <td><code>${esc(p.slug)}</code></td>
+        <td>${esc(p.type)}</td>
+        <td><span class="status-badge status-${p.status === 'published' ? 'published' : 'draft'}">${esc(p.status)}</span></td>
+        <td><button class="btn-outline btn-sm" onclick='openPageEditor(${JSON.stringify(p).replace(/'/g, "&#39;")})'>Edit</button></td>
+      </tr>`).join("") || `<tr><td colspan="5" class="empty-state">No pages yet — click "+ New Page" to create one.</td></tr>`;
+  }
+
+  function backToPagesList() {
+    document.getElementById("page-editor-view").classList.add("hidden");
+    document.getElementById("pages-list-view").classList.remove("hidden");
+    loadPages();
+  }
+
+  function createPage() {
+    openPageEditor({ title: "", slug: "/", type: "freeform", status: "draft", blocks: [] });
+  }
+
+  function openPageEditor(page) {
+    currentPage = JSON.parse(JSON.stringify(page)); // deep clone, never mutate the row we read
+    currentPage.blocks = currentPage.blocks || [];
+    document.getElementById("pages-list-view").classList.add("hidden");
+    document.getElementById("page-editor-view").classList.remove("hidden");
+    document.getElementById("editor-title").value = currentPage.title || "";
+    document.getElementById("editor-slug").value = currentPage.slug || "/";
+    document.getElementById("editor-status").value = currentPage.status || "draft";
+    document.getElementById("save-status").textContent = "";
+    updatePreviewLink();
+    renderBlockCards();
+    renderPreviewNow();
+  }
+
+  function updatePreviewLink() {
+    const slug = normalizeSlug(document.getElementById("editor-slug").value);
+    document.getElementById("preview-link").href = SITE_ORIGIN + slug;
+  }
+
+  // ---- live preview (renders through the real Worker's /api/preview) ----
+  let previewDebounce = null;
+
+  function setPreviewDevice(btn) {
+    document.querySelectorAll(".device-btn").forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById("preview-iframe").style.width = btn.dataset.width;
+  }
+
+  function schedulePreviewUpdate() {
+    clearTimeout(previewDebounce);
+    const status = document.getElementById("preview-status");
+    if (status) status.textContent = "Updating preview…";
+    previewDebounce = setTimeout(renderPreviewNow, 400);
+  }
+
+  async function renderPreviewNow() {
+    if (!currentPage) return;
+    syncBlocksFromDom();
+    const status = document.getElementById("preview-status");
+    try {
+      const res = await fetch(SITE_ORIGIN + "/api/preview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: document.getElementById("editor-title").value || "Preview",
+          blocks: currentPage.blocks,
+          wrapChrome: true,
+        }),
+      });
+      if (!res.ok) throw new Error("Preview request failed (" + res.status + ")");
+      const html = await res.text();
+      document.getElementById("preview-iframe").srcdoc = html;
+      if (status) status.textContent = "This renders through the same code as the live site — updates as you edit, nothing is saved until you click Save Page.";
+    } catch (err) {
+      if (status) status.textContent = "Preview error: " + err.message;
+    }
+  }
+
+  // ---- structured block editor (prop_schema-driven) ----
+  function fieldId(blockIndex, path) {
+    return `field_${blockIndex}_${path.replace(/[\[\]\.]/g, "_")}`;
+  }
+
+  // Renders one field's input given its schema entry. `schema` can be a
+  // string shorthand ("text") or a full {type, label, ...} object.
+  function renderField(blockIndex, key, schema, value) {
+    const spec = typeof schema === "string" ? { type: schema } : (schema || { type: "text" });
+    const type = spec.type || "text";
+    const label = spec.label || key;
+    const id = fieldId(blockIndex, key);
+    const v = value ?? spec.default ?? "";
+
+    if (type === "boolean") {
+      return `
+        <div class="field checkbox-row">
+          <input type="checkbox" id="${id}" data-key="${esc(key)}" data-type="boolean" ${v ? "checked" : ""} onchange="markDirty()">
+          <label class="field-label" style="margin:0;" for="${id}">${esc(label)}</label>
+        </div>`;
+    }
+
+    if (type === "textarea") {
+      return `
+        <div class="field">
+          <label class="field-label" for="${id}">${esc(label)}</label>
+          <textarea id="${id}" data-key="${esc(key)}" data-type="textarea" rows="3" onchange="markDirty()">${esc(v)}</textarea>
+        </div>`;
+    }
+
+    if (type === "int" || type === "float") {
+      const step = type === "float" ? "any" : "1";
+      const minAttr = spec.min != null ? `min="${spec.min}"` : "";
+      const maxAttr = spec.max != null ? `max="${spec.max}"` : "";
+      return `
+        <div class="field">
+          <label class="field-label" for="${id}">${esc(label)}</label>
+          <input type="number" step="${step}" ${minAttr} ${maxAttr} id="${id}" data-key="${esc(key)}" data-type="${type}" value="${esc(v)}" onchange="markDirty()">
+        </div>`;
+    }
+
+    if (type === "enum") {
+      const opts = spec.options || [];
+      return `
+        <div class="field">
+          <label class="field-label" for="${id}">${esc(label)}</label>
+          <select id="${id}" data-key="${esc(key)}" data-type="enum" onchange="markDirty()">
+            ${opts.map((o) => `<option value="${esc(o)}" ${o === v ? "selected" : ""}>${esc(o)}</option>`).join("")}
+          </select>
+        </div>`;
+    }
+
+    if (type === "list") {
+      const itemSchema = spec.item || {};
+      const items = Array.isArray(v) ? v : [];
+      const repeaterId = id + "_repeater";
+      const itemsHtml = items.map((item, i) => renderListItem(blockIndex, key, itemSchema, item, i)).join("");
+      return `
+        <div class="field">
+          <label class="field-label">${esc(label)}</label>
+          <div class="list-repeater" id="${repeaterId}" data-key="${esc(key)}" data-type="list" data-item-schema='${esc(JSON.stringify(itemSchema))}'>
+            ${itemsHtml || `<div class="field-hint">No items yet.</div>`}
+          </div>
+          <button type="button" class="btn-outline btn-sm list-add-btn" onclick="addListItem('${repeaterId}')">+ Add item</button>
+        </div>`;
+    }
+
+    // default: text
+    return `
+      <div class="field">
+        <label class="field-label" for="${id}">${esc(label)}</label>
+        <input type="text" id="${id}" data-key="${esc(key)}" data-type="text" value="${esc(v)}" onchange="markDirty()">
+      </div>`;
+  }
+
+  function renderListItem(blockIndex, listKey, itemSchema, itemValue, index) {
+    const fieldsHtml = Object.entries(itemSchema).map(([subKey, subSchema]) => {
+      const spec = typeof subSchema === "string" ? { type: subSchema } : subSchema;
+      const val = itemValue?.[subKey];
+      if (spec.type === "enum") {
+        const opts = spec.options || [];
+        return `
+          <div class="field">
+            <label class="field-label">${esc(spec.label || subKey)}</label>
+            <select data-sub-key="${esc(subKey)}" onchange="markDirty()">
+              ${opts.map((o) => `<option value="${esc(o)}" ${o === val ? "selected" : ""}>${esc(o)}</option>`).join("")}
+            </select>
+          </div>`;
+      }
+      if (spec.type === "textarea") {
+        return `
+          <div class="field">
+            <label class="field-label">${esc(spec.label || subKey)}</label>
+            <textarea rows="2" data-sub-key="${esc(subKey)}" onchange="markDirty()">${esc(val || "")}</textarea>
+          </div>`;
+      }
+      return `
+        <div class="field">
+          <label class="field-label">${esc(spec.label || subKey)}</label>
+          <input type="text" data-sub-key="${esc(subKey)}" value="${esc(val || "")}" onchange="markDirty()">
+        </div>`;
+    }).join("");
+    return `
+      <div class="list-item" data-index="${index}">
+        <button type="button" class="btn-ghost list-item-remove" onclick="this.closest('.list-item').remove(); markDirty();">Remove</button>
+        ${fieldsHtml}
+      </div>`;
+  }
+
+  function addListItem(repeaterId) {
+    const repeater = document.getElementById(repeaterId);
+    const itemSchema = JSON.parse(repeater.dataset.itemSchema || "{}");
+    const blockIndex = repeaterId.split("_")[1];
+    const emptyHint = repeater.querySelector(".field-hint");
+    if (emptyHint) emptyHint.remove();
+    const index = repeater.querySelectorAll(".list-item").length;
+    repeater.insertAdjacentHTML("beforeend", renderListItem(blockIndex, null, itemSchema, {}, index));
+    markDirty();
+  }
+
+  // Reads the current DOM state of one block's fields back into a props object.
+  function collectBlockProps(blockIndex, propSchema) {
+    const container = document.getElementById(`block-body-${blockIndex}`);
+    const props = {};
+    Object.entries(propSchema || {}).forEach(([key, schema]) => {
+      const spec = typeof schema === "string" ? { type: schema } : schema;
+      const type = spec.type || "text";
+
+      if (type === "list") {
+        const repeater = container.querySelector(`[data-key="${CSS.escape(key)}"][data-type="list"]`);
+        const items = [];
+        repeater?.querySelectorAll(".list-item").forEach((itemEl) => {
+          const item = {};
+          itemEl.querySelectorAll("[data-sub-key]").forEach((el) => {
+            item[el.dataset.subKey] = el.value;
+          });
+          items.push(item);
+        });
+        props[key] = items;
+        return;
+      }
+
+      const el = container.querySelector(`[data-key="${CSS.escape(key)}"]`);
+      if (!el) return;
+      if (type === "boolean") props[key] = el.checked;
+      else if (type === "int") props[key] = el.value === "" ? null : parseInt(el.value, 10);
+      else if (type === "float") props[key] = el.value === "" ? null : parseFloat(el.value);
+      else props[key] = el.value;
+    });
+    return props;
+  }
+
+  function renderBlockCards() {
+    const container = document.getElementById("editor-blocks");
+    if (!currentPage.blocks.length) {
+      container.innerHTML = `<div class="card empty-state">No blocks yet — add one below to start building this page.</div>`;
+      return;
+    }
+    container.innerHTML = currentPage.blocks.map((b, i) => {
+      const def = blocksLibrary[b.block_type];
+      const label = def?.label || b.block_type;
+      const schema = def?.prop_schema || {};
+      const fieldsHtml = Object.keys(schema).length
+        ? Object.entries(schema).map(([key, s]) => renderField(i, key, s, b.props?.[key])).join("")
+        : `<div class="field-hint">This block type isn't in the block registry — showing nothing to edit. Check blocks_library.</div>`;
+      return `
+        <div class="block-card">
+          <div class="block-card-head">
+            <div>
+              <span class="block-title">${esc(label)}</span>
+              <span class="block-type-tag">${esc(b.block_type)}</span>
+            </div>
+            <div class="block-card-actions">
+              <button class="btn-ghost btn-sm" onclick="moveBlock(${i}, -1)" ${i === 0 ? "disabled" : ""}>↑</button>
+              <button class="btn-ghost btn-sm" onclick="moveBlock(${i}, 1)" ${i === currentPage.blocks.length - 1 ? "disabled" : ""}>↓</button>
+              <button class="btn-ghost btn-sm" onclick="toggleBlockCollapse(${i})">Collapse</button>
+              <button class="btn-ghost btn-sm" onclick="removeBlock(${i})">Remove</button>
+            </div>
+          </div>
+          <div class="block-card-body" id="block-body-${i}">${fieldsHtml}</div>
+        </div>`;
+    }).join("");
+  }
+
+  function toggleBlockCollapse(index) {
+    document.getElementById(`block-body-${index}`).classList.toggle("collapsed");
+  }
+
+  function moveBlock(index, delta) {
+    syncBlocksFromDom();
+    const target = index + delta;
+    if (target < 0 || target >= currentPage.blocks.length) return;
+    const [moved] = currentPage.blocks.splice(index, 1);
+    currentPage.blocks.splice(target, 0, moved);
+    renderBlockCards();
+    markDirty();
+  }
+
+  function removeBlock(index) {
+    syncBlocksFromDom();
+    currentPage.blocks.splice(index, 1);
+    renderBlockCards();
+    markDirty();
+  }
+
+  function addBlock() {
+    const type = document.getElementById("add-block-type").value;
+    if (!type) return;
+    syncBlocksFromDom();
+    currentPage.blocks.push({ block_type: type, props: {} });
+    renderBlockCards();
+    markDirty();
+  }
+
+  // Pulls the DOM's current field values back into currentPage.blocks before
+  // any structural change (reorder/remove/add), so in-progress edits aren't lost.
+  function syncBlocksFromDom() {
+    currentPage.blocks.forEach((b, i) => {
+      const def = blocksLibrary[b.block_type];
+      if (!def) return;
+      b.props = collectBlockProps(i, def.prop_schema || {});
+    });
+  }
+
+  function markDirty() {
+    document.getElementById("save-status").textContent = "Unsaved changes";
+    schedulePreviewUpdate();
+  }
+
+  document.getElementById("editor-slug")?.addEventListener("input", updatePreviewLink);
+  document.getElementById("editor-title")?.addEventListener("input", schedulePreviewUpdate);
+
+  async function savePage() {
+    syncBlocksFromDom();
+    const payload = {
+      title: document.getElementById("editor-title").value,
+      slug: normalizeSlug(document.getElementById("editor-slug").value),
+      status: document.getElementById("editor-status").value,
+      type: currentPage.type || "freeform",
+      blocks: currentPage.blocks,
+      updated_at: new Date().toISOString(),
+    };
+    document.getElementById("save-status").textContent = "Saving…";
+    let error;
+    if (currentPage.id) {
+      ({ error } = await sb.from("pages").update(payload).eq("id", currentPage.id));
+    } else {
+      ({ error } = await sb.from("pages").insert(payload));
+    }
+    if (error) {
+      document.getElementById("save-status").textContent = "Error: " + error.message;
+      return;
+    }
+    document.getElementById("save-status").textContent = "Saved.";
+    setTimeout(backToPagesList, 500);
+  }
+
+  // ---- Menu & Footer (site_settings.nav_items / footer_links, same
+  // singleton row as Settings) ----
+  let menuData = { nav_items: [], footer_links: [], mobile_menu_style: "overlay", header_style: "classic", footer_style: "simple", header_fixed_desktop: false, header_fixed_mobile: false };
+  let menuPagesList = [];
+  let menuFormsList = [];
+  let menuPreviewDebounce = null;
+
+  async function loadMenuFooter() {
+    const status = document.getElementById("menu-save-status");
+    if (status) status.textContent = "";
+    const [{ data, error }, pagesRes, formsRes] = await Promise.all([
+      sb.from("site_settings").select("nav_items, footer_links, mobile_menu_style, header_style, footer_style, header_fixed_desktop, header_fixed_mobile").eq("id", 1).maybeSingle(),
+      sb.from("pages").select("title, slug, status").order("title"),
+      sb.from("forms").select("name, key, status, display_mode").order("name"),
+    ]);
+    if (error) { if (status) status.textContent = "Error loading: " + error.message; return; }
+    menuData.nav_items = (data && data.nav_items) || [];
+    menuData.footer_links = (data && data.footer_links) || [];
+    menuData.mobile_menu_style = (data && data.mobile_menu_style) || "overlay";
+    menuData.header_style = (data && data.header_style) || "classic";
+    menuData.footer_style = (data && data.footer_style) || "simple";
+    menuData.header_fixed_desktop = !!(data && data.header_fixed_desktop);
+    menuData.header_fixed_mobile = !!(data && data.header_fixed_mobile);
+    menuPagesList = pagesRes.data || [];
+    menuFormsList = formsRes.data || [];
+    document.getElementById("menu-mobile-style").value = menuData.mobile_menu_style;
+    document.getElementById("menu-header-style").value = menuData.header_style;
+    document.getElementById("menu-footer-style").value = menuData.footer_style;
+    document.getElementById("menu-header-fixed-desktop").checked = menuData.header_fixed_desktop;
+    document.getElementById("menu-header-fixed-mobile").checked = menuData.header_fixed_mobile;
+    renderMenuItems();
+    renderFooterItems();
+    renderMenuPreviewNow();
+  }
+
+  // Shared by both header links and footer links — a link item can be a
+  // free-form custom URL, or picked from Pages/Forms (ref_type set), which
+  // renders a <select> instead of a text input for the URL half. A form
+  // whose display_mode is 'in_page' has no standalone URL, so it's shown
+  // disabled in the picker (per the request: forms set to standalone/both
+  // link normally; in-page-only forms can't be picked as a menu link).
+  function renderLinkPicker(item, updateFn, idxArgs) {
+    if (item.ref_type === "page") {
+      const opts = menuPagesList.map((p) =>
+        `<option value="${esc(p.slug)}" ${item.href === p.slug ? "selected" : ""}>${esc(p.title || p.slug)} (${esc(p.slug)})${p.status !== "published" ? " — draft" : ""}</option>`
+      ).join("");
+      return `<select onchange="${updateFn}(${idxArgs}, 'href', this.options[this.selectedIndex].value); ${updateFn}(${idxArgs}, 'label', this.options[this.selectedIndex].dataset.label || this.options[this.selectedIndex].textContent)"><option value="">Choose a page…</option>${opts}</select>`;
+    }
+    if (item.ref_type === "form") {
+      const opts = menuFormsList.map((f) => {
+        const linkable = f.display_mode !== "in_page";
+        const url = "/" + f.key;
+        return `<option value="${esc(url)}" data-label="${esc(f.name)}" ${!linkable ? "disabled" : ""} ${item.href === url ? "selected" : ""}>${esc(f.name)}${!linkable ? " — in-page only, can't link" : f.status !== "published" ? " — draft" : ""}</option>`;
+      }).join("");
+      return `<select onchange="${updateFn}(${idxArgs}, 'href', this.options[this.selectedIndex].value); ${updateFn}(${idxArgs}, 'label', this.options[this.selectedIndex].dataset.label)"><option value="">Choose a form…</option>${opts}</select>`;
+    }
+    if (item.ref_type === "calculator") {
+      const opts = CALCULATORS.map((c) => {
+        const url = "/calculators/" + c.slug;
+        return `<option value="${esc(url)}" data-label="${esc(c.title)}" ${item.href === url ? "selected" : ""}>${esc(c.title)}</option>`;
+      }).join("");
+      return `<select onchange="${updateFn}(${idxArgs}, 'href', this.options[this.selectedIndex].value); ${updateFn}(${idxArgs}, 'label', this.options[this.selectedIndex].dataset.label)"><option value="">Choose a calculator…</option>${opts}</select>`;
+    }
+    return `<input type="text" value="${esc(item.href || "")}" placeholder="/listings" oninput="${updateFn}(${idxArgs}, 'href', this.value)" />`;
+  }
+
+  function renderMenuItems() {
+    const container = document.getElementById("menu-nav-items");
+    container.innerHTML = menuData.nav_items.map((item, i) => `
+      <div class="fb-section-card" style="padding:12px 14px;">
+        <div class="layout-row" style="align-items:flex-end;">
+          <div class="field"><label class="field-label">Label</label><input type="text" value="${esc(item.label || "")}" oninput="updateMenuItem(${i}, 'label', this.value)" /></div>
+          <div class="field"><label class="field-label">Link</label>${renderLinkPicker(item, "updateMenuItem", i)}</div>
+          <button class="btn-ghost btn-sm" style="margin-bottom:14px;" onclick="removeMenuItem(${i})">Remove</button>
+        </div>
+        ${(item.children || []).map((c, ci) => `
+          <div class="layout-row" style="align-items:flex-end; padding-left:20px;">
+            <div class="field"><label class="field-label">Sub-link label</label><input type="text" value="${esc(c.label || "")}" oninput="updateMenuSubItem(${i}, ${ci}, 'label', this.value)" /></div>
+            <div class="field"><label class="field-label">Sub-link URL</label><input type="text" value="${esc(c.href || "")}" placeholder="/listings/condos" oninput="updateMenuSubItem(${i}, ${ci}, 'href', this.value)" /></div>
+            <button class="btn-ghost btn-sm" style="margin-bottom:14px;" onclick="removeMenuSubItem(${i}, ${ci})">Remove</button>
+          </div>`).join("")}
+        <button class="btn-ghost btn-sm" onclick="addMenuSubItem(${i})">+ Add sub-link (for Accordion mobile style)</button>
+      </div>`).join("") || `<div class="fb-empty">No menu links yet.</div>`;
+  }
+
+  function renderFooterItems() {
+    const container = document.getElementById("menu-footer-items");
+    container.innerHTML = menuData.footer_links.map((item, i) => `
+      <div class="layout-row" style="align-items:flex-end;">
+        <div class="field"><label class="field-label">Label</label><input type="text" value="${esc(item.label || "")}" oninput="updateFooterItem(${i}, 'label', this.value)" /></div>
+        <div class="field"><label class="field-label">Link</label>${renderLinkPicker(item, "updateFooterItem", i)}</div>
+        <button class="btn-ghost btn-sm" style="margin-bottom:14px;" onclick="removeFooterItem(${i})">Remove</button>
+      </div>`).join("") || `<div class="fb-empty">No footer links yet.</div>`;
+  }
+
+  function addMenuItem() {
+    const refType = document.getElementById("menu-new-item-type").value;
+    menuData.nav_items.push(refType === "custom" ? { label: "", href: "" } : { label: "", href: "", ref_type: refType, children: [] });
+    renderMenuItems();
+  }
+  function removeMenuItem(i) { menuData.nav_items.splice(i, 1); renderMenuItems(); scheduleMenuPreviewUpdate(); }
+  function updateMenuItem(i, key, value) { menuData.nav_items[i][key] = value; scheduleMenuPreviewUpdate(); }
+  function addMenuSubItem(i) { menuData.nav_items[i].children = menuData.nav_items[i].children || []; menuData.nav_items[i].children.push({ label: "", href: "" }); renderMenuItems(); }
+  function removeMenuSubItem(i, ci) { menuData.nav_items[i].children.splice(ci, 1); renderMenuItems(); scheduleMenuPreviewUpdate(); }
+  function updateMenuSubItem(i, ci, key, value) { menuData.nav_items[i].children[ci][key] = value; scheduleMenuPreviewUpdate(); }
+
+  function addFooterItem() {
+    const refType = document.getElementById("menu-new-footer-type").value;
+    menuData.footer_links.push(refType === "custom" ? { label: "", href: "" } : { label: "", href: "", ref_type: refType });
+    renderFooterItems();
+  }
+  function removeFooterItem(i) { menuData.footer_links.splice(i, 1); renderFooterItems(); scheduleMenuPreviewUpdate(); }
+  function updateFooterItem(i, key, value) { menuData.footer_links[i][key] = value; scheduleMenuPreviewUpdate(); }
+
+  async function saveMenuFooter() {
+    const status = document.getElementById("menu-save-status");
+    status.textContent = "Saving…";
+    const { error } = await sb.from("site_settings").update({
+      nav_items: menuData.nav_items.filter((i) => i.label || i.href),
+      footer_links: menuData.footer_links.filter((i) => i.label || i.href),
+      mobile_menu_style: document.getElementById("menu-mobile-style").value,
+      header_style: document.getElementById("menu-header-style").value,
+      footer_style: document.getElementById("menu-footer-style").value,
+      header_fixed_desktop: document.getElementById("menu-header-fixed-desktop").checked,
+      header_fixed_mobile: document.getElementById("menu-header-fixed-mobile").checked,
+    }).eq("id", 1);
+    if (error) { status.textContent = "Error: " + error.message; return; }
+    status.textContent = "Saved.";
+    setTimeout(() => { status.textContent = ""; }, 2000);
+    renderMenuPreviewNow();
+  }
+
+  function setMenuPreviewDevice(btn) {
+    document.querySelectorAll("#tab-menu .device-btn").forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById("menu-preview-iframe").style.width = btn.dataset.width;
+  }
+
+  function scheduleMenuPreviewUpdate() {
+    clearTimeout(menuPreviewDebounce);
+    const status = document.getElementById("menu-preview-status");
+    if (status) status.textContent = "Updating preview…";
+    menuPreviewDebounce = setTimeout(renderMenuPreviewNow, 400);
+  }
+
+  // Renders header_nav + a placeholder body + footer through the real
+  // Worker's /api/preview, passing the in-progress (unsaved) nav_items /
+  // footer_links as block props so header_nav/footer's props-first fallback
+  // shows the edit live, even before Save is clicked.
+  async function renderMenuPreviewNow() {
+    const status = document.getElementById("menu-preview-status");
+    const mobileStyle = document.getElementById("menu-mobile-style").value;
+    const headerStyle = document.getElementById("menu-header-style").value;
+    const footerStyle = document.getElementById("menu-footer-style").value;
+    const fixedDesktop = document.getElementById("menu-header-fixed-desktop").checked;
+    const fixedMobile = document.getElementById("menu-header-fixed-mobile").checked;
+    const blocks = [
+      { block_type: "header_nav", props: {
+          preview_nav_items: menuData.nav_items.filter((i) => i.label || i.href),
+          preview_mobile_menu_style: mobileStyle,
+          preview_header_style: headerStyle,
+          preview_header_fixed_desktop: fixedDesktop,
+          preview_header_fixed_mobile: fixedMobile,
+        } },
+      { block_type: "rich_text", props: { heading: "Page content", body_html: "<p>This area shows whatever blocks a real page has — this preview is only for checking the header and footer. Scroll this preview to check a fixed header setting.</p>".repeat(1) + "<p style='height:900px'></p>" } },
+      { block_type: "footer", props: { preview_footer_links: menuData.footer_links.filter((i) => i.label || i.href), preview_footer_style: footerStyle } },
+    ];
+    try {
+      const res = await fetch(SITE_ORIGIN + "/api/preview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: "Menu & Footer preview", blocks, wrapChrome: true }),
+      });
+      if (!res.ok) throw new Error("Preview request failed (" + res.status + ")");
+      const html = await res.text();
+      document.getElementById("menu-preview-iframe").srcdoc = html;
+      if (status) status.textContent = "Shows the header and footer as they'll look on any page that doesn't override them — updates as you edit, nothing is saved until you click Save.";
+    } catch (err) {
+      if (status) status.textContent = "Preview error: " + err.message;
+    }
+  }
+
+  // ---- settings (site_settings singleton row, id=1) ----
+  async function loadSettings() {
+    const status = document.getElementById("settings-save-status");
+    if (status) status.textContent = "";
+    const { data, error } = await sb.from("site_settings").select("*").eq("id", 1).maybeSingle();
+    if (error) {
+      if (status) status.textContent = "Error loading: " + error.message;
+      return;
+    }
+    const s = data || {};
+    const social = s.social || {};
+    const notif = s.notifications || {};
+
+    document.getElementById("set-business-name").value = s.business_name || "";
+    document.getElementById("set-business-name-font-size").value = s.business_name_font_size || "";
+    document.getElementById("set-brokerage-name").value = s.brokerage_name || "";
+    document.getElementById("set-logo-url").value = s.logo_url || "";
+    document.getElementById("set-favicon-url").value = s.favicon_url || "";
+    document.getElementById("set-phone").value = s.phone || "";
+    document.getElementById("set-email").value = s.email || "";
+    document.getElementById("set-agent-name").value = s.agent_name || "";
+    document.getElementById("set-agent-image-url").value = s.agent_image_url || "";
+    document.getElementById("set-address").value = s.address || "";
+    document.getElementById("set-license-text").value = s.license_text || "";
+
+    document.getElementById("set-social-facebook").value = social.facebook || "";
+    document.getElementById("set-social-instagram").value = social.instagram || "";
+    document.getElementById("set-social-youtube").value = social.youtube || "";
+    document.getElementById("set-social-linkedin").value = social.linkedin || "";
+    document.getElementById("set-social-tiktok").value = social.tiktok || "";
+
+    document.getElementById("set-lead-notify-enabled").checked = notif.lead_notify_enabled !== false;
+    document.getElementById("set-lead-notify-email").value = notif.lead_notify_email || "";
+    document.getElementById("set-auto-reply-enabled").checked = !!notif.auto_reply_enabled;
+    document.getElementById("set-from-name").value = notif.from_name || "";
+    document.getElementById("set-from-email").value = notif.from_email || "";
+    document.getElementById("set-reply-to").value = notif.reply_to || "";
+  }
+
+  async function saveSettings() {
+    const status = document.getElementById("settings-save-status");
+    const payload = {
+      business_name: document.getElementById("set-business-name").value || null,
+      business_name_font_size: parseInt(document.getElementById("set-business-name-font-size").value, 10) || null,
+      brokerage_name: document.getElementById("set-brokerage-name").value || null,
+      logo_url: document.getElementById("set-logo-url").value || null,
+      favicon_url: document.getElementById("set-favicon-url").value || null,
+      phone: document.getElementById("set-phone").value || null,
+      email: document.getElementById("set-email").value || null,
+      agent_name: document.getElementById("set-agent-name").value || null,
+      agent_image_url: document.getElementById("set-agent-image-url").value || null,
+      address: document.getElementById("set-address").value || null,
+      license_text: document.getElementById("set-license-text").value || null,
+      social: {
+        facebook: document.getElementById("set-social-facebook").value || undefined,
+        instagram: document.getElementById("set-social-instagram").value || undefined,
+        youtube: document.getElementById("set-social-youtube").value || undefined,
+        linkedin: document.getElementById("set-social-linkedin").value || undefined,
+        tiktok: document.getElementById("set-social-tiktok").value || undefined,
+      },
+      notifications: {
+        lead_notify_enabled: document.getElementById("set-lead-notify-enabled").checked,
+        lead_notify_email: document.getElementById("set-lead-notify-email").value || undefined,
+        auto_reply_enabled: document.getElementById("set-auto-reply-enabled").checked,
+        from_name: document.getElementById("set-from-name").value || undefined,
+        from_email: document.getElementById("set-from-email").value || undefined,
+        reply_to: document.getElementById("set-reply-to").value || undefined,
+      },
+    };
+    if (status) status.textContent = "Saving…";
+    const { error } = await sb.from("site_settings").update(payload).eq("id", 1);
+    if (error) {
+      if (status) status.textContent = "Error: " + error.message;
+      return;
+    }
+    if (status) status.textContent = "Saved.";
+    setTimeout(() => { if (status) status.textContent = ""; }, 2000);
+  }
+
+  // ---- forms builder ----
+  const QUESTION_TYPES = [
+    { id: "single_line", label: "Single Line" },
+    { id: "multi_line", label: "Multi-Line" },
+    { id: "email", label: "Email" },
+    { id: "phone", label: "Phone" },
+    { id: "date", label: "Date Picker" },
+    { id: "number", label: "Number" },
+    { id: "radio", label: "Radio Group" },
+    { id: "checkbox", label: "Checkbox" },
+    { id: "yesno", label: "Yes / No" },
+    { id: "multicheck", label: "Multi-Check" },
+    { id: "dropdown", label: "Dropdown" },
+    { id: "range", label: "Range Slider" },
+    { id: "section_header", label: "Section Header" },
+  ];
+  const CHOICE_TYPES = new Set(["radio", "dropdown", "multicheck"]);
+  const TRIGGER_TYPES = new Set(["radio", "dropdown", "yesno"]);
+
+  let currentFormId = null;
+  let formData = null;          // {..., form_sections:[{..., form_questions:[...]}]}
+  let editingQuestion = null;   // draft object while the modal is open (has _sectionId, may have real id or be new)
+
+  async function loadForms() {
+    const body = document.getElementById("forms-table-body");
+    const { data, error } = await sb.from("forms").select("*, form_sections(id, form_questions(id))").order("created_at");
+    if (error) { body.innerHTML = `<tr><td colspan="6" class="empty-state">${esc(error.message)}</td></tr>`; return; }
+    body.innerHTML = (data || []).map((f) => {
+      const sectionCount = (f.form_sections || []).length;
+      const questionCount = (f.form_sections || []).reduce((n, s) => n + (s.form_questions || []).length, 0);
+      const mode = f.display_mode || "both";
+      const linkAvailable = mode !== "in_page" && f.status === "published";
+      const availabilityLabel = mode === "standalone" ? "Standalone" : mode === "in_page" ? "In-page block" : "Standalone + block";
+      const link = linkAvailable
+        ? `<a href="${SITE_ORIGIN}/${esc(f.key)}" target="_blank" style="font-size:11.5px; color:var(--blue); font-weight:700;">${SITE_ORIGIN.replace("https://", "")}/${esc(f.key)} &rarr;</a>`
+        : `<span style="font-size:11.5px; color:var(--ink-45);">No link${mode === "in_page" ? " (in-page only)" : f.status !== "published" ? " (draft)" : ""}</span>`;
+      return `
+        <tr>
+          <td><strong>${esc(f.name)}</strong></td>
+          <td><code>${esc(f.key)}</code></td>
+          <td><span class="status-badge status-${f.status === "published" ? "published" : "draft"}">${esc(f.status)}</span></td>
+          <td>${esc(availabilityLabel)}<br/>${link}</td>
+          <td>${sectionCount} sections · ${questionCount} questions</td>
+          <td><button class="btn-outline btn-sm" onclick="loadFormBuilder('${f.id}')">Edit</button></td>
+        </tr>`;
+    }).join("") || `<tr><td colspan="6" class="empty-state">No forms yet — click "+ New Form" to create one.</td></tr>`;
+  }
+
+  function backToFormsList() {
+    document.getElementById("form-builder-view").classList.add("hidden");
+    document.getElementById("forms-list-view").classList.remove("hidden");
+    currentFormId = null;
+    formData = null;
+    loadForms();
+  }
+
+  async function createForm() {
+    const name = prompt("Form name (e.g. \"Pre-Construction Interest\"):");
+    if (!name) return;
+    const key = name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+    const { data, error } = await sb.from("forms").insert({ name: name.trim(), key, status: "draft" }).select().single();
+    if (error) { alert("Couldn't create form: " + error.message); return; }
+    loadFormBuilder(data.id);
+  }
+
+  async function loadFormBuilder(id) {
+    currentFormId = id;
+    const { data, error } = await sb.from("forms").select("*, form_sections(*, form_questions(*))").eq("id", id).single();
+    if (error) { alert(error.message); return; }
+    formData = data;
+    formData.form_sections = (formData.form_sections || []).slice().sort((a, b) => (a.position || 0) - (b.position || 0));
+    formData.form_sections.forEach((s) => { s.form_questions = (s.form_questions || []).slice().sort((a, b) => (a.position || 0) - (b.position || 0)); });
+
+    document.getElementById("forms-list-view").classList.add("hidden");
+    document.getElementById("form-builder-view").classList.remove("hidden");
+    document.getElementById("fb-title").textContent = formData.name;
+    document.getElementById("fb-name").value = formData.name || "";
+    document.getElementById("fb-key").value = formData.key || "";
+    document.getElementById("fb-status").value = formData.status || "draft";
+    document.getElementById("fb-display-mode").value = formData.display_mode || "both";
+    const settings = formData.settings || {};
+    document.getElementById("fb-submit-label").value = settings.submitLabel || "";
+    document.getElementById("fb-redirect-url").value = settings.redirectUrl || "";
+    document.getElementById("fb-success-message").value = settings.successMessage || "";
+    document.getElementById("fb-save-status").textContent = "";
+    updateFormLinkDisplay();
+    renderFormBuilderSections();
+    renderFormPreviewNow();
+  }
+
+  // ---- form builder live preview (same /api/preview endpoint as Pages,
+  // but tells the Worker to load the form BY ID and ignore its published
+  // status, so a draft-in-progress still previews) ----
+  let formPreviewDebounce = null;
+  let formPreviewMode = "standalone"; // "standalone" (own page/link) or "in_page" (embedded, like a page's Blocks list)
+
+  function setFormPreviewDevice(btn) {
+    const group = btn.closest(".device-tabs");
+    group.querySelectorAll(".device-btn").forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById("form-preview-iframe").style.width = btn.dataset.width;
+  }
+
+  function setFormPreviewMode(btn) {
+    const group = btn.closest(".device-tabs");
+    group.querySelectorAll(".device-btn").forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
+    formPreviewMode = btn.dataset.mode;
+    renderFormPreviewNow();
+  }
+
+  function scheduleFormPreviewUpdate() {
+    clearTimeout(formPreviewDebounce);
+    const status = document.getElementById("form-preview-status");
+    if (status) status.textContent = "Updating preview…";
+    formPreviewDebounce = setTimeout(renderFormPreviewNow, 400);
+  }
+
+  async function renderFormPreviewNow() {
+    if (!currentFormId) return;
+    const status = document.getElementById("form-preview-status");
+    const heading = document.getElementById("fb-name").value || formData?.name || "";
+    // "Standalone" wraps the form in the site's real header/footer (driven
+    // by Menu & Footer settings — wrapChrome:true adds it server-side), like
+    // it would look at its own link (e.g. /general-contact); "In Page" shows
+    // just the block on its own the way it renders when dropped into
+    // another page's Blocks list, with no surrounding chrome.
+    const blocks = [{ block_type: "dynamic_form", props: { previewFormId: currentFormId, heading } }];
+    try {
+      const res = await fetch(SITE_ORIGIN + "/api/preview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: heading || "Form preview", blocks, wrapChrome: formPreviewMode === "standalone" }),
+      });
+      if (!res.ok) throw new Error("Preview request failed (" + res.status + ")");
+      const html = await res.text();
+      document.getElementById("form-preview-iframe").srcdoc = html;
+      if (status) status.textContent = "Standalone shows this form as its own link/page (e.g. a \"Home Evaluation\" page); In Page shows it embedded the way it looks dropped into any other page's Blocks list.";
+    } catch (err) {
+      if (status) status.textContent = "Preview error: " + err.message;
+    }
+  }
+
+  async function saveFormSettings() {
+    const status = document.getElementById("fb-save-status");
+    const payload = {
+      name: document.getElementById("fb-name").value || formData.name,
+      key: document.getElementById("fb-key").value || formData.key,
+      status: document.getElementById("fb-status").value,
+      display_mode: document.getElementById("fb-display-mode").value,
+      settings: {
+        submitLabel: document.getElementById("fb-submit-label").value || undefined,
+        redirectUrl: document.getElementById("fb-redirect-url").value || undefined,
+        successMessage: document.getElementById("fb-success-message").value || undefined,
+      },
+    };
+    status.textContent = "Saving…";
+    const { error } = await sb.from("forms").update(payload).eq("id", currentFormId);
+    if (error) { status.textContent = "Error: " + error.message; return; }
+    document.getElementById("fb-title").textContent = payload.name;
+    formData.display_mode = payload.display_mode;
+    formData.key = payload.key;
+    formData.status = payload.status;
+    status.textContent = "Saved.";
+    setTimeout(() => { status.textContent = ""; }, 2000);
+    updateFormLinkDisplay();
+    renderFormPreviewNow();
+  }
+
+  // Shows the form's standalone URL in the builder when it's actually
+  // reachable there — Draft or 'in_page'-only forms have no live link, so
+  // there's nothing to show (see index.js's tryRenderStandaloneForm, which
+  // gates the same way: published + display_mode != 'in_page').
+  function updateFormLinkDisplay() {
+    const row = document.getElementById("fb-link-row");
+    const mode = document.getElementById("fb-display-mode").value;
+    const status = document.getElementById("fb-status").value;
+    const key = document.getElementById("fb-key").value;
+    if (mode === "in_page" || status !== "published" || !key) { row.style.display = "none"; return; }
+    const url = SITE_ORIGIN + "/" + key;
+    document.getElementById("fb-link-url").textContent = url;
+    document.getElementById("fb-link-open").href = url;
+    row.style.display = "";
+  }
+
+  function renderFormBuilderSections() {
+    const container = document.getElementById("fb-sections");
+    container.innerHTML = formData.form_sections.map((sec) => `
+      <div class="fb-section-card">
+        <div class="fb-section-head">
+          <input type="text" value="${esc(sec.title || "")}" placeholder="Section title" onchange="renameSection('${sec.id}', this.value)" />
+          <select onchange="updateSectionColumns('${sec.id}', this.value)" title="Columns" style="max-width:110px;">
+            <option value="1" ${(sec.columns || 2) === 1 ? "selected" : ""}>1 column</option>
+            <option value="2" ${(sec.columns || 2) === 2 ? "selected" : ""}>2 columns</option>
+            <option value="3" ${(sec.columns || 2) === 3 ? "selected" : ""}>3 columns</option>
+          </select>
+          <button class="btn-ghost btn-sm" onclick="deleteSection('${sec.id}')">Delete section</button>
+        </div>
+        <textarea rows="2" placeholder="Section description (optional — shown under the title)" onchange="updateSectionDescription('${sec.id}', this.value)" style="margin-bottom:10px;">${esc(sec.description || "")}</textarea>
+        ${sec.form_questions.length ? sec.form_questions.map((q) => `
+          <div class="fb-question-row">
+            <span class="fb-q-label">${esc(q.label)}</span>
+            <span class="fb-q-type-tag">${esc((QUESTION_TYPES.find((t) => t.id === q.type) || {}).label || q.type)}</span>
+            ${q.type !== "section_header" && q.type !== "repeater" ? `<span class="fb-q-type-tag">${q.column_width === "1col" ? "1 col" : q.column_width === "2col" ? "2 col" : "Full width"}</span>` : ""}
+            ${q.required ? '<span class="fb-q-required">Required</span>' : ""}
+            ${q.show_if_question_id ? '<span class="fb-q-conditional">Follow-up</span>' : ""}
+            <span class="fb-q-actions">
+              <button class="btn-ghost btn-sm" onclick="openQuestionModal('${sec.id}', '${q.id}')">Edit</button>
+              <button class="btn-ghost btn-sm" onclick="deleteQuestion('${q.id}')">Delete</button>
+            </span>
+          </div>`).join("") : `<div class="fb-empty">No questions yet.</div>`}
+        <div class="fb-add-question-row">
+          <button class="btn-outline btn-sm" onclick="openQuestionModal('${sec.id}', null)">+ Add Question</button>
+        </div>
+      </div>`).join("") || `<div class="fb-empty">No sections yet — add one below.</div>`;
+  }
+
+  async function addSection() {
+    const input = document.getElementById("fb-new-section-title");
+    const title = input.value.trim();
+    if (!title) return;
+    const position = formData.form_sections.length;
+    const { error } = await sb.from("form_sections").insert({ form_id: currentFormId, title, position });
+    if (error) { alert(error.message); return; }
+    input.value = "";
+    await loadFormBuilder(currentFormId);
+  }
+
+  async function renameSection(sectionId, title) {
+    const { error } = await sb.from("form_sections").update({ title }).eq("id", sectionId);
+    if (error) { alert(error.message); return; }
+    renderFormPreviewNow();
+  }
+
+  async function updateSectionDescription(sectionId, description) {
+    const { error } = await sb.from("form_sections").update({ description }).eq("id", sectionId);
+    if (error) { alert(error.message); return; }
+    renderFormPreviewNow();
+  }
+
+  // How many of these does a question's own column_width (1col/2col/full)
+  // span — see spanFor() in dynamic-form.js for the matching client logic.
+  async function updateSectionColumns(sectionId, columns) {
+    const { error } = await sb.from("form_sections").update({ columns: parseInt(columns, 10) }).eq("id", sectionId);
+    if (error) { alert(error.message); return; }
+    await loadFormBuilder(currentFormId);
+  }
+
+  async function deleteSection(sectionId) {
+    if (!confirm("Delete this section and every question in it?")) return;
+    const { error } = await sb.from("form_sections").delete().eq("id", sectionId);
+    if (error) { alert(error.message); return; }
+    await loadFormBuilder(currentFormId);
+  }
+
+  async function deleteQuestion(questionId) {
+    if (!confirm("Delete this question? Any follow-up questions linked to it will be deleted too.")) return;
+    const { error } = await sb.from("form_questions").delete().eq("id", questionId);
+    if (error) { alert(error.message); return; }
+    await loadFormBuilder(currentFormId);
+  }
+
+  function findQuestion(id) {
+    for (const sec of formData.form_sections) {
+      const q = sec.form_questions.find((qq) => qq.id === id);
+      if (q) return q;
+    }
+    return null;
+  }
+
+  function allQuestionsFlat() {
+    const out = [];
+    formData.form_sections.forEach((sec) => sec.form_questions.forEach((q) => out.push(q)));
+    return out;
+  }
+
+  function openQuestionModal(sectionId, questionId) {
+    const existing = questionId ? findQuestion(questionId) : null;
+    editingQuestion = existing
+      ? JSON.parse(JSON.stringify(existing))
+      : { type: "single_line", label: "", field_key: "", placeholder: "", help_text: "", options: [], required: false, column_width: "full", show_if_question_id: null, show_if_value: null };
+    editingQuestion._sectionId = sectionId;
+    document.getElementById("question-modal").classList.remove("hidden");
+    renderQuestionModal();
+  }
+
+  function closeQuestionModal() {
+    document.getElementById("question-modal").classList.add("hidden");
+    editingQuestion = null;
+  }
+
+  function pickQuestionType(type) {
+    editingQuestion.type = type;
+    if (CHOICE_TYPES.has(type) && !editingQuestion.options.length) {
+      editingQuestion.options = [{ label: "Option 1", value: "option_1" }];
+    }
+    renderQuestionModal();
+  }
+
+  function addOption() {
+    const n = editingQuestion.options.length + 1;
+    editingQuestion.options.push({ label: "Option " + n, value: "option_" + n });
+    renderQuestionModal();
+  }
+
+  function removeOption(index) {
+    editingQuestion.options.splice(index, 1);
+    renderQuestionModal();
+  }
+
+  function updateOption(index, key, value) {
+    editingQuestion.options[index][key] = value;
+  }
+
+  // Follow-up questions linked to this trigger question + a specific option
+  // value — matches "IF ANSWER IS <option>" grouping in the modal. Only
+  // meaningful once the question has a real id (been saved at least once).
+  async function unlinkFollowup(questionId) {
+    const { error } = await sb.from("form_questions").update({ show_if_question_id: null, show_if_value: null }).eq("id", questionId);
+    if (error) { alert(error.message); return; }
+    await loadFormBuilder(currentFormId);
+    editingQuestion = JSON.parse(JSON.stringify(findQuestion(editingQuestion.id)));
+    editingQuestion._sectionId = editingQuestion.section_id;
+    document.getElementById("question-modal").classList.remove("hidden");
+    renderQuestionModal();
+  }
+
+  async function addFollowupField(optionValue) {
+    const label = prompt('New follow-up question label (shown when the answer is "' + optionValue + '"):');
+    if (!label) return;
+    const sec = formData.form_sections.find((s) => s.id === editingQuestion._sectionId);
+    const position = sec ? sec.form_questions.length : 0;
+    const { error } = await sb.from("form_questions").insert({
+      form_id: currentFormId,
+      section_id: editingQuestion._sectionId,
+      position,
+      type: "single_line",
+      label,
+      required: false,
+      column_width: "full",
+      show_if_question_id: editingQuestion.id,
+      show_if_value: optionValue,
+    });
+    if (error) { alert(error.message); return; }
+    await loadFormBuilder(currentFormId);
+    editingQuestion = JSON.parse(JSON.stringify(findQuestion(editingQuestion.id)));
+    editingQuestion._sectionId = editingQuestion.section_id;
+    document.getElementById("question-modal").classList.remove("hidden");
+    renderQuestionModal();
+  }
+
+  async function linkExistingFollowup(optionValue, questionId) {
+    if (!questionId) return;
+    const { error } = await sb.from("form_questions").update({ show_if_question_id: editingQuestion.id, show_if_value: optionValue }).eq("id", questionId);
+    if (error) { alert(error.message); return; }
+    await loadFormBuilder(currentFormId);
+    editingQuestion = JSON.parse(JSON.stringify(findQuestion(editingQuestion.id)));
+    editingQuestion._sectionId = editingQuestion.section_id;
+    document.getElementById("question-modal").classList.remove("hidden");
+    renderQuestionModal();
+  }
+
+  function renderQuestionModal() {
+    const q = editingQuestion;
+    const body = document.getElementById("question-modal-body");
+    const sectionOptions = formData.form_sections.map((s) =>
+      `<option value="${s.id}" ${s.id === q._sectionId ? "selected" : ""}>${esc(s.title || "(untitled section)")}</option>`).join("");
+
+    const typeGrid = QUESTION_TYPES.map((t) =>
+      `<button type="button" class="type-btn ${q.type === t.id ? "active" : ""}" onclick="pickQuestionType('${t.id}')">${esc(t.label)}</button>`).join("");
+
+    const showOptions = CHOICE_TYPES.has(q.type);
+    const optionsHtml = showOptions ? `
+      <div class="field">
+        <label class="field-label">Options</label>
+        <div class="fb-options-list">
+          ${q.options.map((o, i) => `
+            <div class="fb-option-row">
+              <input type="text" value="${esc(o.label)}" placeholder="Label" oninput="updateOption(${i},'label',this.value)" />
+              <input type="text" value="${esc(o.value)}" placeholder="Value" oninput="updateOption(${i},'value',this.value)" />
+              <button class="btn-ghost btn-sm fb-option-remove" onclick="removeOption(${i})">&times;</button>
+            </div>`).join("")}
+          <button class="btn-outline btn-sm" onclick="addOption()">+ Add option</button>
+        </div>
+      </div>` : "";
+
+    const isNew = !q.id;
+    const canHaveFollowups = TRIGGER_TYPES.has(q.type);
+    const triggerOptions = q.type === "yesno" ? [{ label: "Yes", value: "Yes" }, { label: "No", value: "No" }] : q.options;
+    let followupsHtml = "";
+    if (canHaveFollowups) {
+      if (isNew) {
+        followupsHtml = `<div class="fb-followups"><div class="fb-followups-head"><strong>Follow-up questions</strong><div class="field-hint sub">Save this question first, then reopen it to add follow-ups.</div></div></div>`;
+      } else {
+        const otherQuestions = allQuestionsFlat().filter((qq) => qq.id !== q.id);
+        followupsHtml = `
+          <div class="fb-followups">
+            <div class="fb-followups-head">
+              <strong>Follow-up questions</strong>
+              <div class="field-hint sub">What else to ask, depending on the answer. Changes save immediately.</div>
+            </div>
+            ${(triggerOptions || []).map((opt) => {
+              const linked = otherQuestions.filter((qq) => qq.show_if_question_id === q.id && qq.show_if_value === opt.value);
+              const candidates = otherQuestions.filter((qq) => !(qq.show_if_question_id === q.id && qq.show_if_value === opt.value));
+              return `
+                <div class="fb-followup-group">
+                  <div class="fb-followup-group-title">If answer is "${esc(opt.label)}"</div>
+                  ${linked.map((f) => `
+                    <div class="fb-followup-field">
+                      <span>${esc(f.label)} <span class="type-label">· ${esc((QUESTION_TYPES.find((t) => t.id === f.type) || {}).label || f.type)}</span></span>
+                      <button onclick="unlinkFollowup('${f.id}')" title="Remove">&times;</button>
+                    </div>`).join("")}
+                  <div class="fb-followup-add-row">
+                    <button class="btn-outline btn-sm" onclick="addFollowupField('${escAttrJs(opt.value)}')">+ Add field</button>
+                    <select onchange="if(this.value){linkExistingFollowup('${escAttrJs(opt.value)}', this.value); this.value='';}">
+                      <option value="">or use an existing question…</option>
+                      ${candidates.map((c) => `<option value="${c.id}">${esc(c.label)}</option>`).join("")}
+                    </select>
+                  </div>
+                </div>`;
+            }).join("")}
+          </div>`;
+      }
+    }
+
+    body.innerHTML = `
+      <div class="fb-move-box">
+        <h4>Move to Section</h4>
+        <select id="qm-section">${sectionOptions}</select>
+        <div class="field-hint">Pick a different section and Save to move this question there.</div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Question Type</label>
+        <div class="type-grid">${typeGrid}</div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Label${q.type !== "section_header" ? " *" : ""}</label>
+        <input id="qm-label" type="text" value="${esc(q.label || "")}" placeholder="e.g. First Name" />
+      </div>
+
+      ${q.type !== "section_header" ? `
+      <div class="field">
+        <label class="field-label">Field Key</label>
+        <input id="qm-field-key" type="text" value="${esc(q.field_key || "")}" placeholder="e.g. firstName" />
+        <div class="field-hint">Used for data mapping (firstName/lastName/email/phone map onto the contact record). Leave blank for custom questions.</div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Placeholder</label>
+        <input id="qm-placeholder" type="text" value="${esc(q.placeholder || "")}" />
+      </div>` : ""}
+
+      <div class="field">
+        <label class="field-label">Help text (optional)</label>
+        <input id="qm-help" type="text" value="${esc(q.help_text || "")}" />
+      </div>
+
+      ${optionsHtml}
+
+      ${q.type !== "section_header" ? `
+      <div class="field">
+        <label class="field-label">Column Width</label>
+        <div class="col-width-row">
+          <label><input type="radio" name="qm-col" value="1col" ${q.column_width === "1col" ? "checked" : ""}> 1 col</label>
+          <label><input type="radio" name="qm-col" value="2col" ${q.column_width === "2col" ? "checked" : ""}> 2 col</label>
+          <label><input type="radio" name="qm-col" value="full" ${q.column_width === "full" || !q.column_width ? "checked" : ""}> Full width</label>
+        </div>
+      </div>
+
+      <div class="field checkbox-row">
+        <input type="checkbox" id="qm-required" ${q.required ? "checked" : ""} />
+        <label class="field-label" style="margin:0;" for="qm-required">Required field</label>
+      </div>
+
+      ${followupsHtml}` : ""}
+    `;
+  }
+
+  // Small helper: escape a value for safe use inside a single-quoted JS
+  // string literal built via innerHTML (separate from esc(), which escapes
+  // for HTML text/attribute context — option values can contain characters
+  // that break both contexts at once).
+  function escAttrJs(s = "") {
+    return esc(String(s)).replaceAll("'", "&#39;");
+  }
+
+  async function saveQuestionFromModal() {
+    const q = editingQuestion;
+    const label = document.getElementById("qm-label").value.trim();
+    if (!label) { alert("Label is required."); return; }
+    const sectionId = document.getElementById("qm-section").value;
+
+    const payload = {
+      form_id: currentFormId,
+      section_id: sectionId,
+      type: q.type,
+      label,
+      help_text: document.getElementById("qm-help").value || null,
+    };
+    if (q.type !== "section_header") {
+      payload.field_key = document.getElementById("qm-field-key").value || null;
+      payload.placeholder = document.getElementById("qm-placeholder").value || null;
+      payload.required = document.getElementById("qm-required").checked;
+      const colEl = document.querySelector('input[name="qm-col"]:checked');
+      payload.column_width = colEl ? colEl.value : "full";
+    }
+    if (CHOICE_TYPES.has(q.type)) {
+      payload.options = q.options;
+    }
+
+    let error;
+    if (q.id) {
+      ({ error } = await sb.from("form_questions").update(payload).eq("id", q.id));
+    } else {
+      const sec = formData.form_sections.find((s) => s.id === sectionId);
+      payload.position = sec ? sec.form_questions.length : 0;
+      ({ error } = await sb.from("form_questions").insert(payload));
+    }
+    if (error) { alert(error.message); return; }
+    closeQuestionModal();
+    await loadFormBuilder(currentFormId);
+  }
+
+  checkSession();
+</script>
+</body>
+</html>
