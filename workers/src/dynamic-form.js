@@ -155,7 +155,16 @@ export function renderDynamicForm(props = {}, form) {
       .filter((q) => !q.parent_question_id)
       .slice()
       .sort((a, b) => (a.position || 0) - (b.position || 0));
-    const sectionColumns = Number.isFinite(sec.columns) && sec.columns >= 1 && sec.columns <= 3 ? sec.columns : 2;
+    // Coerce before checking: sec.columns can arrive as a string ("1"/"2"/
+    // "3") depending on how the admin's column picker saves it, and
+    // Number.isFinite() does NOT coerce strings — Number.isFinite("2") is
+    // false — so checking the raw value silently fell back to the default
+    // of 2 every time, regardless of what was actually picked. Coercing
+    // with Number(...) first fixes that while still rejecting genuinely
+    // invalid values (Number(undefined) / Number("") are NaN, which
+    // Number.isFinite correctly rejects, keeping the same safe fallback).
+    const rawColumns = Number(sec.columns);
+    const sectionColumns = Number.isFinite(rawColumns) && rawColumns >= 1 && rawColumns <= 3 ? rawColumns : 2;
     const fieldsHtml = questions
       .map((q) => (q.type === "repeater" ? renderRepeater(q, childrenByParent[q.id] || [], sectionColumns) : renderQuestion(q, undefined, undefined, sectionColumns)))
       .join("");
@@ -288,8 +297,8 @@ export function renderDynamicForm(props = {}, form) {
             var repKey = parts[0];
             var idx = parts[1];
             var childKey = parts.slice(2).join('__');
-            var isMulti = /\\[\\]$/.test(childKey);
-            if (isMulti) childKey = childKey.replace(/\\[\\]$/, '');
+            var isMulti = /\[\]$/.test(childKey);
+            if (isMulti) childKey = childKey.replace(/\[\]$/, '');
             if (!repeaterAnswers[repKey]) repeaterAnswers[repKey] = [];
             if (!repeaterAnswers[repKey][idx]) repeaterAnswers[repKey][idx] = {};
             var row = repeaterAnswers[repKey][idx];
@@ -308,7 +317,7 @@ export function renderDynamicForm(props = {}, form) {
             return;
           }
           if (el.type === 'checkbox') {
-            var key = el.name.replace(/\\[\\]$/, '');
+            var key = el.name.replace(/\[\]$/, '');
             if (!seenChecks[key]) seenChecks[key] = [];
             if (el.checked) seenChecks[key].push(el.value);
             answers[key] = seenChecks[key];
