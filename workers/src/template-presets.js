@@ -1,7 +1,3 @@
---- public/template-presets.js (原始)
-
-
-+++ public/template-presets.js (修改后)
 // workers/src/template-presets.js
 // Pre-built template blocks for the page builder
 
