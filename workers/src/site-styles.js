@@ -383,17 +383,27 @@ img{ max-width:100%; display:block; }
    this can appear on any page and should look consistent everywhere. */
 export const dynamicFormStyles = `
 .df-block{ background:var(--surface); }
-.df-wrap{ max-width:640px; margin:0 auto; background:#fff; border:1px solid var(--line); border-radius:16px; padding:32px 36px; }
+.df-wrap{ max-width:720px; margin:0 auto; }
 .df-heading{ margin-bottom:20px; font-size:22px; }
-.df-section{ margin-bottom:28px; }
+/* Each section is its own bordered card, not just margin-separated text. */
+.df-section{
+  background:#fff; border:1px solid var(--line); border-radius:16px;
+  padding:24px 28px; margin-bottom:20px; box-shadow:0 1px 3px rgba(11,11,13,0.05);
+}
 .df-section:last-of-type{ margin-bottom:20px; }
 .df-section-title{ font-family:var(--font-display); font-size:16px; margin:0 0 6px; }
 .df-section-desc{ font-size:13px; color:var(--ink-45); margin:0 0 14px; }
 .df-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:16px; }
-.df-field{ display:flex; flex-direction:column; gap:6px; }
+/* Each question is its own bordered block within the section, instead of
+   just floating text/inputs with no visual boundary between questions. */
+.df-field{
+  display:flex; flex-direction:column; gap:6px;
+  border:1px solid var(--line); border-radius:12px; padding:14px 16px;
+  background:var(--surface);
+}
 .df-field.df-full{ grid-column:1 / -1; }
+.df-field.df-header-field{ border:none; background:none; padding:6px 0 0; }
 .df-label{ font-size:12.5px; font-weight:700; color:var(--ink-70); }
-.df-header-field{ margin-top:6px; }
 .df-header-label{ font-family:var(--font-display); font-size:15px; margin:0 0 4px; }
 .df-field input[type=text], .df-field input[type=email], .df-field input[type=tel],
 .df-field input[type=number], .df-field input[type=date], .df-field select, .df-field textarea{
@@ -402,7 +412,14 @@ export const dynamicFormStyles = `
 .df-field textarea{ min-height:90px; resize:vertical; }
 .df-field input:focus, .df-field select:focus, .df-field textarea:focus{ outline:none; border-color:var(--blue); }
 .df-choice-group{ display:flex; flex-direction:column; gap:8px; }
-.df-radio, .df-checkbox{ display:flex; align-items:center; gap:8px; font-size:13.5px; font-weight:normal; color:var(--ink); cursor:pointer; }
+.df-radio, .df-checkbox{
+  display:flex; align-items:center; gap:8px; font-size:13.5px; font-weight:normal; color:var(--ink); cursor:pointer;
+  padding:10px 12px; border:1px solid var(--line); border-radius:10px; background:#fff;
+}
+.df-radio:hover, .df-checkbox:hover{ border-color:var(--blue); background:var(--blue-dim); }
+/* Standalone boolean checkbox already looks like a chip via .df-checkbox,
+   so its own .df-field wrapper doesn't need a second nested border. */
+.df-field > .df-checkbox{ border:1px solid var(--line); }
 .df-help{ font-size:11.5px; color:var(--ink-45); }
 .df-submit{ margin-top:8px; background:var(--ink); color:#fff; border:none; border-radius:999px; padding:13px 26px; font-weight:700; font-size:13.5px; cursor:pointer; }
 .df-submit:hover{ background:var(--blue); }
@@ -414,7 +431,7 @@ export const dynamicFormStyles = `
 .df-repeater-remove{ grid-column:1/-1; justify-self:end; background:none; border:none; color:#b3261e; font-size:12.5px; font-weight:600; cursor:pointer; padding:2px 4px; }
 .df-repeater-add{ margin-top:10px; background:#fff; border:1.5px solid var(--ink); color:var(--ink); border-radius:999px; padding:9px 18px; font-weight:700; font-size:13px; cursor:pointer; }
 .df-repeater-add:hover{ background:var(--ink); color:#fff; }
-@media (max-width:600px){ .df-repeater-row{ grid-template-columns:1fr; } }
+@media (max-width:640px){ .df-grid{ grid-template-columns:1fr !important; } .df-repeater-row{ grid-template-columns:1fr; } }
 .df-error{ color:#C0362C; font-size:12.5px; margin-top:8px; }
 .df-success{ font-size:15px; font-weight:600; padding:20px 0; }
 .df-missing{ padding:24px; background:var(--surface); border-radius:12px; color:var(--ink-45); font-size:13.5px; }
