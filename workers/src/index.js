@@ -12,6 +12,11 @@ import { renderBlocks } from "./blocks.js";
 import { tokensAsCSS } from "./tokens.js";
 import { siteStyles, dynamicFormStyles } from "./site-styles.js";
 
+// ═══════════════════════════════════════════════════════════════════════════
+// ✅ ADDITION #1: Import template presets
+// ═══════════════════════════════════════════════════════════════════════════
+import { templatePresets, getPresetById } from "./template-presets.js";
+
 async function supabaseFetch(env, path, init = {}) {
   const res = await fetch(`${env.SUPABASE_URL}/rest/v1/${path}`, {
     ...init,
@@ -560,13 +565,48 @@ async function handlePreviewRequest(request, env) {
   });
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// ✅ ADDITION #2: Template presets handler
+// The admin app calls this to get available templates for the "Insert
+// Template" picker. Supports listing all presets or fetching one by ID.
+// ═══════════════════════════════════════════════════════════════════════════
+async function handleTemplatesRequest(url) {
+  const id = url.searchParams.get("id");
+
+  // Single preset lookup: GET /api/templates?id=header_classic
+  if (id) {
+    const preset = getPresetById(id);
+    if (!preset) {
+      return new Response(JSON.stringify({ error: "Template not found" }), {
+        status: 404,
+        headers: { "content-type": "application/json", ...CORS_HEADERS },
+      });
+    }
+    return new Response(JSON.stringify(preset), {
+      headers: { "content-type": "application/json", ...CORS_HEADERS },
+    });
+  }
+
+  // List all presets: GET /api/templates
+  // Optionally filter by category: GET /api/templates?category=headers
+  const category = url.searchParams.get("category");
+  let presets = templatePresets;
+  if (category) {
+    presets = presets.filter(p => p.category === category);
+  }
+
+  return new Response(JSON.stringify({ templates: presets }), {
+    headers: { "content-type": "application/json", ...CORS_HEADERS },
+  });
+}
+
 // The admin app (admin.rohit-910.workers.dev) calls /api/preview on this
 // Worker (cms.rohit-910.workers.dev) — different origins, so this needs
 // CORS. The endpoint only renders whatever block JSON it's given and never
 // touches the database, so an open origin is fine here.
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type",
 };
 
@@ -581,6 +621,16 @@ export default {
     if (url.pathname === "/api/preview") {
       if (request.method === "OPTIONS") return new Response(null, { headers: CORS_HEADERS });
       if (request.method === "POST") return handlePreviewRequest(request, env);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // ✅ ADDITION #3: Template presets route
+    // GET /api/templates → returns all presets (optionally filtered by ?category=)
+    // GET /api/templates?id=header_classic → returns one preset
+    // ═══════════════════════════════════════════════════════════════════════
+    if (url.pathname === "/api/templates") {
+      if (request.method === "OPTIONS") return new Response(null, { headers: CORS_HEADERS });
+      return handleTemplatesRequest(url);
     }
 
     if (url.pathname === "/api/listings-search") {
