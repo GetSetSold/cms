@@ -22,8 +22,18 @@ function getClients(env) {
 // ---------------------------------------------------------
 async function fetchBlockData(blockName, props, clients) {
   if (blockName === 'featured_listings') {
-    let query = clients.mls.from('grid').select('*').limit(props.count || 3);
-    if (props.filter === 'office_only') query = query.eq('ListOfficeKey', '291890');
+    if (props.filter === 'office_only') {
+      const officeKey = props.officeKey || '291890';
+      const { data, error } = await clients.mls
+        .from('property')
+        .select('*')
+        .eq('ListOfficeKey', officeKey)
+        .limit(props.count || 3);
+      if (error) { console.error('featured_listings (property) fetch failed:', error.message); return []; }
+      return data;
+    }
+
+    let query = clients.mls.from('grid').select('*').limit(props.count || 20);
     if (props.filter === 'for_lease') query = query.not('TotalActualRent', 'is', null);
     if (props.filter === 'for_sale') query = query.is('TotalActualRent', null);
     const { data, error } = await query;
