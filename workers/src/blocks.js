@@ -7,6 +7,7 @@ import { tokens } from "./tokens.js";
 import { registry as realEstateRegistry } from "./blocks-realestate.js";
 import { renderListingDetail } from "./listing-detail.js";
 import { renderDynamicForm } from "./dynamic-form.js";
+import { calculators_hub } from "./blocks-calculators.js";
 
 function esc(s = "") {
   return String(s)
@@ -249,6 +250,15 @@ export const renderers = {
   // tab) — one block type that renders whatever form `props.formKey`
   // points at, built from sections + questions stored in the CRM DB.
   dynamic_form: renderDynamicForm,
+
+  // The 14-calculator hub (see blocks-calculators.js) as a droppable page
+  // builder block — same source as the standalone /calculators page.
+  // Ignores props/data entirely (nothing configurable, no data_source),
+  // and is NOT in DATA_BLOCK_TYPES below since it needs no live fetch —
+  // its regulatory settings are fetched client-side straight from
+  // Supabase, not server-side here. Single-instance-per-page only — see
+  // the doc comment in blocks-calculators.js for why.
+  calculators_hub,
 };
 
 // Block types that need a live data fetch before rendering (see render.js /
