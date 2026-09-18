@@ -1,238 +1,350 @@
-/* dynamic-form.css
- * Drop these rules into site-styles.js (or wherever your global stylesheet
- * is built) — they target the class names dynamic-form.js already renders:
- * .df-wrap > form.dynamic-form > .df-section > .df-grid > .df-field
- */
+// dynamic-form.js — renders a form built in the admin's Forms tab (see
+// 0008_lead_forms.sql for the forms/form_sections/form_questions schema).
+// Registered as the "dynamic_form" block in blocks.js. `form` here is
+// whatever getForm(env, key) in index.js fetched: a forms row with
+// form_sections(*) nested, each with form_questions(*) nested.
 
-.df-wrap {
-  max-width: 760px;
-  margin: 0 auto;
+import { tokens } from "./tokens.js";
+
+function esc(s = "") {
+  return String(s).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
 }
 
-.dynamic-form {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+function escAttr(s = "") {
+  return esc(s).replaceAll('"', "&quot;");
 }
 
-.df-heading {
-  font-size: 1.9rem;
-  margin: 0 0 4px;
+const INPUT_TYPE = {
+  single_line: "text",
+  email: "email",
+  phone: "tel",
+  date: "date",
+  number: "number",
+};
+
+// name attribute: field_key when set (so a submission maps straight onto
+// contacts.name/email/phone), otherwise a stable q_<id> so custom/free-form
+// questions still land in leads.payload under something identifiable.
+function fieldName(q) {
+  return q.field_key ? q.field_key : `q_${q.id}`;
 }
 
-/* ---- Sections render as their own card/block ---- */
-.df-section {
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 14px;
-  padding: 24px 28px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+// nameOverride/qidOverride let renderQuestion double as the renderer for a
+// repeater instance's child fields, where the real `name`/`data-qid` need an
+// index baked in (see renderRepeater below) instead of the plain field key.
+// spanFor(): how many of the section's grid columns this question occupies.
+// column_width is '1col' (occupies one column), '2col' (occupies two,
+// clamped to however many the section actually has), or 'full' (spans every
+// column in the section — always a full row on its own).
+function spanFor(columnWidth, sectionColumns) {
+  if (columnWidth === "full" || !columnWidth) return sectionColumns;
+  if (columnWidth === "2col") return Math.min(2, sectionColumns);
+  return 1; // '1col'
 }
 
-.df-section-title {
-  margin: 0 0 4px;
-  font-size: 1.15rem;
-  font-weight: 700;
+function renderQuestion(q, nameOverride, qidOverride, sectionColumns = 2) {
+  if (q.type === "section_header") {
+    return `
+      <div class="df-field df-header-field" style="grid-column:span ${sectionColumns};">
+        <h4 class="df-header-label">${esc(q.label)}</h4>
+        ${q.help_text ? `<p class="df-help">${esc(q.help_text)}</p>` : ""}
+      </div>`;
+  }
+  if (q.type === "repeater") return "";
+
+  const name = nameOverride || fieldName(q);
+  const qid = qidOverride || q.id;
+  const required = q.required ? "required" : "";
+  const options = Array.isArray(q.options) ? q.options : [];
+  let inputHtml = "";
+
+  if (q.type === "multi_line") {
+    inputHtml = `<textarea name="${escAttr(name)}" data-qid="${qid}" placeholder="${escAttr(q.placeholder || "")}" ${required}></textarea>`;
+  } else if (q.type === "dropdown") {
+    const opts = options.map((o) => `<option value="${escAttr(o.value)}">${esc(o.label)}</option>`).join("");
+    inputHtml = `<select name="${escAttr(name)}" data-qid="${qid}" ${required}><option value="">Select…</option>${opts}</select>`;
+  } else if (q.type === "radio" || q.type === "yesno") {
+    const opts = q.type === "yesno" ? [{ label: "Yes", value: "Yes" }, { label: "No", value: "No" }] : options;
+    inputHtml = `<div class="df-choice-group">${opts.map((o) =>
+      `<label class="df-radio"><input type="radio" name="${escAttr(name)}" value="${escAttr(o.value)}" data-qid="${qid}" ${required}> ${esc(o.label)}</label>`
+    ).join("")}</div>`;
+  } else if (q.type === "multicheck") {
+    inputHtml = `<div class="df-choice-group">${options.map((o) =>
+      `<label class="df-checkbox"><input type="checkbox" name="${escAttr(name)}[]" value="${escAttr(o.value)}" data-qid="${qid}"> ${esc(o.label)}</label>`
+    ).join("")}</div>`;
+  } else if (q.type === "checkbox") {
+    // Single boolean checkbox — the question's own label doubles as the
+    // checkbox text, so we skip the separate <label class="df-label"> below.
+    inputHtml = `<label class="df-checkbox"><input type="checkbox" name="${escAttr(name)}" value="true" data-qid="${qid}"> ${esc(q.label)}</label>`;
+  } else if (q.type === "range") {
+    const opts = options && !Array.isArray(options) ? options : {};
+    const min = opts.min ?? 0, max = opts.max ?? 100, step = opts.step ?? 1;
+    inputHtml = `<input type="range" name="${escAttr(name)}" data-qid="${qid}" min="${min}" max="${max}" step="${step}">`;
+  } else {
+    // single_line / email / phone / date / number
+    inputHtml = `<input type="${INPUT_TYPE[q.type] || "text"}" name="${escAttr(name)}" data-qid="${qid}" placeholder="${escAttr(q.placeholder || "")}" ${required}>`;
+  }
+
+  const span = spanFor(q.column_width, sectionColumns);
+  // grid-column and display:none (for a conditional field, hidden until its
+  // trigger question matches) both need to land in the same style attr.
+  const spanStyle = `grid-column:span ${span};`;
+  const styleAttr = q.show_if_question_id
+    ? `style="${spanStyle}display:none;" data-show-if-q="${q.show_if_question_id}" data-show-if-v="${escAttr(q.show_if_value || "")}"`
+    : `style="${spanStyle}"`;
+  const showLabel = q.type !== "checkbox";
+
+  return `
+    <div class="df-field" data-question-id="${qid}" ${styleAttr}>
+      ${showLabel ? `<label class="df-label">${esc(q.label)}${q.required ? " *" : ""}</label>` : ""}
+      ${inputHtml}
+      ${q.help_text && showLabel ? `<div class="df-help">${esc(q.help_text)}</div>` : ""}
+    </div>`;
 }
 
-.df-section-desc {
-  margin: 0 0 16px;
-  color: #6b7280;
-  font-size: 0.95rem;
+// A repeater is a question with type:'repeater'. Its children are other
+// questions in the SAME form (any section) with parent_question_id === the
+// repeater's id — they are pulled out of normal section rendering and
+// rendered only inside the repeater's repeating template. options holds
+// { source_question_id, min, max }: when source_question_id is set, the
+// instance count tracks that (numeric) question's live value; otherwise the
+// user manually adds/removes rows within [min, max].
+function renderRepeater(q, children, sectionColumns = 2) {
+  const opts = q.options && !Array.isArray(q.options) ? q.options : {};
+  const min = Number.isFinite(opts.min) ? opts.min : 0;
+  const max = Number.isFinite(opts.max) ? opts.max : 10;
+  const sourceId = opts.source_question_id || "";
+
+  // __IDX__ is replaced client-side with the instance number when a new
+  // repeated row is rendered. Repeater children always render 2-up inside
+  // their own row regardless of the parent section's column count (see
+  // .df-repeater-row in site-styles.js), so they get a fixed span of 1.
+  const templateFields = children
+    .slice()
+    .sort((a, b) => (a.position || 0) - (b.position || 0))
+    .map((child) => renderQuestion(child, `rep_${q.id}__IDX__${fieldName(child)}`, `${child.id}__IDX__`, 2))
+    .join("");
+
+  return `
+    <div class="df-field df-repeater" style="grid-column:span ${sectionColumns};" data-repeater-id="${q.id}" data-repeater-source="${escAttr(sourceId)}" data-repeater-min="${min}" data-repeater-max="${max}">
+      <label class="df-label">${esc(q.label)}${q.required ? " *" : ""}</label>
+      ${q.help_text ? `<div class="df-help">${esc(q.help_text)}</div>` : ""}
+      <template class="df-repeater-template">${templateFields}</template>
+      <div class="df-repeater-items"></div>
+      ${!sourceId ? `<button type="button" class="df-repeater-add">+ Add another</button>` : ""}
+    </div>`;
 }
 
-/* This is the rule that was missing: without it every .df-field just
- * stacks full-width because <div style="grid-template-columns:..."> alone
- * does nothing unless the container is actually display:grid. */
-.df-grid {
-  display: grid;
-  gap: 18px 24px;
-  align-items: start;
-}
+export function renderDynamicForm(props = {}, form) {
+  if (!form) {
+    return `<div class="df-missing">This form isn't available right now.</div>`;
+  }
+  const settings = form.settings || {};
+  const sections = (form.form_sections || []).slice().sort((a, b) => (a.position || 0) - (b.position || 0));
+  const allQuestions = sections.flatMap((sec) => sec.form_questions || []);
+  const childrenByParent = {};
+  for (const q of allQuestions) {
+    if (q.parent_question_id) {
+      (childrenByParent[q.parent_question_id] ||= []).push(q);
+    }
+  }
+  const sectionsHtml = sections.map((sec) => {
+    // Repeater children are rendered only inside their repeater's template,
+    // never inline in the section they happen to live in.
+    const questions = (sec.form_questions || [])
+      .filter((q) => !q.parent_question_id)
+      .slice()
+      .sort((a, b) => (a.position || 0) - (b.position || 0));
+    const sectionColumns = Number.isFinite(sec.columns) && sec.columns >= 1 && sec.columns <= 3 ? sec.columns : 2;
+    const fieldsHtml = questions
+      .map((q) => (q.type === "repeater" ? renderRepeater(q, childrenByParent[q.id] || [], sectionColumns) : renderQuestion(q, undefined, undefined, sectionColumns)))
+      .join("");
+    return `
+      <div class="df-section">
+        ${sec.title ? `<h3 class="df-section-title">${esc(sec.title)}</h3>` : ""}
+        ${sec.description ? `<p class="df-section-desc">${esc(sec.description)}</p>` : ""}
+        <div class="df-grid" style="grid-template-columns:repeat(${sectionColumns}, 1fr);">${fieldsHtml}</div>
+      </div>`;
+  }).join("");
 
-/* ---- Each question renders as its own wrapped block inside the grid ---- */
-.df-field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-width: 0; /* let long labels/inputs shrink inside a grid track */
-}
+  const successMessage = settings.successMessage || "Thanks — we'll be in touch shortly.";
+  const submitLabel = settings.submitLabel || "Submit";
 
-.df-label {
-  font-weight: 600;
-  font-size: 0.92rem;
-  color: #374151;
-}
+  // Wrapped in <section class="block"> like every other block renderer
+  // (see blocks-realestate.js / site-styles.js's `.block{ padding:56px;
+  // max-width:1440px; margin:0 auto; }`) — without it this block had no
+  // side padding or max-width at all, so it ran edge-to-edge on every
+  // screen size instead of sitting in the page's normal content column.
+  return `
+    <section class="block df-block">
+      <div class="df-wrap">
+        <form id="dform-${form.id}" class="dynamic-form" data-form-key="${escAttr(form.key)}" data-success="${escAttr(successMessage)}" ${settings.redirectUrl ? `data-redirect="${escAttr(settings.redirectUrl)}"` : ""}>
+          ${props.heading ? `<h2 class="df-heading">${esc(props.heading)}</h2>` : (form.name ? `<h2 class="df-heading">${esc(form.name)}</h2>` : "")}
+          ${sectionsHtml}
+          <div class="df-error" style="display:none;"></div>
+          <button type="submit" class="df-submit">${esc(submitLabel)}</button>
+        </form>
+      </div>
+    </section>
+    <script>
+    (function() {
+      var form = document.getElementById('dform-${form.id}');
+      if (!form) return;
 
-.df-help {
-  font-size: 0.82rem;
-  color: #6b7280;
-  margin: 0;
-}
+      function triggerValue(qid) {
+        var checked = form.querySelector('[data-qid="' + qid + '"]:checked');
+        if (checked) return checked.value;
+        var el = form.querySelector('[data-qid="' + qid + '"]');
+        return el ? el.value : null;
+      }
 
-.df-field input[type="text"],
-.df-field input[type="email"],
-.df-field input[type="tel"],
-.df-field input[type="date"],
-.df-field input[type="number"],
-.df-field textarea,
-.df-field select {
-  width: 100%;
-  box-sizing: border-box;
-  padding: 10px 12px;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  font-size: 0.95rem;
-  background: #fff;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
-}
+      function updateConditions() {
+        var fields = form.querySelectorAll('[data-show-if-q]');
+        for (var i = 0; i < fields.length; i++) {
+          var field = fields[i];
+          var qid = field.getAttribute('data-show-if-q');
+          var want = field.getAttribute('data-show-if-v');
+          var show = !qid || triggerValue(qid) === want;
+          field.style.display = show ? '' : 'none';
+          var controls = field.querySelectorAll('input,select,textarea');
+          for (var j = 0; j < controls.length; j++) controls[j].disabled = !show;
+        }
+      }
+      form.addEventListener('change', updateConditions);
+      updateConditions();
 
-.df-field textarea {
-  min-height: 90px;
-  resize: vertical;
-}
+      // --- Repeater groups (e.g. "How Many Employed" -> N repeated
+      // {Employer, Job Title, Income} blocks) ---
+      var repeaters = form.querySelectorAll('.df-repeater');
+      Array.prototype.forEach.call(repeaters, function(rep) {
+        var templateEl = rep.querySelector('.df-repeater-template');
+        var itemsEl = rep.querySelector('.df-repeater-items');
+        var template = templateEl ? templateEl.innerHTML : '';
+        var min = parseInt(rep.getAttribute('data-repeater-min'), 10) || 0;
+        var max = parseInt(rep.getAttribute('data-repeater-max'), 10) || 10;
+        var sourceQid = rep.getAttribute('data-repeater-source');
+        var count = 0;
 
-.df-field input:focus,
-.df-field textarea:focus,
-.df-field select:focus {
-  outline: none;
-  border-color: #6366f1;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
-}
+        function renderCount(n) {
+          n = Math.max(min, Math.min(max, n || 0));
+          while (count < n) {
+            var row = document.createElement('div');
+            row.className = 'df-repeater-row';
+            row.innerHTML = template.split('__IDX__').join(String(count));
+            var removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'df-repeater-remove';
+            removeBtn.textContent = 'Remove';
+            (function(rowEl) {
+              removeBtn.addEventListener('click', function() {
+                rowEl.remove();
+                count--;
+                updateConditions();
+              });
+            })(row);
+            if (!sourceQid) row.appendChild(removeBtn);
+            itemsEl.appendChild(row);
+            count++;
+          }
+          while (count > n) {
+            var last = itemsEl.lastElementChild;
+            if (!last) break;
+            last.remove();
+            count--;
+          }
+          updateConditions();
+        }
 
-.df-field input[type="range"] {
-  width: 100%;
-}
+        if (sourceQid) {
+          var sourceEl = form.querySelector('[data-qid="' + sourceQid + '"]');
+          if (sourceEl) {
+            var sync = function() {
+              var n = parseInt(sourceEl.value, 10);
+              renderCount(isNaN(n) ? min : n);
+            };
+            sourceEl.addEventListener('input', sync);
+            sourceEl.addEventListener('change', sync);
+            sync();
+          } else {
+            renderCount(min);
+          }
+        } else {
+          renderCount(min);
+          var addBtn = rep.querySelector('.df-repeater-add');
+          if (addBtn) addBtn.addEventListener('click', function() { renderCount(count + 1); });
+        }
+      });
 
-/* Section header question type — spans the row, reads like a sub-heading */
-.df-header-field { gap: 2px; }
-.df-header-label { margin: 0; font-size: 1.02rem; font-weight: 700; }
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        var answers = {};
+        var seenChecks = {};
+        var repeaterAnswers = {};
+        Array.prototype.forEach.call(form.elements, function(el) {
+          if (!el.name || el.disabled || el.type === 'submit') return;
+          if (el.name.indexOf('rep_') === 0) {
+            // rep_<repeaterId>__<idx>__<childFieldName>[]
+            var parts = el.name.split('__');
+            var repKey = parts[0];
+            var idx = parts[1];
+            var childKey = parts.slice(2).join('__');
+            var isMulti = /\\[\\]$/.test(childKey);
+            if (isMulti) childKey = childKey.replace(/\\[\\]$/, '');
+            if (!repeaterAnswers[repKey]) repeaterAnswers[repKey] = [];
+            if (!repeaterAnswers[repKey][idx]) repeaterAnswers[repKey][idx] = {};
+            var row = repeaterAnswers[repKey][idx];
+            if (el.type === 'checkbox') {
+              if (isMulti) {
+                if (!row[childKey]) row[childKey] = [];
+                if (el.checked) row[childKey].push(el.value);
+              } else {
+                row[childKey] = el.checked;
+              }
+            } else if (el.type === 'radio') {
+              if (el.checked) row[childKey] = el.value;
+            } else {
+              row[childKey] = el.value;
+            }
+            return;
+          }
+          if (el.type === 'checkbox') {
+            var key = el.name.replace(/\\[\\]$/, '');
+            if (!seenChecks[key]) seenChecks[key] = [];
+            if (el.checked) seenChecks[key].push(el.value);
+            answers[key] = seenChecks[key];
+          } else if (el.type === 'radio') {
+            if (el.checked) answers[el.name] = el.value;
+          } else {
+            answers[el.name] = el.value;
+          }
+        });
+        Object.keys(repeaterAnswers).forEach(function(k) {
+          answers[k] = repeaterAnswers[k].filter(function(row) { return row; });
+        });
 
-/* ---- Radio / checkbox groups: each option is its own bordered chip,
- * not a bare circle floating next to text ---- */
-.df-choice-group {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
+        var errorEl = form.querySelector('.df-error');
+        var submitBtn = form.querySelector('.df-submit');
+        if (submitBtn) submitBtn.disabled = true;
+        if (errorEl) errorEl.style.display = 'none';
 
-.df-radio,
-.df-checkbox {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 14px;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  cursor: pointer;
-  font-size: 0.95rem;
-  transition: border-color 0.15s ease, background 0.15s ease;
-}
-
-.df-radio:hover,
-.df-checkbox:hover {
-  border-color: #c7d2fe;
-  background: #f8f9ff;
-}
-
-.df-radio input,
-.df-checkbox input {
-  width: 17px;
-  height: 17px;
-  accent-color: #6366f1;
-  flex-shrink: 0;
-}
-
-/* A single standalone boolean checkbox (no separate .df-label above it) */
-.df-field > .df-checkbox {
-  border: 1px solid #e5e7eb;
-}
-
-/* ---- Repeater (subform) blocks ---- */
-.df-repeater {
-  border: 1px dashed #c7d2fe;
-  border-radius: 12px;
-  padding: 16px 18px;
-  background: #f8f9ff;
-}
-
-.df-repeater-items {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-top: 10px;
-}
-
-.df-repeater-row {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 14px 18px;
-  padding: 16px;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  background: #fff;
-  position: relative;
-}
-
-.df-repeater-remove {
-  grid-column: 1 / -1;
-  justify-self: end;
-  border: none;
-  background: none;
-  color: #dc2626;
-  font-size: 0.82rem;
-  cursor: pointer;
-  padding: 2px 4px;
-}
-
-.df-repeater-add {
-  margin-top: 12px;
-  border: 1px dashed #a5b4fc;
-  background: #fff;
-  color: #4f46e5;
-  border-radius: 8px;
-  padding: 8px 14px;
-  font-size: 0.88rem;
-  cursor: pointer;
-}
-
-.df-repeater-add:hover { background: #eef2ff; }
-
-/* ---- Conditional (show_if) fields: fade instead of popping in ---- */
-.df-field[data-show-if-q] {
-  transition: opacity 0.15s ease;
-}
-
-/* ---- Submit / errors ---- */
-.df-submit {
-  align-self: flex-start;
-  background: #111827;
-  color: #fff;
-  border: none;
-  border-radius: 9px;
-  padding: 12px 26px;
-  font-size: 0.95rem;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.df-submit:disabled { opacity: 0.6; cursor: not-allowed; }
-.df-submit:hover:not(:disabled) { background: #000; }
-
-.df-error {
-  color: #dc2626;
-  font-size: 0.88rem;
-}
-
-.df-success {
-  text-align: center;
-  font-size: 1.05rem;
-  padding: 24px 0;
-}
-
-/* ---- Responsive: collapse every grid to 1 column below ~640px ---- */
-@media (max-width: 640px) {
-  .df-section { padding: 18px 18px; }
-  .df-grid { grid-template-columns: 1fr !important; }
-  .df-repeater-row { grid-template-columns: 1fr; }
+        fetch('/api/leads', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            form_key: form.getAttribute('data-form-key'),
+            answers: answers,
+            source_page: location.pathname,
+          }),
+        }).then(function(r) {
+          if (!r.ok) throw new Error('Submit failed');
+          var redirect = form.getAttribute('data-redirect');
+          if (redirect) { location.href = redirect; return; }
+          form.innerHTML = '<p class="df-success">' + form.getAttribute('data-success') + '</p>';
+        }).catch(function() {
+          if (submitBtn) submitBtn.disabled = false;
+          if (errorEl) { errorEl.textContent = 'Something went wrong — please try again.'; errorEl.style.display = 'block'; }
+        });
+      });
+    })();
+    </script>`;
 }
