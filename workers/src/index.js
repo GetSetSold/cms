@@ -133,7 +133,13 @@ async function fetchBlockData(type, props, env) {
     // (area/city listings) comes from `grid`, the lighter public table.
     // filter: "office_only" -> property table, office's own listings.
     if (props.filter === "office_only") {
-      const q = `property?select=*&OfficeName=eq.${encodeURIComponent("LOMBARD GROUP REAL ESTATE INC.")}&order=OriginalEntryTimestamp.desc&limit=${count}`;
+      // Filtering by ListOfficeKey instead of OfficeName: OfficeName is a
+      // free-text brokerage name ("LOMBARD GROUP REAL ESTATE INC." — note
+      // the trailing period) that silently broke an exact eq. match and
+      // fell through to unfiltered `grid` results with no visible error.
+      // ListOfficeKey is a stable identifier confirmed clean in the data.
+      const officeKey = props.officeKey || "291890";
+      const q = `property?select=*&ListOfficeKey=eq.${encodeURIComponent(officeKey)}&order=OriginalEntryTimestamp.desc&limit=${count}`;
       const res = await mlsFetch(env, q);
       if (!res.ok) { console.error("featured_listings (property) fetch failed:", await res.text()); return []; }
       const rows = await res.json();
