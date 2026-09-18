@@ -99,7 +99,13 @@ img{ max-width:100%; display:block; }
 .site-footer-centered .footer-links, .site-footer-centered .footer-social{ justify-content:center; }
 
 /* Shared block scaffolding */
-.block{ padding:56px; max-width:1440px; margin:0 auto; }
+/* width:100% is explicit here, not left to the flex-column body's default
+   align-items:stretch — that implicit stretch was unreliable and could
+   collapse .block to its content width instead of filling up to the
+   1440px cap (seen live: computed width 419px instead of 1440px on a
+   1440px-wide viewport). max-width alone is only a ceiling; width:100%
+   is what actually makes it fill up to that ceiling every time. */
+.block{ padding:56px; max-width:1440px; width:100%; margin:0 auto; }
 /* Full-bleed variant: same 56px edge padding as .site-header/.site-footer
    (so the page reads as one consistent width top to bottom) but no
    max-width cap — for toolbar-style sections (listing grid, map search)
