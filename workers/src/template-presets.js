@@ -162,25 +162,7 @@ export const templatePresets = [
       block_type: "rich_text",
       props: {
         heading: "Our Services",
-        body_html: \`
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:2rem;margin-top:2rem;">
-            <div style="text-align:center;padding:2rem;background:#f8f9fa;border-radius:12px;">
-              <div style="font-size:2.5rem;margin-bottom:1rem;">🏡</div>
-              <h3>Buy a Home</h3>
-              <p>Find your perfect property from our curated listings across the GTA.</p>
-            </div>
-            <div style="text-align:center;padding:2rem;background:#f8f9fa;border-radius:12px;">
-              <div style="font-size:2.5rem;margin-bottom:1rem;">💰</div>
-              <h3>Sell Your Property</h3>
-              <p>Get top dollar with our proven marketing strategies and expert negotiation.</p>
-            </div>
-            <div style="text-align:center;padding:2rem;background:#f8f9fa;border-radius:12px;">
-              <div style="font-size:2.5rem;margin-bottom:1rem;">📊</div>
-              <h3>Free Valuation</h3>
-              <p>Discover what your home is worth in today's market with a free assessment.</p>
-            </div>
-          </div>
-        \`,
+        body_html: '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:2rem;margin-top:2rem;"><div style="text-align:center;padding:2rem;background:#f8f9fa;border-radius:12px;"><div style="font-size:2.5rem;margin-bottom:1rem;">🏡</div><h3>Buy a Home</h3><p>Find your perfect property from our curated listings across the GTA.</p></div><div style="text-align:center;padding:2rem;background:#f8f9fa;border-radius:12px;"><div style="font-size:2.5rem;margin-bottom:1rem;">💰</div><h3>Sell Your Property</h3><p>Get top dollar with our proven marketing strategies and expert negotiation.</p></div><div style="text-align:center;padding:2rem;background:#f8f9fa;border-radius:12px;"><div style="font-size:2.5rem;margin-bottom:1rem;">📊</div><h3>Free Valuation</h3><p>Discover what your home is worth in today\'s market with a free assessment.</p></div></div>',
       }
     }]
   },
@@ -383,7 +365,7 @@ export const templatePresets = [
     id: "page_home",
     name: "Complete Home Page",
     category: "layouts",
-    description: "Full homepage: hero → stats → services → listings → FAQ → CTA → form",
+    description: "Full homepage: hero → stats → services → listings → CTA → form",
     icon: "📄",
     blocks: [
       { block_type: "hero", props: { heading: "Find Your Perfect Property", subheading: "Search listings across the GTA", image: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1920&q=80", cta_label: "Browse Listings", cta_href: "/listings" } },
@@ -414,7 +396,7 @@ export const templatePresets = [
     description: "Property listings page with grid",
     icon: "📄",
     blocks: [
-      { block_type: "hero", props: { heading: "Property Listings", subheading: "Browse available properties", cta_label: "", cta_href: "" } },
+      { block_type: "hero", props: { heading: "Property Listings", subheading: "Browse available properties" } },
       { block_type: "listing_grid", props: { pageSize: 12 } },
       { block_type: "cta_banner", props: { heading: "Can't Find What You're Looking For?", cta_label: "Contact Us", cta_href: "/contact" } },
     ]
