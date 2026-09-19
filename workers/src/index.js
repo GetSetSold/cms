@@ -11,6 +11,7 @@
 import { renderBlocks } from "./blocks.js";
 import { tokensAsCSS } from "./tokens.js";
 import { siteStyles, dynamicFormStyles } from "./site-styles.js";
+import { handleTemplatesRequest } from "./templates-api.js";
 
 async function supabaseFetch(env, path, init = {}) {
   const res = await fetch(`${env.SUPABASE_URL}/rest/v1/${path}`, {
@@ -585,6 +586,11 @@ export default {
     if (url.pathname === "/api/cities") {
       if (request.method === "OPTIONS") return new Response(null, { headers: CORS_HEADERS });
       return handleCitiesRequest(env);
+    }
+
+    // Template presets for the admin "Insert Template" picker.
+    if (url.pathname === "/api/templates") {
+      return handleTemplatesRequest(request);
     }
 
     // Calculators hub — served as a single static HTML page (see
