@@ -590,7 +590,7 @@ export default {
 
     // Template presets for the admin "Insert Template" picker.
     if (url.pathname === "/api/templates") {
-      return handleTemplatesRequest(request);
+      return handleTemplatesRequest(request, env);
     }
 
     // Calculators hub — served as a single static HTML page (see
