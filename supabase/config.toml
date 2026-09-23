@@ -1,0 +1,14 @@
+# Minimal config used by `supabase link` / `supabase functions deploy`.
+project_id = "supabase-cms"
+
+[functions.submit-lead]
+verify_jwt = false          # public website forms
+
+[functions.sms-inbound]
+verify_jwt = false          # Twilio webhook (signature checked in code)
+
+[functions.process-follow-ups]
+verify_jwt = false          # checks the CRON_SECRET header itself
+
+[functions.send-sms]
+verify_jwt = true           # called from the admin by a signed-in user

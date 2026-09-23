@@ -1,0 +1,331 @@
+import Link from "next/link";
+import type { Page, Section, SiteSettings, SvgAsset } from "@/lib/types";
+import { Svg } from "@/components/site/Svg";
+import { LeadForm } from "./LeadForm";
+
+export type BlockCtx = { svgs: Record<string, SvgAsset>; settings: SiteSettings; page?: Page };
+type BlockProps = { data: any; ctx: BlockCtx };
+
+const wrap = "mx-auto w-full max-w-7xl px-5 md:px-10";
+const h2 = "font-display text-[40px] leading-none md:text-[56px]";
+const paragraphs = (text?: string) =>
+  (text ?? "").split(/\n{2,}/).filter(Boolean).map((p, i) => <p key={i}>{p}</p>);
+
+function Button({ link, variant = "primary" }: { link?: { label?: string; href?: string }; variant?: "primary" | "outline" }) {
+  if (!link?.label || !link?.href) return null;
+  const cls = variant === "primary"
+    ? "bg-primary text-white"
+    : "border border-ink text-ink";
+  return (
+    <Link href={link.href} className={`inline-flex h-13 items-center justify-center rounded-full px-7 py-3.5 font-medium ${cls}`}>
+      {link.label}
+    </Link>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+function Hero({ data, ctx }: BlockProps) {
+  const art = data.svg_id ? ctx.svgs[data.svg_id] : null;
+  const title = (
+    <h1 className="font-display text-[48px] leading-[0.98] tracking-tight md:text-[84px]">
+      {data.heading}{" "}
+      {data.heading_accent ? <span className="italic text-primary">{data.heading_accent}</span> : null}
+    </h1>
+  );
+  const copy = (
+    <>
+      {data.eyebrow ? <div className="text-xs uppercase tracking-[0.12em] text-muted md:text-[13px]">{data.eyebrow}</div> : null}
+      {title}
+      {data.subheading ? <p className="max-w-xl text-[17px] leading-relaxed text-muted md:text-[19px]">{data.subheading}</p> : null}
+    </>
+  );
+
+  if (data.layout === "centered" || (!art && data.layout !== "form")) {
+    return (
+      <div className={`${wrap} flex flex-col items-center gap-6 py-16 text-center md:py-24`}>
+        {copy}
+        <div className="flex flex-wrap justify-center gap-3"><Button link={data.primary_cta} /><Button link={data.secondary_cta} variant="outline" /></div>
+      </div>
+    );
+  }
+
+  if (data.layout === "form") {
+    return (
+      <div className={`${wrap} grid items-center gap-10 py-12 md:grid-cols-2 md:gap-16 md:py-20`}>
+        <div className="flex flex-col gap-6">{copy}</div>
+        <div className="rounded-3xl bg-white p-6 shadow-[0_12px_40px_rgba(21,23,28,0.08)] md:p-8">
+          <LeadForm data={{ form_key: "landing", submit_label: data.primary_cta?.label || "Get my quote", show_message: false }} pageId={ctx.page?.id} siteName={ctx.settings.site_name} />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`${wrap} grid items-center gap-10 py-10 md:grid-cols-2 md:gap-16 md:py-20`}>
+      <div className="flex flex-col gap-6 md:gap-7">
+        {copy}
+        <div className="flex flex-col gap-3 sm:flex-row"><Button link={data.primary_cta} /><Button link={data.secondary_cta} variant="outline" /></div>
+      </div>
+      <div className="relative">
+        <Svg asset={art} label={art?.name} className="aspect-[600/520] overflow-hidden rounded-3xl" />
+        {data.badge?.value ? (
+          <div className="absolute -bottom-4 left-4 flex w-64 flex-col gap-1 rounded-2xl bg-white p-5 shadow-[0_12px_40px_rgba(21,23,28,0.12)] md:-left-8 md:bottom-9">
+            <div className="text-[13px] text-muted">{data.badge.label}</div>
+            <div className="font-display text-4xl">{data.badge.value}</div>
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+function Logos({ data }: BlockProps) {
+  return (
+    <div className={`${wrap} flex flex-col gap-4 border-y border-line py-8 md:flex-row md:items-center md:justify-between`}>
+      {data.heading ? <div className="text-sm text-muted">{data.heading}</div> : null}
+      <div className="flex flex-wrap gap-x-12 gap-y-3 text-lg font-semibold text-[#6B7079] md:text-xl">
+        {(data.items ?? []).map((l: string, i: number) => <span key={i}>{l}</span>)}
+      </div>
+    </div>
+  );
+}
+
+function Services({ data, ctx }: BlockProps) {
+  return (
+    <div className={`${wrap} flex flex-col gap-8 py-16 md:gap-12 md:py-24`}>
+      {data.heading || data.link?.label ? (
+        <div className="flex items-end justify-between gap-4">
+          {data.heading ? <h2 className={h2}>{data.heading}</h2> : <span />}
+          {data.link?.label ? <Link href={data.link.href} className="font-medium text-primary">{data.link.label} →</Link> : null}
+        </div>
+      ) : null}
+      <div className="grid gap-4 md:grid-cols-3 md:gap-6">
+        {(data.items ?? []).map((s: any, i: number) => {
+          const card = (
+            <article className="flex h-full items-center gap-4 rounded-2xl bg-white p-3 md:flex-col md:items-stretch md:gap-4 md:rounded-[20px] md:p-4">
+              <Svg asset={ctx.svgs[s.svg_id]} className="aspect-square w-22 shrink-0 overflow-hidden rounded-xl md:aspect-[360/220] md:w-full" />
+              <div className="flex flex-col gap-1.5 md:p-2">
+                <h3 className="text-lg font-semibold md:text-[22px]">{s.title}</h3>
+                <p className="text-sm leading-relaxed text-muted md:text-base">{s.text}</p>
+              </div>
+            </article>
+          );
+          return s.href ? <Link key={i} href={s.href}>{card}</Link> : <div key={i}>{card}</div>;
+        })}
+      </div>
+    </div>
+  );
+}
+
+function Features({ data }: BlockProps) {
+  return (
+    <div className={`${wrap} flex flex-col gap-10 py-16 md:py-24`}>
+      <div className="flex max-w-2xl flex-col gap-4">
+        {data.heading ? <h2 className={h2}>{data.heading}</h2> : null}
+        {data.intro ? <p className="text-lg text-muted">{data.intro}</p> : null}
+      </div>
+      <div className="grid gap-8 md:grid-cols-3">
+        {(data.items ?? []).map((f: any, i: number) => (
+          <div key={i} className="flex flex-col gap-2 border-t border-line pt-5">
+            <h3 className="text-xl font-semibold">{f.title}</h3>
+            <p className="leading-relaxed text-muted">{f.text}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function Stats({ data }: BlockProps) {
+  return (
+    <div className={`${wrap} grid grid-cols-2 gap-6 py-10 md:grid-cols-4 md:py-16`}>
+      {(data.items ?? []).map((s: any, i: number) => (
+        <div key={i} className="flex flex-col gap-1.5">
+          <div className="font-display text-[44px] leading-none md:text-[56px]">{s.value}</div>
+          <div className="text-sm opacity-75 md:text-[15px]">{s.label}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function Testimonials({ data }: BlockProps) {
+  return (
+    <div className={`${wrap} flex flex-col gap-8 py-16 md:py-24`}>
+      {data.heading ? <h2 className={h2}>{data.heading}</h2> : null}
+      <div className="grid gap-4 md:grid-cols-2 md:gap-6">
+        {(data.items ?? []).map((t: any, i: number) => (
+          <figure key={i} className={`flex flex-col justify-between gap-8 rounded-[20px] p-7 md:p-10 ${i % 2 ? "bg-primary text-white" : "bg-white"}`}>
+            <blockquote className="font-display text-[26px] leading-tight md:text-3xl">“{t.quote}”</blockquote>
+            <figcaption className="flex items-center gap-3">
+              <svg viewBox="0 0 44 44" className="h-11 w-11" aria-hidden="true">
+                <circle cx="22" cy="22" r="22" fill={i % 2 ? "rgba(255,255,255,.25)" : "var(--c-soft)"} />
+                <circle cx="22" cy="17" r="7" fill={i % 2 ? "#fff" : "#8A8E97"} />
+                <path d="M9 38 C11 29 33 29 35 38" fill={i % 2 ? "#fff" : "#8A8E97"} />
+              </svg>
+              <div><div className="font-semibold">{t.name}</div><div className="text-sm opacity-75">{t.role}</div></div>
+            </figcaption>
+          </figure>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function Faq({ data }: BlockProps) {
+  const items = data.items ?? [];
+  const jsonLd = {
+    "@context": "https://schema.org", "@type": "FAQPage",
+    mainEntity: items.map((f: any) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
+  };
+  return (
+    <div className={`${wrap} grid gap-8 py-16 md:grid-cols-3 md:gap-16 md:py-20`}>
+      <h2 className={h2}>{data.heading}</h2>
+      <div className="md:col-span-2">
+        {items.map((f: any, i: number) => (
+          <details key={i} className="group border-t border-line py-6 last:border-b">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-lg font-medium md:text-xl">
+              {f.q}<span className="text-2xl transition group-open:rotate-45">+</span>
+            </summary>
+            <p className="pt-3 leading-relaxed text-muted">{f.a}</p>
+          </details>
+        ))}
+      </div>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
+    </div>
+  );
+}
+
+function Cta({ data }: BlockProps) {
+  return (
+    <div className={`${wrap} py-12 md:py-16`}>
+      <div className="flex flex-col items-start gap-6 rounded-[28px] bg-soft p-8 md:flex-row md:items-center md:justify-between md:p-14">
+        <div className="flex flex-col gap-3">
+          <h2 className={h2}>{data.heading}</h2>
+          {data.text ? <p className="text-lg text-muted">{data.text}</p> : null}
+        </div>
+        <Button link={data.button} />
+      </div>
+    </div>
+  );
+}
+
+function LeadFormBlock({ data, ctx }: BlockProps) {
+  return (
+    <div className={`${wrap} grid gap-8 py-16 md:grid-cols-2 md:gap-12 md:py-20`}>
+      <div className="flex flex-col gap-4">
+        <h2 className={h2}>{data.heading}</h2>
+        {data.text ? <p className="text-lg text-muted">{data.text}</p> : null}
+      </div>
+      <LeadForm data={data} pageId={ctx.page?.id} siteName={ctx.settings.site_name} />
+    </div>
+  );
+}
+
+function RichText({ data }: BlockProps) {
+  return (
+    <div className={`${wrap} flex max-w-3xl flex-col gap-5 py-12 text-lg leading-relaxed md:py-16`}>
+      {data.heading ? <h2 className={h2}>{data.heading}</h2> : null}
+      {paragraphs(data.body)}
+    </div>
+  );
+}
+
+function TextSvg({ data, ctx }: BlockProps) {
+  const right = data.side !== "left";
+  return (
+    <div className={`${wrap} grid items-center gap-10 py-16 md:grid-cols-2 md:gap-16 md:py-24`}>
+      <div className={`flex flex-col gap-5 text-lg leading-relaxed text-muted ${right ? "" : "md:order-2"}`}>
+        {data.heading ? <h2 className={`${h2} text-ink`}>{data.heading}</h2> : null}
+        {paragraphs(data.body)}
+      </div>
+      <Svg asset={ctx.svgs[data.svg_id]} label={ctx.svgs[data.svg_id]?.name} className="overflow-hidden rounded-3xl" />
+    </div>
+  );
+}
+
+function Pricing({ data }: BlockProps) {
+  return (
+    <div className={`${wrap} flex flex-col gap-10 py-16 md:py-24`}>
+      {data.heading ? <h2 className={h2}>{data.heading}</h2> : null}
+      <div className="grid gap-4 md:grid-cols-3 md:gap-6">
+        {(data.plans ?? []).map((p: any, i: number) => (
+          <div key={i} className={`flex flex-col gap-5 rounded-[20px] p-7 ${p.highlight ? "bg-ink text-white" : "bg-white"}`}>
+            <div className="text-lg font-semibold">{p.name}</div>
+            <div className="font-display text-5xl">{p.price}<span className="font-sans text-base opacity-70"> {p.period}</span></div>
+            <ul className="flex flex-col gap-2 text-[15px]">
+              {String(p.features ?? "").split("\n").filter(Boolean).map((f: string, j: number) => <li key={j}>✓ {f}</li>)}
+            </ul>
+            {p.cta_label ? (
+              <Link href={p.cta_href || "#"} className={`mt-auto flex h-12 items-center justify-center rounded-full font-medium ${p.highlight ? "bg-white text-ink" : "bg-primary text-white"}`}>
+                {p.cta_label}
+              </Link>
+            ) : null}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ContactInfo({ data, ctx }: BlockProps) {
+  const c = ctx.settings.contact ?? {};
+  const rows = [["Phone", c.phone, c.phone && `tel:${c.phone}`], ["Email", c.email, c.email && `mailto:${c.email}`], ["Address", c.address], ["Hours", c.hours]]
+    .filter((r) => r[1]);
+  return (
+    <div className={`${wrap} flex flex-col gap-8 py-16`}>
+      {data.heading ? <h2 className={h2}>{data.heading}</h2> : null}
+      <dl className="grid gap-6 md:grid-cols-4">
+        {rows.map(([k, v, href]) => (
+          <div key={k as string} className="flex flex-col gap-1">
+            <dt className="text-sm text-muted">{k}</dt>
+            <dd className="text-lg">{href ? <a href={href as string}>{v}</a> : v}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+export const BLOCKS: Record<string, (p: BlockProps) => React.ReactNode> = {
+  hero: Hero,
+  logos: Logos,
+  services: Services,
+  features: Features,
+  stats: Stats,
+  testimonials: Testimonials,
+  faq: Faq,
+  cta: Cta,
+  lead_form: LeadFormBlock,
+  rich_text: RichText,
+  text_svg: TextSvg,
+  pricing: Pricing,
+  contact_info: ContactInfo,
+};
+
+const BG: Record<string, string> = {
+  default: "",
+  muted: "bg-soft/60",
+  dark: "bg-ink text-ground",
+  brand: "bg-primary text-white",
+};
+
+export function RenderSections({ sections, ctx }: { sections: Section[]; ctx: BlockCtx }) {
+  return (
+    <>
+      {sections.map((s) => {
+        const Block = BLOCKS[s.block_type];
+        if (!Block) return null;
+        const st = s.settings ?? {};
+        const cls = [BG[st.background ?? "default"], st.hide_on_mobile && "hide-mobile", st.hide_on_desktop && "hide-desktop"]
+          .filter(Boolean).join(" ");
+        return (
+          <section key={s.id} id={st.anchor || undefined} className={cls} data-block={s.block_type}>
+            <Block data={s.data ?? {}} ctx={ctx} />
+          </section>
+        );
+      })}
+    </>
+  );
+}

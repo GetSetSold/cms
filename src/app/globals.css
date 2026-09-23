@@ -1,0 +1,54 @@
+@import "tailwindcss";
+
+/* Runtime theme: the site layout sets these from Settings > Branding */
+:root {
+  --c-primary: #0E5C55;
+  --c-accent: #B8581F;
+  --c-ink: #15171C;
+  --c-ground: #F5F3EE;
+  --c-soft: #E9E4D8;
+  --c-line: #D5D0C5;
+  --c-muted: #4A4F5A;
+  --c-paper: #FFFFFF;
+}
+
+@theme inline {
+  --color-primary: var(--c-primary);
+  --color-accent: var(--c-accent);
+  --color-ink: var(--c-ink);
+  --color-ground: var(--c-ground);
+  --color-soft: var(--c-soft);
+  --color-line: var(--c-line);
+  --color-muted: var(--c-muted);
+  --color-paper: var(--c-paper);
+  --font-display: var(--font-instrument), Georgia, serif;
+  --font-sans: var(--font-geist), system-ui, sans-serif;
+}
+
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+body { background: var(--c-ground); color: var(--c-ink); font-family: var(--font-sans); }
+:focus-visible { outline: 2px solid var(--c-primary); outline-offset: 2px; }
+
+/* SVG theme classes used by the illustration library */
+.svg-box svg { display: block; width: 100%; height: 100%; }
+.c-primary { fill: var(--c-primary); }  .s-primary { stroke: var(--c-primary); }
+.c-accent  { fill: var(--c-accent); }   .s-accent  { stroke: var(--c-accent); }
+.c-ink     { fill: var(--c-ink); }      .s-ink     { stroke: var(--c-ink); }
+.c-ground  { fill: var(--c-ground); }
+.c-soft    { fill: var(--c-soft); }
+.c-line    { fill: var(--c-line); }     .s-line    { stroke: var(--c-line); }
+.c-paper   { fill: var(--c-paper); }    .s-paper   { stroke: var(--c-paper); }
+
+/* Section visibility per device (set in the builder) */
+@media (max-width: 767px) { .hide-mobile { display: none !important; } }
+@media (min-width: 768px) { .hide-desktop { display: none !important; } }
+
+/* Small admin helpers */
+@layer components {
+  .input { @apply h-10 w-full rounded-lg border border-line bg-white px-3 text-sm outline-none focus:border-primary; }
+  .textarea { @apply w-full rounded-lg border border-line bg-white px-3 py-2 text-sm outline-none focus:border-primary; }
+  .label { @apply flex flex-col gap-1.5 text-[13px] text-muted; }
+  .btn { @apply inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-line bg-white px-4 text-sm font-medium hover:bg-soft/60 disabled:opacity-50; }
+  .btn-primary { @apply inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50; }
+  .card { @apply rounded-2xl bg-white p-6; }
+}
