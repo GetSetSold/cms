@@ -13,7 +13,7 @@
   --c-primary-soft: #E7E4FB;
 }
 
-@theme inline {
+@theme {
   --color-primary: var(--c-primary);
   --color-primary-soft: var(--c-primary-soft);
   --color-accent: var(--c-accent);
@@ -23,8 +23,8 @@
   --color-line: var(--c-line);
   --color-muted: var(--c-muted);
   --color-paper: var(--c-paper);
-  --font-display: var(--font-instrument), Georgia, serif;
-  --font-sans: var(--font-geist), system-ui, sans-serif;
+  --font-display: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
 }
 
 html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }

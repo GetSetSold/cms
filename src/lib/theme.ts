@@ -4,24 +4,35 @@ export const FONT_OPTIONS = [
   "Inter", "Manrope", "Poppins", "Work Sans", "Sora", "Outfit", "Plus Jakarta Sans", "Space Grotesk",
 ] as const;
 
-const FALLBACK_FONT = "Inter";
+const FALLBACK = "Inter";
 
-/** CSS var overrides for a page's root element, driven by Settings > Branding. */
+function headingFont(settings: SiteSettings) {
+  return settings.theme?.font_heading || settings.theme?.font || FALLBACK;
+}
+function bodyFont(settings: SiteSettings) {
+  return settings.theme?.font_body || settings.theme?.font || FALLBACK;
+}
+
+/** CSS var overrides for a page's root element, driven by Settings > Branding.
+ *  Set as literal values (not var() references) so they win regardless of
+ *  Tailwind's own token defaults — this is what makes runtime theme changes
+ *  actually take effect on every themed page. */
 export function themeVars(settings: SiteSettings): React.CSSProperties {
   const t = settings.theme ?? ({} as SiteSettings["theme"]);
-  const font = t.font || FALLBACK_FONT;
   return {
     "--c-primary": t.primary,
     "--c-accent": t.accent,
     "--c-ink": t.ink,
     "--c-ground": t.ground,
-    "--font-display": `'${font}', ui-sans-serif, system-ui, sans-serif`,
-    "--font-sans": `'${font}', ui-sans-serif, system-ui, sans-serif`,
+    "--font-display": `'${headingFont(settings)}', ui-sans-serif, system-ui, sans-serif`,
+    "--font-sans": `'${bodyFont(settings)}', ui-sans-serif, system-ui, sans-serif`,
   } as React.CSSProperties;
 }
 
-/** Google Fonts href for the site's selected font (weights cover body through bold headings). */
+/** Google Fonts href covering both the heading and body font (deduped if they're the same). */
 export function themeFontHref(settings: SiteSettings): string {
-  const font = (settings.theme?.font || FALLBACK_FONT).replace(/ /g, "+");
-  return `https://fonts.googleapis.com/css2?family=${font}:wght@400;500;600;700;800&display=swap`;
+  const families = [...new Set([headingFont(settings), bodyFont(settings)])]
+    .map((f) => `family=${f.replace(/ /g, "+")}:wght@400;500;600;700;800`)
+    .join("&");
+  return `https://fonts.googleapis.com/css2?${families}&display=swap`;
 }
