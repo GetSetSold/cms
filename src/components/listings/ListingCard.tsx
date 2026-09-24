@@ -10,7 +10,7 @@ export function ListingCard({ listing }: { listing: GridListing }) {
   const sale = isSale(listing);
   const popular = isPopular(listing);
   return (
-    <Link href={`/listings/${encodeURIComponent(listing.ListingKey)}`} className="group flex flex-col overflow-hidden rounded-2xl bg-white">
+    <Link href={`/listings/${encodeURIComponent(listing.ListingKey)}`} prefetch={false} className="group flex flex-col overflow-hidden rounded-2xl bg-white">
       <div className="relative aspect-[4/3] overflow-hidden bg-soft">
         {listing.Media ? (
           // eslint-disable-next-line @next/next/no-img-element

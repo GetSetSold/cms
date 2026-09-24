@@ -384,7 +384,7 @@ function ServiceAreas({ data }: BlockProps) {
       {data.heading ? <h2 className="font-display text-2xl font-bold">{data.heading}</h2> : null}
       <div className="flex flex-wrap gap-2.5">
         {items.map((it: any, i: number) => (
-          <Link key={i} href={it.href || `/listings/city/${(it.label ?? "").toLowerCase().trim().replace(/\s+/g, "-")}`} className="flex h-10 items-center rounded-full bg-ground px-4.5 text-sm font-medium hover:bg-soft">
+          <Link key={i} href={it.href || `/listings/city/${(it.label ?? "").toLowerCase().trim().replace(/\s+/g, "-")}`} prefetch={false} className="flex h-10 items-center rounded-full bg-ground px-4.5 text-sm font-medium hover:bg-soft">
             {it.label}
           </Link>
         ))}
@@ -411,7 +411,7 @@ async function ListingGrid({ data }: BlockProps) {
       {data.heading || data.link_label ? (
         <div className="flex items-end justify-between gap-4">
           {data.heading ? <h2 className={h2}>{data.heading}</h2> : <span />}
-          <Link href={city ? `/listings/city/${city.toLowerCase().replace(/\s+/g, "-")}` : "/listings"} className="font-medium text-primary">
+          <Link href={city ? `/listings/city/${city.toLowerCase().replace(/\s+/g, "-")}` : "/listings"} prefetch={false} className="font-medium text-primary">
             {data.link_label || "View all listings"} →
           </Link>
         </div>

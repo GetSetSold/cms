@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createClient } from "@supabase/supabase-js";
 
 // Separate, read-only project: DDF/CREA listings live here, not in the CMS database.
@@ -54,22 +55,24 @@ export function citySlug(city: string) {
   return city.toLowerCase().trim().replace(/\s+/g, "-");
 }
 
+/** The full distinct-city list, fetched once per request no matter how many
+ *  times it's called (React's cache() memoizes by arguments for the
+ *  lifetime of a single render pass) — resolveCitySlug and the city search
+ *  dropdown both need this, and previously each ran its own separate query. */
+export const listCities = cache(async (): Promise<string[]> => {
+  const mls = createMlsClient();
+  const { data } = await mls.from("distinct_cities").select("City").limit(5000);
+  return (data ?? []).map((r) => r.City as string);
+});
+
 /** DDF City values are free text, not a fixed list — resolve a URL slug back
  *  to the exact-cased city string the database actually stores. Reads from
  *  the `distinct_cities` view (create it once in the MLS project — see
  *  README) rather than sampling raw `grid` rows, which could miss cities
  *  entirely depending on row order. */
 export async function resolveCitySlug(slug: string): Promise<string | null> {
-  const mls = createMlsClient();
-  const { data } = await mls.from("distinct_cities").select("City").limit(5000);
-  const cities = (data ?? []).map((r) => r.City as string);
+  const cities = await listCities();
   return cities.find((c) => citySlug(c) === slug.toLowerCase()) ?? null;
-}
-
-export async function listCities(): Promise<string[]> {
-  const mls = createMlsClient();
-  const { data } = await mls.from("distinct_cities").select("City").limit(5000);
-  return (data ?? []).map((r) => r.City as string);
 }
 
 export function priceDisplay(l: Pick<GridListing, "ListPrice" | "TotalActualRent">) {
