@@ -10,6 +10,8 @@
     "NEXT_PUBLIC_SITE_URL": "https://cms.rohit-910.workers.dev",
     "NEXT_PUBLIC_SUPABASE_URL": "https://pcgggfqndoaoddcrechr.supabase.co",
     "NEXT_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZ2dnZnFuZG9hb2RkY3JlY2hyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAxODIyOTQsImV4cCI6MjEwNTc1ODI5NH0.aaL23C2TC_bXSF9_k2B8QuiULFa7GfWI3Rg15JogpYA"
+"NEXT_PUBLIC_MLS_SUPABASE_URL": "https://nkjxlwuextxzpeohutxz.supabase.co",
+  "NEXT_PUBLIC_MLS_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ranhsd3VleHR4enBlb2h1dHh6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzIzMTI5MDQsImV4cCI6MjA0Nzg4ODkwNH0.S3qHT3l4FDV5T0uPI8q4SDo6O-87ApDILE2OTsWLg_0"
   }
   // Custom domain: add in the Cloudflare dashboard (Workers > cms > Settings > Domains)
   // or uncomment:
