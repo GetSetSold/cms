@@ -74,8 +74,8 @@ function Subform({ field, rows, onChange }: { field: FormField; rows: Record<str
         <div key={i} className="flex flex-col gap-3 rounded-xl border border-line p-4">
           <div className="grid gap-3 sm:grid-cols-2">
             {subfields.map((sf) => (
-              <label key={sf.key} className={`label ${sf.span === 2 ? "sm:col-span-2" : ""}`}>
-                {sf.label}
+              <label key={sf.key} className={`flex flex-col gap-1.5 text-[15px] ${sf.span === 2 ? "sm:col-span-2" : ""}`}>
+                <span className="font-medium text-ink">{sf.label}</span>
                 <BasicField field={sf} value={row[sf.key] ?? ""} onChange={(v) => setCell(i, sf.key, v)} />
               </label>
             ))}
@@ -97,22 +97,25 @@ function SectionBlock({ section, active, values, onFieldChange }: {
   // in a paginated form, and — importantly — the browser automatically skips
   // required-field validation for anything not rendered, so Next/Submit only
   // validates the fields actually visible on the current step.
+  // Native <fieldset>/<legend> render inconsistently inside a flex layout
+  // (legend can overflow its box in some browsers) — use plain elements
+  // with the same grouping semantics via role="group" instead.
   return (
-    <fieldset hidden={!active} className={`flex flex-col gap-3 ${section.background ? "rounded-2xl p-6" : ""}`} style={section.background ? { background: section.background } : undefined}>
-      {section.heading ? <legend className="mb-1 text-lg font-semibold">{section.heading}</legend> : null}
-      <div className={`grid gap-3 ${section.columns === 2 ? "sm:grid-cols-2" : ""}`}>
+    <div hidden={!active} role="group" aria-label={section.heading} className={`flex flex-col gap-4 ${section.background ? "rounded-2xl p-6" : ""}`} style={section.background ? { background: section.background } : undefined}>
+      {section.heading ? <div className="border-b border-line pb-2.5 text-lg font-semibold">{section.heading}</div> : null}
+      <div className={`grid gap-4 ${section.columns === 2 ? "sm:grid-cols-2" : ""}`}>
         {section.fields.map((f) =>
           f.type === "subform" ? (
             <Subform key={f.key} field={f} rows={(values[f.key] as Record<string, string>[]) ?? []} onChange={(rows) => onFieldChange(f.key, rows)} />
           ) : (
-            <label key={f.key} className={`label ${f.span === 2 || section.columns === 1 ? "sm:col-span-2" : ""}`}>
-              {f.type !== "checkbox" ? f.label : null}
+            <label key={f.key} className={`flex flex-col gap-1.5 text-[15px] ${f.span === 2 || section.columns === 1 ? "sm:col-span-2" : ""}`}>
+              {f.type !== "checkbox" ? <span className="font-medium text-ink">{f.label}{f.required ? <span className="text-primary"> *</span> : null}</span> : null}
               <BasicField field={f} value={typeof values[f.key] === "string" ? (values[f.key] as string) : ""} onChange={(v) => onFieldChange(f.key, v)} />
             </label>
           ),
         )}
       </div>
-    </fieldset>
+    </div>
   );
 }
 

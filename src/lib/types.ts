@@ -42,6 +42,9 @@ export type NavColumn = { heading?: string; links: NavLink[] };
 /** A plain link, or — if `columns` is set — a mega-menu dropdown with one or more link groups. */
 export type NavItem = { label: string; href: string; columns?: NavColumn[] };
 
+export type MobileCtaIcon = "phone" | "message" | "star" | "home" | "mail" | "calendar";
+export type MobileCtaButton = { type: "call" | "sms" | "link"; label: string; icon: MobileCtaIcon; href?: string };
+
 export interface SiteSettings {
   site_name: string;
   logo_svg_id: string | null;
@@ -49,7 +52,13 @@ export interface SiteSettings {
   seo_defaults: { title_suffix: string; description: string; site_url?: string };
   navigation: NavItem[];
   header_cta: { label: string; href: string };
-  footer: { tagline?: string; columns: NavColumn[] };
+  header: {
+    bg?: string; text?: string;
+    show_logo_mobile?: boolean; show_logo_desktop?: boolean;
+    show_name_mobile?: boolean; show_name_desktop?: boolean;
+  };
+  footer: { tagline?: string; columns: NavColumn[]; bg?: string; text?: string; columns_per_row?: 3 | 4 };
+  mobile_cta: { buttons: MobileCtaButton[]; shape: "square" | "rectangle" };
   contact: { phone?: string; email?: string; address?: string; hours?: string };
   social_links: Record<string, string>;
   scripts: { ga4_id?: string };

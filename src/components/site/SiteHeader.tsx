@@ -4,21 +4,31 @@ import { useState } from "react";
 import type { SiteSettings, SvgAsset } from "@/lib/types";
 import { Svg } from "./Svg";
 
-function ChevronDown() {
-  return <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" className="mt-0.5"><path d="m6 9 6 6 6-6" /></svg>;
+function PlusMinus({ open }: { open: boolean }) {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" className="shrink-0">
+      <path d="M5 12h14" />
+      {open ? null : <path d="M12 5v14" />}
+    </svg>
+  );
 }
 
 export function SiteHeader({ settings, logo }: { settings: SiteSettings; logo?: SvgAsset | null }) {
   const [open, setOpen] = useState(false);
   const [openMega, setOpenMega] = useState<string | null>(null);
   const [openMobileGroup, setOpenMobileGroup] = useState<string | null>(null);
+  const h = settings.header ?? {};
+  const showLogoMobile = h.show_logo_mobile !== false;
+  const showLogoDesktop = h.show_logo_desktop !== false;
+  const showNameMobile = h.show_name_mobile !== false;
+  const showNameDesktop = h.show_name_desktop !== false;
 
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-ground/95 backdrop-blur">
+    <header className="sticky top-0 z-40 border-b border-line backdrop-blur" style={{ background: h.bg || "var(--c-ground, #fff)", color: h.text || undefined }}>
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 md:h-20 md:px-10">
         <Link href="/" className="flex items-center gap-2 font-display text-2xl md:text-3xl" aria-label={`${settings.site_name} home`}>
-          {logo ? <Svg asset={logo} className="h-8 w-8" /> : null}
-          {settings.site_name}
+          {logo ? <Svg asset={logo} className={`h-8 w-8 ${showLogoMobile ? "" : "hidden"} ${showLogoDesktop ? "md:block" : "md:hidden"}`} /> : null}
+          <span className={`${showNameMobile ? "" : "hidden"} ${showNameDesktop ? "md:inline" : "md:hidden"}`}>{settings.site_name}</span>
         </Link>
 
         <nav className="hidden gap-9 text-[15px] md:flex" aria-label="Main">
@@ -26,15 +36,15 @@ export function SiteHeader({ settings, logo }: { settings: SiteSettings; logo?: 
             n.columns?.length ? (
               <div key={n.href} className="relative" onMouseEnter={() => setOpenMega(n.href)} onMouseLeave={() => setOpenMega(null)}>
                 <button
-                  className="flex items-center gap-1 hover:text-primary"
+                  className={`flex items-center gap-1.5 border-b-2 pb-1 hover:text-primary ${openMega === n.href ? "border-primary text-primary" : "border-transparent"}`}
                   aria-expanded={openMega === n.href}
                   onClick={() => setOpenMega(openMega === n.href ? null : n.href)}
                 >
-                  {n.label}<ChevronDown />
+                  {n.label}<PlusMinus open={openMega === n.href} />
                 </button>
                 {openMega === n.href ? (
                   <div className="absolute left-1/2 top-full z-50 w-[560px] -translate-x-1/2 pt-3">
-                    <div className="grid grid-cols-[repeat(auto-fit,minmax(160px,1fr))] gap-8 rounded-2xl bg-white p-6 shadow-[0_16px_50px_rgba(20,20,43,0.15)]">
+                    <div className="grid grid-cols-[repeat(auto-fit,minmax(160px,1fr))] gap-8 rounded-2xl bg-white p-6 text-ink shadow-[0_16px_50px_rgba(20,20,43,0.15)]">
                       {n.columns.map((col, i) => (
                         <div key={i} className="flex flex-col gap-2.5">
                           {col.heading ? <div className="text-xs font-semibold uppercase tracking-wide text-muted">{col.heading}</div> : null}
@@ -79,7 +89,7 @@ export function SiteHeader({ settings, logo }: { settings: SiteSettings; logo?: 
                 <button className="flex w-full items-center justify-between py-3 text-lg" aria-expanded={openMobileGroup === n.href}
                   onClick={() => setOpenMobileGroup(openMobileGroup === n.href ? null : n.href)}>
                   {n.label}
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={openMobileGroup === n.href ? "rotate-180" : ""}><path d="m6 9 6 6 6-6" /></svg>
+                  <PlusMinus open={openMobileGroup === n.href} />
                 </button>
                 {openMobileGroup === n.href ? (
                   <div className="flex flex-col gap-4 pb-3 pl-3">

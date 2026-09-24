@@ -17,8 +17,8 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
   async function save() {
     const { error } = await supabase.from("site_settings").update({
       site_name: s.site_name, logo_svg_id: s.logo_svg_id, theme: s.theme, seo_defaults: s.seo_defaults,
-      navigation: s.navigation.filter((n) => n.label && n.href), header_cta: s.header_cta, footer: s.footer,
-      contact: s.contact, scripts: s.scripts, lead_settings: s.lead_settings,
+      navigation: s.navigation.filter((n) => n.label && n.href), header_cta: s.header_cta, header: s.header, footer: s.footer,
+      contact: s.contact, scripts: s.scripts, lead_settings: s.lead_settings, mobile_cta: s.mobile_cta,
     }).eq("id", 1);
     setMsg(error ? error.message : "Saved"); router.refresh();
   }
@@ -100,10 +100,86 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
           <label className="label">Header button<input className="input" value={s.header_cta?.label ?? ""} onChange={(e) => set("header_cta", { ...s.header_cta, label: e.target.value })} /></label>
           <label className="label">Links to<input className="input" value={s.header_cta?.href ?? ""} onChange={(e) => set("header_cta", { ...s.header_cta, href: e.target.value })} /></label>
         </div>
+
+        <div className="flex flex-col gap-3 rounded-lg border border-line p-3">
+          <strong className="text-sm">Header appearance</strong>
+          <div className="grid grid-cols-2 gap-3">
+            <label className="label">Background<div className="flex items-center gap-2">
+              <input type="color" value={s.header?.bg || "#ffffff"} onChange={(e) => set("header", { ...s.header, bg: e.target.value })} className="h-8 w-9 cursor-pointer rounded border-0 bg-transparent" />
+              <button type="button" className="text-xs text-muted" onClick={() => set("header", { ...s.header, bg: undefined })}>Reset</button>
+            </div></label>
+            <label className="label">Text color<div className="flex items-center gap-2">
+              <input type="color" value={s.header?.text || "#14142B"} onChange={(e) => set("header", { ...s.header, text: e.target.value })} className="h-8 w-9 cursor-pointer rounded border-0 bg-transparent" />
+              <button type="button" className="text-xs text-muted" onClick={() => set("header", { ...s.header, text: undefined })}>Reset</button>
+            </div></label>
+          </div>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+            <label className="flex items-center justify-between">Logo on mobile<input type="checkbox" checked={s.header?.show_logo_mobile !== false} onChange={(e) => set("header", { ...s.header, show_logo_mobile: e.target.checked })} /></label>
+            <label className="flex items-center justify-between">Logo on desktop<input type="checkbox" checked={s.header?.show_logo_desktop !== false} onChange={(e) => set("header", { ...s.header, show_logo_desktop: e.target.checked })} /></label>
+            <label className="flex items-center justify-between">Site name on mobile<input type="checkbox" checked={s.header?.show_name_mobile !== false} onChange={(e) => set("header", { ...s.header, show_name_mobile: e.target.checked })} /></label>
+            <label className="flex items-center justify-between">Site name on desktop<input type="checkbox" checked={s.header?.show_name_desktop !== false} onChange={(e) => set("header", { ...s.header, show_name_desktop: e.target.checked })} /></label>
+          </div>
+        </div>
+
         <label className="label">Footer tagline<input className="input" value={s.footer?.tagline ?? ""} onChange={(e) => set("footer", { ...s.footer, tagline: e.target.value })} /></label>
+        <div className="grid grid-cols-3 gap-3 rounded-lg border border-line p-3">
+          <label className="label">Footer background<div className="flex items-center gap-2">
+            <input type="color" value={s.footer?.bg || "#14142B"} onChange={(e) => set("footer", { ...s.footer, bg: e.target.value })} className="h-8 w-9 cursor-pointer rounded border-0 bg-transparent" />
+            <button type="button" className="text-xs text-muted" onClick={() => set("footer", { ...s.footer, bg: undefined })}>Reset</button>
+          </div></label>
+          <label className="label">Footer text color<div className="flex items-center gap-2">
+            <input type="color" value={s.footer?.text || "#FFFFFF"} onChange={(e) => set("footer", { ...s.footer, text: e.target.value })} className="h-8 w-9 cursor-pointer rounded border-0 bg-transparent" />
+            <button type="button" className="text-xs text-muted" onClick={() => set("footer", { ...s.footer, text: undefined })}>Reset</button>
+          </div></label>
+          <label className="label">Columns per row
+            <select className="input" value={s.footer?.columns_per_row ?? 4} onChange={(e) => set("footer", { ...s.footer, columns_per_row: Number(e.target.value) as 3 | 4 })}>
+              <option value={3}>3</option>
+              <option value={4}>4</option>
+            </select>
+          </label>
+        </div>
         <div className="label">Footer columns
           <FooterColumnsEditor columns={s.footer?.columns ?? []} onChange={(cols) => set("footer", { ...s.footer, columns: cols })} />
         </div>
+      </section>
+
+      <section className="card flex flex-col gap-4">
+        <h2 className="text-lg font-semibold">Mobile bottom bar</h2>
+        <p className="text-xs text-muted">Shown as a sticky bar on phones. Up to 3 buttons.</p>
+        <label className="label">Button shape
+          <select className="input w-40" value={s.mobile_cta?.shape ?? "rectangle"} onChange={(e) => set("mobile_cta", { ...s.mobile_cta, shape: e.target.value as "square" | "rectangle" })}>
+            <option value="rectangle">Rectangle</option>
+            <option value="square">Square</option>
+          </select>
+        </label>
+        {(s.mobile_cta?.buttons ?? []).map((btn, i) => (
+          <div key={i} className="grid grid-cols-[120px_1fr_140px_1fr_auto] items-center gap-2 rounded-lg border border-line p-2">
+            <select className="input" value={btn.type} onChange={(e) => {
+              const buttons = [...(s.mobile_cta?.buttons ?? [])]; buttons[i] = { ...btn, type: e.target.value as typeof btn.type }; set("mobile_cta", { ...s.mobile_cta, buttons });
+            }}>
+              <option value="call">Call</option>
+              <option value="sms">Message</option>
+              <option value="link">Link</option>
+            </select>
+            <input className="input" placeholder="Label" value={btn.label} onChange={(e) => {
+              const buttons = [...(s.mobile_cta?.buttons ?? [])]; buttons[i] = { ...btn, label: e.target.value }; set("mobile_cta", { ...s.mobile_cta, buttons });
+            }} />
+            <select className="input" value={btn.icon} onChange={(e) => {
+              const buttons = [...(s.mobile_cta?.buttons ?? [])]; buttons[i] = { ...btn, icon: e.target.value as typeof btn.icon }; set("mobile_cta", { ...s.mobile_cta, buttons });
+            }}>
+              {(["phone", "message", "star", "home", "mail", "calendar"] as const).map((ic) => <option key={ic} value={ic}>{ic}</option>)}
+            </select>
+            <input className="input" placeholder={btn.type === "link" ? "/contact" : "Phone override (optional)"} value={btn.href ?? ""} onChange={(e) => {
+              const buttons = [...(s.mobile_cta?.buttons ?? [])]; buttons[i] = { ...btn, href: e.target.value }; set("mobile_cta", { ...s.mobile_cta, buttons });
+            }} />
+            <button type="button" aria-label="Remove" onClick={() => set("mobile_cta", { ...s.mobile_cta, buttons: (s.mobile_cta?.buttons ?? []).filter((_, j) => j !== i) })}>✕</button>
+          </div>
+        ))}
+        {(s.mobile_cta?.buttons?.length ?? 0) < 3 ? (
+          <button type="button" className="btn self-start border-dashed" onClick={() => set("mobile_cta", { ...s.mobile_cta, buttons: [...(s.mobile_cta?.buttons ?? []), { type: "link", label: "New button", icon: "star" }] })}>
+            + Add button
+          </button>
+        ) : null}
       </section>
 
       <section className="card flex flex-col gap-4">
