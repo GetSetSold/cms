@@ -51,7 +51,7 @@ export function ListingsMap({ listings }: { listings: GridListing[] }) {
         const el = document.createElement("a");
         el.href = `/listings/${encodeURIComponent(l.ListingKey)}`;
         el.textContent = priceDisplay(l).replace("/mo", "");
-        el.style.cssText = "display:inline-flex;align-items:center;height:30px;padding:0 10px;border-radius:999px;background:#fff;color:#14142B;font:600 12px Inter,sans-serif;box-shadow:0 2px 8px rgba(20,20,43,.18);white-space:nowrap;text-decoration:none;";
+        el.style.cssText = "display:inline-flex;align-items:center;height:30px;padding:0 10px;border-radius:999px;background:#fff;color:var(--c-ink);font:600 12px Inter,sans-serif;box-shadow:0 2px 8px rgba(20,20,43,.18);white-space:nowrap;text-decoration:none;";
         const marker = new maplibregl.Marker({ element: el, anchor: "bottom" })
           .setLngLat([l.Longitude, l.Latitude])
           .addTo(map);
@@ -73,7 +73,8 @@ export function ListingsMap({ listings }: { listings: GridListing[] }) {
     navigator.geolocation.getCurrentPosition((pos) => {
       const { latitude, longitude } = pos.coords;
       mapRef.current.flyTo({ center: [longitude, latitude], zoom: 13 });
-      new window.maplibregl.Marker({ color: "#6C5DD3" }).setLngLat([longitude, latitude]).addTo(mapRef.current);
+      const live = getComputedStyle(mapRef.current.getContainer()).getPropertyValue("--c-primary").trim();
+      new window.maplibregl.Marker({ color: live || "#6C5DD3" }).setLngLat([longitude, latitude]).addTo(mapRef.current);
     });
   }
 
