@@ -42,6 +42,16 @@ export function FieldEditor({ fields, value, onChange, svgs, forms = [] }: Props
                 </select>
               </label>
             );
+          case "color":
+            return (
+              <div key={f.key} className="label">{f.label}
+                <div className="flex items-center gap-2">
+                  <input type="color" value={v || "#ffffff"} onChange={(e) => set(f.key, e.target.value)} className="h-8 w-9 cursor-pointer rounded border-0 bg-transparent" />
+                  <span className="font-mono text-xs text-ink">{v || "default"}</span>
+                  {v ? <button type="button" className="ml-auto text-xs text-muted" onClick={() => set(f.key, "")}>Reset</button> : null}
+                </div>
+              </div>
+            );
           case "link":
             return (
               <div key={f.key} className="grid grid-cols-2 gap-2">

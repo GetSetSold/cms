@@ -5,12 +5,59 @@ import { sanitizeSvg } from "@/lib/svg";
 import type { SvgAsset } from "@/lib/types";
 import { SvgThumb } from "./SvgPicker";
 
+function EditSvgModal({ asset, onClose, onSaved }: { asset: SvgAsset; onClose: () => void; onSaved: (a: SvgAsset) => void }) {
+  const supabase = useMemo(() => createClient(), []);
+  const [markup, setMarkup] = useState(asset.markup);
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  async function save() {
+    setSaving(true); setError("");
+    let clean: string;
+    try { clean = sanitizeSvg(markup); } catch (e) { setSaving(false); return setError((e as Error).message); }
+    const { data, error } = await supabase.from("svg_assets").update({ markup: clean }).eq("id", asset.id).select("id,name,markup,tags").single();
+    setSaving(false);
+    if (error) return setError(error.message.includes("svg_is_safe") ? "This SVG contains unsafe content and was rejected." : error.message);
+    onSaved(data as SvgAsset);
+    onClose();
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-6" onClick={onClose}>
+      <div className="flex max-h-[85vh] w-full max-w-3xl flex-col gap-4 rounded-2xl bg-white p-6" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center gap-3">
+          <strong className="text-lg">Edit {asset.name}</strong>
+          <button className="ml-auto text-muted" onClick={onClose} aria-label="Close">✕</button>
+        </div>
+        <div className="grid flex-1 gap-4 overflow-hidden md:grid-cols-[220px_1fr]">
+          <div className="flex flex-col gap-2">
+            <span className="text-xs text-muted">Live preview</span>
+            <div className="svg-box aspect-square rounded-xl border border-line p-4" dangerouslySetInnerHTML={{ __html: (() => { try { return sanitizeSvg(markup); } catch { return ""; } })() }} />
+          </div>
+          <textarea
+            className="textarea flex-1 resize-none font-mono text-xs"
+            value={markup}
+            onChange={(e) => setMarkup(e.target.value)}
+            spellCheck={false}
+          />
+        </div>
+        {error ? <p className="rounded-lg bg-red-50 p-3 text-sm text-red-800" role="alert">{error}</p> : null}
+        <div className="flex justify-end gap-2">
+          <button className="btn" onClick={onClose}>Cancel</button>
+          <button className="btn-primary" disabled={saving} onClick={save}>{saving ? "Saving…" : "Save changes"}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function SvgLibrary({ initial }: { initial: SvgAsset[] }) {
   const supabase = useMemo(() => createClient(), []);
   const [items, setItems] = useState(initial);
   const [error, setError] = useState("");
   const [paste, setPaste] = useState("");
   const [name, setName] = useState("");
+  const [editing, setEditing] = useState<SvgAsset | null>(null);
 
   async function add(rawName: string, raw: string) {
     setError("");
@@ -62,10 +109,20 @@ export function SvgLibrary({ initial }: { initial: SvgAsset[] }) {
           <figure key={s.id} className="flex flex-col gap-2 rounded-xl bg-white p-3">
             <SvgThumb asset={s} className="aspect-[4/3] w-full" />
             <input className="input h-8 text-xs" defaultValue={s.name} onBlur={(e) => e.target.value !== s.name && rename(s.id, e.target.value)} aria-label="SVG name" />
-            <button className="self-end text-xs text-red-700" onClick={() => remove(s.id)}>Delete</button>
+            <div className="flex justify-between">
+              <button className="text-xs text-primary" onClick={() => setEditing(s)}>Edit</button>
+              <button className="text-xs text-red-700" onClick={() => remove(s.id)}>Delete</button>
+            </div>
           </figure>
         ))}
       </div>
+      {editing ? (
+        <EditSvgModal
+          asset={editing}
+          onClose={() => setEditing(null)}
+          onSaved={(updated) => setItems((l) => l.map((s) => (s.id === updated.id ? updated : s)))}
+        />
+      ) : null}
     </div>
   );
 }

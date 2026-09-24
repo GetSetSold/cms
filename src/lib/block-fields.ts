@@ -1,6 +1,6 @@
 // Describes the editable fields of each block. The builder's inspector is generated from this.
 export type Field =
-  | { key: string; label: string; type: "text" | "textarea" | "svg" | "link" | "boolean" | "strings" | "form" }
+  | { key: string; label: string; type: "text" | "textarea" | "svg" | "link" | "boolean" | "strings" | "form" | "color" }
   | { key: string; label: string; type: "select"; options: string[] }
   | { key: string; label: string; type: "group"; fields: Field[] }
   | { key: string; label: string; type: "list"; itemLabel: string; fields: Field[] };
@@ -18,6 +18,7 @@ export const BLOCK_FIELDS: Record<string, Field[]> = {
     { key: "image_side", label: "Illustration side (split layout)", type: "select", options: ["right", "left"] },
     { key: "centered_icon_svg_id", label: "Icon above eyebrow (centered layout)", type: "svg" },
     t("centered_icon_radius", "Icon circle radius, 50–100px (centered layout)"),
+    { key: "centered_icon_bg", label: "Icon circle background (default white)", type: "color" },
     { key: "primary_cta", label: "Primary button", type: "link" },
     { key: "secondary_cta", label: "Secondary button", type: "link" },
     { key: "badge", label: "Floating badge", type: "group", fields: [t("label", "Label"), t("value", "Value")] },
