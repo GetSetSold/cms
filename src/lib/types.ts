@@ -77,3 +77,23 @@ export interface Lead {
 }
 
 export const LEAD_STATUSES: LeadStatus[] = ["new", "contacted", "qualified", "proposal", "won", "lost"];
+
+export type FormField = {
+  key: string; label: string;
+  type: "text" | "email" | "tel" | "textarea" | "select" | "checkbox";
+  required?: boolean;
+  options?: string[]; // for "select"
+};
+
+export interface CmsForm {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  fields: FormField[];
+  embed_html: string | null;
+  submit_label: string;
+  success_message: string;
+  form_key: string;
+  is_active: boolean;
+}

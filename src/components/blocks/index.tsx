@@ -4,6 +4,9 @@ import { Svg } from "@/components/site/Svg";
 import { LeadForm } from "./LeadForm";
 import { createMlsClient, type GridListing } from "@/lib/mls";
 import { ListingCard } from "@/components/listings/ListingCard";
+import { CmsFormRenderer } from "./CmsFormRenderer";
+import { createClient } from "@/lib/supabase/server";
+import type { CmsForm } from "@/lib/types";
 
 export type BlockCtx = { svgs: Record<string, SvgAsset>; settings: SiteSettings; page?: Page };
 type BlockProps = { data: any; ctx: BlockCtx };
@@ -401,6 +404,23 @@ async function ListingGrid({ data }: BlockProps) {
   );
 }
 
+async function CustomForm({ data, ctx }: BlockProps) {
+  if (!data.form_slug) return null;
+  const supabase = await createClient();
+  const { data: form } = await supabase.from("forms").select("*").eq("slug", data.form_slug).eq("is_active", true).maybeSingle();
+  if (!form) return null;
+
+  return (
+    <div className={`${wrap} flex flex-col gap-6 py-16 md:py-20`}>
+      {data.heading ? <h2 className={h2}>{data.heading}</h2> : null}
+      {data.text ? <p className="max-w-xl text-lg text-muted">{data.text}</p> : null}
+      <div className="max-w-2xl">
+        <CmsFormRenderer form={form as CmsForm} pageId={ctx.page?.id} />
+      </div>
+    </div>
+  );
+}
+
 /* ------------------------------------------------------------------ */
 export const BLOCKS: Record<string, (p: BlockProps) => React.ReactNode> = {
   hero: Hero,
@@ -420,6 +440,7 @@ export const BLOCKS: Record<string, (p: BlockProps) => React.ReactNode> = {
   team_profile: TeamProfile,
   service_areas: ServiceAreas,
   listing_grid: ListingGrid,
+  custom_form: CustomForm,
 };
 
 const BG: Record<string, string> = {

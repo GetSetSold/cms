@@ -4,15 +4,15 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { BLOCK_FIELDS } from "@/lib/block-fields";
-import type { Page, Section, SvgAsset } from "@/lib/types";
+import type { Page, Section, SvgAsset, CmsForm } from "@/lib/types";
 import { FieldEditor } from "./FieldEditor";
 
 type BlockType = { key: string; name: string; category: string; default_data: Record<string, any> };
-type Props = { page: Page; sections: Section[]; blockTypes: BlockType[]; svgs: SvgAsset[] };
+type Props = { page: Page; sections: Section[]; blockTypes: BlockType[]; svgs: SvgAsset[]; forms: CmsForm[] };
 
 const DEVICES = { Desktop: "100%", Tablet: "820px", Mobile: "390px" } as const;
 
-export function PageBuilder({ page: initialPage, sections: initialSections, blockTypes, svgs }: Props) {
+export function PageBuilder({ page: initialPage, sections: initialSections, blockTypes, svgs, forms }: Props) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const [page, setPage] = useState(initialPage);
@@ -172,7 +172,7 @@ export function PageBuilder({ page: initialPage, sections: initialSections, bloc
           </div>
           <div className="p-4">
             {tab === "content" && current ? (
-              <FieldEditor fields={BLOCK_FIELDS[current.block_type] ?? []} value={current.data} svgs={svgs}
+              <FieldEditor fields={BLOCK_FIELDS[current.block_type] ?? []} value={current.data} svgs={svgs} forms={forms}
                 onChange={(data) => patchSection(current.id, { data })} />
             ) : null}
             {tab === "style" && current ? (

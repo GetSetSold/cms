@@ -1,6 +1,6 @@
 // Describes the editable fields of each block. The builder's inspector is generated from this.
 export type Field =
-  | { key: string; label: string; type: "text" | "textarea" | "svg" | "link" | "boolean" | "strings" }
+  | { key: string; label: string; type: "text" | "textarea" | "svg" | "link" | "boolean" | "strings" | "form" }
   | { key: string; label: string; type: "select"; options: string[] }
   | { key: string; label: string; type: "group"; fields: Field[] }
   | { key: string; label: string; type: "list"; itemLabel: string; fields: Field[] };
@@ -79,5 +79,10 @@ export const BLOCK_FIELDS: Record<string, Field[]> = {
     { key: "per_row", label: "Columns", type: "select", options: ["2", "3", "4"] },
     t("per_page", "Number of listings to show"),
     t("link_label", "\"View all\" link label"),
+  ],
+  custom_form: [
+    { key: "form_slug", label: "Form", type: "form" },
+    t("heading", "Heading"),
+    ta("text", "Intro text"),
   ],
 };

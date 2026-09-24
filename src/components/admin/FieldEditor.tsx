@@ -1,11 +1,11 @@
 "use client";
 import type { Field } from "@/lib/block-fields";
-import type { SvgAsset } from "@/lib/types";
+import type { SvgAsset, CmsForm } from "@/lib/types";
 import { SvgPicker } from "./SvgPicker";
 
-type Props = { fields: Field[]; value: Record<string, any>; onChange: (v: Record<string, any>) => void; svgs: SvgAsset[] };
+type Props = { fields: Field[]; value: Record<string, any>; onChange: (v: Record<string, any>) => void; svgs: SvgAsset[]; forms?: CmsForm[] };
 
-export function FieldEditor({ fields, value, onChange, svgs }: Props) {
+export function FieldEditor({ fields, value, onChange, svgs, forms = [] }: Props) {
   const set = (k: string, v: unknown) => onChange({ ...value, [k]: v });
 
   return (
@@ -33,6 +33,15 @@ export function FieldEditor({ fields, value, onChange, svgs }: Props) {
             );
           case "svg":
             return <div key={f.key} className="label">{f.label}<SvgPicker value={v} svgs={svgs} onChange={(id) => set(f.key, id)} /></div>;
+          case "form":
+            return (
+              <label key={f.key} className="label">{f.label}
+                <select className="input" value={v ?? ""} onChange={(e) => set(f.key, e.target.value)}>
+                  <option value="">None</option>
+                  {forms.map((form) => <option key={form.slug} value={form.slug}>{form.name}</option>)}
+                </select>
+              </label>
+            );
           case "link":
             return (
               <div key={f.key} className="grid grid-cols-2 gap-2">
@@ -50,7 +59,7 @@ export function FieldEditor({ fields, value, onChange, svgs }: Props) {
             return (
               <fieldset key={f.key} className="flex flex-col gap-3 rounded-lg border border-line p-3">
                 <legend className="px-1 text-[13px] text-muted">{f.label}</legend>
-                <FieldEditor fields={f.fields} value={v ?? {}} onChange={(nv) => set(f.key, nv)} svgs={svgs} />
+                <FieldEditor fields={f.fields} value={v ?? {}} onChange={(nv) => set(f.key, nv)} svgs={svgs} forms={forms} />
               </fieldset>
             );
           case "list": {
@@ -70,7 +79,7 @@ export function FieldEditor({ fields, value, onChange, svgs }: Props) {
                       </span>
                     </summary>
                     <div className="border-t border-line p-3">
-                      <FieldEditor fields={f.fields} value={item} onChange={(nv) => update(items.map((x, j) => (j === i ? nv : x)))} svgs={svgs} />
+                      <FieldEditor fields={f.fields} value={item} onChange={(nv) => update(items.map((x, j) => (j === i ? nv : x)))} svgs={svgs} forms={forms} />
                     </div>
                   </details>
                 ))}
