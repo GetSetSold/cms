@@ -24,6 +24,16 @@ export function themeVars(settings: SiteSettings): React.CSSProperties {
     "--c-accent": t.accent,
     "--c-ink": t.ink,
     "--c-ground": t.ground,
+    // Tailwind's bg-primary/text-primary/etc. compile to `var(--color-primary)`,
+    // and --color-primary is itself declared as `var(--c-primary)` at :root in
+    // the @theme block. CSS custom properties resolve var() once at the
+    // declaring element, then inherit that resolved value — they don't
+    // re-follow the reference at each descendant. So overriding --c-primary
+    // alone never reaches --color-primary; it has to be set directly too.
+    "--color-primary": t.primary,
+    "--color-accent": t.accent,
+    "--color-ink": t.ink,
+    "--color-ground": t.ground,
     "--font-display": `'${headingFont(settings)}', ui-sans-serif, system-ui, sans-serif`,
     "--font-sans": `'${bodyFont(settings)}', ui-sans-serif, system-ui, sans-serif`,
   } as React.CSSProperties;
