@@ -2,6 +2,8 @@ import Link from "next/link";
 import type { Page, Section, SiteSettings, SvgAsset } from "@/lib/types";
 import { Svg } from "@/components/site/Svg";
 import { LeadForm } from "./LeadForm";
+import { createMlsClient, type GridListing } from "@/lib/mls";
+import { ListingCard } from "@/components/listings/ListingCard";
 
 export type BlockCtx = { svgs: Record<string, SvgAsset>; settings: SiteSettings; page?: Page };
 type BlockProps = { data: any; ctx: BlockCtx };
@@ -369,6 +371,36 @@ function ServiceAreas({ data }: BlockProps) {
   );
 }
 
+async function ListingGrid({ data }: BlockProps) {
+  const city: string | undefined = data.city || undefined;
+  const perRow = [2, 3, 4].includes(Number(data.per_row)) ? Number(data.per_row) : 4;
+  const perPage = Number(data.per_page) || 4;
+  const cols: Record<number, string> = { 2: "sm:grid-cols-2", 3: "sm:grid-cols-2 lg:grid-cols-3", 4: "sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" };
+
+  const mls = createMlsClient();
+  let query = mls.from("grid").select("*").order("OriginalEntryTimestamp", { ascending: false }).limit(perPage);
+  if (city) query = query.eq("City", city);
+  const { data: rows } = await query;
+  const listings = (rows ?? []) as GridListing[];
+  if (!listings.length) return null;
+
+  return (
+    <div className={`${wrap} flex flex-col gap-8 py-16 md:py-24`}>
+      {data.heading || data.link_label ? (
+        <div className="flex items-end justify-between gap-4">
+          {data.heading ? <h2 className={h2}>{data.heading}</h2> : <span />}
+          <Link href={city ? `/city/${encodeURIComponent(city.toLowerCase().replace(/\s+/g, "-"))}` : "/listings"} className="font-medium text-primary">
+            {data.link_label || "View all listings"} →
+          </Link>
+        </div>
+      ) : null}
+      <div className={`grid grid-cols-1 gap-5 ${cols[perRow]}`}>
+        {listings.map((l) => <ListingCard key={l.ListingKey} listing={l} />)}
+      </div>
+    </div>
+  );
+}
+
 /* ------------------------------------------------------------------ */
 export const BLOCKS: Record<string, (p: BlockProps) => React.ReactNode> = {
   hero: Hero,
@@ -387,6 +419,7 @@ export const BLOCKS: Record<string, (p: BlockProps) => React.ReactNode> = {
   timeline: Timeline,
   team_profile: TeamProfile,
   service_areas: ServiceAreas,
+  listing_grid: ListingGrid,
 };
 
 const BG: Record<string, string> = {

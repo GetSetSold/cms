@@ -73,4 +73,11 @@ export const BLOCK_FIELDS: Record<string, Field[]> = {
     t("heading", "Heading"),
     { key: "items", label: "Areas", type: "list", itemLabel: "Area", fields: [t("label", "City name"), t("href", "Links to (blank = auto)")] },
   ],
+  listing_grid: [
+    t("heading", "Heading"),
+    t("city", "City (blank = most recent across all cities)"),
+    { key: "per_row", label: "Columns", type: "select", options: ["2", "3", "4"] },
+    t("per_page", "Number of listings to show"),
+    t("link_label", "\"View all\" link label"),
+  ],
 };
