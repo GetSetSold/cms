@@ -134,10 +134,15 @@ function Services({ data, ctx }: BlockProps) {
               <div className="flex flex-col gap-1.5 md:p-2">
                 <h3 className="text-lg font-semibold md:text-[22px]">{s.title}</h3>
                 <p className="text-sm leading-relaxed text-muted md:text-base">{s.text}</p>
+                {s.href ? (
+                  <span className="mt-2 inline-flex w-fit items-center gap-1 rounded-full border border-line px-3.5 py-1.5 text-[13px] font-medium text-primary transition group-hover:bg-primary group-hover:text-white">
+                    {s.link_label || "Learn more"} →
+                  </span>
+                ) : null}
               </div>
             </article>
           );
-          return s.href ? <Link key={i} href={s.href}>{card}</Link> : <div key={i}>{card}</div>;
+          return s.href ? <Link key={i} href={s.href} className="group">{card}</Link> : <div key={i}>{card}</div>;
         })}
       </div>
     </div>
@@ -450,19 +455,43 @@ const BG: Record<string, string> = {
   brand: "bg-primary text-white",
 };
 
+const ROW_COLS: Record<number, string> = { 1: "md:grid-cols-1", 2: "md:grid-cols-2", 3: "md:grid-cols-3", 4: "md:grid-cols-4" };
+
+function renderOne(s: Section, ctx: BlockCtx) {
+  const Block = BLOCKS[s.block_type];
+  if (!Block) return null;
+  const st = s.settings ?? {};
+  const cls = [BG[st.background ?? "default"], st.hide_on_mobile && "hide-mobile", st.hide_on_desktop && "hide-desktop"]
+    .filter(Boolean).join(" ");
+  return (
+    <section key={s.id} id={st.anchor || undefined} className={cls} data-block={s.block_type}>
+      <Block data={s.data ?? {}} ctx={ctx} />
+    </section>
+  );
+}
+
 export function RenderSections({ sections, ctx }: { sections: Section[]; ctx: BlockCtx }) {
+  // Group consecutive sections that share a row_id (set in the builder's
+  // Style tab) into one CSS-grid row — up to 4 columns on desktop, always
+  // 1 column on mobile. Sections without a row_id render individually,
+  // exactly as before.
+  const groups: Section[][] = [];
+  for (const s of sections) {
+    const rid = s.settings?.row_id;
+    const last = groups[groups.length - 1];
+    if (rid && last?.[0]?.settings?.row_id === rid) last.push(s);
+    else groups.push([s]);
+  }
+
   return (
     <>
-      {sections.map((s) => {
-        const Block = BLOCKS[s.block_type];
-        if (!Block) return null;
-        const st = s.settings ?? {};
-        const cls = [BG[st.background ?? "default"], st.hide_on_mobile && "hide-mobile", st.hide_on_desktop && "hide-desktop"]
-          .filter(Boolean).join(" ");
+      {groups.map((group, gi) => {
+        if (group.length === 1 && !group[0].settings?.row_id) return renderOne(group[0], ctx);
+        const cols = group[0].settings?.row_columns ?? Math.min(group.length, 4) as 1 | 2 | 3 | 4;
         return (
-          <section key={s.id} id={st.anchor || undefined} className={cls} data-block={s.block_type}>
-            <Block data={s.data ?? {}} ctx={ctx} />
-          </section>
+          <div key={group[0].id ?? gi} className={`grid grid-cols-1 ${ROW_COLS[cols]}`}>
+            {group.map((s) => renderOne(s, ctx))}
+          </div>
         );
       })}
     </>

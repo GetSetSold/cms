@@ -23,7 +23,7 @@ export const BLOCK_FIELDS: Record<string, Field[]> = {
   services: [
     t("heading", "Heading"), { key: "link", label: "Heading link", type: "link" },
     { key: "items", label: "Services", type: "list", itemLabel: "Service", fields: [
-      t("title", "Title"), ta("text", "Text"), { key: "svg_id", label: "Illustration", type: "svg" }, t("href", "Links to"),
+      t("title", "Title"), ta("text", "Text"), { key: "svg_id", label: "Illustration", type: "svg" }, t("href", "Links to"), t("link_label", "Button label (default: Learn more)"),
     ] },
   ],
   features: [

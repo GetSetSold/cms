@@ -8,33 +8,34 @@ export function SiteFooter({ settings }: { settings: SiteSettings }) {
   const perRow = f.columns_per_row ?? 4;
 
   return (
-    <footer
-      className={`mx-auto grid max-w-7xl grid-cols-2 gap-8 px-5 pb-28 pt-16 text-[15px] md:px-10 md:pb-12 md:[grid-template-columns:1.4fr_repeat(${perRow},1fr)]`}
-      style={{ background: f.bg || undefined, color: f.text || undefined }}
-    >
-      <div className="col-span-2 flex flex-col gap-3 md:col-span-1">
-        <div className="font-display text-3xl">{settings.site_name}</div>
-        {f.tagline ? <p className="opacity-75">{f.tagline}</p> : null}
-        {c.address ? <p className="opacity-75">{c.address}</p> : null}
-        <div className="mt-1 flex flex-col gap-1.5">
-          {c.phone ? <a href={`tel:${c.phone}`} className="opacity-75 hover:opacity-100">{c.phone}</a> : null}
-          {c.email ? <a href={`mailto:${c.email}`} className="opacity-75 hover:opacity-100">{c.email}</a> : null}
-          {c.hours ? <span className="opacity-75">{c.hours}</span> : null}
+    <footer style={{ background: f.bg || undefined, color: f.text || undefined }}>
+      <div
+        className={`mx-auto grid max-w-7xl grid-cols-2 gap-8 px-5 pb-28 pt-16 text-[15px] md:px-10 md:pb-12 md:[grid-template-columns:1.4fr_repeat(${perRow},1fr)]`}
+      >
+        <div className="col-span-2 flex flex-col gap-3 md:col-span-1">
+          <div className="font-display text-3xl">{settings.site_name}</div>
+          {f.tagline ? <p className="opacity-75">{f.tagline}</p> : null}
+          {c.address ? <p className="opacity-75">{c.address}</p> : null}
+          <div className="mt-1 flex flex-col gap-1.5">
+            {c.phone ? <a href={`tel:${c.phone}`} className="opacity-75 hover:opacity-100">{c.phone}</a> : null}
+            {c.email ? <a href={`mailto:${c.email}`} className="opacity-75 hover:opacity-100">{c.email}</a> : null}
+            {c.hours ? <span className="opacity-75">{c.hours}</span> : null}
+          </div>
         </div>
-      </div>
 
-      {columns.map((col, i) => (
-        <div key={i} className="flex flex-col gap-2.5">
-          {col.heading ? <strong>{col.heading}</strong> : null}
-          {col.links.map((l) => (
-            <Link key={l.href} href={l.href} className="opacity-75 hover:opacity-100">{l.label}</Link>
-          ))}
+        {columns.map((col, i) => (
+          <div key={i} className="flex flex-col gap-2.5">
+            {col.heading ? <strong>{col.heading}</strong> : null}
+            {col.links.map((l) => (
+              <Link key={l.href} href={l.href} className="opacity-75 hover:opacity-100">{l.label}</Link>
+            ))}
+          </div>
+        ))}
+
+        <div className="col-span-2 flex flex-col gap-2.5 border-t pt-6 text-sm opacity-75 md:col-span-1 md:border-0 md:pt-0" style={{ borderColor: f.text ? `${f.text}33` : undefined }}>
+          <span>© {new Date().getFullYear()} {settings.site_name}</span>
+          <Link href="/login" className="hover:opacity-100">Staff login</Link>
         </div>
-      ))}
-
-      <div className="col-span-2 flex flex-col gap-2.5 border-t pt-6 text-sm opacity-75 md:col-span-1 md:border-0 md:pt-0" style={{ borderColor: f.text ? `${f.text}33` : undefined }}>
-        <span>© {new Date().getFullYear()} {settings.site_name}</span>
-        <Link href="/login" className="hover:opacity-100">Staff login</Link>
       </div>
     </footer>
   );
@@ -55,12 +56,19 @@ function ctaHref(btn: MobileCtaButton, phone?: string) {
   return btn.href || "#";
 }
 
+const SIZE = {
+  sm: { rect: "h-10 text-[13px]", sq: "h-14 text-[11px]", icon: 15, iconSq: 17 },
+  md: { rect: "h-12 text-sm", sq: "h-16 text-xs", icon: 17, iconSq: 20 },
+  lg: { rect: "h-14 text-base", sq: "h-20 text-sm", icon: 19, iconSq: 24 },
+};
+
 /** Sticky bottom bar on phones — up to 3 configurable buttons (Settings > Mobile bar). */
 export function MobileCtaBar({ settings }: { settings: SiteSettings }) {
-  const cfg = settings.mobile_cta ?? { buttons: [], shape: "rectangle" as const };
+  const cfg = settings.mobile_cta ?? { buttons: [], shape: "rectangle" as const, size: "md" as const };
   const buttons = (cfg.buttons ?? []).slice(0, 3);
   if (!buttons.length) return null;
   const square = cfg.shape === "square";
+  const sizing = SIZE[cfg.size ?? "md"];
   const cols = buttons.length === 3 ? "grid-cols-3" : "grid-cols-2";
 
   return (
@@ -68,11 +76,11 @@ export function MobileCtaBar({ settings }: { settings: SiteSettings }) {
       {buttons.map((btn, i) => {
         const filled = i === buttons.length - 1;
         const cls = square
-          ? `flex h-16 flex-col items-center justify-center gap-1 rounded-2xl text-xs font-medium ${filled ? "bg-primary text-white" : "border border-ink text-ink"}`
-          : `flex h-12 items-center justify-center gap-2 rounded-full text-sm font-medium ${filled ? "bg-primary text-white" : "border border-ink text-ink"}`;
+          ? `flex ${sizing.sq} flex-col items-center justify-center gap-1 rounded-2xl font-medium ${filled ? "bg-primary text-white" : "border border-ink text-ink"}`
+          : `flex ${sizing.rect} items-center justify-center gap-2 rounded-full font-medium ${filled ? "bg-primary text-white" : "border border-ink text-ink"}`;
         return (
           <a key={i} href={ctaHref(btn, settings.contact?.phone)} className={cls}>
-            <svg width={square ? 20 : 17} height={square ? 20 : 17} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <svg width={square ? sizing.iconSq : sizing.icon} height={square ? sizing.iconSq : sizing.icon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d={ICONS[btn.icon]} />
             </svg>
             {btn.label}

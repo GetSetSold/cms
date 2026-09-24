@@ -130,6 +130,7 @@ export function PageBuilder({ page: initialPage, sections: initialSections, bloc
               className={`group flex h-11 items-center gap-1 rounded-lg border px-2 ${s.id === selected ? "border-primary bg-[#E4F0EE] font-medium" : "border-transparent hover:bg-ground"} ${s.is_visible ? "" : "text-[#8A8E97]"}`}>
               <button className="flex-1 truncate text-left" onClick={() => setSelected(s.id)}>{nameOf(s.block_type)}</button>
               {s.settings?.hide_on_mobile ? <span className="text-[10px] text-muted">desktop</span> : null}
+              {s.settings?.row_id ? <span className="text-[10px] text-primary">row · {s.settings.row_columns ?? 2}col</span> : null}
               {s.settings?.hide_on_desktop ? <span className="text-[10px] text-muted">mobile</span> : null}
               <span className="hidden gap-0.5 text-muted group-hover:flex">
                 <button aria-label="Move up" onClick={() => move(i, -1)}>↑</button>
@@ -195,6 +196,49 @@ export function PageBuilder({ page: initialPage, sections: initialSections, bloc
                   <input type="checkbox" checked={!current.settings.hide_on_desktop}
                     onChange={(e) => patchSection(current.id, { settings: { ...current.settings, hide_on_desktop: !e.target.checked } })} />
                 </label>
+
+                <div className="flex flex-col gap-2 rounded-lg border border-line p-3">
+                  <strong className="text-sm">Row layout</strong>
+                  <p className="text-xs text-muted">Group this block with a neighbour to place them side by side (1–4 columns on desktop; always stacked on mobile).</p>
+                  {current.settings.row_id ? (
+                    <>
+                      <label className="label">Columns in this row
+                        <select className="input" value={current.settings.row_columns ?? 2}
+                          onChange={(e) => {
+                            const cols = Number(e.target.value) as 1 | 2 | 3 | 4;
+                            setSections(sections.map((s) => (s.settings.row_id === current.settings.row_id ? { ...s, settings: { ...s.settings, row_columns: cols } } : s))); setDirty(true);
+                          }}>
+                          {[1, 2, 3, 4].map((n) => <option key={n} value={n}>{n}</option>)}
+                        </select>
+                      </label>
+                      <button className="btn self-start" onClick={() => patchSection(current.id, { settings: { ...current.settings, row_id: undefined, row_columns: undefined } })}>
+                        Remove from row
+                      </button>
+                    </>
+                  ) : (
+                    (() => {
+                      const idx = sections.findIndex((s) => s.id === current.id);
+                      const prev = sections[idx - 1];
+                      const next = sections[idx + 1];
+                      const groupWith = (neighbor: Section) => {
+                        const rid = neighbor.settings.row_id || `row-${Date.now().toString(36)}`;
+                        setSections(sections.map((s) =>
+                          s.id === current.id || s.id === neighbor.id
+                            ? { ...s, settings: { ...s.settings, row_id: rid, row_columns: neighbor.settings.row_columns ?? 2 } }
+                            : s,
+                        ));
+                        setDirty(true);
+                      };
+                      return (
+                        <div className="flex gap-2">
+                          {prev ? <button className="btn" onClick={() => groupWith(prev)}>Group with block above</button> : null}
+                          {next ? <button className="btn" onClick={() => groupWith(next)}>Group with block below</button> : null}
+                          {!prev && !next ? <span className="text-xs text-muted">Add another block to group with it.</span> : null}
+                        </div>
+                      );
+                    })()
+                  )}
+                </div>
               </div>
             ) : null}
             {(tab === "content" || tab === "style") && !current ? <p className="text-muted">Select a section to edit it.</p> : null}

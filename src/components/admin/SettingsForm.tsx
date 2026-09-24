@@ -6,6 +6,7 @@ import type { SiteSettings, SvgAsset } from "@/lib/types";
 import { FONT_OPTIONS } from "@/lib/theme";
 import { SvgPicker } from "./SvgPicker";
 import { NavItemEditor, FooterColumnsEditor } from "./NavEditors";
+import { ColorField } from "./ColorField";
 
 export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: SvgAsset[] }) {
   const router = useRouter();
@@ -104,14 +105,8 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
         <div className="flex flex-col gap-3 rounded-lg border border-line p-3">
           <strong className="text-sm">Header appearance</strong>
           <div className="grid grid-cols-2 gap-3">
-            <label className="label">Background<div className="flex items-center gap-2">
-              <input type="color" value={s.header?.bg || "#ffffff"} onChange={(e) => set("header", { ...s.header, bg: e.target.value })} className="h-8 w-9 cursor-pointer rounded border-0 bg-transparent" />
-              <button type="button" className="text-xs text-muted" onClick={() => set("header", { ...s.header, bg: undefined })}>Reset</button>
-            </div></label>
-            <label className="label">Text color<div className="flex items-center gap-2">
-              <input type="color" value={s.header?.text || "#14142B"} onChange={(e) => set("header", { ...s.header, text: e.target.value })} className="h-8 w-9 cursor-pointer rounded border-0 bg-transparent" />
-              <button type="button" className="text-xs text-muted" onClick={() => set("header", { ...s.header, text: undefined })}>Reset</button>
-            </div></label>
+            <ColorField label="Background" value={s.header?.bg} fallback="#ffffff" onChange={(v) => set("header", { ...s.header, bg: v })} onReset={() => set("header", { ...s.header, bg: undefined })} />
+            <ColorField label="Text color" value={s.header?.text} fallback="#14142B" onChange={(v) => set("header", { ...s.header, text: v })} onReset={() => set("header", { ...s.header, text: undefined })} />
           </div>
           <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
             <label className="flex items-center justify-between">Logo on mobile<input type="checkbox" checked={s.header?.show_logo_mobile !== false} onChange={(e) => set("header", { ...s.header, show_logo_mobile: e.target.checked })} /></label>
@@ -119,18 +114,17 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
             <label className="flex items-center justify-between">Site name on mobile<input type="checkbox" checked={s.header?.show_name_mobile !== false} onChange={(e) => set("header", { ...s.header, show_name_mobile: e.target.checked })} /></label>
             <label className="flex items-center justify-between">Site name on desktop<input type="checkbox" checked={s.header?.show_name_desktop !== false} onChange={(e) => set("header", { ...s.header, show_name_desktop: e.target.checked })} /></label>
           </div>
+          <div className="grid grid-cols-3 gap-3">
+            <label className="label">Logo size (px)<input type="number" min={16} max={80} className="input" value={s.header?.logo_size ?? 32} onChange={(e) => set("header", { ...s.header, logo_size: Number(e.target.value) })} /></label>
+            <label className="label">Name size, mobile (px)<input type="number" min={12} max={48} className="input" value={s.header?.name_size_mobile ?? 24} onChange={(e) => set("header", { ...s.header, name_size_mobile: Number(e.target.value) })} /></label>
+            <label className="label">Name size, desktop (px)<input type="number" min={12} max={60} className="input" value={s.header?.name_size_desktop ?? 30} onChange={(e) => set("header", { ...s.header, name_size_desktop: Number(e.target.value) })} /></label>
+          </div>
         </div>
 
         <label className="label">Footer tagline<input className="input" value={s.footer?.tagline ?? ""} onChange={(e) => set("footer", { ...s.footer, tagline: e.target.value })} /></label>
         <div className="grid grid-cols-3 gap-3 rounded-lg border border-line p-3">
-          <label className="label">Footer background<div className="flex items-center gap-2">
-            <input type="color" value={s.footer?.bg || "#14142B"} onChange={(e) => set("footer", { ...s.footer, bg: e.target.value })} className="h-8 w-9 cursor-pointer rounded border-0 bg-transparent" />
-            <button type="button" className="text-xs text-muted" onClick={() => set("footer", { ...s.footer, bg: undefined })}>Reset</button>
-          </div></label>
-          <label className="label">Footer text color<div className="flex items-center gap-2">
-            <input type="color" value={s.footer?.text || "#FFFFFF"} onChange={(e) => set("footer", { ...s.footer, text: e.target.value })} className="h-8 w-9 cursor-pointer rounded border-0 bg-transparent" />
-            <button type="button" className="text-xs text-muted" onClick={() => set("footer", { ...s.footer, text: undefined })}>Reset</button>
-          </div></label>
+          <ColorField label="Footer background" value={s.footer?.bg} fallback="#14142B" onChange={(v) => set("footer", { ...s.footer, bg: v })} onReset={() => set("footer", { ...s.footer, bg: undefined })} />
+          <ColorField label="Footer text color" value={s.footer?.text} fallback="#FFFFFF" onChange={(v) => set("footer", { ...s.footer, text: v })} onReset={() => set("footer", { ...s.footer, text: undefined })} />
           <label className="label">Columns per row
             <select className="input" value={s.footer?.columns_per_row ?? 4} onChange={(e) => set("footer", { ...s.footer, columns_per_row: Number(e.target.value) as 3 | 4 })}>
               <option value={3}>3</option>
@@ -146,12 +140,21 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
       <section className="card flex flex-col gap-4">
         <h2 className="text-lg font-semibold">Mobile bottom bar</h2>
         <p className="text-xs text-muted">Shown as a sticky bar on phones. Up to 3 buttons.</p>
-        <label className="label">Button shape
-          <select className="input w-40" value={s.mobile_cta?.shape ?? "rectangle"} onChange={(e) => set("mobile_cta", { ...s.mobile_cta, shape: e.target.value as "square" | "rectangle" })}>
-            <option value="rectangle">Rectangle</option>
-            <option value="square">Square</option>
-          </select>
-        </label>
+        <div className="flex gap-4">
+          <label className="label">Button shape
+            <select className="input w-40" value={s.mobile_cta?.shape ?? "rectangle"} onChange={(e) => set("mobile_cta", { ...s.mobile_cta, shape: e.target.value as "square" | "rectangle" })}>
+              <option value="rectangle">Rectangle</option>
+              <option value="square">Square</option>
+            </select>
+          </label>
+          <label className="label">Button size
+            <select className="input w-32" value={s.mobile_cta?.size ?? "md"} onChange={(e) => set("mobile_cta", { ...s.mobile_cta, size: e.target.value as "sm" | "md" | "lg" })}>
+              <option value="sm">Small</option>
+              <option value="md">Medium</option>
+              <option value="lg">Large</option>
+            </select>
+          </label>
+        </div>
         {(s.mobile_cta?.buttons ?? []).map((btn, i) => (
           <div key={i} className="grid grid-cols-[120px_1fr_140px_1fr_auto] items-center gap-2 rounded-lg border border-line p-2">
             <select className="input" value={btn.type} onChange={(e) => {

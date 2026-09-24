@@ -8,6 +8,11 @@ export interface SectionSettings {
   background?: "default" | "muted" | "dark" | "brand";
   hide_on_mobile?: boolean;
   hide_on_desktop?: boolean;
+  /** Groups this block with other consecutive blocks sharing the same row_id
+   *  into one CSS-grid row on desktop (mobile always stacks to 1 column).
+   *  row_columns only needs to be set on any one block in the group. */
+  row_id?: string;
+  row_columns?: 1 | 2 | 3 | 4;
   anchor?: string;
 }
 
@@ -44,7 +49,6 @@ export type NavItem = { label: string; href: string; columns?: NavColumn[] };
 
 export type MobileCtaIcon = "phone" | "message" | "star" | "home" | "mail" | "calendar";
 export type MobileCtaButton = { type: "call" | "sms" | "link"; label: string; icon: MobileCtaIcon; href?: string };
-
 export interface SiteSettings {
   site_name: string;
   logo_svg_id: string | null;
@@ -56,9 +60,12 @@ export interface SiteSettings {
     bg?: string; text?: string;
     show_logo_mobile?: boolean; show_logo_desktop?: boolean;
     show_name_mobile?: boolean; show_name_desktop?: boolean;
+    logo_size?: number;      // px, applies to both breakpoints
+    name_size_mobile?: number;  // px
+    name_size_desktop?: number; // px
   };
   footer: { tagline?: string; columns: NavColumn[]; bg?: string; text?: string; columns_per_row?: 3 | 4 };
-  mobile_cta: { buttons: MobileCtaButton[]; shape: "square" | "rectangle" };
+  mobile_cta: { buttons: MobileCtaButton[]; shape: "square" | "rectangle"; size?: "sm" | "md" | "lg" };
   contact: { phone?: string; email?: string; address?: string; hours?: string };
   social_links: Record<string, string>;
   scripts: { ga4_id?: string };

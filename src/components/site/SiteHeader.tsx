@@ -26,9 +26,14 @@ export function SiteHeader({ settings, logo }: { settings: SiteSettings; logo?: 
   return (
     <header className="sticky top-0 z-40 border-b border-line backdrop-blur" style={{ background: h.bg || "var(--c-ground, #fff)", color: h.text || undefined }}>
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 md:h-20 md:px-10">
-        <Link href="/" className="flex items-center gap-2 font-display text-2xl md:text-3xl" aria-label={`${settings.site_name} home`}>
-          {logo ? <Svg asset={logo} className={`h-8 w-8 ${showLogoMobile ? "" : "hidden"} ${showLogoDesktop ? "md:block" : "md:hidden"}`} /> : null}
-          <span className={`${showNameMobile ? "" : "hidden"} ${showNameDesktop ? "md:inline" : "md:hidden"}`}>{settings.site_name}</span>
+        <Link href="/" className="flex items-center gap-2 font-display" aria-label={`${settings.site_name} home`}>
+          {logo ? <Svg asset={logo} className={`${showLogoMobile ? "" : "hidden"} ${showLogoDesktop ? "md:block" : "md:hidden"}`} style={{ width: h.logo_size ?? 32, height: h.logo_size ?? 32 }} /> : null}
+          <span
+            className={`${showNameMobile ? "" : "hidden"} ${showNameDesktop ? "md:inline" : "md:hidden"} text-[length:var(--name-size-m)] md:text-[length:var(--name-size-d)]`}
+            style={{ "--name-size-m": `${h.name_size_mobile ?? 24}px`, "--name-size-d": `${h.name_size_desktop ?? 30}px` } as React.CSSProperties}
+          >
+            {settings.site_name}
+          </span>
         </Link>
 
         <nav className="hidden gap-9 text-[15px] md:flex" aria-label="Main">
