@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import type { SiteSettings, SvgAsset } from "@/lib/types";
 import { FONT_OPTIONS } from "@/lib/theme";
 import { SvgPicker } from "./SvgPicker";
+import { NavItemEditor, FooterColumnsEditor } from "./NavEditors";
 
 export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: SvgAsset[] }) {
   const router = useRouter();
@@ -87,12 +88,12 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
       <section className="card flex flex-col gap-4">
         <h2 className="text-lg font-semibold">Navigation</h2>
         {s.navigation.map((n, i) => (
-          <div key={i} className="grid grid-cols-[1fr_1fr_auto_auto] items-center gap-2">
-            <input className="input" placeholder="Label" value={n.label} onChange={(e) => set("navigation", s.navigation.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)))} />
-            <input className="input" placeholder="/about" value={n.href} onChange={(e) => set("navigation", s.navigation.map((x, j) => (j === i ? { ...x, href: e.target.value } : x)))} />
-            <button aria-label="Move up" disabled={i === 0} onClick={() => { const a = [...s.navigation]; [a[i - 1], a[i]] = [a[i], a[i - 1]]; set("navigation", a); }}>↑</button>
-            <button aria-label="Remove" onClick={() => set("navigation", s.navigation.filter((_, j) => j !== i))}>✕</button>
-          </div>
+          <NavItemEditor key={i} item={n}
+            onChange={(ni) => set("navigation", s.navigation.map((x, j) => (j === i ? ni : x)))}
+            onRemove={() => set("navigation", s.navigation.filter((_, j) => j !== i))}
+            onMoveUp={() => { const a = [...s.navigation]; [a[i - 1], a[i]] = [a[i], a[i - 1]]; set("navigation", a); }}
+            canMoveUp={i > 0}
+          />
         ))}
         <button className="btn self-start border-dashed" onClick={() => set("navigation", [...s.navigation, { label: "", href: "" }])}>+ Add link</button>
         <div className="grid grid-cols-2 gap-2">
@@ -100,6 +101,9 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
           <label className="label">Links to<input className="input" value={s.header_cta?.href ?? ""} onChange={(e) => set("header_cta", { ...s.header_cta, href: e.target.value })} /></label>
         </div>
         <label className="label">Footer tagline<input className="input" value={s.footer?.tagline ?? ""} onChange={(e) => set("footer", { ...s.footer, tagline: e.target.value })} /></label>
+        <div className="label">Footer columns
+          <FooterColumnsEditor columns={s.footer?.columns ?? []} onChange={(cols) => set("footer", { ...s.footer, columns: cols })} />
+        </div>
       </section>
 
       <section className="card flex flex-col gap-4">

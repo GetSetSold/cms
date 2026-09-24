@@ -37,14 +37,19 @@ export interface Page {
   updated_at: string;
 }
 
+export type NavLink = { label: string; href: string };
+export type NavColumn = { heading?: string; links: NavLink[] };
+/** A plain link, or — if `columns` is set — a mega-menu dropdown with one or more link groups. */
+export type NavItem = { label: string; href: string; columns?: NavColumn[] };
+
 export interface SiteSettings {
   site_name: string;
   logo_svg_id: string | null;
   theme: { primary: string; accent: string; ink: string; ground: string; font?: string; font_heading?: string; font_body?: string };
   seo_defaults: { title_suffix: string; description: string; site_url?: string };
-  navigation: { label: string; href: string }[];
+  navigation: NavItem[];
   header_cta: { label: string; href: string };
-  footer: { tagline?: string };
+  footer: { tagline?: string; columns: NavColumn[] };
   contact: { phone?: string; email?: string; address?: string; hours?: string };
   social_links: Record<string, string>;
   scripts: { ga4_id?: string };
