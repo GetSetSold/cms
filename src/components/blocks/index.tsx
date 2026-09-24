@@ -40,6 +40,27 @@ function Hero({ data, ctx }: BlockProps) {
     </>
   );
 
+  if (data.layout === "search") {
+    return (
+      <div className={`${wrap} flex flex-col gap-6 py-10 md:py-16`}>
+        {copy}
+        <div className="inline-flex w-fit gap-6 border-b border-line text-[15px]">
+          {(data.tabs?.length ? data.tabs : ["Rent", "Buy", "Sell"]).map((t: string, i: number) => (
+            <span key={t} className={`-mb-px border-b-2 pb-2.5 ${i === 0 ? "border-primary font-medium text-primary" : "border-transparent text-muted"}`}>{t}</span>
+          ))}
+        </div>
+        <form action="/listings" className="flex w-full flex-col gap-3 rounded-2xl bg-white p-3 shadow-[0_12px_40px_rgba(20,20,43,0.08)] sm:flex-row sm:items-center">
+          <label className="flex flex-1 flex-col gap-1 px-3 py-1">
+            <span className="text-xs text-muted">Location</span>
+            <input name="city" placeholder="City or neighbourhood" className="border-0 p-0 text-[15px] outline-none placeholder:text-muted/70" />
+          </label>
+          <button className="btn-primary h-13 shrink-0 px-7 text-[15px]">{data.primary_cta?.label || "Browse Properties"}</button>
+        </form>
+        {art ? <Svg asset={art} label={art?.name} className="mt-4 aspect-[16/7] overflow-hidden rounded-3xl" /> : null}
+      </div>
+    );
+  }
+
   if (data.layout === "centered" || (!art && data.layout !== "form")) {
     return (
       <div className={`${wrap} flex flex-col items-center gap-6 py-16 text-center md:py-24`}>
@@ -124,9 +145,14 @@ function Features({ data }: BlockProps) {
         {data.heading ? <h2 className={h2}>{data.heading}</h2> : null}
         {data.intro ? <p className="text-lg text-muted">{data.intro}</p> : null}
       </div>
-      <div className="grid gap-8 md:grid-cols-3">
+      <div className="grid gap-8 md:grid-cols-2">
         {(data.items ?? []).map((f: any, i: number) => (
-          <div key={i} className="flex flex-col gap-2 border-t border-line pt-5">
+          <div key={i} className="flex flex-col gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary-soft text-primary">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="9" />
+              </svg>
+            </div>
             <h3 className="text-xl font-semibold">{f.title}</h3>
             <p className="leading-relaxed text-muted">{f.text}</p>
           </div>
@@ -307,7 +333,7 @@ export const BLOCKS: Record<string, (p: BlockProps) => React.ReactNode> = {
 const BG: Record<string, string> = {
   default: "",
   muted: "bg-soft/60",
-  dark: "bg-ink text-ground",
+  dark: "bg-gradient-to-br from-ink to-primary text-ground",
   brand: "bg-primary text-white",
 };
 

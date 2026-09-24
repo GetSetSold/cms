@@ -12,7 +12,7 @@ export const BLOCK_FIELDS: Record<string, Field[]> = {
   hero: [
     t("eyebrow", "Eyebrow"), t("heading", "Heading"), t("heading_accent", "Heading (accent part)"),
     ta("subheading", "Subheading"),
-    { key: "layout", label: "Layout", type: "select", options: ["split", "centered", "form"] },
+    { key: "layout", label: "Layout", type: "select", options: ["split", "centered", "form", "search"] },
     { key: "svg_id", label: "Illustration", type: "svg" },
     { key: "primary_cta", label: "Primary button", type: "link" },
     { key: "secondary_cta", label: "Secondary button", type: "link" },

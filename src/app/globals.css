@@ -2,18 +2,20 @@
 
 /* Runtime theme: the site layout sets these from Settings > Branding */
 :root {
-  --c-primary: #0E5C55;
-  --c-accent: #B8581F;
-  --c-ink: #15171C;
-  --c-ground: #F5F3EE;
-  --c-soft: #E9E4D8;
-  --c-line: #D5D0C5;
-  --c-muted: #4A4F5A;
+  --c-primary: #6C5DD3;
+  --c-accent: #1B1145;
+  --c-ink: #14142B;
+  --c-ground: #F4F2FC;
+  --c-soft: #EDEBFB;
+  --c-line: #E3DFF7;
+  --c-muted: #6E7191;
   --c-paper: #FFFFFF;
+  --c-primary-soft: #E7E4FB;
 }
 
 @theme inline {
   --color-primary: var(--c-primary);
+  --color-primary-soft: var(--c-primary-soft);
   --color-accent: var(--c-accent);
   --color-ink: var(--c-ink);
   --color-ground: var(--c-ground);
@@ -45,10 +47,11 @@ body { background: var(--c-ground); color: var(--c-ink); font-family: var(--font
 
 /* Small admin helpers */
 @layer components {
-  .input { @apply h-10 w-full rounded-lg border border-line bg-white px-3 text-sm outline-none focus:border-primary; }
-  .textarea { @apply w-full rounded-lg border border-line bg-white px-3 py-2 text-sm outline-none focus:border-primary; }
+  .input { @apply h-10 w-full rounded-xl border border-line bg-white px-3 text-sm outline-none focus:border-primary; }
+  .textarea { @apply w-full rounded-xl border border-line bg-white px-3 py-2 text-sm outline-none focus:border-primary; }
   .label { @apply flex flex-col gap-1.5 text-[13px] text-muted; }
-  .btn { @apply inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-line bg-white px-4 text-sm font-medium hover:bg-soft/60 disabled:opacity-50; }
-  .btn-primary { @apply inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50; }
+  .btn { @apply inline-flex h-10 items-center justify-center gap-2 rounded-full border border-line bg-white px-4 text-sm font-medium hover:bg-soft/60 disabled:opacity-50; }
+  .btn-primary { @apply inline-flex h-10 items-center justify-center gap-2 rounded-full bg-primary px-4 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50; }
+  .btn-dark { @apply inline-flex h-10 items-center justify-center gap-2 rounded-full bg-ink px-4 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50; }
   .card { @apply rounded-2xl bg-white p-6; }
 }

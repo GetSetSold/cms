@@ -57,25 +57,29 @@ export default async function ListingsPage({ searchParams }: { searchParams: Pro
       <SiteHeader settings={settings} />
       <main className="mx-auto w-full max-w-7xl px-5 py-10 md:px-10 md:py-14">
         <div className="mb-8 flex flex-col gap-2">
-          <h1 className="font-display text-4xl md:text-5xl">{sp.city ? `Homes for sale in ${sp.city}` : "All listings"}</h1>
-          <p className="text-muted">{total.toLocaleString()} listing{total === 1 ? "" : "s"}</p>
+          <div className="text-sm text-muted"><a href="/" className="hover:text-ink">Home</a> / <span>Search</span></div>
+          <h1 className="font-display text-4xl md:text-5xl">{sp.city ? `${total.toLocaleString()} listings in ${sp.city}` : "Search properties"}</h1>
+          <p className="text-muted">{sp.city ? `Find your next home in ${sp.city}.` : `${total.toLocaleString()} properties available`}</p>
         </div>
 
-        <form className="mb-8 flex flex-wrap gap-2" action="/listings">
-          <select name="city" defaultValue={sp.city ?? ""} className="input h-11 w-auto">
-            <option value="">All cities</option>
-            {cities.map((c) => <option key={c} value={c}>{c}</option>)}
-          </select>
-          <select name="type" defaultValue={sp.type ?? ""} className="input h-11 w-auto">
-            <option value="">For sale &amp; rent</option>
-            <option value="sale">For sale</option>
-            <option value="rent">For rent</option>
-          </select>
-          <select name="beds" defaultValue={sp.beds ?? ""} className="input h-11 w-auto">
-            <option value="">Any beds</option>
-            {[1, 2, 3, 4, 5].map((n) => <option key={n} value={n}>{n}+ beds</option>)}
-          </select>
-          <button className="btn-primary h-11">Search</button>
+        <form className="mb-8 flex flex-col gap-3 rounded-2xl bg-white p-3 shadow-[0_8px_30px_rgba(20,20,43,0.06)] sm:flex-row sm:items-center" action="/listings">
+          <label className="flex flex-1 items-center gap-2 rounded-xl bg-ground px-3.5 py-2.5">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0 text-primary" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
+            <input name="city" list="cities" defaultValue={sp.city ?? ""} placeholder="Search city or neighbourhood" className="w-full border-0 bg-transparent p-0 text-sm outline-none placeholder:text-muted" />
+            <datalist id="cities">{cities.map((c) => <option key={c} value={c} />)}</datalist>
+          </label>
+          <div className="flex flex-wrap gap-2">
+            <select name="type" defaultValue={sp.type ?? ""} className="h-11 rounded-xl border border-line bg-white px-3 text-sm">
+              <option value="">Any type</option>
+              <option value="sale">For sale</option>
+              <option value="rent">For rent</option>
+            </select>
+            <select name="beds" defaultValue={sp.beds ?? ""} className="h-11 rounded-xl border border-line bg-white px-3 text-sm">
+              <option value="">Any beds</option>
+              {[1, 2, 3, 4, 5].map((n) => <option key={n} value={n}>{n}+ beds</option>)}
+            </select>
+            <button className="btn-primary h-11 px-6">Search</button>
+          </div>
         </form>
 
         {listings?.length ? (
