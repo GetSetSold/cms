@@ -114,10 +114,31 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
             <label className="flex items-center justify-between">Site name on mobile<input type="checkbox" checked={s.header?.show_name_mobile !== false} onChange={(e) => set("header", { ...s.header, show_name_mobile: e.target.checked })} /></label>
             <label className="flex items-center justify-between">Site name on desktop<input type="checkbox" checked={s.header?.show_name_desktop !== false} onChange={(e) => set("header", { ...s.header, show_name_desktop: e.target.checked })} /></label>
           </div>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-4 gap-3">
             <label className="label">Logo size (px)<input type="number" min={16} max={80} className="input" value={s.header?.logo_size ?? 32} onChange={(e) => set("header", { ...s.header, logo_size: Number(e.target.value) })} /></label>
             <label className="label">Name size, mobile (px)<input type="number" min={12} max={48} className="input" value={s.header?.name_size_mobile ?? 24} onChange={(e) => set("header", { ...s.header, name_size_mobile: Number(e.target.value) })} /></label>
             <label className="label">Name size, desktop (px)<input type="number" min={12} max={60} className="input" value={s.header?.name_size_desktop ?? 30} onChange={(e) => set("header", { ...s.header, name_size_desktop: Number(e.target.value) })} /></label>
+            <label className="label">Name weight
+              <select className="input" value={s.header?.name_weight ?? "bold"} onChange={(e) => set("header", { ...s.header, name_weight: e.target.value as "normal" | "bold" })}>
+                <option value="normal">Normal</option>
+                <option value="bold">Bold</option>
+              </select>
+            </label>
+          </div>
+          <div className="flex flex-col gap-3 rounded-lg bg-ground p-3">
+            <label className="label">Subline (tagline shown under the site name)
+              <input className="input" placeholder="e.g. Real Estate Brokerage" value={s.header?.subline ?? ""} onChange={(e) => set("header", { ...s.header, subline: e.target.value })} />
+            </label>
+            <div className="grid grid-cols-3 gap-3">
+              <label className="label">Size, mobile (px)<input type="number" min={9} max={24} className="input" value={s.header?.subline_size_mobile ?? 12} onChange={(e) => set("header", { ...s.header, subline_size_mobile: Number(e.target.value) })} /></label>
+              <label className="label">Size, desktop (px)<input type="number" min={9} max={28} className="input" value={s.header?.subline_size_desktop ?? 13} onChange={(e) => set("header", { ...s.header, subline_size_desktop: Number(e.target.value) })} /></label>
+              <label className="label">Weight
+                <select className="input" value={s.header?.subline_weight ?? "normal"} onChange={(e) => set("header", { ...s.header, subline_weight: e.target.value as "normal" | "bold" })}>
+                  <option value="normal">Normal</option>
+                  <option value="bold">Bold</option>
+                </select>
+              </label>
+            </div>
           </div>
         </div>
 

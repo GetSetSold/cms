@@ -63,6 +63,11 @@ export interface SiteSettings {
     logo_size?: number;      // px, applies to both breakpoints
     name_size_mobile?: number;  // px
     name_size_desktop?: number; // px
+    name_weight?: "normal" | "bold";
+    subline?: string;            // e.g. a tagline under the site name
+    subline_size_mobile?: number;  // px
+    subline_size_desktop?: number; // px
+    subline_weight?: "normal" | "bold";
   };
   footer: { tagline?: string; rows: NavColumn[][]; bg?: string; text?: string; columns_per_row?: 3 | 4 };
   mobile_cta: { buttons: MobileCtaButton[]; shape: "square" | "rectangle"; size?: "xs" | "sm" | "md" | "lg" };
