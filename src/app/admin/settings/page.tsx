@@ -1,5 +1,6 @@
 import { requireStaff } from "@/lib/auth";
 import { SettingsForm } from "@/components/admin/SettingsForm";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import type { SiteSettings, SvgAsset } from "@/lib/types";
 
 export default async function SettingsPage() {
@@ -9,9 +10,11 @@ export default async function SettingsPage() {
     supabase.from("svg_assets").select("id,name,markup,tags").order("name"),
   ]);
   return (
-    <div className="flex flex-col gap-6 p-8">
-      <h1 className="font-display text-4xl">Settings</h1>
-      <SettingsForm initial={settings as SiteSettings} svgs={(svgs ?? []) as SvgAsset[]} />
-    </div>
+    <>
+      <AdminPageHeader title="Settings" />
+      <div className="flex flex-col gap-6 p-8">
+        <SettingsForm initial={settings as SiteSettings} svgs={(svgs ?? []) as SvgAsset[]} />
+      </div>
+    </>
   );
 }

@@ -93,7 +93,9 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
             onChange={(ni) => set("navigation", s.navigation.map((x, j) => (j === i ? ni : x)))}
             onRemove={() => set("navigation", s.navigation.filter((_, j) => j !== i))}
             onMoveUp={() => { const a = [...s.navigation]; [a[i - 1], a[i]] = [a[i], a[i - 1]]; set("navigation", a); }}
+            onMoveDown={() => { const a = [...s.navigation]; [a[i + 1], a[i]] = [a[i], a[i + 1]]; set("navigation", a); }}
             canMoveUp={i > 0}
+            canMoveDown={i < s.navigation.length - 1}
           />
         ))}
         <button className="btn self-start border-dashed" onClick={() => set("navigation", [...s.navigation, { label: "", href: "" }])}>+ Add link</button>

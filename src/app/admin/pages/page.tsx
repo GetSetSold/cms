@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { requireStaff } from "@/lib/auth";
 import { NewPageForm } from "@/components/admin/NewPageForm";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { PageRowActions } from "@/components/admin/PageRowActions";
 
 const STATUS_STYLE: Record<string, string> = {
   published: "bg-[#E4F0EE] text-[#0A4540]",
@@ -17,27 +19,30 @@ export default async function PagesList() {
   ]);
 
   return (
-    <div className="flex flex-col gap-6 p-8">
-      <h1 className="font-display text-4xl">Pages</h1>
-      <NewPageForm templates={templates ?? []} />
-      <div className="overflow-hidden rounded-2xl bg-white">
-        <table className="w-full text-left">
-          <thead className="border-b border-line text-xs uppercase tracking-wide text-muted">
-            <tr><th className="p-4">Title</th><th className="p-4">URL</th><th className="p-4">Type</th><th className="p-4">Status</th><th className="p-4">Updated</th></tr>
-          </thead>
-          <tbody>
-            {(pages ?? []).map((p) => (
-              <tr key={p.id} className="border-b border-line/60 last:border-0 hover:bg-ground/60">
-                <td className="p-4 font-medium"><Link href={`/admin/pages/${p.id}`} className="hover:text-primary">{p.title}</Link></td>
-                <td className="p-4 text-muted">{p.slug === "home" ? "/" : `/${p.slug}`}</td>
-                <td className="p-4 capitalize text-muted">{p.page_type}</td>
-                <td className="p-4"><span className={`rounded-full px-2.5 py-1 text-xs font-medium ${STATUS_STYLE[p.status]}`}>{p.status}</span></td>
-                <td className="p-4 text-muted">{new Date(p.updated_at).toLocaleDateString()}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+    <>
+      <AdminPageHeader title="Pages" />
+      <div className="flex flex-col gap-6 p-8">
+        <NewPageForm templates={templates ?? []} />
+        <div className="overflow-hidden rounded-2xl bg-white">
+          <table className="w-full text-left">
+            <thead className="border-b border-line text-xs uppercase tracking-wide text-muted">
+              <tr><th className="p-4">Title</th><th className="p-4">URL</th><th className="p-4">Type</th><th className="p-4">Status</th><th className="p-4">Updated</th><th className="w-12 p-4" /></tr>
+            </thead>
+            <tbody>
+              {(pages ?? []).map((p) => (
+                <tr key={p.id} className="border-b border-line/60 last:border-0 hover:bg-ground/60">
+                  <td className="p-4 font-medium"><Link href={`/admin/pages/${p.id}`} className="hover:text-primary">{p.title}</Link></td>
+                  <td className="p-4 text-muted">{p.slug === "home" ? "/" : `/${p.slug}`}</td>
+                  <td className="p-4 capitalize text-muted">{p.page_type}</td>
+                  <td className="p-4"><span className={`rounded-full px-2.5 py-1 text-xs font-medium ${STATUS_STYLE[p.status]}`}>{p.status}</span></td>
+                  <td className="p-4 text-muted">{new Date(p.updated_at).toLocaleDateString()}</td>
+                  <td className="p-4"><PageRowActions pageId={p.id} pageTitle={p.title} /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

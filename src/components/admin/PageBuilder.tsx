@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { BLOCK_FIELDS } from "@/lib/block-fields";
+import { Spinner } from "./Spinner";
 import type { Page, Section, SvgAsset, CmsForm } from "@/lib/types";
 import { FieldEditor } from "./FieldEditor";
 
@@ -114,11 +115,15 @@ export function PageBuilder({ page: initialPage, sections: initialSections, bloc
           ))}
         </div>
         <a href={`${url}?preview=1`} target="_blank" className="btn">Preview ↗</a>
-        <button className="btn" onClick={save} disabled={!!busy || !dirty}>{busy === "Saving…" ? busy : "Save draft"}</button>
+        <button className="btn" onClick={save} disabled={!!busy || !dirty}>
+          {busy === "Saving…" ? <><Spinner /> Saving…</> : "Save draft"}
+        </button>
         {page.status === "published"
           ? <button className="btn" onClick={unpublish}>Unpublish</button>
           : null}
-        <button className="btn-primary" onClick={publish} disabled={!!busy}>{busy === "Publishing…" ? busy : page.status === "published" ? "Update live page" : "Publish"}</button>
+        <button className="btn-success" onClick={publish} disabled={!!busy}>
+          {busy === "Publishing…" ? <><Spinner /> Publishing…</> : page.status === "published" ? "Update live page" : "Publish"}
+        </button>
       </header>
 
       <div className="flex min-h-0 flex-1">

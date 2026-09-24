@@ -5,6 +5,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { CONTACT_BLOCK_FIELDS } from "@/lib/types";
 import type { CmsForm, FormField, FormFieldType, FormSection } from "@/lib/types";
+import { Spinner } from "./Spinner";
 
 const FIELD_TYPES: FormFieldType[] = [
   "text", "email", "tel", "url", "textarea", "number", "decimal", "currency", "date",
@@ -121,6 +122,7 @@ export function FormEditor({ initial }: { initial: CmsForm }) {
   const [form, setForm] = useState<CmsForm>({ ...initial, sections: initial.sections ?? [] });
   const [mode, setMode] = useState<"fields" | "embed">(initial.embed_html ? "embed" : "fields");
   const [msg, setMsg] = useState("");
+  const [saving, setSaving] = useState(false);
   const set = <K extends keyof CmsForm>(k: K, v: CmsForm[K]) => setForm((f) => ({ ...f, [k]: v }));
 
   const setSection = (i: number, s: FormSection) => set("sections", form.sections.map((x, j) => (j === i ? s : x)));
@@ -128,7 +130,7 @@ export function FormEditor({ initial }: { initial: CmsForm }) {
   const removeSection = (i: number) => set("sections", form.sections.filter((_, j) => j !== i));
 
   async function save() {
-    setMsg("");
+    setMsg(""); setSaving(true);
     const row = {
       name: form.name, slug: slugify(form.slug || form.name), description: form.description || null,
       sections: mode === "fields" ? form.sections : [],
@@ -138,6 +140,7 @@ export function FormEditor({ initial }: { initial: CmsForm }) {
       paginate: mode === "fields" ? form.paginate : false,
     };
     const { error } = await createClient().from("forms").update(row).eq("id", form.id);
+    setSaving(false);
     setMsg(error ? error.message : "Saved");
     if (!error) { set("slug", row.slug); router.refresh(); }
   }
@@ -157,7 +160,7 @@ export function FormEditor({ initial }: { initial: CmsForm }) {
         <div className="ml-auto flex gap-2">
           {msg ? <span className="self-center text-sm text-muted">{msg}</span> : null}
           <a href={`/forms/${form.slug}`} target="_blank" className="btn">Preview ↗</a>
-          <button className="btn-primary" onClick={save}>Save</button>
+          <button className="btn-primary" onClick={save} disabled={saving}>{saving ? <><Spinner /> Saving…</> : "Save"}</button>
         </div>
       </div>
 

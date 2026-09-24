@@ -50,8 +50,9 @@ body { background: var(--c-ground); color: var(--c-ink); font-family: var(--font
   .input { @apply h-10 w-full rounded-xl border border-line bg-white px-3 text-sm outline-none focus:border-primary; }
   .textarea { @apply w-full rounded-xl border border-line bg-white px-3 py-2 text-sm outline-none focus:border-primary; }
   .label { @apply flex flex-col gap-1.5 text-[13px] text-muted; }
-  .btn { @apply inline-flex h-10 items-center justify-center gap-2 rounded-full border border-line bg-white px-4 text-sm font-medium hover:bg-soft/60 disabled:opacity-50; }
-  .btn-primary { @apply inline-flex h-10 items-center justify-center gap-2 rounded-full bg-primary px-4 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50; }
-  .btn-dark { @apply inline-flex h-10 items-center justify-center gap-2 rounded-full bg-ink px-4 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50; }
+  .btn { @apply inline-flex h-10 items-center justify-center gap-2 rounded-full border border-line bg-white px-4 text-sm font-medium transition active:scale-[0.97] hover:bg-soft/60 active:bg-soft disabled:pointer-events-none disabled:opacity-50 disabled:active:scale-100; }
+  .btn-primary { @apply inline-flex h-10 items-center justify-center gap-2 rounded-full bg-primary px-4 text-sm font-medium text-white transition active:scale-[0.97] hover:brightness-110 active:brightness-90 disabled:pointer-events-none disabled:opacity-50 disabled:active:scale-100; }
+  .btn-dark { @apply inline-flex h-10 items-center justify-center gap-2 rounded-full bg-ink px-4 text-sm font-medium text-white transition active:scale-[0.97] hover:brightness-125 active:brightness-90 disabled:pointer-events-none disabled:opacity-50 disabled:active:scale-100; }
+  .btn-success { @apply inline-flex h-10 items-center justify-center gap-2 rounded-full bg-[#1B8A5A] px-4 text-sm font-medium text-white transition active:scale-[0.97] hover:brightness-110 active:brightness-90 disabled:pointer-events-none disabled:opacity-50 disabled:active:scale-100; }
   .card { @apply rounded-2xl bg-white p-6; }
 }
