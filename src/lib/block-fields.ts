@@ -108,4 +108,10 @@ export const BLOCK_FIELDS: Record<string, Field[]> = {
   spacer: [
     t("height", "Space (px) — positive adds space, negative reduces it (e.g. -50)"),
   ],
+  section_header: [
+    t("eyebrow", "Eyebrow (colored, above the heading)"),
+    t("heading", "Heading"),
+    t("subline", "Subline (bold, below the divider)"),
+    { key: "align", label: "Alignment", type: "select", options: ["left", "center"] },
+  ],
 };

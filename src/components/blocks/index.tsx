@@ -503,6 +503,18 @@ function Spacer({ data }: BlockProps) {
   return <div style={{ height: 0, marginTop: h }} aria-hidden="true" />;
 }
 
+function SectionHeader({ data }: BlockProps) {
+  const centered = data.align === "center";
+  return (
+    <div className={`${wrap} flex flex-col gap-4 py-10 md:py-14 ${centered ? "items-center text-center" : "items-start text-left"}`}>
+      {data.eyebrow ? <div className="text-base font-extrabold text-accent md:text-lg">{data.eyebrow}</div> : null}
+      {data.heading ? <h2 className="font-display text-3xl font-extrabold text-ink md:text-5xl">{data.heading}</h2> : null}
+      <div className="h-px w-full bg-line" />
+      {data.subline ? <p className="text-sm font-bold text-ink md:text-base">{data.subline}</p> : null}
+    </div>
+  );
+}
+
 /* ------------------------------------------------------------------ */
 export const BLOCKS: Record<string, (p: BlockProps) => React.ReactNode> = {
   hero: Hero,
@@ -527,6 +539,7 @@ export const BLOCKS: Record<string, (p: BlockProps) => React.ReactNode> = {
   process_steps: ProcessSteps,
   checklist: Checklist,
   spacer: Spacer,
+  section_header: SectionHeader,
 };
 
 const BG: Record<string, string> = {
