@@ -22,6 +22,12 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
   }
 
   const colors: [keyof SiteSettings["theme"], string][] = [["primary", "Primary"], ["accent", "Accent"], ["ink", "Text"], ["ground", "Background"]];
+  const presets: { name: string; theme: SiteSettings["theme"] }[] = [
+    { name: "Purple & indigo", theme: { primary: "#6C5DD3", accent: "#1B1145", ink: "#14142B", ground: "#F4F2FC" } },
+    { name: "Teal & clay", theme: { primary: "#0E5C55", accent: "#B8581F", ink: "#15171C", ground: "#F5F3EE" } },
+    { name: "Navy & gold", theme: { primary: "#1E3A8A", accent: "#B8860B", ink: "#0F172A", ground: "#F8F7F2" } },
+    { name: "Forest & rust", theme: { primary: "#1F5B3F", accent: "#C1440E", ink: "#161A17", ground: "#F3F1EA" } },
+  ];
 
   return (
     <div className="grid gap-5 xl:grid-cols-2">
@@ -29,6 +35,20 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
         <h2 className="text-lg font-semibold">Branding</h2>
         <label className="label">Site name<input className="input" value={s.site_name} onChange={(e) => set("site_name", e.target.value)} /></label>
         <div className="label">Logo (SVG)<SvgPicker value={s.logo_svg_id} svgs={svgs} onChange={(id) => set("logo_svg_id", id)} /></div>
+        <div className="label">Theme presets
+          <div className="flex flex-wrap gap-2">
+            {presets.map((p) => (
+              <button key={p.name} type="button" onClick={() => set("theme", p.theme)}
+                className="flex items-center gap-2 rounded-lg border border-line px-2.5 py-1.5 hover:border-primary">
+                <span className="flex h-5 w-5 overflow-hidden rounded-full border border-line">
+                  <span className="h-full w-1/2" style={{ background: p.theme.primary }} />
+                  <span className="h-full w-1/2" style={{ background: p.theme.accent }} />
+                </span>
+                <span className="text-xs text-ink">{p.name}</span>
+              </button>
+            ))}
+          </div>
+        </div>
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
           {colors.map(([k, label]) => (
             <label key={k} className="label">{label}

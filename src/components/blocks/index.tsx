@@ -7,7 +7,7 @@ export type BlockCtx = { svgs: Record<string, SvgAsset>; settings: SiteSettings;
 type BlockProps = { data: any; ctx: BlockCtx };
 
 const wrap = "mx-auto w-full max-w-7xl px-5 md:px-10";
-const h2 = "font-display text-[40px] leading-none md:text-[56px]";
+const h2 = "font-display font-bold tracking-tight text-[40px] leading-none md:text-[56px]";
 const paragraphs = (text?: string) =>
   (text ?? "").split(/\n{2,}/).filter(Boolean).map((p, i) => <p key={i}>{p}</p>);
 
@@ -26,17 +26,18 @@ function Button({ link, variant = "primary" }: { link?: { label?: string; href?:
 /* ------------------------------------------------------------------ */
 function Hero({ data, ctx }: BlockProps) {
   const art = data.svg_id ? ctx.svgs[data.svg_id] : null;
+  const dark = data.tone === "dark";
   const title = (
-    <h1 className="font-display text-[48px] leading-[0.98] tracking-tight md:text-[84px]">
+    <h1 className="font-display font-bold text-[44px] leading-[1.05] tracking-tight md:text-[72px]">
       {data.heading}{" "}
-      {data.heading_accent ? <span className="italic text-primary">{data.heading_accent}</span> : null}
+      {data.heading_accent ? <span className="text-primary">{data.heading_accent}</span> : null}
     </h1>
   );
   const copy = (
     <>
-      {data.eyebrow ? <div className="text-xs uppercase tracking-[0.12em] text-muted md:text-[13px]">{data.eyebrow}</div> : null}
+      {data.eyebrow ? <div className={`text-xs uppercase tracking-[0.12em] md:text-[13px] ${dark ? "text-primary/80" : "text-muted"}`}>{data.eyebrow}</div> : null}
       {title}
-      {data.subheading ? <p className="max-w-xl text-[17px] leading-relaxed text-muted md:text-[19px]">{data.subheading}</p> : null}
+      {data.subheading ? <p className={`max-w-xl text-[17px] leading-relaxed md:text-[19px] ${dark ? "text-ground/75" : "text-muted"}`}>{data.subheading}</p> : null}
     </>
   );
 
@@ -92,7 +93,7 @@ function Hero({ data, ctx }: BlockProps) {
         {data.badge?.value ? (
           <div className="absolute -bottom-4 left-4 flex w-64 flex-col gap-1 rounded-2xl bg-white p-5 shadow-[0_12px_40px_rgba(21,23,28,0.12)] md:-left-8 md:bottom-9">
             <div className="text-[13px] text-muted">{data.badge.label}</div>
-            <div className="font-display text-4xl">{data.badge.value}</div>
+            <div className="font-display font-bold text-4xl">{data.badge.value}</div>
           </div>
         ) : null}
       </div>
@@ -167,7 +168,7 @@ function Stats({ data }: BlockProps) {
     <div className={`${wrap} grid grid-cols-2 gap-6 py-10 md:grid-cols-4 md:py-16`}>
       {(data.items ?? []).map((s: any, i: number) => (
         <div key={i} className="flex flex-col gap-1.5">
-          <div className="font-display text-[44px] leading-none md:text-[56px]">{s.value}</div>
+          <div className="font-display font-bold text-[44px] leading-none md:text-[56px]">{s.value}</div>
           <div className="text-sm opacity-75 md:text-[15px]">{s.label}</div>
         </div>
       ))}
@@ -182,7 +183,7 @@ function Testimonials({ data }: BlockProps) {
       <div className="grid gap-4 md:grid-cols-2 md:gap-6">
         {(data.items ?? []).map((t: any, i: number) => (
           <figure key={i} className={`flex flex-col justify-between gap-8 rounded-[20px] p-7 md:p-10 ${i % 2 ? "bg-primary text-white" : "bg-white"}`}>
-            <blockquote className="font-display text-[26px] leading-tight md:text-3xl">“{t.quote}”</blockquote>
+            <blockquote className="font-display font-semibold text-[22px] leading-snug md:text-[26px]">“{t.quote}”</blockquote>
             <figcaption className="flex items-center gap-3">
               <svg viewBox="0 0 44 44" className="h-11 w-11" aria-hidden="true">
                 <circle cx="22" cy="22" r="22" fill={i % 2 ? "rgba(255,255,255,.25)" : "var(--c-soft)"} />
@@ -278,7 +279,7 @@ function Pricing({ data }: BlockProps) {
         {(data.plans ?? []).map((p: any, i: number) => (
           <div key={i} className={`flex flex-col gap-5 rounded-[20px] p-7 ${p.highlight ? "bg-ink text-white" : "bg-white"}`}>
             <div className="text-lg font-semibold">{p.name}</div>
-            <div className="font-display text-5xl">{p.price}<span className="font-sans text-base opacity-70"> {p.period}</span></div>
+            <div className="font-display font-bold text-5xl">{p.price}<span className="font-sans text-base opacity-70"> {p.period}</span></div>
             <ul className="flex flex-col gap-2 text-[15px]">
               {String(p.features ?? "").split("\n").filter(Boolean).map((f: string, j: number) => <li key={j}>✓ {f}</li>)}
             </ul>
@@ -313,6 +314,61 @@ function ContactInfo({ data, ctx }: BlockProps) {
   );
 }
 
+function Timeline({ data }: BlockProps) {
+  const items = data.items ?? [];
+  if (!items.length) return null;
+  return (
+    <div className={`${wrap} flex flex-col gap-11 py-16 md:py-20`}>
+      {data.heading ? <h2 className="font-display text-[32px] font-bold">{data.heading}</h2> : null}
+      <div className="relative flex flex-col gap-8 md:flex-row md:justify-between">
+        <div className="absolute left-[9px] top-2.5 hidden h-0.5 w-full bg-line md:block" />
+        {items.map((it: any, i: number) => (
+          <div key={i} className="relative flex gap-4 md:w-1/4 md:flex-col md:gap-3.5">
+            <div className={`h-5 w-5 shrink-0 rounded-full border-4 border-ground ${i === items.length - 1 ? "bg-ink" : "bg-primary"}`} />
+            <div className="flex flex-col gap-1">
+              <div className="text-[13px] font-bold text-primary">{it.year}</div>
+              <div className="text-sm font-semibold">{it.title}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function TeamProfile({ data, ctx }: BlockProps) {
+  const art = data.svg_id ? ctx.svgs[data.svg_id] : null;
+  return (
+    <div className={`${wrap} grid items-center gap-14 py-16 md:grid-cols-[320px_1fr] md:py-20`}>
+      <Svg asset={art} label={art?.name} className="aspect-[8/9] overflow-hidden rounded-3xl" />
+      <div className="flex flex-col gap-3.5">
+        {data.eyebrow ? <div className="text-xs font-bold uppercase tracking-[0.08em] text-primary">{data.eyebrow}</div> : null}
+        <h2 className="font-display text-[32px] font-bold">{data.name}</h2>
+        {data.role ? <div className="text-[15px] text-muted">{data.role}</div> : null}
+        {data.bio ? <p className="max-w-xl text-[15px] leading-relaxed text-muted">{data.bio}</p> : null}
+        <div className="mt-2 flex gap-3"><Button link={data.primary_cta} /><Button link={data.secondary_cta} variant="outline" /></div>
+      </div>
+    </div>
+  );
+}
+
+function ServiceAreas({ data }: BlockProps) {
+  const items = data.items ?? [];
+  if (!items.length) return null;
+  return (
+    <div className={`${wrap} flex flex-col gap-6 py-12 md:py-16`}>
+      {data.heading ? <h2 className="font-display text-2xl font-bold">{data.heading}</h2> : null}
+      <div className="flex flex-wrap gap-2.5">
+        {items.map((it: any, i: number) => (
+          <Link key={i} href={it.href || `/listings?city=${encodeURIComponent(it.label ?? "")}`} className="flex h-10 items-center rounded-full bg-ground px-4.5 text-sm font-medium hover:bg-soft">
+            {it.label}
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /* ------------------------------------------------------------------ */
 export const BLOCKS: Record<string, (p: BlockProps) => React.ReactNode> = {
   hero: Hero,
@@ -328,6 +384,9 @@ export const BLOCKS: Record<string, (p: BlockProps) => React.ReactNode> = {
   text_svg: TextSvg,
   pricing: Pricing,
   contact_info: ContactInfo,
+  timeline: Timeline,
+  team_profile: TeamProfile,
+  service_areas: ServiceAreas,
 };
 
 const BG: Record<string, string> = {

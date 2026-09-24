@@ -13,6 +13,7 @@ export const BLOCK_FIELDS: Record<string, Field[]> = {
     t("eyebrow", "Eyebrow"), t("heading", "Heading"), t("heading_accent", "Heading (accent part)"),
     ta("subheading", "Subheading"),
     { key: "layout", label: "Layout", type: "select", options: ["split", "centered", "form", "search"] },
+    { key: "tone", label: "Text tone (match to background)", type: "select", options: ["light", "dark"] },
     { key: "svg_id", label: "Illustration", type: "svg" },
     { key: "primary_cta", label: "Primary button", type: "link" },
     { key: "secondary_cta", label: "Secondary button", type: "link" },
@@ -58,4 +59,18 @@ export const BLOCK_FIELDS: Record<string, Field[]> = {
     ] },
   ],
   contact_info: [t("heading", "Heading")],
+  timeline: [
+    t("heading", "Heading"),
+    { key: "items", label: "Milestones", type: "list", itemLabel: "Milestone", fields: [t("year", "Year"), t("title", "Title")] },
+  ],
+  team_profile: [
+    t("eyebrow", "Eyebrow"), t("name", "Name"), t("role", "Role / brokerage"), ta("bio", "Bio"),
+    { key: "svg_id", label: "Photo (illustration)", type: "svg" },
+    { key: "primary_cta", label: "Primary button", type: "link" },
+    { key: "secondary_cta", label: "Secondary button", type: "link" },
+  ],
+  service_areas: [
+    t("heading", "Heading"),
+    { key: "items", label: "Areas", type: "list", itemLabel: "Area", fields: [t("label", "City name"), t("href", "Links to (blank = auto)")] },
+  ],
 };
