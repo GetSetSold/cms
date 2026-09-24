@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { createMlsClient, daysOnMarket, displayValue, isSale, mediaItems, priceDisplay, type GridListing, type PropertyListing } from "@/lib/mls";
 import { getSettings } from "@/lib/cms";
+import { themeFontHref, themeVars } from "@/lib/theme";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter, MobileCtaBar } from "@/components/site/SiteFooter";
 import { ListingCard } from "@/components/listings/ListingCard";
@@ -60,8 +61,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
   const dom = daysOnMarket(listing.OriginalEntryTimestamp);
   const sale = isSale(listing);
 
-  const t = settings.theme ?? {};
-  const themeVars = { "--c-primary": t.primary, "--c-accent": t.accent, "--c-ink": t.ink, "--c-ground": t.ground } as React.CSSProperties;
+  const themeVars_ = themeVars(settings);
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -73,7 +73,8 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
   };
 
   return (
-    <div style={themeVars} className="bg-ground text-ink">
+    <div style={themeVars_} className="bg-ground text-ink">
+      <link rel="stylesheet" href={themeFontHref(settings)} />
       <SiteHeader settings={settings} />
       <main className="mx-auto w-full max-w-7xl px-5 py-8 md:px-10 md:py-12">
         <div className="mb-4 text-sm text-muted">

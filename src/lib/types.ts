@@ -40,7 +40,7 @@ export interface Page {
 export interface SiteSettings {
   site_name: string;
   logo_svg_id: string | null;
-  theme: { primary: string; accent: string; ink: string; ground: string };
+  theme: { primary: string; accent: string; ink: string; ground: string; font?: string };
   seo_defaults: { title_suffix: string; description: string; site_url?: string };
   navigation: { label: string; href: string }[];
   header_cta: { label: string; href: string };

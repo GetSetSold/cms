@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { collectSvgIds, getPage, getSettings, getSvgs } from "@/lib/cms";
+import { themeFontHref, themeVars } from "@/lib/theme";
 import { createClient } from "@/lib/supabase/server";
 import { RenderSections } from "@/components/blocks";
 import { SiteHeader } from "@/components/site/SiteHeader";
@@ -56,10 +57,7 @@ export default async function SitePage(props: Props) {
   if (settings.logo_svg_id) ids.add(settings.logo_svg_id);
   const svgs = await getSvgs(ids);
 
-  const t = settings.theme ?? {};
-  const themeVars = {
-    "--c-primary": t.primary, "--c-accent": t.accent, "--c-ink": t.ink, "--c-ground": t.ground,
-  } as React.CSSProperties;
+  const themeVars_ = themeVars(settings);
 
   const c = settings.contact ?? {};
   const orgLd = {
@@ -69,7 +67,8 @@ export default async function SitePage(props: Props) {
   };
 
   return (
-    <div style={themeVars} className="bg-ground text-ink">
+    <div style={themeVars_} className="bg-ground text-ink">
+      <link rel="stylesheet" href={themeFontHref(settings)} />
       {preview ? (
         <div className="bg-accent px-4 py-2 text-center text-sm text-white">Preview — status: {page.status}</div>
       ) : null}

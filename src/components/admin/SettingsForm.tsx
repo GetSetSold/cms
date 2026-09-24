@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { SiteSettings, SvgAsset } from "@/lib/types";
+import { FONT_OPTIONS } from "@/lib/theme";
 import { SvgPicker } from "./SvgPicker";
 
 export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: SvgAsset[] }) {
@@ -23,10 +24,10 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
 
   const colors: [keyof SiteSettings["theme"], string][] = [["primary", "Primary"], ["accent", "Accent"], ["ink", "Text"], ["ground", "Background"]];
   const presets: { name: string; theme: SiteSettings["theme"] }[] = [
-    { name: "Purple & indigo", theme: { primary: "#6C5DD3", accent: "#1B1145", ink: "#14142B", ground: "#F4F2FC" } },
-    { name: "Teal & clay", theme: { primary: "#0E5C55", accent: "#B8581F", ink: "#15171C", ground: "#F5F3EE" } },
-    { name: "Navy & gold", theme: { primary: "#1E3A8A", accent: "#B8860B", ink: "#0F172A", ground: "#F8F7F2" } },
-    { name: "Forest & rust", theme: { primary: "#1F5B3F", accent: "#C1440E", ink: "#161A17", ground: "#F3F1EA" } },
+    { name: "Purple & indigo", theme: { primary: "#6C5DD3", accent: "#1B1145", ink: "#14142B", ground: "#F4F2FC", font: "Inter" } },
+    { name: "Teal & clay", theme: { primary: "#0E5C55", accent: "#B8581F", ink: "#15171C", ground: "#F5F3EE", font: "Manrope" } },
+    { name: "Navy & gold", theme: { primary: "#1E3A8A", accent: "#B8860B", ink: "#0F172A", ground: "#F8F7F2", font: "Sora" } },
+    { name: "Forest & rust", theme: { primary: "#1F5B3F", accent: "#C1440E", ink: "#161A17", ground: "#F3F1EA", font: "Work Sans" } },
   ];
 
   return (
@@ -59,6 +60,12 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
             </label>
           ))}
         </div>
+        <label className="label">Font
+          <select className="input" value={s.theme.font || "Inter"} onChange={(e) => set("theme", { ...s.theme, font: e.target.value })}>
+            {FONT_OPTIONS.map((f) => <option key={f} value={f} style={{ fontFamily: f }}>{f}</option>)}
+          </select>
+          <span style={{ fontFamily: s.theme.font || "Inter" }} className="mt-2 text-2xl font-bold">Aa Bb Cc — {s.theme.font || "Inter"}</span>
+        </label>
       </section>
 
       <section className="card flex flex-col gap-4">
