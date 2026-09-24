@@ -1,6 +1,6 @@
 "use client";
 import { useRef, useState } from "react";
-import type { CmsForm, FormField } from "@/lib/types";
+import type { CmsForm, FormField, FormSection } from "@/lib/types";
 
 type Values = Record<string, string | Record<string, string>[]>;
 
@@ -90,11 +90,39 @@ function Subform({ field, rows, onChange }: { field: FormField; rows: Record<str
   );
 }
 
+function SectionBlock({ section, active, values, onFieldChange }: {
+  section: FormSection; active: boolean; values: Values; onFieldChange: (key: string, v: string | Record<string, string>[]) => void;
+}) {
+  // `hidden` (not unmounting) keeps entered values intact when navigating back
+  // in a paginated form, and — importantly — the browser automatically skips
+  // required-field validation for anything not rendered, so Next/Submit only
+  // validates the fields actually visible on the current step.
+  return (
+    <fieldset hidden={!active} className={`flex flex-col gap-3 ${section.background ? "rounded-2xl p-6" : ""}`} style={section.background ? { background: section.background } : undefined}>
+      {section.heading ? <legend className="mb-1 text-lg font-semibold">{section.heading}</legend> : null}
+      <div className={`grid gap-3 ${section.columns === 2 ? "sm:grid-cols-2" : ""}`}>
+        {section.fields.map((f) =>
+          f.type === "subform" ? (
+            <Subform key={f.key} field={f} rows={(values[f.key] as Record<string, string>[]) ?? []} onChange={(rows) => onFieldChange(f.key, rows)} />
+          ) : (
+            <label key={f.key} className={`label ${f.span === 2 || section.columns === 1 ? "sm:col-span-2" : ""}`}>
+              {f.type !== "checkbox" ? f.label : null}
+              <BasicField field={f} value={typeof values[f.key] === "string" ? (values[f.key] as string) : ""} onChange={(v) => onFieldChange(f.key, v)} />
+            </label>
+          ),
+        )}
+      </div>
+    </fieldset>
+  );
+}
+
 export function CmsFormRenderer({ form, pageId }: { form: CmsForm; pageId?: string }) {
   const [values, setValues] = useState<Values>({});
   const [state, setState] = useState<"idle" | "sending" | "done" | "error">("idle");
   const [error, setError] = useState("");
+  const [step, setStep] = useState(0);
   const started = useRef(Date.now());
+  const formRef = useRef<HTMLFormElement>(null);
 
   if (form.embed_html) {
     // Admin/editor-authored embed (e.g. Zoho) — same trust boundary as other admin HTML in this CMS.
@@ -102,10 +130,20 @@ export function CmsFormRenderer({ form, pageId }: { form: CmsForm; pageId?: stri
   }
 
   const sections = form.sections ?? [];
+  const paginated = form.paginate && sections.length > 1;
+  const lastStep = step === sections.length - 1;
   const set = (key: string, v: string | Record<string, string>[]) => setValues((s) => ({ ...s, [key]: v }));
+
+  function next() {
+    // reportValidity() only checks fields currently rendered (the active section) —
+    // hidden sections' required fields are excluded per the HTML spec.
+    if (formRef.current && !formRef.current.reportValidity()) return;
+    setStep((s) => Math.min(s + 1, sections.length - 1));
+  }
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (paginated && !lastStep) { next(); return; }
     setState("sending"); setError("");
 
     const str = (k: string) => (typeof values[k] === "string" ? (values[k] as string) : "");
@@ -140,29 +178,38 @@ export function CmsFormRenderer({ form, pageId }: { form: CmsForm; pageId?: stri
   }
 
   return (
-    <form onSubmit={onSubmit} className="flex flex-col gap-8">
+    <form ref={formRef} onSubmit={onSubmit} className="flex flex-col gap-6">
       <input type="text" name="website" tabIndex={-1} autoComplete="off" className="hidden" aria-hidden="true" />
-      {sections.map((section) => (
-        <fieldset key={section.id} className="flex flex-col gap-3">
-          {section.heading ? <legend className="mb-1 text-lg font-semibold">{section.heading}</legend> : null}
-          <div className={`grid gap-3 ${section.columns === 2 ? "sm:grid-cols-2" : ""}`}>
-            {section.fields.map((f) =>
-              f.type === "subform" ? (
-                <Subform key={f.key} field={f} rows={(values[f.key] as Record<string, string>[]) ?? []} onChange={(rows) => set(f.key, rows)} />
-              ) : (
-                <label key={f.key} className={`label ${f.span === 2 || section.columns === 1 ? "sm:col-span-2" : ""}`}>
-                  {f.type !== "checkbox" ? f.label : null}
-                  <BasicField field={f} value={typeof values[f.key] === "string" ? (values[f.key] as string) : ""} onChange={(v) => set(f.key, v)} />
-                </label>
-              ),
-            )}
+
+      {paginated ? (
+        <div className="flex items-center gap-3">
+          <span className="text-sm font-medium text-muted">Step {step + 1} of {sections.length}</span>
+          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-soft">
+            <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${((step + 1) / sections.length) * 100}%` }} />
           </div>
-        </fieldset>
-      ))}
+        </div>
+      ) : null}
+
+      <div className="flex flex-col gap-8">
+        {sections.map((section, i) => (
+          <SectionBlock key={section.id} section={section} active={!paginated || i === step} values={values} onFieldChange={set} />
+        ))}
+      </div>
+
       {state === "error" ? <p className="text-sm text-red-700" role="alert">{error}</p> : null}
-      <button disabled={state === "sending"} className="h-13 rounded-full bg-ink py-3.5 text-base font-medium text-white disabled:opacity-60">
-        {state === "sending" ? "Sending…" : form.submit_label}
-      </button>
+
+      {paginated ? (
+        <div className="flex gap-3">
+          {step > 0 ? <button type="button" onClick={() => setStep((s) => s - 1)} className="btn h-13 flex-1">Back</button> : null}
+          <button type="submit" disabled={state === "sending"} className="h-13 flex-1 rounded-full bg-ink py-3.5 text-base font-medium text-white disabled:opacity-60">
+            {lastStep ? (state === "sending" ? "Sending…" : form.submit_label) : "Next"}
+          </button>
+        </div>
+      ) : (
+        <button type="submit" disabled={state === "sending"} className="h-13 rounded-full bg-ink py-3.5 text-base font-medium text-white disabled:opacity-60">
+          {state === "sending" ? "Sending…" : form.submit_label}
+        </button>
+      )}
     </form>
   );
 }

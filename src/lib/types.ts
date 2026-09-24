@@ -102,6 +102,7 @@ export type FormSection = {
   id: string;
   heading?: string;
   columns: 1 | 2; // desktop only — mobile is always single column
+  background?: string; // hex color, e.g. "#F4F2FC" — blank/undefined = no background
   fields: FormField[];
 };
 
@@ -116,6 +117,7 @@ export interface CmsForm {
   success_message: string;
   form_key: string;
   is_active: boolean;
+  paginate: boolean; // one section per step, with Next/Back — for longer forms
 }
 
 /** A one-click starting block for every new form: First name, Last name, Email, Phone —

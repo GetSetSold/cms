@@ -14,6 +14,24 @@ const HAS_OPTIONS: FormFieldType[] = ["dropdown", "radio", "multiple_choice"];
 const slugify = (s: string) => s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 const newField = (n: number): FormField => ({ key: `field_${n}`, label: "New field", type: "text" });
 
+/** One row per option — avoids comma-splitting, so an option can contain a
+ *  comma, spaces, anything — no parsing ambiguity. */
+function OptionsEditor({ options, onChange }: { options: string[]; onChange: (o: string[]) => void }) {
+  const setOption = (i: number, v: string) => onChange(options.map((o, j) => (j === i ? v : o)));
+  return (
+    <div className="flex flex-col gap-1.5 rounded-lg bg-ground p-2.5">
+      <span className="text-xs text-muted">Options</span>
+      {options.map((o, i) => (
+        <div key={i} className="flex gap-2">
+          <input className="input h-9" value={o} onChange={(e) => setOption(i, e.target.value)} placeholder={`Option ${i + 1}`} />
+          <button type="button" aria-label="Remove option" onClick={() => onChange(options.filter((_, j) => j !== i))}>✕</button>
+        </div>
+      ))}
+      <button type="button" className="btn h-9 self-start border-dashed text-sm" onClick={() => onChange([...options, ""])}>+ Add option</button>
+    </div>
+  );
+}
+
 function FieldRow({ field, showSpan, onChange, onRemove }: { field: FormField; showSpan: boolean; onChange: (f: FormField) => void; onRemove: () => void }) {
   const [showSubBuilder, setShowSubBuilder] = useState(field.type === "subform");
   return (
@@ -33,8 +51,7 @@ function FieldRow({ field, showSpan, onChange, onRemove }: { field: FormField; s
         <button type="button" className="ml-auto shrink-0 text-sm text-red-700" onClick={onRemove}>Remove</button>
       </div>
       {HAS_OPTIONS.includes(field.type) ? (
-        <input className="input" placeholder="Options, comma separated" value={(field.options ?? []).join(", ")}
-          onChange={(e) => onChange({ ...field, options: e.target.value.split(",").map((s) => s.trim()).filter(Boolean) })} />
+        <OptionsEditor options={field.options ?? []} onChange={(options) => onChange({ ...field, options })} />
       ) : null}
       {field.type === "subform" && showSubBuilder ? (
         <div className="flex flex-col gap-2 rounded-lg bg-ground p-3">
@@ -57,6 +74,8 @@ function FieldRow({ field, showSpan, onChange, onRemove }: { field: FormField; s
   );
 }
 
+const BG_PRESETS = ["", "#FFFFFF", "#F4F2FC", "#E7E4FB", "#14142B"];
+
 function SectionEditor({ section, onChange, onRemove }: { section: FormSection; onChange: (s: FormSection) => void; onRemove: () => void }) {
   const setField = (i: number, f: FormField) => onChange({ ...section, fields: section.fields.map((x, j) => (j === i ? f : x)) });
   const addField = () => onChange({ ...section, fields: [...section.fields, newField(section.fields.length + 1)] });
@@ -73,6 +92,19 @@ function SectionEditor({ section, onChange, onRemove }: { section: FormSection; 
         </select>
         <button type="button" className="text-sm text-red-700" onClick={onRemove}>Remove section</button>
       </div>
+
+      <div className="flex items-center gap-2">
+        <span className="text-sm text-muted">Background</span>
+        <div className="flex gap-1.5">
+          {BG_PRESETS.map((c) => (
+            <button key={c || "none"} type="button" title={c || "None"} onClick={() => onChange({ ...section, background: c || undefined })}
+              className={`h-7 w-7 rounded-full border ${(section.background ?? "") === c ? "ring-2 ring-primary ring-offset-1" : "border-line"}`}
+              style={{ background: c || "repeating-conic-gradient(#ddd 0% 25%, #fff 0% 50%) 50% / 10px 10px" }} />
+          ))}
+        </div>
+        <input type="color" value={section.background || "#ffffff"} onChange={(e) => onChange({ ...section, background: e.target.value })} className="h-7 w-9 cursor-pointer rounded border-0 bg-transparent" />
+      </div>
+
       {section.fields.map((f, i) => (
         <FieldRow key={i} field={f} showSpan={section.columns === 2} onChange={(nf) => setField(i, nf)} onRemove={() => removeField(i)} />
       ))}
@@ -103,6 +135,7 @@ export function FormEditor({ initial }: { initial: CmsForm }) {
       embed_html: mode === "embed" ? form.embed_html || null : null,
       submit_label: form.submit_label, success_message: form.success_message,
       form_key: form.form_key || "form", is_active: form.is_active,
+      paginate: mode === "fields" ? form.paginate : false,
     };
     const { error } = await createClient().from("forms").update(row).eq("id", form.id);
     setMsg(error ? error.message : "Saved");
@@ -138,6 +171,15 @@ export function FormEditor({ initial }: { initial: CmsForm }) {
           <label className="label">Submit button label<input className="input" value={form.submit_label} onChange={(e) => set("submit_label", e.target.value)} /></label>
           <label className="label">Thank-you message<input className="input" value={form.success_message} onChange={(e) => set("success_message", e.target.value)} /></label>
           <label className="flex items-center justify-between">Active<input type="checkbox" checked={form.is_active} onChange={(e) => set("is_active", e.target.checked)} /></label>
+          {mode === "fields" ? (
+            <label className="flex items-center justify-between">
+              Paginate (one section per step)
+              <input type="checkbox" checked={form.paginate} onChange={(e) => set("paginate", e.target.checked)} />
+            </label>
+          ) : null}
+          {form.paginate && form.sections.length <= 1 ? (
+            <p className="text-xs text-muted">Add more than one section for pagination to take effect.</p>
+          ) : null}
           <button className="btn self-start text-red-700" onClick={remove}>Delete form</button>
         </section>
 
