@@ -55,12 +55,21 @@ export function citySlug(city: string) {
 }
 
 /** DDF City values are free text, not a fixed list — resolve a URL slug back
- *  to the exact-cased city string the database actually stores. */
+ *  to the exact-cased city string the database actually stores. Reads from
+ *  the `distinct_cities` view (create it once in the MLS project — see
+ *  README) rather than sampling raw `grid` rows, which could miss cities
+ *  entirely depending on row order. */
 export async function resolveCitySlug(slug: string): Promise<string | null> {
   const mls = createMlsClient();
-  const { data } = await mls.from("grid").select("City").not("City", "is", null).limit(2000);
-  const cities = [...new Set((data ?? []).map((r) => r.City as string))];
+  const { data } = await mls.from("distinct_cities").select("City").limit(5000);
+  const cities = (data ?? []).map((r) => r.City as string);
   return cities.find((c) => citySlug(c) === slug.toLowerCase()) ?? null;
+}
+
+export async function listCities(): Promise<string[]> {
+  const mls = createMlsClient();
+  const { data } = await mls.from("distinct_cities").select("City").limit(5000);
+  return (data ?? []).map((r) => r.City as string);
 }
 
 export function priceDisplay(l: Pick<GridListing, "ListPrice" | "TotalActualRent">) {

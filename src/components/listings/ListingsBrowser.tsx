@@ -1,4 +1,4 @@
-import { createMlsClient, type GridListing } from "@/lib/mls";
+import { createMlsClient, listCities, type GridListing } from "@/lib/mls";
 import { ListingCard } from "@/components/listings/ListingCard";
 import { ListingsMap } from "@/components/listings/ListingsMap";
 import { Pagination } from "@/components/listings/Pagination";
@@ -49,12 +49,12 @@ export async function ListingsBrowser({
   if (sp.beds) query = query.gte("BedroomsTotal", Number(sp.beds));
   query = query.order("OriginalEntryTimestamp", { ascending: false });
 
-  const [{ data: listings, count }, { data: cityRows }] = await Promise.all([
+  const [{ data: listings, count }, cityList] = await Promise.all([
     query,
-    fixedCity ? Promise.resolve({ data: [] as { City: string }[] }) : mls.from("grid").select("City").not("City", "is", null).limit(2000),
+    fixedCity ? Promise.resolve([]) : listCities(),
   ]);
 
-  const cities = fixedCity ? [] : [...new Set((cityRows ?? []).map((r) => r.City as string))].sort();
+  const cities = fixedCity ? [] : [...cityList].sort();
   const total = count ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / perPage));
   const rows = (listings ?? []) as GridListing[];
