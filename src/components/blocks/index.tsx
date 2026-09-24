@@ -165,7 +165,7 @@ function Services({ data, ctx }: BlockProps) {
 
 function Features({ data }: BlockProps) {
   return (
-    <div className={`${wrap} flex flex-col gap-10 py-16 md:py-24`}>
+    <div className={`${wrap} flex flex-col gap-10 py-12 md:py-24`}>
       <div className="flex max-w-2xl flex-col gap-4">
         {data.heading ? <h2 className={h2}>{data.heading}</h2> : null}
         {data.intro ? <p className="text-lg text-muted">{data.intro}</p> : null}
@@ -202,7 +202,7 @@ function Stats({ data }: BlockProps) {
 
 function Testimonials({ data }: BlockProps) {
   return (
-    <div className={`${wrap} flex flex-col gap-8 py-16 md:py-24`}>
+    <div className={`${wrap} flex flex-col gap-8 py-12 md:py-24`}>
       {data.heading ? <h2 className={h2}>{data.heading}</h2> : null}
       <div className="grid gap-4 md:grid-cols-2 md:gap-6">
         {(data.items ?? []).map((t: any, i: number) => (
@@ -297,7 +297,7 @@ function TextSvg({ data, ctx }: BlockProps) {
 
 function Pricing({ data }: BlockProps) {
   return (
-    <div className={`${wrap} flex flex-col gap-10 py-16 md:py-24`}>
+    <div className={`${wrap} flex flex-col gap-10 py-12 md:py-24`}>
       {data.heading ? <h2 className={h2}>{data.heading}</h2> : null}
       <div className="grid gap-4 md:grid-cols-3 md:gap-6">
         {(data.plans ?? []).map((p: any, i: number) => (
@@ -342,7 +342,7 @@ function Timeline({ data }: BlockProps) {
   const items = data.items ?? [];
   if (!items.length) return null;
   return (
-    <div className={`${wrap} flex flex-col gap-11 py-16 md:py-20`}>
+    <div className={`${wrap} flex flex-col gap-11 py-12 md:py-20`}>
       {data.heading ? <h2 className="font-display text-[32px] font-bold">{data.heading}</h2> : null}
       <div className="relative flex flex-col gap-8 md:flex-row md:justify-between">
         <div className="absolute left-[9px] top-2.5 hidden h-0.5 w-full bg-line md:block" />
@@ -407,7 +407,7 @@ async function ListingGrid({ data }: BlockProps) {
   if (!listings.length) return null;
 
   return (
-    <div className={`${wrap} flex flex-col gap-8 py-16 md:py-24`}>
+    <div className={`${wrap} flex flex-col gap-8 py-12 md:py-24`}>
       {data.heading || data.link_label ? (
         <div className="flex items-end justify-between gap-4">
           {data.heading ? <h2 className={h2}>{data.heading}</h2> : <span />}
@@ -430,7 +430,7 @@ async function CustomForm({ data, ctx }: BlockProps) {
   if (!form) return null;
 
   return (
-    <div className={`${wrap} flex flex-col gap-6 py-16 md:py-20`}>
+    <div className={`${wrap} flex flex-col gap-6 py-12 md:py-20`}>
       {data.heading ? <h2 className={h2}>{data.heading}</h2> : null}
       {data.text ? <p className="max-w-xl text-lg text-muted">{data.text}</p> : null}
       <div className="max-w-2xl">
@@ -443,10 +443,10 @@ async function CustomForm({ data, ctx }: BlockProps) {
 function IconCard({ data, ctx }: BlockProps) {
   const art = data.svg_id ? ctx.svgs[data.svg_id] : null;
   return (
-    <div className={`${wrap} flex flex-col items-start gap-4 py-10`}>
-      {art ? <Svg asset={art} label={art.name} className="h-14 w-14" /> : null}
-      {data.heading ? <h3 className="text-xl font-semibold">{data.heading}</h3> : null}
-      {data.text ? <p className="leading-relaxed text-muted">{data.text}</p> : null}
+    <div className={`${wrap} flex flex-col items-start gap-3 py-6 md:gap-4 md:py-10`}>
+      {art ? <Svg asset={art} label={art.name} className="h-10 w-10 md:h-14 md:w-14" /> : null}
+      {data.heading ? <h3 className="text-lg font-semibold md:text-xl">{data.heading}</h3> : null}
+      {data.text ? <p className="text-[15px] leading-relaxed text-muted md:text-base">{data.text}</p> : null}
       {data.link?.label ? <Link href={data.link.href} className="font-medium text-primary">{data.link.label} →</Link> : null}
     </div>
   );
@@ -459,14 +459,14 @@ function ProcessSteps({ data }: BlockProps) {
   if (!items.length) return null;
   const mobileCols = STEP_COLS[Number(data.mobile_columns) === 2 ? 2 : 1];
   return (
-    <div className={`${wrap} flex flex-col gap-10 py-16 md:py-24`}>
+    <div className={`${wrap} flex flex-col gap-8 py-12 md:gap-10 md:py-24`}>
       {data.heading ? <h2 className={h2}>{data.heading}</h2> : null}
-      <div className={`grid gap-8 ${mobileCols} md:grid-cols-3`}>
+      <div className={`grid gap-6 md:gap-8 ${mobileCols} md:grid-cols-3`}>
         {items.map((it: any, i: number) => (
-          <div key={i} className="flex flex-col gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary text-lg font-bold text-white">{i + 1}</div>
-            <h3 className="text-lg font-semibold">{it.title}</h3>
-            {it.text ? <p className="leading-relaxed text-muted">{it.text}</p> : null}
+          <div key={i} className="flex flex-col gap-2.5 md:gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-base font-bold text-white md:h-11 md:w-11 md:text-lg">{i + 1}</div>
+            <h3 className="text-base font-semibold md:text-lg">{it.title}</h3>
+            {it.text ? <p className="text-[15px] leading-relaxed text-muted md:text-base">{it.text}</p> : null}
           </div>
         ))}
       </div>
@@ -479,7 +479,7 @@ function Checklist({ data }: BlockProps) {
   if (!items.length) return null;
   const mobileCols = STEP_COLS[Number(data.mobile_columns) === 2 ? 2 : 1];
   return (
-    <div className={`${wrap} flex flex-col gap-6 py-12 md:py-16`}>
+    <div className={`${wrap} flex flex-col gap-5 py-10 md:gap-6 md:py-16`}>
       {data.heading ? <h2 className={h2}>{data.heading}</h2> : null}
       <ul className={`grid max-w-xl gap-3 ${mobileCols} md:grid-cols-1`}>
         {items.map((it: any, i: number) => (
@@ -570,7 +570,7 @@ export function RenderSections({ sections, ctx }: { sections: Section[]; ctx: Bl
         if (group.length === 1 && !group[0].settings?.row_id) return renderOne(group[0], ctx);
         const cols = group[0].settings?.row_columns ?? Math.min(group.length, 4) as 1 | 2 | 3 | 4;
         return (
-          <div key={group[0].id ?? gi} className={`mx-auto w-full max-w-7xl grid grid-cols-1 ${ROW_COLS[cols]}`}>
+          <div key={group[0].id ?? gi} className={`mx-auto w-full max-w-7xl grid grid-cols-1 gap-x-8 gap-y-10 md:gap-y-8 ${ROW_COLS[cols]}`}>
             {group.map((s) => renderOne(s, ctx))}
           </div>
         );

@@ -127,6 +127,14 @@ export type FormSection = {
   fields: FormField[];
 };
 
+export interface SectionPreset {
+  id: string;
+  name: string;
+  category: string;
+  description: string | null;
+  blocks: { type: string; data?: Json; settings?: SectionSettings }[];
+}
+
 export interface CmsForm {
   id: string;
   name: string;

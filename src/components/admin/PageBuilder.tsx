@@ -5,15 +5,15 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { BLOCK_FIELDS } from "@/lib/block-fields";
 import { Spinner } from "./Spinner";
-import type { Page, Section, SvgAsset, CmsForm } from "@/lib/types";
+import type { Page, Section, SvgAsset, CmsForm, SectionPreset } from "@/lib/types";
 import { FieldEditor } from "./FieldEditor";
 
 type BlockType = { key: string; name: string; category: string; default_data: Record<string, any> };
-type Props = { page: Page; sections: Section[]; blockTypes: BlockType[]; svgs: SvgAsset[]; forms: CmsForm[] };
+type Props = { page: Page; sections: Section[]; blockTypes: BlockType[]; svgs: SvgAsset[]; forms: CmsForm[]; presets: SectionPreset[] };
 
 const DEVICES = { Desktop: "100%", Tablet: "820px", Mobile: "390px" } as const;
 
-export function PageBuilder({ page: initialPage, sections: initialSections, blockTypes, svgs, forms }: Props) {
+export function PageBuilder({ page: initialPage, sections: initialSections, blockTypes, svgs, forms, presets }: Props) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const [page, setPage] = useState(initialPage);
@@ -27,6 +27,7 @@ export function PageBuilder({ page: initialPage, sections: initialSections, bloc
   const [message, setMessage] = useState("");
   const [previewKey, setPreviewKey] = useState(0);
   const [adding, setAdding] = useState(false);
+  const [addTab, setAddTab] = useState<"blocks" | "presets">("presets");
 
   const current = sections.find((s) => s.id === selected);
   const nameOf = (key: string) => blockTypes.find((b) => b.key === key)?.name ?? key;
@@ -52,6 +53,25 @@ export function PageBuilder({ page: initialPage, sections: initialSections, bloc
     const idx = current ? sections.findIndex((x) => x.id === current.id) + 1 : sections.length;
     const n = [...sections]; n.splice(idx, 0, s);
     setSections(n); setSelected(s.id); setAdding(false); setTab("content"); setDirty(true);
+  };
+
+  const addPreset = (preset: SectionPreset) => {
+    // Give this insertion's row groups a unique suffix so using the same
+    // preset twice on one page never merges their row groups together.
+    const suffix = Date.now().toString(36);
+    const newSections: Section[] = preset.blocks.map((b) => {
+      const bt = blockTypes.find((x) => x.key === b.type);
+      const settings = { ...(b.settings ?? {}) };
+      if (settings.row_id) settings.row_id = `${settings.row_id}-${suffix}`;
+      return {
+        id: crypto.randomUUID(), page_id: page.id, block_type: b.type, position: 0,
+        data: { ...structuredClone(bt?.default_data ?? {}), ...structuredClone(b.data ?? {}) },
+        settings, is_visible: true,
+      };
+    });
+    const idx = current ? sections.findIndex((x) => x.id === current.id) + 1 : sections.length;
+    const n = [...sections]; n.splice(idx, 0, ...newSections);
+    setSections(n); setSelected(newSections[0]?.id ?? null); setAdding(false); setTab("content"); setDirty(true);
   };
 
   async function save(): Promise<boolean> {
@@ -145,14 +165,43 @@ export function PageBuilder({ page: initialPage, sections: initialSections, bloc
               </span>
             </div>
           ))}
-          <button className="btn mt-2 border-dashed" onClick={() => setAdding(!adding)}>+ Add block</button>
+          <button className="btn mt-2 border-dashed" onClick={() => setAdding(!adding)}>+ Add section</button>
           {adding ? (
-            <div className="grid grid-cols-2 gap-1.5">
-              {blockTypes.map((b) => (
-                <button key={b.key} className="rounded-lg border border-line p-2 text-left text-xs hover:border-primary" onClick={() => addBlock(b)}>
-                  <div className="font-medium">{b.name}</div><div className="text-muted">{b.category}</div>
-                </button>
-              ))}
+            <div className="flex flex-col gap-2">
+              <div className="flex rounded-lg bg-ground p-1">
+                <button className={`h-8 flex-1 rounded-md text-xs font-medium ${addTab === "presets" ? "bg-white shadow-sm" : "text-muted"}`} onClick={() => setAddTab("presets")}>Presets</button>
+                <button className={`h-8 flex-1 rounded-md text-xs font-medium ${addTab === "blocks" ? "bg-white shadow-sm" : "text-muted"}`} onClick={() => setAddTab("blocks")}>Blank blocks</button>
+              </div>
+              {addTab === "presets" ? (
+                presets.length ? (
+                  <div className="flex max-h-[60vh] flex-col gap-3 overflow-y-auto">
+                    {Object.entries(
+                      presets.reduce<Record<string, SectionPreset[]>>((acc, p) => {
+                        (acc[p.category] ??= []).push(p); return acc;
+                      }, {}),
+                    ).map(([category, items]) => (
+                      <div key={category} className="flex flex-col gap-1.5">
+                        <div className="px-1 text-[11px] font-semibold uppercase tracking-wide text-muted">{category}</div>
+                        {items.map((p) => (
+                          <button key={p.id} className="rounded-lg border border-line p-2.5 text-left hover:border-primary" onClick={() => addPreset(p)}>
+                            <div className="text-xs font-medium">{p.name}</div>
+                            {p.description ? <div className="text-[11px] text-muted">{p.description}</div> : null}
+                            {p.blocks.length > 1 ? <div className="mt-1 text-[10px] text-primary">{p.blocks.length} blocks, ready-grouped</div> : null}
+                          </button>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                ) : <p className="text-xs text-muted">No presets yet.</p>
+              ) : (
+                <div className="grid grid-cols-2 gap-1.5">
+                  {blockTypes.map((b) => (
+                    <button key={b.key} className="rounded-lg border border-line p-2 text-left text-xs hover:border-primary" onClick={() => addBlock(b)}>
+                      <div className="font-medium">{b.name}</div><div className="text-muted">{b.category}</div>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           ) : null}
         </section>
