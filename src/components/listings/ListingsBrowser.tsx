@@ -2,7 +2,8 @@ import { createMlsClient, type GridListing } from "@/lib/mls";
 import { ListingCard } from "@/components/listings/ListingCard";
 import { ListingsMap } from "@/components/listings/ListingsMap";
 import { Pagination } from "@/components/listings/Pagination";
-import { ViewToggle, PerPageControl } from "@/components/listings/ListingsControls";
+import { ViewToggle } from "@/components/listings/ViewToggle";
+import { PerPageControl } from "@/components/listings/PerPageControl";
 
 export type ListingsSearchParams = { city?: string; type?: string; beds?: string; page?: string; perPage?: string; perRow?: string; view?: string };
 
@@ -109,7 +110,7 @@ export async function ListingsBrowser({
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <ViewToggle view={view} hrefFor={(v) => hrefFor({ view: v })} />
-        {view !== "map" ? <PerPageControl perRow={perRow} perPage={perPage} hrefFor={(patch) => hrefFor(patch)} /> : null}
+        {view !== "map" ? <PerPageControl basePath={basePath} currentParams={sp as Record<string, string>} perRow={perRow} perPage={perPage} /> : null}
       </div>
 
       {view === "map" ? (

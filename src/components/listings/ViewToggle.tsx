@@ -1,5 +1,3 @@
-"use client";
-
 type View = "grid" | "split" | "map";
 
 export function ViewToggle({ view, hrefFor }: { view: View; hrefFor: (v: View) => string }) {
@@ -17,22 +15,6 @@ export function ViewToggle({ view, hrefFor }: { view: View; hrefFor: (v: View) =
           {o.label}
         </a>
       ))}
-    </div>
-  );
-}
-
-export function PerPageControl({ perRow, perPage, hrefFor }: { perRow: number; perPage: number; hrefFor: (patch: { perRow?: number; perPage?: number }) => string }) {
-  return (
-    <div className="flex items-center gap-2 text-sm text-muted">
-      <span>Show</span>
-      <select value={perRow} onChange={(e) => { window.location.href = hrefFor({ perRow: Number(e.target.value) }); }}
-        className="h-9 rounded-lg border border-line bg-white px-2 text-ink">
-        {[2, 3, 4].map((n) => <option key={n} value={n}>{n} per row</option>)}
-      </select>
-      <select value={perPage} onChange={(e) => { window.location.href = hrefFor({ perPage: Number(e.target.value) }); }}
-        className="h-9 rounded-lg border border-line bg-white px-2 text-ink">
-        {[8, 12, 24, 48].map((n) => <option key={n} value={n}>{n} per page</option>)}
-      </select>
     </div>
   );
 }
