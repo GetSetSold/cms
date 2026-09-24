@@ -1,12 +1,17 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "supabase-cms",
+  "name": "cms",
   "main": ".open-next/worker.js",
   "compatibility_date": "2026-09-01",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
-  "observability": { "enabled": true }
-  // Custom domain: add in the Cloudflare dashboard (Workers > supabase-cms > Settings > Domains)
+  "observability": { "enabled": true },
+  "vars": {
+    "NEXT_PUBLIC_SITE_URL": "https://cms.rohit-910.workers.dev",
+    "NEXT_PUBLIC_SUPABASE_URL": "https://pcgggfqndoaoddcrechr.supabase.co",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZ2dnZnFuZG9hb2RkY3JlY2hyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAxODIyOTQsImV4cCI6MjEwNTc1ODI5NH0.aaL23C2TC_bXSF9_k2B8QuiULFa7GfWI3Rg15JogpYA"
+  }
+  // Custom domain: add in the Cloudflare dashboard (Workers > cms > Settings > Domains)
   // or uncomment:
   // "routes": [{ "pattern": "www.yourdomain.com", "custom_domain": true }]
 }
