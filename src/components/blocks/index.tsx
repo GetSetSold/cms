@@ -40,6 +40,14 @@ function Hero({ data, ctx }: BlockProps) {
   );
   const copy = (
     <>
+      {data.layout === "centered" && data.centered_icon_svg_id && ctx.svgs[data.centered_icon_svg_id] ? (
+        <div
+          className="flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-white shadow-[0_8px_24px_rgba(20,20,43,0.12)]"
+          style={{ width: (Number(data.centered_icon_radius) || 64) * 2, height: (Number(data.centered_icon_radius) || 64) * 2, padding: (Number(data.centered_icon_radius) || 64) * 0.4 }}
+        >
+          <Svg asset={ctx.svgs[data.centered_icon_svg_id]} className="h-full w-full" />
+        </div>
+      ) : null}
       {data.eyebrow ? <div className={`text-xs uppercase tracking-[0.12em] md:text-[13px] ${dark ? "text-primary/80" : "text-muted"}`}>{data.eyebrow}</div> : null}
       {title}
       {data.subheading ? <p className={`max-w-xl text-[17px] leading-relaxed md:text-[19px] ${dark ? "text-ground/75" : "text-muted"}`}>{data.subheading}</p> : null}
@@ -87,16 +95,17 @@ function Hero({ data, ctx }: BlockProps) {
     );
   }
 
+  const imageOnLeft = data.image_side === "left";
   return (
     <div className={`${wrap} grid items-center gap-10 py-10 md:grid-cols-2 md:gap-16 md:py-20`}>
-      <div className="flex flex-col gap-6 md:gap-7">
+      <div className={`flex flex-col gap-6 md:gap-7 ${imageOnLeft ? "md:order-2" : ""}`}>
         {copy}
         <div className="flex flex-col gap-3 sm:flex-row"><Button link={data.primary_cta} /><Button link={data.secondary_cta} variant="outline" /></div>
       </div>
-      <div className="relative">
+      <div className={`relative ${imageOnLeft ? "md:order-1" : ""}`}>
         <Svg asset={art} label={art?.name} className="aspect-[600/520] overflow-hidden rounded-3xl" />
         {data.badge?.value ? (
-          <div className="absolute -bottom-4 left-4 flex w-64 flex-col gap-1 rounded-2xl bg-white p-5 shadow-[0_12px_40px_rgba(21,23,28,0.12)] md:-left-8 md:bottom-9">
+          <div className={`absolute -bottom-4 flex w-64 flex-col gap-1 rounded-2xl bg-white p-5 shadow-[0_12px_40px_rgba(21,23,28,0.12)] md:bottom-9 ${imageOnLeft ? "right-4 md:-right-8" : "left-4 md:-left-8"}`}>
             <div className="text-[13px] text-muted">{data.badge.label}</div>
             <div className="font-display font-bold text-4xl">{data.badge.value}</div>
           </div>
