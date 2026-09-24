@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
-import { createMlsClient, daysOnMarket, displayValue, isSale, mediaItems, priceDisplay, type GridListing, type PropertyListing } from "@/lib/mls";
+import { createMlsClient, daysOnMarket, displayValue, isSale, mediaItems, priceDisplay, resolveCitySlug, citySlug, type GridListing, type PropertyListing } from "@/lib/mls";
 import { getSettings } from "@/lib/cms";
 import { themeFontHref, themeVars } from "@/lib/theme";
 import { SiteHeader } from "@/components/site/SiteHeader";
@@ -15,19 +15,6 @@ async function getListing(key: string) {
   const mls = createMlsClient();
   const { data } = await mls.from("property").select("*").eq("ListingKey", key).maybeSingle();
   return data as PropertyListing | null;
-}
-
-const slugify = (s: string) => s.toLowerCase().trim().replace(/\s+/g, "-");
-
-/** /listings/[key] is reserved for actual listing keys. If someone lands here
- *  with a city name instead (e.g. /listings/cayuga), send them to the real
- *  city page at /city/[slug] rather than showing a dead end. */
-async function matchingCitySlug(key: string): Promise<string | null> {
-  const mls = createMlsClient();
-  const { data } = await mls.from("grid").select("City").not("City", "is", null).limit(2000);
-  const cities = [...new Set((data ?? []).map((r) => r.City as string))];
-  const match = cities.find((c) => slugify(c) === key.toLowerCase());
-  return match ? slugify(match) : null;
 }
 
 async function getSimilar(listing: PropertyListing) {
@@ -68,8 +55,8 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
   const { key } = await params;
   const listing = await getListing(decodeURIComponent(key));
   if (!listing) {
-    const citySlug = await matchingCitySlug(decodeURIComponent(key));
-    if (citySlug) redirect(`/city/${citySlug}`);
+    const city = await resolveCitySlug(decodeURIComponent(key));
+    if (city) redirect(`/listings/city/${citySlug(city)}`);
     notFound();
   }
 

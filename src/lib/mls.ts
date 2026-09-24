@@ -50,6 +50,19 @@ export interface PropertyListing extends Omit<GridListing, "Media"> {
 
 export const isSale = (l: Pick<GridListing, "ListPrice">) => l.ListPrice != null;
 
+export function citySlug(city: string) {
+  return city.toLowerCase().trim().replace(/\s+/g, "-");
+}
+
+/** DDF City values are free text, not a fixed list — resolve a URL slug back
+ *  to the exact-cased city string the database actually stores. */
+export async function resolveCitySlug(slug: string): Promise<string | null> {
+  const mls = createMlsClient();
+  const { data } = await mls.from("grid").select("City").not("City", "is", null).limit(2000);
+  const cities = [...new Set((data ?? []).map((r) => r.City as string))];
+  return cities.find((c) => citySlug(c) === slug.toLowerCase()) ?? null;
+}
+
 export function priceDisplay(l: Pick<GridListing, "ListPrice" | "TotalActualRent">) {
   if (isSale(l)) return l.ListPrice ? `$${Number(l.ListPrice).toLocaleString("en-CA")}` : "Price on request";
   if (l.TotalActualRent) return `$${Number(l.TotalActualRent).toLocaleString("en-CA")}/mo`;
