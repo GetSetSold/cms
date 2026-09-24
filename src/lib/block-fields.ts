@@ -94,6 +94,8 @@ export const BLOCK_FIELDS: Record<string, Field[]> = {
     t("heading", "Title"),
     ta("text", "Content"),
     { key: "link", label: "Link (optional)", type: "link" },
+    { key: "box", label: "Show background box", type: "boolean" },
+    { key: "box_bg", label: "Box background color (default: theme soft)", type: "color" },
   ],
   process_steps: [
     t("heading", "Heading"),

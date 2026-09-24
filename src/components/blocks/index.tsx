@@ -442,8 +442,12 @@ async function CustomForm({ data, ctx }: BlockProps) {
 
 function IconCard({ data, ctx }: BlockProps) {
   const art = data.svg_id ? ctx.svgs[data.svg_id] : null;
+  const boxed = !!data.box;
   return (
-    <div className={`${wrap} flex flex-col items-start gap-3 py-6 md:gap-4 md:py-10`}>
+    <div
+      className={`${wrap} flex h-full flex-col items-start gap-3 md:gap-4 ${boxed ? "rounded-2xl p-6 md:p-7" : "py-6 md:py-10"}`}
+      style={boxed ? { background: data.box_bg || "var(--c-soft)" } : undefined}
+    >
       {art ? <Svg asset={art} label={art.name} className="h-10 w-10 md:h-14 md:w-14" /> : null}
       {data.heading ? <h3 className="text-lg font-semibold md:text-xl">{data.heading}</h3> : null}
       {data.text ? <p className="text-[15px] leading-relaxed text-muted md:text-base">{data.text}</p> : null}
