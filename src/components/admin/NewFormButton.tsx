@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { CONTACT_BLOCK_FIELDS } from "@/lib/types";
 
 const slugify = (s: string) => s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 
@@ -16,11 +17,7 @@ export function NewFormButton() {
     const supabase = createClient();
     const { data, error } = await supabase.from("forms").insert({
       name, slug: `${slugify(name)}-${Date.now().toString(36)}`, form_key: "form",
-      fields: [
-        { key: "name", label: "Name", type: "text", required: true },
-        { key: "email", label: "Email", type: "email", required: true },
-        { key: "phone", label: "Phone", type: "tel", required: false },
-      ],
+      sections: [{ id: "contact", columns: 2, fields: CONTACT_BLOCK_FIELDS.map((f) => ({ ...f })) }],
     }).select("id").single();
     setBusy(false);
     if (error) return setError(error.message);

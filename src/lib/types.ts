@@ -78,11 +78,26 @@ export interface Lead {
 
 export const LEAD_STATUSES: LeadStatus[] = ["new", "contacted", "qualified", "proposal", "won", "lost"];
 
+export type FormFieldType =
+  | "text" | "email" | "tel" | "url" | "textarea" | "number" | "decimal" | "currency" | "date"
+  | "dropdown" | "radio" | "checkbox" | "multiple_choice" | "address" | "subform";
+
 export type FormField = {
-  key: string; label: string;
-  type: "text" | "email" | "tel" | "textarea" | "select" | "checkbox";
+  key: string; label: string; type: FormFieldType;
   required?: boolean;
-  options?: string[]; // for "select"
+  options?: string[]; // dropdown / radio / multiple_choice
+  span?: 1 | 2;        // force full width in a 2-column section
+  // subform only: a repeatable group of its own fields
+  subfields?: FormField[];
+  repeat_label?: string; // e.g. "Add another applicant"
+  max?: number;           // max repeats, default unlimited
+};
+
+export type FormSection = {
+  id: string;
+  heading?: string;
+  columns: 1 | 2; // desktop only — mobile is always single column
+  fields: FormField[];
 };
 
 export interface CmsForm {
@@ -90,10 +105,20 @@ export interface CmsForm {
   name: string;
   slug: string;
   description: string | null;
-  fields: FormField[];
+  sections: FormSection[];
   embed_html: string | null;
   submit_label: string;
   success_message: string;
   form_key: string;
   is_active: boolean;
 }
+
+/** A one-click starting block for every new form: First name, Last name, Email, Phone —
+ *  matches what the lead pipeline expects (name/email/phone), so submissions from any
+ *  form land in Leads consistently regardless of what else the form asks. */
+export const CONTACT_BLOCK_FIELDS: FormField[] = [
+  { key: "first_name", label: "First name", type: "text", required: true, span: 1 },
+  { key: "last_name", label: "Last name", type: "text", required: true, span: 1 },
+  { key: "email", label: "Email", type: "email", required: true, span: 1 },
+  { key: "phone", label: "Phone", type: "tel", required: false, span: 1 },
+];
