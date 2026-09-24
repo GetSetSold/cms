@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { createMlsClient, daysOnMarket, displayValue, isSale, mediaItems, priceDisplay, type GridListing, type PropertyListing } from "@/lib/mls";
 import { getSettings } from "@/lib/cms";
 import { themeFontHref, themeVars } from "@/lib/theme";
@@ -15,6 +15,19 @@ async function getListing(key: string) {
   const mls = createMlsClient();
   const { data } = await mls.from("property").select("*").eq("ListingKey", key).maybeSingle();
   return data as PropertyListing | null;
+}
+
+const slugify = (s: string) => s.toLowerCase().trim().replace(/\s+/g, "-");
+
+/** /listings/[key] is reserved for actual listing keys. If someone lands here
+ *  with a city name instead (e.g. /listings/cayuga), send them to the real
+ *  city page at /city/[slug] rather than showing a dead end. */
+async function matchingCitySlug(key: string): Promise<string | null> {
+  const mls = createMlsClient();
+  const { data } = await mls.from("grid").select("City").not("City", "is", null).limit(2000);
+  const cities = [...new Set((data ?? []).map((r) => r.City as string))];
+  const match = cities.find((c) => slugify(c) === key.toLowerCase());
+  return match ? slugify(match) : null;
 }
 
 async function getSimilar(listing: PropertyListing) {
@@ -54,7 +67,11 @@ const stat = (value: unknown, label: string) => {
 export default async function ListingDetailPage({ params }: { params: Promise<{ key: string }> }) {
   const { key } = await params;
   const listing = await getListing(decodeURIComponent(key));
-  if (!listing) notFound();
+  if (!listing) {
+    const citySlug = await matchingCitySlug(decodeURIComponent(key));
+    if (citySlug) redirect(`/city/${citySlug}`);
+    notFound();
+  }
 
   const [settings, similar] = await Promise.all([getSettings(), getSimilar(listing)]);
   const photos = mediaItems(listing.Media);
