@@ -93,10 +93,15 @@ export const BLOCK_FIELDS: Record<string, Field[]> = {
   ],
   process_steps: [
     t("heading", "Heading"),
+    { key: "mobile_columns", label: "Columns on mobile", type: "select", options: ["1", "2"] },
     { key: "items", label: "Steps", type: "list", itemLabel: "Step", fields: [t("title", "Title"), ta("text", "Description")] },
   ],
   checklist: [
     t("heading", "Heading (optional)"),
+    { key: "mobile_columns", label: "Columns on mobile", type: "select", options: ["1", "2"] },
     { key: "items", label: "Items", type: "list", itemLabel: "Item", fields: [t("text", "Text")] },
+  ],
+  spacer: [
+    t("height", "Height (px)"),
   ],
 };

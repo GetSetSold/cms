@@ -438,13 +438,16 @@ function IconCard({ data, ctx }: BlockProps) {
   );
 }
 
+const STEP_COLS: Record<number, string> = { 1: "grid-cols-1", 2: "grid-cols-2" };
+
 function ProcessSteps({ data }: BlockProps) {
   const items = data.items ?? [];
   if (!items.length) return null;
+  const mobileCols = STEP_COLS[Number(data.mobile_columns) === 2 ? 2 : 1];
   return (
     <div className={`${wrap} flex flex-col gap-10 py-16 md:py-24`}>
       {data.heading ? <h2 className={h2}>{data.heading}</h2> : null}
-      <div className="grid gap-8 md:grid-cols-3">
+      <div className={`grid gap-8 ${mobileCols} md:grid-cols-3`}>
         {items.map((it: any, i: number) => (
           <div key={i} className="flex flex-col gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary text-lg font-bold text-white">{i + 1}</div>
@@ -460,10 +463,11 @@ function ProcessSteps({ data }: BlockProps) {
 function Checklist({ data }: BlockProps) {
   const items = data.items ?? [];
   if (!items.length) return null;
+  const mobileCols = STEP_COLS[Number(data.mobile_columns) === 2 ? 2 : 1];
   return (
     <div className={`${wrap} flex flex-col gap-6 py-12 md:py-16`}>
       {data.heading ? <h2 className={h2}>{data.heading}</h2> : null}
-      <ul className="flex max-w-xl flex-col gap-3">
+      <ul className={`grid max-w-xl gap-3 ${mobileCols} md:grid-cols-1`}>
         {items.map((it: any, i: number) => (
           <li key={i} className="flex items-start gap-3">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="mt-0.5 shrink-0" aria-hidden="true">
@@ -476,6 +480,11 @@ function Checklist({ data }: BlockProps) {
       </ul>
     </div>
   );
+}
+
+function Spacer({ data }: BlockProps) {
+  const h = Number(data.height) || 40;
+  return <div style={{ height: h }} aria-hidden="true" />;
 }
 
 /* ------------------------------------------------------------------ */
@@ -501,6 +510,7 @@ export const BLOCKS: Record<string, (p: BlockProps) => React.ReactNode> = {
   icon_card: IconCard,
   process_steps: ProcessSteps,
   checklist: Checklist,
+  spacer: Spacer,
 };
 
 const BG: Record<string, string> = {
@@ -544,7 +554,7 @@ export function RenderSections({ sections, ctx }: { sections: Section[]; ctx: Bl
         if (group.length === 1 && !group[0].settings?.row_id) return renderOne(group[0], ctx);
         const cols = group[0].settings?.row_columns ?? Math.min(group.length, 4) as 1 | 2 | 3 | 4;
         return (
-          <div key={group[0].id ?? gi} className={`grid grid-cols-1 ${ROW_COLS[cols]}`}>
+          <div key={group[0].id ?? gi} className={`mx-auto w-full max-w-7xl grid grid-cols-1 ${ROW_COLS[cols]}`}>
             {group.map((s) => renderOne(s, ctx))}
           </div>
         );
