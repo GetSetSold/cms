@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import type { SiteSettings, SvgAsset } from "@/lib/types";
 import { FONT_OPTIONS } from "@/lib/theme";
 import { SvgPicker } from "./SvgPicker";
-import { NavItemEditor, FooterColumnsEditor } from "./NavEditors";
+import { NavItemEditor, FooterRowsEditor } from "./NavEditors";
 import { ColorField } from "./ColorField";
 
 export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: SvgAsset[] }) {
@@ -125,15 +125,15 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
         <div className="grid grid-cols-3 gap-3 rounded-lg border border-line p-3">
           <ColorField label="Footer background" value={s.footer?.bg} fallback="#14142B" onChange={(v) => set("footer", { ...s.footer, bg: v })} onReset={() => set("footer", { ...s.footer, bg: undefined })} />
           <ColorField label="Footer text color" value={s.footer?.text} fallback="#FFFFFF" onChange={(v) => set("footer", { ...s.footer, text: v })} onReset={() => set("footer", { ...s.footer, text: undefined })} />
-          <label className="label">Columns per row
+          <label className="label">Max columns per row
             <select className="input" value={s.footer?.columns_per_row ?? 4} onChange={(e) => set("footer", { ...s.footer, columns_per_row: Number(e.target.value) as 3 | 4 })}>
               <option value={3}>3</option>
               <option value={4}>4</option>
             </select>
           </label>
         </div>
-        <div className="label">Footer columns
-          <FooterColumnsEditor columns={s.footer?.columns ?? []} onChange={(cols) => set("footer", { ...s.footer, columns: cols })} />
+        <div className="label">Footer rows
+          <FooterRowsEditor rows={s.footer?.rows ?? []} maxPerRow={s.footer?.columns_per_row ?? 4} onChange={(rows) => set("footer", { ...s.footer, rows })} />
         </div>
       </section>
 
@@ -148,7 +148,8 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
             </select>
           </label>
           <label className="label">Button size
-            <select className="input w-32" value={s.mobile_cta?.size ?? "md"} onChange={(e) => set("mobile_cta", { ...s.mobile_cta, size: e.target.value as "sm" | "md" | "lg" })}>
+            <select className="input w-32" value={s.mobile_cta?.size ?? "md"} onChange={(e) => set("mobile_cta", { ...s.mobile_cta, size: e.target.value as "xs" | "sm" | "md" | "lg" })}>
+              <option value="xs">X-Small</option>
               <option value="sm">Small</option>
               <option value="md">Medium</option>
               <option value="lg">Large</option>

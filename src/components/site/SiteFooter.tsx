@@ -1,38 +1,52 @@
 import Link from "next/link";
 import type { MobileCtaButton, MobileCtaIcon, SiteSettings } from "@/lib/types";
 
+const ROW_COLS: Record<number, string> = { 1: "md:grid-cols-1", 2: "md:grid-cols-2", 3: "md:grid-cols-3", 4: "md:grid-cols-4" };
+
 export function SiteFooter({ settings }: { settings: SiteSettings }) {
   const c = settings.contact ?? {};
-  const f = settings.footer ?? { columns: [] };
-  const columns = f.columns ?? [];
-  const perRow = f.columns_per_row ?? 4;
+  const f = settings.footer ?? { rows: [] };
+  const rows = f.rows ?? [];
+  const [firstRow, ...restRows] = rows;
 
   return (
     <footer style={{ background: f.bg || undefined, color: f.text || undefined }}>
-      <div
-        className={`mx-auto grid max-w-7xl grid-cols-2 gap-8 px-5 pb-28 pt-16 text-[15px] md:px-10 md:pb-12 md:[grid-template-columns:1.4fr_repeat(${perRow},1fr)]`}
-      >
-        <div className="col-span-2 flex flex-col gap-3 md:col-span-1">
-          <div className="font-display text-3xl">{settings.site_name}</div>
-          {f.tagline ? <p className="opacity-75">{f.tagline}</p> : null}
-          {c.address ? <p className="opacity-75">{c.address}</p> : null}
-          <div className="mt-1 flex flex-col gap-1.5">
-            {c.phone ? <a href={`tel:${c.phone}`} className="opacity-75 hover:opacity-100">{c.phone}</a> : null}
-            {c.email ? <a href={`mailto:${c.email}`} className="opacity-75 hover:opacity-100">{c.email}</a> : null}
-            {c.hours ? <span className="opacity-75">{c.hours}</span> : null}
+      <div className="mx-auto flex max-w-7xl flex-col gap-10 px-5 pb-28 pt-16 text-[15px] md:px-10 md:pb-12">
+        {/* Row 1: brand block (wider) + this row's columns */}
+        <div className={`grid grid-cols-2 gap-8 md:[grid-template-columns:1.4fr_repeat(${firstRow?.length || 1},1fr)]`}>
+          <div className="col-span-2 flex flex-col gap-3 md:col-span-1">
+            <div className="font-display text-3xl">{settings.site_name}</div>
+            {f.tagline ? <p className="opacity-75">{f.tagline}</p> : null}
+            {c.address ? <p className="opacity-75">{c.address}</p> : null}
+            <div className="mt-1 flex flex-col gap-1.5">
+              {c.phone ? <a href={`tel:${c.phone}`} className="opacity-75 hover:opacity-100">{c.phone}</a> : null}
+              {c.email ? <a href={`mailto:${c.email}`} className="opacity-75 hover:opacity-100">{c.email}</a> : null}
+              {c.hours ? <span className="opacity-75">{c.hours}</span> : null}
+            </div>
           </div>
+          {(firstRow ?? []).map((col, i) => (
+            <div key={i} className="flex flex-col gap-2.5">
+              {col.heading ? <strong>{col.heading}</strong> : null}
+              {col.links.map((l) => <Link key={l.href} href={l.href} className="opacity-75 hover:opacity-100">{l.label}</Link>)}
+            </div>
+          ))}
         </div>
 
-        {columns.map((col, i) => (
-          <div key={i} className="flex flex-col gap-2.5">
-            {col.heading ? <strong>{col.heading}</strong> : null}
-            {col.links.map((l) => (
-              <Link key={l.href} href={l.href} className="opacity-75 hover:opacity-100">{l.label}</Link>
+        {/* Additional rows: full-width, clean grid of their own — never shares
+            a track with the brand block, so column count changes never
+            distort neighbouring content the way one shared grid did. */}
+        {restRows.map((row, ri) => (
+          <div key={ri} className={`grid grid-cols-1 gap-8 ${ROW_COLS[Math.min(row.length, 4) as 1 | 2 | 3 | 4]}`}>
+            {row.map((col, i) => (
+              <div key={i} className="flex flex-col gap-2.5">
+                {col.heading ? <strong>{col.heading}</strong> : null}
+                {col.links.map((l) => <Link key={l.href} href={l.href} className="opacity-75 hover:opacity-100">{l.label}</Link>)}
+              </div>
             ))}
           </div>
         ))}
 
-        <div className="col-span-2 flex flex-col gap-2.5 border-t pt-6 text-sm opacity-75 md:col-span-1 md:border-0 md:pt-0" style={{ borderColor: f.text ? `${f.text}33` : undefined }}>
+        <div className="flex flex-col gap-2.5 border-t pt-6 text-sm opacity-75" style={{ borderColor: f.text ? `${f.text}33` : undefined }}>
           <span>© {new Date().getFullYear()} {settings.site_name}</span>
           <Link href="/login" className="hover:opacity-100">Staff login</Link>
         </div>
@@ -57,6 +71,7 @@ function ctaHref(btn: MobileCtaButton, phone?: string) {
 }
 
 const SIZE = {
+  xs: { rect: "h-8 text-[11px]", sq: "h-12 text-[10px]", icon: 13, iconSq: 15 },
   sm: { rect: "h-10 text-[13px]", sq: "h-14 text-[11px]", icon: 15, iconSq: 17 },
   md: { rect: "h-12 text-sm", sq: "h-16 text-xs", icon: 17, iconSq: 20 },
   lg: { rect: "h-14 text-base", sq: "h-20 text-sm", icon: 19, iconSq: 24 },

@@ -426,6 +426,58 @@ async function CustomForm({ data, ctx }: BlockProps) {
   );
 }
 
+function IconCard({ data, ctx }: BlockProps) {
+  const art = data.svg_id ? ctx.svgs[data.svg_id] : null;
+  return (
+    <div className={`${wrap} flex flex-col items-start gap-4 py-10`}>
+      {art ? <Svg asset={art} label={art.name} className="h-14 w-14" /> : null}
+      {data.heading ? <h3 className="text-xl font-semibold">{data.heading}</h3> : null}
+      {data.text ? <p className="leading-relaxed text-muted">{data.text}</p> : null}
+      {data.link?.label ? <Link href={data.link.href} className="font-medium text-primary">{data.link.label} →</Link> : null}
+    </div>
+  );
+}
+
+function ProcessSteps({ data }: BlockProps) {
+  const items = data.items ?? [];
+  if (!items.length) return null;
+  return (
+    <div className={`${wrap} flex flex-col gap-10 py-16 md:py-24`}>
+      {data.heading ? <h2 className={h2}>{data.heading}</h2> : null}
+      <div className="grid gap-8 md:grid-cols-3">
+        {items.map((it: any, i: number) => (
+          <div key={i} className="flex flex-col gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary text-lg font-bold text-white">{i + 1}</div>
+            <h3 className="text-lg font-semibold">{it.title}</h3>
+            {it.text ? <p className="leading-relaxed text-muted">{it.text}</p> : null}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function Checklist({ data }: BlockProps) {
+  const items = data.items ?? [];
+  if (!items.length) return null;
+  return (
+    <div className={`${wrap} flex flex-col gap-6 py-12 md:py-16`}>
+      {data.heading ? <h2 className={h2}>{data.heading}</h2> : null}
+      <ul className="flex max-w-xl flex-col gap-3">
+        {items.map((it: any, i: number) => (
+          <li key={i} className="flex items-start gap-3">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="mt-0.5 shrink-0" aria-hidden="true">
+              <circle cx="12" cy="12" r="11" className="fill-primary" />
+              <path d="m7.5 12.5 3 3 6-6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <span className="text-[15px] leading-relaxed">{it.text}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 /* ------------------------------------------------------------------ */
 export const BLOCKS: Record<string, (p: BlockProps) => React.ReactNode> = {
   hero: Hero,
@@ -446,6 +498,9 @@ export const BLOCKS: Record<string, (p: BlockProps) => React.ReactNode> = {
   service_areas: ServiceAreas,
   listing_grid: ListingGrid,
   custom_form: CustomForm,
+  icon_card: IconCard,
+  process_steps: ProcessSteps,
+  checklist: Checklist,
 };
 
 const BG: Record<string, string> = {

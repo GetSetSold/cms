@@ -85,4 +85,18 @@ export const BLOCK_FIELDS: Record<string, Field[]> = {
     t("heading", "Heading"),
     ta("text", "Intro text"),
   ],
+  icon_card: [
+    { key: "svg_id", label: "Icon", type: "svg" },
+    t("heading", "Title"),
+    ta("text", "Content"),
+    { key: "link", label: "Link (optional)", type: "link" },
+  ],
+  process_steps: [
+    t("heading", "Heading"),
+    { key: "items", label: "Steps", type: "list", itemLabel: "Step", fields: [t("title", "Title"), ta("text", "Description")] },
+  ],
+  checklist: [
+    t("heading", "Heading (optional)"),
+    { key: "items", label: "Items", type: "list", itemLabel: "Item", fields: [t("text", "Text")] },
+  ],
 };

@@ -55,15 +55,32 @@ export function NavItemEditor({ item, onChange, onRemove, onMoveUp, canMoveUp }:
   );
 }
 
-export function FooterColumnsEditor({ columns, onChange }: { columns: NavColumn[]; onChange: (c: NavColumn[]) => void }) {
-  const setColumn = (i: number, c: NavColumn) => onChange(columns.map((x, j) => (j === i ? c : x)));
+export function FooterRowsEditor({ rows, maxPerRow, onChange }: { rows: NavColumn[][]; maxPerRow: number; onChange: (r: NavColumn[][]) => void }) {
+  const setRow = (ri: number, row: NavColumn[]) => onChange(rows.map((r, i) => (i === ri ? row : r)));
+  const setColumn = (ri: number, ci: number, c: NavColumn) => setRow(ri, rows[ri].map((x, j) => (j === ci ? c : x)));
+
   return (
-    <div className="flex flex-col gap-3">
-      {columns.map((col, i) => (
-        <ColumnEditor key={i} column={col} onChange={(c) => setColumn(i, c)} onRemove={() => onChange(columns.filter((_, j) => j !== i))} />
+    <div className="flex flex-col gap-4">
+      {rows.map((row, ri) => (
+        <div key={ri} className="flex flex-col gap-2 rounded-xl bg-ground p-3">
+          <div className="flex items-center justify-between px-1">
+            <strong className="text-xs uppercase tracking-wide text-muted">Row {ri + 1} · {row.length}/{maxPerRow} columns</strong>
+            <button type="button" className="text-sm text-red-700" onClick={() => onChange(rows.filter((_, i) => i !== ri))}>Remove row</button>
+          </div>
+          {row.map((col, ci) => (
+            <ColumnEditor key={ci} column={col} onChange={(c) => setColumn(ri, ci, c)} onRemove={() => setRow(ri, row.filter((_, j) => j !== ci))} />
+          ))}
+          {row.length < maxPerRow ? (
+            <button type="button" className="btn self-start border-dashed" onClick={() => setRow(ri, [...row, { heading: "", links: [{ label: "", href: "" }] }])}>
+              + Add column to this row
+            </button>
+          ) : (
+            <p className="px-1 text-xs text-muted">This row is full ({maxPerRow} columns) — add another row for more.</p>
+          )}
+        </div>
       ))}
-      <button type="button" className="btn self-start border-dashed" onClick={() => onChange([...columns, { heading: "", links: [{ label: "", href: "" }] }])}>
-        + Add footer column
+      <button type="button" className="btn self-start border-dashed" onClick={() => onChange([...rows, [{ heading: "", links: [{ label: "", href: "" }] }]])}>
+        + Add row
       </button>
     </div>
   );
