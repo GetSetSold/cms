@@ -497,8 +497,10 @@ function Checklist({ data }: BlockProps) {
 }
 
 function Spacer({ data }: BlockProps) {
-  const h = Number(data.height) || 40;
-  return <div style={{ height: h }} aria-hidden="true" />;
+  const h = Number(data.height) || 0;
+  // height:0 + signed margin-top: positive pushes the next section down (adds
+  // space), negative pulls it up (reduces space) — same field either way.
+  return <div style={{ height: 0, marginTop: h }} aria-hidden="true" />;
 }
 
 /* ------------------------------------------------------------------ */

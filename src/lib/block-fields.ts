@@ -106,6 +106,6 @@ export const BLOCK_FIELDS: Record<string, Field[]> = {
     { key: "items", label: "Items", type: "list", itemLabel: "Item", fields: [t("text", "Text")] },
   ],
   spacer: [
-    t("height", "Height (px)"),
+    t("height", "Space (px) — positive adds space, negative reduces it (e.g. -50)"),
   ],
 };
