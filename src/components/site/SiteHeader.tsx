@@ -26,7 +26,7 @@ export function SiteHeader({ settings, logo }: { settings: SiteSettings; logo?: 
   return (
     <header className="sticky top-0 z-40 border-b border-line backdrop-blur" style={{ background: h.bg || "var(--c-ground, #fff)", color: h.text || undefined }}>
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 md:h-20 md:px-10">
-        <Link href="/" className="flex items-center gap-2.5" aria-label={`${settings.site_name} home`}>
+        <Link href="/" className="flex items-center" style={{ gap: h.logo_gap ?? 10 }} aria-label={`${settings.site_name} home`}>
           {logo ? <Svg asset={logo} className={`${showLogoMobile ? "" : "hidden"} ${showLogoDesktop ? "md:block" : "md:hidden"}`} style={{ width: h.logo_size ?? 32, height: h.logo_size ?? 32 }} /> : null}
           {(showNameMobile || showNameDesktop) ? (
             <span className="flex flex-col leading-tight">

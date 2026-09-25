@@ -87,7 +87,7 @@ export function MobileCtaBar({ settings }: { settings: SiteSettings }) {
   const cols = buttons.length === 3 ? "grid-cols-3" : "grid-cols-2";
 
   return (
-    <div className={`fixed inset-x-0 bottom-0 z-40 grid ${cols} gap-2.5 border-t border-line bg-white p-3 pb-[max(12px,env(safe-area-inset-bottom))] md:hidden`}>
+    <div className={`fixed inset-x-0 bottom-0 z-40 grid ${cols} gap-2 border-t border-line bg-white/95 px-2 pb-[max(8px,env(safe-area-inset-bottom))] pt-2 shadow-[0_-4px_16px_rgba(20,20,43,0.06)] backdrop-blur md:hidden`}>
       {buttons.map((btn, i) => {
         const filled = i === buttons.length - 1;
         const cls = square

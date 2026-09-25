@@ -61,6 +61,7 @@ export interface SiteSettings {
     show_logo_mobile?: boolean; show_logo_desktop?: boolean;
     show_name_mobile?: boolean; show_name_desktop?: boolean;
     logo_size?: number;      // px, applies to both breakpoints
+    logo_gap?: number;       // px, space between logo and site name/subline
     name_size_mobile?: number;  // px
     name_size_desktop?: number; // px
     name_weight?: "normal" | "bold";
