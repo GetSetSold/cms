@@ -445,7 +445,9 @@ function IconCard({ data, ctx }: BlockProps) {
   const boxed = !!data.box;
   return (
     <div
-      className={`${wrap} flex h-full flex-col items-start gap-3 md:gap-4 ${boxed ? "rounded-2xl p-6 md:p-7" : "py-6 md:py-10"}`}
+      className={boxed
+        ? "flex h-full w-full flex-col items-start gap-3 rounded-2xl p-6 md:gap-4 md:p-7"
+        : "flex h-full w-full flex-col items-start gap-3 py-6 md:gap-4 md:py-10"}
       style={boxed ? { background: data.box_bg || "var(--c-soft)" } : undefined}
     >
       {art ? <Svg asset={art} label={art.name} className="h-10 w-10 md:h-14 md:w-14" /> : null}
@@ -587,7 +589,7 @@ export function RenderSections({ sections, ctx }: { sections: Section[]; ctx: Bl
         if (group.length === 1 && !group[0].settings?.row_id) return renderOne(group[0], ctx);
         const cols = group[0].settings?.row_columns ?? Math.min(group.length, 4) as 1 | 2 | 3 | 4;
         return (
-          <div key={group[0].id ?? gi} className={`mx-auto w-full max-w-7xl grid grid-cols-1 gap-x-8 gap-y-10 md:gap-y-8 ${ROW_COLS[cols]}`}>
+          <div key={group[0].id ?? gi} className={`mx-auto w-full max-w-7xl grid grid-cols-1 gap-x-8 gap-y-10 px-5 md:gap-y-8 md:px-10 ${ROW_COLS[cols]}`}>
             {group.map((s) => renderOne(s, ctx))}
           </div>
         );
