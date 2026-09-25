@@ -29,6 +29,48 @@ function TagsInput({ value, onChange }: { value: string[]; onChange: (t: string[
   );
 }
 
+function GenerateQaCard({ content, onGenerated }: { content: string; onGenerated: (items: { q: string; a: string }[]) => void }) {
+  const [provider, setProvider] = useState<"groq" | "museai">("groq");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [done, setDone] = useState(false);
+
+  async function generate() {
+    if (!content.trim()) { setError("Write something in the post first — there's nothing to generate from yet."); return; }
+    setBusy(true); setError(""); setDone(false);
+    try {
+      const res = await fetch("/api/generate-qa", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content, provider }),
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error || "Something went wrong.");
+      onGenerated(body.items);
+      setDone(true);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="card flex flex-col gap-3">
+      <h2 className="text-lg font-semibold">Generate Q&amp;A</h2>
+      <p className="text-sm text-muted">Drafts Q&amp;A pairs from what you've written above, added as a new Q&amp;A block you can edit or remove below — nothing is published automatically.</p>
+      <div className="flex items-center gap-2">
+        <select className="input w-40" value={provider} onChange={(e) => setProvider(e.target.value as "groq" | "museai")}>
+          <option value="groq">Groq</option>
+          <option value="museai">muse.ai</option>
+        </select>
+        <button className="btn-primary" onClick={generate} disabled={busy}>{busy ? <><Spinner /> Generating…</> : "Generate Q&A"}</button>
+        {done ? <span className="text-sm text-muted">Added below — review and edit before publishing.</span> : null}
+      </div>
+      {error ? <p className="text-sm text-red-700">{error}</p> : null}
+    </div>
+  );
+}
+
 export function PostEditor({
   initial, categories, blockTypes, svgs, forms, authors,
 }: { initial: BlogPost; categories: { id: string; name: string; slug: string }[]; blockTypes: BlockType[]; svgs: SvgAsset[]; forms: CmsForm[]; authors: BlogAuthor[] }) {
@@ -142,6 +184,8 @@ export function PostEditor({
             <h2 className="mb-3 text-lg font-semibold">Writing area</h2>
             <MarkdownEditor value={post.content_md} onChange={(v) => set("content_md", v)} />
           </div>
+
+          <GenerateQaCard content={post.content_md} onGenerated={(items) => set("blocks_after", [...post.blocks_after, { type: "qa_block", data: { heading: "Common questions", items }, settings: {} }])} />
 
           <div className="card">
             <BlockListEditor label="Blocks after the writing area" blocks={post.blocks_after} blockTypes={blockTypes} svgs={svgs} forms={forms} onChange={(b) => set("blocks_after", b)} />
