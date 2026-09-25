@@ -8,7 +8,12 @@ import { CmsFormRenderer } from "./CmsFormRenderer";
 import { createClient } from "@/lib/supabase/server";
 import type { CmsForm } from "@/lib/types";
 
-export type BlockCtx = { svgs: Record<string, SvgAsset>; settings: SiteSettings; page?: Page };
+export type BlockCtx = { svgs: Record<string, SvgAsset>; settings: SiteSettings; page?: Page; dark?: boolean };
+
+/** Text tone that auto-adjusts to the section's background — use instead of
+ *  a hardcoded text-muted/text-ink so copy stays readable on dark sections. */
+const muted = (ctx: BlockCtx) => (ctx.dark ? "text-ground/75" : "text-muted");
+const heading = (ctx: BlockCtx) => (ctx.dark ? "text-ground" : "text-ink");
 type BlockProps = { data: any; ctx: BlockCtx };
 
 const wrap = "mx-auto w-full max-w-7xl px-5 md:px-10";
@@ -16,11 +21,11 @@ const h2 = "font-display font-bold tracking-tight text-[40px] leading-none md:te
 const paragraphs = (text?: string) =>
   (text ?? "").split(/\n{2,}/).filter(Boolean).map((p, i) => <p key={i}>{p}</p>);
 
-function Button({ link, variant = "primary" }: { link?: { label?: string; href?: string }; variant?: "primary" | "outline" }) {
+function Button({ link, variant = "primary", dark }: { link?: { label?: string; href?: string }; variant?: "primary" | "outline"; dark?: boolean }) {
   if (!link?.label || !link?.href) return null;
   const cls = variant === "primary"
-    ? "bg-primary text-white"
-    : "border border-ink text-ink";
+    ? dark ? "bg-white text-ink" : "bg-primary text-white"
+    : dark ? "border border-ground text-ground" : "border border-ink text-ink";
   return (
     <Link href={link.href} className={`inline-flex h-13 items-center justify-center rounded-full px-7 py-3.5 font-medium ${cls}`}>
       {link.label}
@@ -31,7 +36,7 @@ function Button({ link, variant = "primary" }: { link?: { label?: string; href?:
 /* ------------------------------------------------------------------ */
 function Hero({ data, ctx }: BlockProps) {
   const art = data.svg_id ? ctx.svgs[data.svg_id] : null;
-  const dark = data.tone === "dark";
+  const dark = data.tone === "dark" || !!ctx.dark;
   const title = (
     <h1 className="font-display font-bold text-[44px] leading-[1.05] tracking-tight md:text-[72px]">
       {data.heading}{" "}
@@ -47,7 +52,7 @@ function Hero({ data, ctx }: BlockProps) {
             width: (Number(data.centered_icon_radius) || 64) * 2,
             height: (Number(data.centered_icon_radius) || 64) * 2,
             padding: 5,
-            background: data.centered_icon_bg || "#FFFFFF",
+            background: data.centered_icon_bg || "var(--c-icon-bg, #FFFFFF)",
           }}
         >
           <Svg asset={ctx.svgs[data.centered_icon_svg_id]} className="h-full w-full" />
@@ -84,7 +89,7 @@ function Hero({ data, ctx }: BlockProps) {
     return (
       <div className={`${wrap} flex flex-col items-center gap-6 py-16 text-center md:py-24`}>
         {copy}
-        <div className="flex flex-wrap justify-center gap-3"><Button link={data.primary_cta} /><Button link={data.secondary_cta} variant="outline" /></div>
+        <div className="flex flex-wrap justify-center gap-3"><Button link={data.primary_cta} dark={dark} /><Button link={data.secondary_cta} variant="outline" dark={dark} /></div>
       </div>
     );
   }
@@ -105,7 +110,7 @@ function Hero({ data, ctx }: BlockProps) {
     <div className={`${wrap} grid items-center gap-10 py-10 md:grid-cols-2 md:gap-16 md:py-20`}>
       <div className={`flex flex-col gap-6 md:gap-7 ${imageOnLeft ? "order-2" : ""}`}>
         {copy}
-        <div className="flex flex-col gap-3 sm:flex-row"><Button link={data.primary_cta} /><Button link={data.secondary_cta} variant="outline" /></div>
+        <div className="flex flex-col gap-3 sm:flex-row"><Button link={data.primary_cta} dark={dark} /><Button link={data.secondary_cta} variant="outline" dark={dark} /></div>
       </div>
       <div className={`relative ${imageOnLeft ? "order-1" : ""}`}>
         <Svg asset={art} label={art?.name} className="aspect-[600/520] overflow-hidden rounded-3xl" />
@@ -131,11 +136,11 @@ function Hero({ data, ctx }: BlockProps) {
   );
 }
 
-function Logos({ data }: BlockProps) {
+function Logos({ data, ctx }: BlockProps) {
   return (
     <div className={`${wrap} flex flex-col gap-4 border-y border-line py-8 md:flex-row md:items-center md:justify-between`}>
-      {data.heading ? <div className="text-sm text-muted">{data.heading}</div> : null}
-      <div className="flex flex-wrap gap-x-12 gap-y-3 text-lg font-semibold text-[#6B7079] md:text-xl">
+      {data.heading ? <div className={`text-sm ${muted(ctx)}`}>{data.heading}</div> : null}
+      <div className={`flex flex-wrap gap-x-12 gap-y-3 text-lg font-semibold md:text-xl ${ctx.dark ? "text-ground/60" : "text-[#6B7079]"}`}>
         {(data.items ?? []).map((l: string, i: number) => <span key={i}>{l}</span>)}
       </div>
     </div>
@@ -174,12 +179,12 @@ function Services({ data, ctx }: BlockProps) {
   );
 }
 
-function Features({ data }: BlockProps) {
+function Features({ data, ctx }: BlockProps) {
   return (
     <div className={`${wrap} flex flex-col gap-10 py-12 md:py-24`}>
       <div className="flex max-w-2xl flex-col gap-4">
-        {data.heading ? <h2 className={h2}>{data.heading}</h2> : null}
-        {data.intro ? <p className="text-lg text-muted">{data.intro}</p> : null}
+        {data.heading ? <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2> : null}
+        {data.intro ? <p className={`text-lg ${muted(ctx)}`}>{data.intro}</p> : null}
       </div>
       <div className="grid gap-8 md:grid-cols-2">
         {(data.items ?? []).map((f: any, i: number) => {
@@ -190,8 +195,8 @@ function Features({ data }: BlockProps) {
                   <circle cx="12" cy="12" r="9" />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold">{f.title}</h3>
-              <p className="leading-relaxed text-muted">{f.text}</p>
+              <h3 className={`text-xl font-semibold ${heading(ctx)}`}>{f.title}</h3>
+              <p className={`leading-relaxed ${muted(ctx)}`}>{f.text}</p>
               {f.href ? (
                 <span className="mt-1 inline-flex w-fit items-center gap-1 text-sm font-medium text-primary">
                   {f.link_label || "Learn more"} →
@@ -242,7 +247,7 @@ function Testimonials({ data }: BlockProps) {
   );
 }
 
-function Faq({ data }: BlockProps) {
+function Faq({ data, ctx }: BlockProps) {
   const items = data.items ?? [];
   const jsonLd = {
     "@context": "https://schema.org", "@type": "FAQPage",
@@ -250,14 +255,14 @@ function Faq({ data }: BlockProps) {
   };
   return (
     <div className={`${wrap} grid gap-8 py-16 md:grid-cols-3 md:gap-16 md:py-20`}>
-      <h2 className={h2}>{data.heading}</h2>
+      <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2>
       <div className="md:col-span-2">
         {items.map((f: any, i: number) => (
-          <details key={i} className="group border-t border-line py-6 last:border-b">
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-lg font-medium md:text-xl">
+          <details key={i} className={`group border-t py-6 last:border-b ${ctx.dark ? "border-white/20" : "border-line"}`}>
+            <summary className={`flex cursor-pointer list-none items-center justify-between gap-4 text-lg font-medium md:text-xl ${heading(ctx)}`}>
               {f.q}<span className="text-2xl transition group-open:rotate-45">+</span>
             </summary>
-            <p className="pt-3 leading-relaxed text-muted">{f.a}</p>
+            <p className={`pt-3 leading-relaxed ${muted(ctx)}`}>{f.a}</p>
           </details>
         ))}
       </div>
@@ -266,15 +271,16 @@ function Faq({ data }: BlockProps) {
   );
 }
 
-function Cta({ data }: BlockProps) {
+function Cta({ data, ctx }: BlockProps) {
+  const dark = ctx.dark;
   return (
     <div className={`${wrap} py-12 md:py-16`}>
-      <div className="flex flex-col items-start gap-6 rounded-[28px] bg-soft p-8 md:flex-row md:items-center md:justify-between md:p-14">
+      <div className={`flex flex-col items-start gap-6 rounded-[28px] p-8 md:flex-row md:items-center md:justify-between md:p-14 ${dark ? "bg-white/10 border border-white/20" : "bg-soft"}`}>
         <div className="flex flex-col gap-3">
-          <h2 className={h2}>{data.heading}</h2>
-          {data.text ? <p className="text-lg text-muted">{data.text}</p> : null}
+          <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2>
+          {data.text ? <p className={`text-lg ${muted(ctx)}`}>{data.text}</p> : null}
         </div>
-        <Button link={data.button} />
+        <Button link={data.button} dark={dark} />
       </div>
     </div>
   );
@@ -284,8 +290,8 @@ function LeadFormBlock({ data, ctx }: BlockProps) {
   return (
     <div className={`${wrap} grid gap-8 py-16 md:grid-cols-2 md:gap-12 md:py-20`}>
       <div className="flex flex-col gap-4">
-        <h2 className={h2}>{data.heading}</h2>
-        {data.text ? <p className="text-lg text-muted">{data.text}</p> : null}
+        <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2>
+        {data.text ? <p className={`text-lg ${muted(ctx)}`}>{data.text}</p> : null}
       </div>
       <LeadForm data={data} pageId={ctx.page?.id} siteName={ctx.settings.site_name} />
     </div>
@@ -305,8 +311,8 @@ function TextSvg({ data, ctx }: BlockProps) {
   const right = data.side !== "left";
   return (
     <div className={`${wrap} grid items-center gap-10 py-16 md:grid-cols-2 md:gap-16 md:py-24`}>
-      <div className={`flex flex-col gap-5 text-lg leading-relaxed text-muted ${right ? "" : "md:order-2"}`}>
-        {data.heading ? <h2 className={`${h2} text-ink`}>{data.heading}</h2> : null}
+      <div className={`flex flex-col gap-5 text-lg leading-relaxed ${muted(ctx)} ${right ? "" : "md:order-2"}`}>
+        {data.heading ? <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2> : null}
         {paragraphs(data.body)}
       </div>
       <Svg asset={ctx.svgs[data.svg_id]} label={ctx.svgs[data.svg_id]?.name} className="overflow-hidden rounded-3xl" />
@@ -314,10 +320,10 @@ function TextSvg({ data, ctx }: BlockProps) {
   );
 }
 
-function Pricing({ data }: BlockProps) {
+function Pricing({ data, ctx }: BlockProps) {
   return (
     <div className={`${wrap} flex flex-col gap-10 py-12 md:py-24`}>
-      {data.heading ? <h2 className={h2}>{data.heading}</h2> : null}
+      {data.heading ? <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2> : null}
       <div className="grid gap-4 md:grid-cols-3 md:gap-6">
         {(data.plans ?? []).map((p: any, i: number) => (
           <div key={i} className={`flex flex-col gap-5 rounded-[20px] p-7 ${p.highlight ? "bg-ink text-white" : "bg-white"}`}>
@@ -344,12 +350,12 @@ function ContactInfo({ data, ctx }: BlockProps) {
     .filter((r) => r[1]);
   return (
     <div className={`${wrap} flex flex-col gap-8 py-16`}>
-      {data.heading ? <h2 className={h2}>{data.heading}</h2> : null}
+      {data.heading ? <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2> : null}
       <dl className="grid gap-6 md:grid-cols-4">
         {rows.map(([k, v, href]) => (
           <div key={k as string} className="flex flex-col gap-1">
-            <dt className="text-sm text-muted">{k}</dt>
-            <dd className="text-lg">{href ? <a href={href as string}>{v}</a> : v}</dd>
+            <dt className={`text-sm ${muted(ctx)}`}>{k}</dt>
+            <dd className={`text-lg ${heading(ctx)}`}>{href ? <a href={href as string}>{v}</a> : v}</dd>
           </div>
         ))}
       </dl>
@@ -386,21 +392,21 @@ function TeamProfile({ data, ctx }: BlockProps) {
       <Svg asset={art} label={art?.name} className="aspect-[8/9] overflow-hidden rounded-3xl" />
       <div className="flex flex-col gap-3.5">
         {data.eyebrow ? <div className="text-xs font-bold uppercase tracking-[0.08em] text-primary">{data.eyebrow}</div> : null}
-        <h2 className="font-display text-[32px] font-bold">{data.name}</h2>
-        {data.role ? <div className="text-[15px] text-muted">{data.role}</div> : null}
-        {data.bio ? <p className="max-w-xl text-[15px] leading-relaxed text-muted">{data.bio}</p> : null}
-        <div className="mt-2 flex gap-3"><Button link={data.primary_cta} /><Button link={data.secondary_cta} variant="outline" /></div>
+        <h2 className={`font-display text-[32px] font-bold ${heading(ctx)}`}>{data.name}</h2>
+        {data.role ? <div className={`text-[15px] ${muted(ctx)}`}>{data.role}</div> : null}
+        {data.bio ? <p className={`max-w-xl text-[15px] leading-relaxed ${muted(ctx)}`}>{data.bio}</p> : null}
+        <div className="mt-2 flex gap-3"><Button link={data.primary_cta} dark={ctx.dark} /><Button link={data.secondary_cta} variant="outline" dark={ctx.dark} /></div>
       </div>
     </div>
   );
 }
 
-function ServiceAreas({ data }: BlockProps) {
+function ServiceAreas({ data, ctx }: BlockProps) {
   const items = data.items ?? [];
   if (!items.length) return null;
   return (
     <div className={`${wrap} flex flex-col gap-6 py-12 md:py-16`}>
-      {data.heading ? <h2 className="font-display text-2xl font-bold">{data.heading}</h2> : null}
+      {data.heading ? <h2 className={`font-display text-2xl font-bold ${heading(ctx)}`}>{data.heading}</h2> : null}
       <div className="flex flex-wrap gap-2.5">
         {items.map((it: any, i: number) => (
           <Link key={i} href={it.href || `/listings/city/${(it.label ?? "").toLowerCase().trim().replace(/\s+/g, "-")}`} prefetch={false} className="flex h-10 items-center rounded-full bg-ground px-4.5 text-sm font-medium hover:bg-soft">
@@ -450,8 +456,8 @@ async function CustomForm({ data, ctx }: BlockProps) {
 
   return (
     <div className={`${wrap} flex flex-col gap-6 py-12 md:py-20`}>
-      {data.heading ? <h2 className={h2}>{data.heading}</h2> : null}
-      {data.text ? <p className="max-w-xl text-lg text-muted">{data.text}</p> : null}
+      {data.heading ? <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2> : null}
+      {data.text ? <p className={`max-w-xl text-lg ${muted(ctx)}`}>{data.text}</p> : null}
       <div className="max-w-2xl">
         <CmsFormRenderer form={form as CmsForm} pageId={ctx.page?.id} />
       </div>
@@ -462,23 +468,27 @@ async function CustomForm({ data, ctx }: BlockProps) {
 function IconCard({ data, ctx }: BlockProps) {
   const art = data.svg_id ? ctx.svgs[data.svg_id] : null;
   const boxed = !!data.box;
+  // A boxed card has its own light surface, so it keeps normal dark-on-light
+  // text regardless of the section — only a "bare" card (text directly on
+  // the section background) needs to flip for a dark section.
+  const dark = !boxed && ctx.dark;
   const iconStyle = data.icon_color ? ({ "--c-primary": data.icon_color, "--c-accent": data.icon_color } as React.CSSProperties) : undefined;
   const solid = data.link_style !== "bordered";
+  const btnCls = solid
+    ? dark ? "bg-white text-ink hover:brightness-95" : "bg-primary text-white hover:brightness-110"
+    : dark ? "border border-ground text-ground hover:bg-white/10" : "border border-ink text-ink hover:bg-ground";
   return (
     <div
       className={boxed
         ? "flex h-full w-full flex-col items-start gap-3 rounded-2xl p-6 md:gap-4 md:p-7"
         : "flex h-full w-full flex-col items-start gap-3 py-6 md:gap-4 md:py-10"}
-      style={boxed ? { background: data.box_bg || "var(--c-soft)" } : undefined}
+      style={boxed ? { background: data.box_bg || "var(--c-icon-bg, var(--c-soft))" } : undefined}
     >
       {art ? <Svg asset={art} label={art.name} className="h-10 w-10 md:h-14 md:w-14" style={iconStyle} /> : null}
-      {data.heading ? <h3 className="text-lg font-semibold md:text-xl">{data.heading}</h3> : null}
-      {data.text ? <p className="text-[15px] leading-relaxed text-muted md:text-base">{data.text}</p> : null}
+      {data.heading ? <h3 className={`text-lg font-semibold md:text-xl ${dark ? "text-ground" : ""}`}>{data.heading}</h3> : null}
+      {data.text ? <p className={`text-[15px] leading-relaxed md:text-base ${dark ? "text-ground/75" : "text-muted"}`}>{data.text}</p> : null}
       {data.link?.label ? (
-        <Link
-          href={data.link.href}
-          className={`mt-1 inline-flex h-10 items-center rounded-full px-5 text-sm font-medium ${solid ? "bg-primary text-white hover:brightness-110" : "border border-ink text-ink hover:bg-ground"}`}
-        >
+        <Link href={data.link.href} className={`mt-1 inline-flex h-10 items-center rounded-full px-5 text-sm font-medium transition ${btnCls}`}>
           {data.link.label}
         </Link>
       ) : null}
@@ -488,19 +498,19 @@ function IconCard({ data, ctx }: BlockProps) {
 
 const STEP_COLS: Record<number, string> = { 1: "grid-cols-1", 2: "grid-cols-2" };
 
-function ProcessSteps({ data }: BlockProps) {
+function ProcessSteps({ data, ctx }: BlockProps) {
   const items = data.items ?? [];
   if (!items.length) return null;
   const mobileCols = STEP_COLS[Number(data.mobile_columns) === 2 ? 2 : 1];
   return (
     <div className={`${wrap} flex flex-col gap-8 py-12 md:gap-10 md:py-24`}>
-      {data.heading ? <h2 className={h2}>{data.heading}</h2> : null}
+      {data.heading ? <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2> : null}
       <div className={`grid gap-6 md:gap-8 ${mobileCols} md:grid-cols-3`}>
         {items.map((it: any, i: number) => (
           <div key={i} className="flex flex-col gap-2.5 md:gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-base font-bold text-white md:h-11 md:w-11 md:text-lg">{i + 1}</div>
-            <h3 className="text-base font-semibold md:text-lg">{it.title}</h3>
-            {it.text ? <p className="text-[15px] leading-relaxed text-muted md:text-base">{it.text}</p> : null}
+            <h3 className={`text-base font-semibold md:text-lg ${heading(ctx)}`}>{it.title}</h3>
+            {it.text ? <p className={`text-[15px] leading-relaxed md:text-base ${muted(ctx)}`}>{it.text}</p> : null}
           </div>
         ))}
       </div>
@@ -508,13 +518,13 @@ function ProcessSteps({ data }: BlockProps) {
   );
 }
 
-function Checklist({ data }: BlockProps) {
+function Checklist({ data, ctx }: BlockProps) {
   const items = data.items ?? [];
   if (!items.length) return null;
   const mobileCols = STEP_COLS[Number(data.mobile_columns) === 2 ? 2 : 1];
   return (
     <div className={`${wrap} flex flex-col gap-5 py-10 md:gap-6 md:py-16`}>
-      {data.heading ? <h2 className={h2}>{data.heading}</h2> : null}
+      {data.heading ? <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2> : null}
       <ul className={`grid max-w-xl gap-3 ${mobileCols} md:grid-cols-1`}>
         {items.map((it: any, i: number) => (
           <li key={i} className="flex items-start gap-3">
@@ -522,7 +532,7 @@ function Checklist({ data }: BlockProps) {
               <circle cx="12" cy="12" r="11" className="fill-primary" />
               <path d="m7.5 12.5 3 3 6-6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-            <span className="text-[15px] leading-relaxed">{it.text}</span>
+            <span className={`text-[15px] leading-relaxed ${heading(ctx)}`}>{it.text}</span>
           </li>
         ))}
       </ul>
@@ -537,14 +547,14 @@ function Spacer({ data }: BlockProps) {
   return <div style={{ height: 0, marginTop: h }} aria-hidden="true" />;
 }
 
-function SectionHeader({ data }: BlockProps) {
+function SectionHeader({ data, ctx }: BlockProps) {
   const centered = data.align === "center";
   return (
     <div className={`${wrap} flex flex-col gap-4 py-10 md:py-14 ${centered ? "items-center text-center" : "items-start text-left"}`}>
       {data.eyebrow ? <div className="text-base font-extrabold text-accent md:text-lg">{data.eyebrow}</div> : null}
-      {data.heading ? <h2 className="font-display text-3xl font-extrabold text-ink md:text-5xl">{data.heading}</h2> : null}
-      <div className="h-px w-full bg-line" />
-      {data.subline ? <p className="text-sm font-bold text-ink md:text-base">{data.subline}</p> : null}
+      {data.heading ? <h2 className={`font-display text-3xl font-extrabold md:text-5xl ${heading(ctx)}`}>{data.heading}</h2> : null}
+      <div className={`h-px w-full ${ctx.dark ? "bg-white/20" : "bg-line"}`} />
+      {data.subline ? <p className={`text-sm font-bold md:text-base ${heading(ctx)}`}>{data.subline}</p> : null}
     </div>
   );
 }
@@ -589,11 +599,12 @@ function renderOne(s: Section, ctx: BlockCtx) {
   const Block = BLOCKS[s.block_type];
   if (!Block) return null;
   const st = s.settings ?? {};
+  const isDark = st.background === "dark" || st.background === "brand";
   const cls = [BG[st.background ?? "default"], st.hide_on_mobile && "hide-mobile", st.hide_on_desktop && "hide-desktop"]
     .filter(Boolean).join(" ");
   return (
     <section key={s.id} id={st.anchor || undefined} className={cls} data-block={s.block_type}>
-      <Block data={s.data ?? {}} ctx={ctx} />
+      <Block data={s.data ?? {}} ctx={{ ...ctx, dark: isDark }} />
     </section>
   );
 }

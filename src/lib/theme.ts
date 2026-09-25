@@ -19,7 +19,7 @@ function bodyFont(settings: SiteSettings) {
  *  actually take effect on every themed page. */
 export function themeVars(settings: SiteSettings): React.CSSProperties {
   const t = settings.theme ?? ({} as SiteSettings["theme"]);
-  return {
+  const vars: Record<string, string> = {
     "--c-primary": t.primary,
     "--c-accent": t.accent,
     "--c-ink": t.ink,
@@ -36,7 +36,15 @@ export function themeVars(settings: SiteSettings): React.CSSProperties {
     "--color-ground": t.ground,
     "--font-display": `'${headingFont(settings)}', ui-sans-serif, system-ui, sans-serif`,
     "--font-sans": `'${bodyFont(settings)}', ui-sans-serif, system-ui, sans-serif`,
-  } as React.CSSProperties;
+  };
+  // Forces the background behind every icon (hero's centered icon circle,
+  // icon_card's box) to one color at once, sitewide — distinct from
+  // icon_override, which forces the icon's own fill/stroke color instead.
+  // Per-instance colors (set directly on a block) still take priority over
+  // this, since each component only falls back to var(--c-icon-bg) when its
+  // own field is empty.
+  if (t.icon_bg_override) vars["--c-icon-bg"] = t.icon_bg_override;
+  return vars as React.CSSProperties;
 }
 
 /** Google Fonts href covering both the heading and body font (deduped if they're the same). */

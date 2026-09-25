@@ -82,6 +82,11 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
             onChange={(v) => set("theme", { ...s.theme, icon_override: v })} onReset={() => set("theme", { ...s.theme, icon_override: undefined })} />
           <p className="pb-1.5 text-xs text-muted">Overrides every icon's accent color at once, sitewide. Leave unset to let each icon follow the normal Primary/Accent colors above.</p>
         </div>
+        <div className="flex items-end gap-4">
+          <ColorField label="Force all icon backgrounds (optional)" value={s.theme.icon_bg_override} fallback="#FFFFFF"
+            onChange={(v) => set("theme", { ...s.theme, icon_bg_override: v })} onReset={() => set("theme", { ...s.theme, icon_bg_override: undefined })} />
+          <p className="pb-1.5 text-xs text-muted">Overrides the box/circle behind icons (hero icon, icon cards) sitewide, unless a block sets its own color.</p>
+        </div>
 
         <div className="flex flex-col gap-3 rounded-lg border border-line p-3">
           <strong className="text-sm">Header appearance</strong>
