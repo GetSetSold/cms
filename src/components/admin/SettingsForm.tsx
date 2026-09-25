@@ -19,7 +19,7 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
     const { error } = await supabase.from("site_settings").update({
       site_name: s.site_name, logo_svg_id: s.logo_svg_id, theme: s.theme, seo_defaults: s.seo_defaults,
       navigation: s.navigation.filter((n) => n.label && n.href), header_cta: s.header_cta, header: s.header, footer: s.footer,
-      contact: s.contact, scripts: s.scripts, lead_settings: s.lead_settings, mobile_cta: s.mobile_cta,
+      contact: s.contact, scripts: s.scripts, lead_settings: s.lead_settings, mobile_cta: s.mobile_cta, blog_cta: s.blog_cta,
     }).eq("id", 1);
     setMsg(error ? error.message : "Saved"); router.refresh();
   }
@@ -231,6 +231,17 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
             onChange={(e) => set("lead_settings", { ...s.lead_settings, notify_emails: e.target.value.split(",").map((x) => x.trim()).filter(Boolean) })} />
         </label>
         <p className="text-xs text-muted">SMS and email provider keys (Twilio, Resend) are Supabase secrets — they are never stored here.</p>
+      </section>
+
+      <section className="card flex flex-col gap-4">
+        <h2 className="text-lg font-semibold">Blog sidebar CTA</h2>
+        <p className="text-xs text-muted">Set once — shown automatically on every blog post's sidebar. No per-post setup needed.</p>
+        <label className="label">Heading<input className="input" value={s.blog_cta?.heading ?? ""} onChange={(e) => set("blog_cta", { ...s.blog_cta, heading: e.target.value })} /></label>
+        <label className="label">Text<textarea rows={2} className="textarea" value={s.blog_cta?.text ?? ""} onChange={(e) => set("blog_cta", { ...s.blog_cta, text: e.target.value })} /></label>
+        <div className="grid grid-cols-2 gap-3">
+          <label className="label">Button label<input className="input" value={s.blog_cta?.button_label ?? ""} onChange={(e) => set("blog_cta", { ...s.blog_cta, button_label: e.target.value })} /></label>
+          <label className="label">Button links to<input className="input" value={s.blog_cta?.button_href ?? ""} onChange={(e) => set("blog_cta", { ...s.blog_cta, button_href: e.target.value })} /></label>
+        </div>
       </section>
 
       <div className="flex items-center gap-3 xl:col-span-2">

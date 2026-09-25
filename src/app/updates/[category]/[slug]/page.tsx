@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getSettings, getSvgs, getLogo, collectSvgIds } from "@/lib/cms";
 import { getPostBySlug, getPosts } from "@/lib/blog";
-import { renderMarkdown, readingTime } from "@/lib/markdown";
+import { renderMarkdown, readingTime, extractToc } from "@/lib/markdown";
 import { themeFontHref, themeVars, themeIconOverrideCSS } from "@/lib/theme";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter, MobileCtaBar } from "@/components/site/SiteFooter";
@@ -65,6 +65,7 @@ export default async function PostPage({ params, searchParams }: { params: Promi
 
   const ctx = { svgs, settings, page: undefined };
   const html = renderMarkdown(post.content_md);
+  const toc = extractToc(post.content_md);
   const minutes = readingTime(post.content_md);
 
   const jsonLd = {
@@ -117,7 +118,9 @@ export default async function PostPage({ params, searchParams }: { params: Promi
 
               {post.tags.length ? (
                 <div className="mt-8 flex flex-wrap gap-2">
-                  {post.tags.map((t) => <span key={t} className="rounded-full bg-ground px-3 py-1 text-xs font-medium text-muted">#{t}</span>)}
+                  {post.tags.map((t) => (
+                    <Link key={t} href={`/updates/tag/${encodeURIComponent(t)}`} className="rounded-full bg-ground px-3 py-1 text-xs font-medium text-muted hover:bg-soft hover:text-ink">#{t}</Link>
+                  ))}
                 </div>
               ) : null}
 
@@ -139,18 +142,39 @@ export default async function PostPage({ params, searchParams }: { params: Promi
             ))}
           </div>
 
-          {/* SIDEBAR: related reading, each post its own box */}
-          {related.length ? (
-            <aside className="flex flex-col gap-4 lg:sticky lg:top-24">
-              <h2 className="text-lg font-extrabold">Related reading</h2>
-              {related.map((p: any) => (
-                <Link key={p.id} href={`/updates/${cat.slug}/${p.slug}`} prefetch={false} className="flex flex-col gap-3 overflow-hidden rounded-2xl bg-white p-3 shadow-[0_4px_16px_rgba(20,20,43,0.05)]">
-                  <Svg asset={p.cover_svg_id ? relatedSvgs[p.cover_svg_id] : undefined} fill className="aspect-[16/10] overflow-hidden rounded-xl" />
-                  <span className="px-1 pb-1 text-[15px] font-bold leading-snug">{p.title}</span>
-                </Link>
-              ))}
-            </aside>
-          ) : null}
+          {/* SIDEBAR: TOC (auto from headings), CTA (set once in Settings), related reading — none of this needs per-post setup */}
+          <aside className="flex flex-col gap-4 lg:sticky lg:top-24">
+            {toc.length ? (
+              <div className="flex flex-col gap-2.5 rounded-2xl bg-white p-5">
+                <span className="text-xs font-bold uppercase tracking-wide text-muted">On this page</span>
+                {toc.map((item) => (
+                  <a key={item.id} href={`#${item.id}`} className={`text-sm hover:text-primary ${item.level === 3 ? "pl-4 text-muted" : "font-medium"}`}>{item.text}</a>
+                ))}
+              </div>
+            ) : null}
+
+            {settings.blog_cta?.heading ? (
+              <div className="flex flex-col gap-3 rounded-2xl bg-gradient-to-br from-ink to-primary p-6 text-white">
+                <strong className="text-lg">{settings.blog_cta.heading}</strong>
+                {settings.blog_cta.text ? <span className="text-sm text-white/75">{settings.blog_cta.text}</span> : null}
+                {settings.blog_cta.button_label && settings.blog_cta.button_href ? (
+                  <Link href={settings.blog_cta.button_href} className="mt-1 flex h-11 items-center justify-center rounded-full bg-white text-sm font-bold text-ink">{settings.blog_cta.button_label}</Link>
+                ) : null}
+              </div>
+            ) : null}
+
+            {related.length ? (
+              <div className="flex flex-col gap-4">
+                <h2 className="text-lg font-extrabold">Related reading</h2>
+                {related.map((p: any) => (
+                  <Link key={p.id} href={`/updates/${cat.slug}/${p.slug}`} prefetch={false} className="flex flex-col gap-3 overflow-hidden rounded-2xl bg-white p-3 shadow-[0_4px_16px_rgba(20,20,43,0.05)]">
+                    <Svg asset={p.cover_svg_id ? relatedSvgs[p.cover_svg_id] : undefined} fill className="aspect-[16/10] overflow-hidden rounded-xl" />
+                    <span className="px-1 pb-1 text-[15px] font-bold leading-snug">{p.title}</span>
+                  </Link>
+                ))}
+              </div>
+            ) : null}
+          </aside>
         </div>
       </main>
 

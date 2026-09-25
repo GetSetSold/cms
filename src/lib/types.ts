@@ -72,6 +72,7 @@ export interface SiteSettings {
   };
   footer: { tagline?: string; rows: NavColumn[][]; bg?: string; text?: string; columns_per_row?: 3 | 4 };
   mobile_cta: { buttons: MobileCtaButton[]; shape: "square" | "rectangle"; size?: "xs" | "sm" | "md" | "lg" };
+  blog_cta: { heading?: string; text?: string; button_label?: string; button_href?: string };
   contact: { phone?: string; email?: string; address?: string; hours?: string };
   social_links: Record<string, string>;
   scripts: { ga4_id?: string };

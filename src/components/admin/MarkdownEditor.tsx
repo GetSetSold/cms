@@ -10,6 +10,9 @@ const TOOLS: { label: string; wrap?: [string, string]; line?: string }[] = [
   { label: "Link", wrap: ["[", "](https://)"] },
   { label: "•", line: "- " },
   { label: "❝", line: "> " },
+  { label: "Tip", line: "> [!tip] " },
+  { label: "Warning", line: "> [!warning] " },
+  { label: "Note", line: "> [!note] " },
 ];
 
 export function MarkdownEditor({ value, onChange }: { value: string; onChange: (v: string) => void }) {
