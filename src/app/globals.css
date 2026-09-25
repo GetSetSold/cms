@@ -65,3 +65,5 @@ body { background: var(--c-ground); color: var(--c-ink); font-family: var(--font
 .prose-post blockquote { padding: 1.3em 1.5em; border-radius: 14px; background: var(--c-soft); border-left: 4px solid var(--c-primary); font-style: italic; }
 .prose-post a { color: var(--c-primary); text-decoration: underline; }
 .prose-post strong { font-weight: 700; }
+
+.blog-blocks > * + * { border-top: 1px solid var(--c-line); }
