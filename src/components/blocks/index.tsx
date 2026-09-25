@@ -271,6 +271,61 @@ function Faq({ data, ctx }: BlockProps) {
   );
 }
 
+function FaqBoxed({ data, ctx }: BlockProps) {
+  const items = data.items ?? [];
+  if (!items.length) return null;
+  const jsonLd = {
+    "@context": "https://schema.org", "@type": "FAQPage",
+    mainEntity: items.map((f: any) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
+  };
+  return (
+    <div className={`${wrap} flex flex-col gap-6 py-12 md:py-20`}>
+      {data.heading ? <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2> : null}
+      <div className="flex flex-col gap-3">
+        {items.map((f: any, i: number) => (
+          <details key={i} className={`group overflow-hidden rounded-2xl p-6 ${ctx.dark ? "bg-white/10" : "bg-white shadow-[0_2px_10px_rgba(20,20,43,0.05)]"}`} open={i === 0}>
+            <summary className={`flex cursor-pointer list-none items-center justify-between gap-4 text-lg font-semibold ${heading(ctx)}`}>
+              {f.q}
+              <span className="relative h-5 w-5 shrink-0">
+                <span className={`absolute inset-0 flex items-center justify-center text-2xl leading-none transition-transform group-open:rotate-45 ${heading(ctx)}`}>+</span>
+              </span>
+            </summary>
+            <p className={`mt-3 leading-relaxed ${muted(ctx)}`}>{f.a}</p>
+          </details>
+        ))}
+      </div>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
+    </div>
+  );
+}
+
+function QaBlock({ data, ctx }: BlockProps) {
+  const items = data.items ?? [];
+  if (!items.length) return null;
+  const jsonLd = {
+    "@context": "https://schema.org", "@type": "FAQPage",
+    mainEntity: items.map((f: any) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
+  };
+  return (
+    <div className={`${wrap} flex flex-col gap-10 py-12 md:py-20`}>
+      {data.heading ? <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2> : null}
+      <div className="flex flex-col gap-8">
+        {items.map((f: any, i: number) => (
+          // Each pair is a self-contained, fully-visible unit — no accordion —
+          // so the question and its direct answer sit together in the DOM
+          // exactly as an AI system (or a person) would want to lift and cite
+          // them as one block, rather than needing a click to reveal the answer.
+          <div key={i} className={`border-l-4 pl-5 ${ctx.dark ? "border-white/30" : "border-primary/30"}`}>
+            <h3 className={`text-lg font-bold md:text-xl ${heading(ctx)}`}>{f.q}</h3>
+            <p className={`mt-2 leading-relaxed ${muted(ctx)}`}>{f.a}</p>
+          </div>
+        ))}
+      </div>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
+    </div>
+  );
+}
+
 function Cta({ data, ctx }: BlockProps) {
   const dark = ctx.dark;
   return (
@@ -642,6 +697,8 @@ export const BLOCKS: Record<string, (p: BlockProps) => React.ReactNode> = {
   section_header: SectionHeader,
   featured_listing: FeaturedListing,
   blog_grid: BlogGrid,
+  qa_block: QaBlock,
+  faq_boxed: FaqBoxed,
 };
 
 const BG: Record<string, string> = {

@@ -134,4 +134,15 @@ export const BLOCK_FIELDS: Record<string, Field[]> = {
     t("category_slug", "Category (blank = all)"),
     t("link_label", "\"View all\" link label"),
   ],
+  qa_block: [
+    t("heading", "Heading (optional)"),
+    { key: "items", label: "Questions", type: "list", itemLabel: "Q&A", fields: [
+      t("q", "Question — phrase it the way someone would actually ask it"),
+      ta("a", "Direct answer — lead with the answer itself, keep it short"),
+    ] },
+  ],
+  faq_boxed: [
+    t("heading", "Heading (e.g. Frequently Asked Questions)"),
+    { key: "items", label: "Questions", type: "list", itemLabel: "Q&A", fields: [t("q", "Question"), ta("a", "Answer")] },
+  ],
 };
