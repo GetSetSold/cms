@@ -90,11 +90,15 @@ export default async function PostPage({ params, searchParams }: { params: Promi
         </div>
 
         <div className="grid gap-10 lg:grid-cols-[1fr_320px] lg:items-start">
-          {/* MAIN: one continuous white card — before-blocks, article, after-blocks all inside it */}
-          <div className="flex flex-col overflow-hidden rounded-3xl bg-white">
-            {post.blocks_before.length ? <div className="blog-blocks"><RenderSections sections={toSections(post.blocks_before, "before")} ctx={ctx} /></div> : null}
+          {/* MAIN: each block — and the article — is its own separate box, not one shared card */}
+          <div className="flex flex-col gap-6">
+            {post.blocks_before.map((b, i) => (
+              <div key={`before-${i}`} className="overflow-hidden rounded-3xl bg-white">
+                <RenderSections sections={toSections([b], `before-${i}`)} ctx={ctx} />
+              </div>
+            ))}
 
-            <article className={`px-6 py-10 md:px-14 md:py-14 ${post.blocks_before.length ? "border-t border-line" : ""} ${post.blocks_after.length ? "border-b border-line" : ""}`}>
+            <article className="overflow-hidden rounded-3xl bg-white px-6 py-10 md:px-14 md:py-14">
               <span className="mb-4 inline-block w-fit rounded-full bg-primary-soft px-3 py-1 text-xs font-bold uppercase tracking-wide text-primary">{cat.name}</span>
               <h1 className="mb-4 font-display text-3xl font-extrabold leading-tight md:text-5xl">{post.title}</h1>
               {post.excerpt ? <p className="mb-6 text-lg text-muted">{post.excerpt}</p> : null}
@@ -128,7 +132,11 @@ export default async function PostPage({ params, searchParams }: { params: Promi
               ) : null}
             </article>
 
-            {post.blocks_after.length ? <div className="blog-blocks"><RenderSections sections={toSections(post.blocks_after, "after")} ctx={ctx} /></div> : null}
+            {post.blocks_after.map((b, i) => (
+              <div key={`after-${i}`} className="overflow-hidden rounded-3xl bg-white">
+                <RenderSections sections={toSections([b], `after-${i}`)} ctx={ctx} />
+              </div>
+            ))}
           </div>
 
           {/* SIDEBAR: related reading, each post its own box */}

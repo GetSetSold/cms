@@ -12,6 +12,23 @@ import type { BlogAuthor, BlogPost, CmsForm, SvgAsset } from "@/lib/types";
 const slugify = (s: string) => s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 type BlockType = { key: string; name: string; category: string; default_data: Record<string, any> };
 
+function TagsInput({ value, onChange }: { value: string[]; onChange: (t: string[]) => void }) {
+  // The input keeps its own raw text so a trailing "," or space while typing
+  // isn't immediately stripped by re-deriving the value from the parsed
+  // array on every keystroke (that was the bug — it made it impossible to
+  // type a second tag, since the comma vanished the instant you typed it).
+  const [text, setText] = useState(value.join(", "));
+  return (
+    <input
+      className="input"
+      value={text}
+      onChange={(e) => setText(e.target.value)}
+      onBlur={() => { const tags = text.split(",").map((t) => t.trim()).filter(Boolean); onChange(tags); setText(tags.join(", ")); }}
+      placeholder="e.g. first-time buyers, market trends"
+    />
+  );
+}
+
 export function PostEditor({
   initial, categories, blockTypes, svgs, forms, authors,
 }: { initial: BlogPost; categories: { id: string; name: string; slug: string }[]; blockTypes: BlockType[]; svgs: SvgAsset[]; forms: CmsForm[]; authors: BlogAuthor[] }) {
@@ -101,7 +118,7 @@ export function PostEditor({
           </div>
 
           <label className="label">Tags (comma separated — helps SEO clustering)
-            <input className="input" value={post.tags.join(", ")} onChange={(e) => set("tags", e.target.value.split(",").map((t) => t.trim()).filter(Boolean))} />
+            <TagsInput value={post.tags} onChange={(tags) => set("tags", tags)} />
           </label>
 
           <div className="flex flex-col gap-3 rounded-lg border border-line p-3">
