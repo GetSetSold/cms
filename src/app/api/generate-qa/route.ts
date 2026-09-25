@@ -18,7 +18,11 @@ async function generateWithGroq(content: string) {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
     body: JSON.stringify({
-      model: "llama-3.3-70b-versatile",
+      // llama-prompt-guard-* models are safety classifiers, not chat models —
+      // gpt-oss-120b is the strongest general-purpose model on this account
+      // for structured generation. Swap to openai/gpt-oss-20b for a
+      // faster/cheaper option if 120b is ever unavailable or too slow.
+      model: "openai/gpt-oss-120b",
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
         { role: "user", content: content.slice(0, 12000) }, // keep the request reasonably sized
@@ -35,7 +39,21 @@ async function generateWithGroq(content: string) {
   const data = await res.json();
   const raw = data.choices?.[0]?.message?.content;
   if (!raw) throw new Error("Groq returned no content.");
-  const parsed = JSON.parse(raw);
+
+  // Parse defensively: some models wrap JSON in ```json fences or add a
+  // stray sentence before/after it even when asked for JSON only.
+  let jsonText = raw.trim();
+  const fenced = /```(?:json)?\s*([\s\S]*?)```/.exec(jsonText);
+  if (fenced) jsonText = fenced[1].trim();
+  else {
+    const braceStart = jsonText.indexOf("{");
+    const braceEnd = jsonText.lastIndexOf("}");
+    if (braceStart !== -1 && braceEnd > braceStart) jsonText = jsonText.slice(braceStart, braceEnd + 1);
+  }
+
+  let parsed: any;
+  try { parsed = JSON.parse(jsonText); }
+  catch { throw new Error(`Groq's response wasn't valid JSON: ${raw.slice(0, 200)}`); }
   if (!Array.isArray(parsed.items)) throw new Error("Groq response wasn't in the expected {items:[...]} shape.");
   return parsed.items as { q: string; a: string }[];
 }
