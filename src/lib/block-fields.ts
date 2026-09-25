@@ -123,4 +123,15 @@ export const BLOCK_FIELDS: Record<string, Field[]> = {
     t("subline", "Subline (bold, below the divider)"),
     { key: "align", label: "Alignment", type: "select", options: ["left", "center"] },
   ],
+  featured_listing: [
+    t("heading", "Heading"),
+    t("listing_key", "MLS listing key"),
+  ],
+  blog_grid: [
+    t("heading", "Heading"),
+    { key: "layout", label: "Layout", type: "select", options: ["grid", "swipe"] },
+    t("count", "Number of posts"),
+    t("category_slug", "Category (blank = all)"),
+    t("link_label", "\"View all\" link label"),
+  ],
 };

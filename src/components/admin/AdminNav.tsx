@@ -5,6 +5,7 @@ import type { Role } from "@/lib/types";
 
 const ITEMS: { href: string; label: string; roles: Role[]; icon: string }[] = [
   { href: "/admin/pages", label: "Pages", roles: ["admin", "editor"], icon: "M6 3h9l4 4v14H6z M14 3v5h5" },
+  { href: "/admin/posts", label: "Updates", roles: ["admin", "editor"], icon: "M4 6h16v3H4z M4 12h10v3H4z M4 18h7v2H4z" },
   { href: "/admin/leads", label: "Leads", roles: ["admin", "sales"], icon: "M9 11.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6 M16 5.5a3 3 0 0 1 0 5.5 M18 14c2 .8 3 2.8 3 6" },
   { href: "/admin/svgs", label: "SVG library", roles: ["admin", "editor"], icon: "M3 4h18v16H3z M21 16l-5-5-9 9" },
   { href: "/admin/forms", label: "Forms", roles: ["admin", "editor"], icon: "M4 5h16v3H4z M4 12h16v7H4z M8 15h2" },

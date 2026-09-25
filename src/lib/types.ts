@@ -105,6 +105,40 @@ export interface Lead {
 
 export const LEAD_STATUSES: LeadStatus[] = ["new", "contacted", "qualified", "proposal", "won", "lost"];
 
+export type BlockInstance = { type: string; data?: Json; settings?: SectionSettings };
+
+export interface BlogCategory {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  template_blocks_before: BlockInstance[];
+  template_blocks_after: BlockInstance[];
+  sort_order: number;
+}
+
+export interface BlogPost {
+  id: string;
+  title: string;
+  slug: string;
+  category_id: string | null;
+  excerpt: string | null;
+  cover_svg_id: string | null;
+  blocks_before: BlockInstance[];
+  content_md: string;
+  blocks_after: BlockInstance[];
+  author_name: string | null;
+  author_role: string | null;
+  author_bio: string | null;
+  author_svg_id: string | null;
+  status: PageStatus;
+  publish_at: string | null;
+  seo_title: string | null;
+  seo_description: string | null;
+  updated_at: string;
+  created_at: string;
+}
+
 export type FormFieldType =
   | "text" | "email" | "tel" | "url" | "textarea" | "number" | "decimal" | "currency" | "date"
   | "dropdown" | "radio" | "checkbox" | "multiple_choice" | "address" | "subform";

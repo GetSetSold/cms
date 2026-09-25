@@ -547,6 +547,62 @@ function Spacer({ data }: BlockProps) {
   return <div style={{ height: 0, marginTop: h }} aria-hidden="true" />;
 }
 
+async function FeaturedListing({ data }: BlockProps) {
+  if (!data.listing_key) return null;
+  const mls = createMlsClient();
+  const { data: listing } = await mls.from("grid").select("*").eq("ListingKey", data.listing_key).maybeSingle();
+  if (!listing) return null;
+  return (
+    <div className={`${wrap} flex flex-col gap-6 py-12 md:py-16`}>
+      {data.heading ? <h2 className={h2}>{data.heading}</h2> : null}
+      <div className="max-w-sm"><ListingCard listing={listing as GridListing} /></div>
+    </div>
+  );
+}
+
+async function BlogGrid({ data, ctx }: BlockProps) {
+  const supabase = await createClient();
+  const count = Number(data.count) || 3;
+  let categoryId: string | undefined;
+  if (data.category_slug) {
+    const { data: cat } = await supabase.from("blog_categories").select("id").eq("slug", data.category_slug).maybeSingle();
+    categoryId = cat?.id;
+  }
+  let q = supabase.from("blog_posts").select("*, blog_categories(name,slug)")
+    .in("status", ["published", "scheduled"]).or(`publish_at.is.null,publish_at.lte.${new Date().toISOString()}`)
+    .order("publish_at", { ascending: false, nullsFirst: false }).limit(count);
+  if (categoryId) q = q.eq("category_id", categoryId);
+  const { data: posts } = await q;
+  if (!posts?.length) return null;
+
+  const swipe = data.layout === "swipe";
+  const card = (p: any) => (
+    <Link key={p.id} href={`/updates/${p.blog_categories?.slug ?? "post"}/${p.slug}`} prefetch={false}
+      className={`flex flex-col gap-3 overflow-hidden rounded-2xl bg-white shadow-[0_4px_16px_rgba(20,20,43,0.05)] ${swipe ? "w-80 shrink-0" : ""}`}>
+      <Svg asset={p.cover_svg_id ? ctx.svgs[p.cover_svg_id] : undefined} className="aspect-[16/10]" />
+      <div className="flex flex-col gap-2 px-4 pb-4">
+        {p.blog_categories?.name ? <span className="text-[11px] font-bold uppercase tracking-wide text-primary">{p.blog_categories.name}</span> : null}
+        <h3 className="text-base font-bold leading-snug">{p.title}</h3>
+        {p.excerpt ? <p className="line-clamp-2 text-[13px] text-muted">{p.excerpt}</p> : null}
+      </div>
+    </Link>
+  );
+
+  return (
+    <div className={`${wrap} flex flex-col gap-6 py-12 md:py-16`}>
+      <div className="flex items-end justify-between gap-4">
+        {data.heading ? <h2 className={h2}>{data.heading}</h2> : <span />}
+        <Link href="/updates" prefetch={false} className="font-medium text-primary">{data.link_label || "View all posts"} →</Link>
+      </div>
+      {swipe ? (
+        <div className="-mx-5 flex gap-5 overflow-x-auto px-5 pb-2 md:-mx-10 md:px-10">{posts.map(card)}</div>
+      ) : (
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">{posts.map(card)}</div>
+      )}
+    </div>
+  );
+}
+
 function SectionHeader({ data, ctx }: BlockProps) {
   const centered = data.align === "center";
   return (
@@ -584,6 +640,8 @@ export const BLOCKS: Record<string, (p: BlockProps) => React.ReactNode> = {
   checklist: Checklist,
   spacer: Spacer,
   section_header: SectionHeader,
+  featured_listing: FeaturedListing,
+  blog_grid: BlogGrid,
 };
 
 const BG: Record<string, string> = {
