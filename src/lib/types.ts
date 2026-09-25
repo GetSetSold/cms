@@ -117,6 +117,14 @@ export interface BlogCategory {
   sort_order: number;
 }
 
+export interface BlogAuthor {
+  id: string;
+  name: string;
+  role: string | null;
+  bio: string | null;
+  avatar_svg_id: string | null;
+}
+
 export interface BlogPost {
   id: string;
   title: string;
@@ -127,10 +135,8 @@ export interface BlogPost {
   blocks_before: BlockInstance[];
   content_md: string;
   blocks_after: BlockInstance[];
-  author_name: string | null;
-  author_role: string | null;
-  author_bio: string | null;
-  author_svg_id: string | null;
+  author_id: string | null;
+  tags: string[];
   status: PageStatus;
   publish_at: string | null;
   seo_title: string | null;

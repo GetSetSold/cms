@@ -49,7 +49,7 @@ export default async function UpdatesLanding() {
         {featured ? (
           <Link href={`/updates/${(featured as any).blog_categories?.slug ?? "post"}/${featured.slug}`} prefetch={false}
             className="mb-14 grid gap-10 rounded-3xl bg-white p-7 shadow-[0_8px_30px_rgba(20,20,43,0.06)] md:grid-cols-2 md:items-center md:p-8">
-            <Svg asset={featured.cover_svg_id ? svgs[featured.cover_svg_id] : undefined} className="aspect-[16/11] overflow-hidden rounded-2xl" />
+            <Svg asset={featured.cover_svg_id ? svgs[featured.cover_svg_id] : undefined} fill className="aspect-[16/11] overflow-hidden rounded-2xl" />
             <div className="flex flex-col gap-3.5">
               <span className="w-fit rounded-full bg-primary-soft px-3 py-1 text-xs font-bold uppercase tracking-wide text-primary">Featured{(featured as any).blog_categories ? ` · ${(featured as any).blog_categories.name}` : ""}</span>
               <h2 className="font-display text-2xl font-extrabold leading-tight md:text-3xl">{featured.title}</h2>
@@ -66,7 +66,7 @@ export default async function UpdatesLanding() {
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {rest.map((p: any) => (
               <Link key={p.id} href={`/updates/${p.blog_categories?.slug ?? "post"}/${p.slug}`} prefetch={false} className="flex flex-col gap-3 overflow-hidden rounded-2xl bg-white shadow-[0_4px_16px_rgba(20,20,43,0.05)]">
-                <Svg asset={p.cover_svg_id ? svgs[p.cover_svg_id] : undefined} className="aspect-[16/10]" />
+                <Svg asset={p.cover_svg_id ? svgs[p.cover_svg_id] : undefined} fill className="aspect-[16/10] overflow-hidden" />
                 <div className="flex flex-col gap-2 px-5 pb-5">
                   {p.blog_categories?.name ? <span className="text-[11px] font-bold uppercase tracking-wide text-primary">{p.blog_categories.name}</span> : null}
                   <h3 className="text-lg font-bold leading-snug">{p.title}</h3>

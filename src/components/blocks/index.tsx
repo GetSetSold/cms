@@ -579,7 +579,7 @@ async function BlogGrid({ data, ctx }: BlockProps) {
   const card = (p: any) => (
     <Link key={p.id} href={`/updates/${p.blog_categories?.slug ?? "post"}/${p.slug}`} prefetch={false}
       className={`flex flex-col gap-3 overflow-hidden rounded-2xl bg-white shadow-[0_4px_16px_rgba(20,20,43,0.05)] ${swipe ? "w-80 shrink-0" : ""}`}>
-      <Svg asset={p.cover_svg_id ? ctx.svgs[p.cover_svg_id] : undefined} className="aspect-[16/10]" />
+      <Svg asset={p.cover_svg_id ? ctx.svgs[p.cover_svg_id] : undefined} fill className="aspect-[16/10] overflow-hidden" />
       <div className="flex flex-col gap-2 px-4 pb-4">
         {p.blog_categories?.name ? <span className="text-[11px] font-bold uppercase tracking-wide text-primary">{p.blog_categories.name}</span> : null}
         <h3 className="text-base font-bold leading-snug">{p.title}</h3>

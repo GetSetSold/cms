@@ -7,14 +7,14 @@ import { MarkdownEditor } from "./MarkdownEditor";
 import { BlockListEditor } from "./BlockListEditor";
 import { SvgPicker } from "./SvgPicker";
 import { Spinner } from "./Spinner";
-import type { BlogPost, CmsForm, SvgAsset } from "@/lib/types";
+import type { BlogAuthor, BlogPost, CmsForm, SvgAsset } from "@/lib/types";
 
 const slugify = (s: string) => s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 type BlockType = { key: string; name: string; category: string; default_data: Record<string, any> };
 
 export function PostEditor({
-  initial, categories, blockTypes, svgs, forms,
-}: { initial: BlogPost; categories: { id: string; name: string; slug: string }[]; blockTypes: BlockType[]; svgs: SvgAsset[]; forms: CmsForm[] }) {
+  initial, categories, blockTypes, svgs, forms, authors,
+}: { initial: BlogPost; categories: { id: string; name: string; slug: string }[]; blockTypes: BlockType[]; svgs: SvgAsset[]; forms: CmsForm[]; authors: BlogAuthor[] }) {
   const router = useRouter();
   const [post, setPost] = useState<BlogPost>(initial);
   const [saving, setSaving] = useState(false);
@@ -28,7 +28,7 @@ export function PostEditor({
       title: post.title, slug: slugify(post.slug || post.title), category_id: post.category_id || null,
       excerpt: post.excerpt || null, cover_svg_id: post.cover_svg_id || null,
       blocks_before: post.blocks_before, content_md: post.content_md, blocks_after: post.blocks_after,
-      author_name: post.author_name || null, author_role: post.author_role || null, author_bio: post.author_bio || null, author_svg_id: post.author_svg_id || null,
+      author_id: post.author_id || null, tags: post.tags,
       status: post.status, publish_at: post.publish_at,
       seo_title: post.seo_title || null, seo_description: post.seo_description || null,
     };
@@ -91,11 +91,18 @@ export function PostEditor({
 
           <div className="flex flex-col gap-3 rounded-lg border border-line p-3">
             <strong className="text-sm">Author</strong>
-            <label className="label">Name<input className="input" value={post.author_name ?? ""} onChange={(e) => set("author_name", e.target.value)} /></label>
-            <label className="label">Role<input className="input" value={post.author_role ?? ""} onChange={(e) => set("author_role", e.target.value)} /></label>
-            <label className="label">Bio<textarea rows={2} className="textarea" value={post.author_bio ?? ""} onChange={(e) => set("author_bio", e.target.value)} /></label>
-            <div className="label">Avatar<SvgPicker value={post.author_svg_id} svgs={svgs} onChange={(id) => set("author_svg_id", id)} /></div>
+            <label className="label">Author
+              <select className="input" value={post.author_id ?? ""} onChange={(e) => set("author_id", e.target.value || null)}>
+                <option value="">None</option>
+                {authors.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
+              </select>
+            </label>
+            <Link href="/admin/authors" className="text-sm text-primary">Manage authors →</Link>
           </div>
+
+          <label className="label">Tags (comma separated — helps SEO clustering)
+            <input className="input" value={post.tags.join(", ")} onChange={(e) => set("tags", e.target.value.split(",").map((t) => t.trim()).filter(Boolean))} />
+          </label>
 
           <div className="flex flex-col gap-3 rounded-lg border border-line p-3">
             <strong className="text-sm">SEO</strong>

@@ -57,7 +57,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {posts.map((p: any) => (
               <Link key={p.id} href={`/updates/${slug}/${p.slug}`} prefetch={false} className="flex flex-col gap-3 overflow-hidden rounded-2xl bg-white shadow-[0_4px_16px_rgba(20,20,43,0.05)]">
-                <Svg asset={p.cover_svg_id ? svgs[p.cover_svg_id] : undefined} className="aspect-[16/10]" />
+                <Svg asset={p.cover_svg_id ? svgs[p.cover_svg_id] : undefined} fill className="aspect-[16/10] overflow-hidden" />
                 <div className="flex flex-col gap-2 px-5 pb-5">
                   <h3 className="text-lg font-bold leading-snug">{p.title}</h3>
                   {p.excerpt ? <p className="line-clamp-2 text-[13px] text-muted">{p.excerpt}</p> : null}
