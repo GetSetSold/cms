@@ -35,7 +35,7 @@ function Hero({ data, ctx }: BlockProps) {
   const title = (
     <h1 className="font-display font-bold text-[44px] leading-[1.05] tracking-tight md:text-[72px]">
       {data.heading}{" "}
-      {data.heading_accent ? <span className="text-primary">{data.heading_accent}</span> : null}
+      {data.heading_accent ? <span className={data.heading_accent_color ? "" : "text-primary"} style={data.heading_accent_color ? { color: data.heading_accent_color } : undefined}>{data.heading_accent}</span> : null}
     </h1>
   );
   const copy = (
@@ -109,12 +109,23 @@ function Hero({ data, ctx }: BlockProps) {
       </div>
       <div className={`relative ${imageOnLeft ? "order-1" : ""}`}>
         <Svg asset={art} label={art?.name} className="aspect-[600/520] overflow-hidden rounded-3xl" />
-        {data.badge?.value ? (
-          <div className={`absolute -bottom-4 flex w-64 flex-col gap-1 rounded-2xl bg-white p-5 shadow-[0_12px_40px_rgba(21,23,28,0.12)] md:bottom-9 ${imageOnLeft ? "right-4 md:-right-8" : "left-4 md:-left-8"}`}>
-            <div className="text-[13px] text-muted">{data.badge.label}</div>
-            <div className="font-display font-bold text-4xl">{data.badge.value}</div>
-          </div>
-        ) : null}
+        {data.badge?.value ? (() => {
+          const size = data.badge_size || "md";
+          const sizeCls = { sm: "w-48 p-3.5 gap-0.5", md: "w-64 p-5 gap-1", lg: "w-80 p-6 gap-1.5" }[size as "sm" | "md" | "lg"];
+          const valueCls = { sm: "text-2xl", md: "text-4xl", lg: "text-5xl" }[size as "sm" | "md" | "lg"];
+          const style = data.badge_style || "solid";
+          const styleCls = {
+            solid: "bg-white shadow-[0_12px_40px_rgba(21,23,28,0.12)]",
+            bordered: "bg-white border-2 border-ink",
+            glass: "bg-white/70 backdrop-blur-md shadow-[0_12px_40px_rgba(21,23,28,0.12)]",
+          }[style as "solid" | "bordered" | "glass"];
+          return (
+            <div className={`absolute -bottom-4 flex flex-col rounded-2xl md:bottom-9 ${sizeCls} ${styleCls} ${imageOnLeft ? "right-4 md:-right-8" : "left-4 md:-left-8"}`}>
+              <div className="text-[13px] text-muted">{data.badge.label}</div>
+              <div className={`font-display font-bold ${valueCls}`}>{data.badge.value}</div>
+            </div>
+          );
+        })() : null}
       </div>
     </div>
   );
@@ -171,17 +182,25 @@ function Features({ data }: BlockProps) {
         {data.intro ? <p className="text-lg text-muted">{data.intro}</p> : null}
       </div>
       <div className="grid gap-8 md:grid-cols-2">
-        {(data.items ?? []).map((f: any, i: number) => (
-          <div key={i} className="flex flex-col gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary-soft text-primary">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <circle cx="12" cy="12" r="9" />
-              </svg>
+        {(data.items ?? []).map((f: any, i: number) => {
+          const card = (
+            <div className="flex h-full flex-col gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary-soft text-primary">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="12" r="9" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold">{f.title}</h3>
+              <p className="leading-relaxed text-muted">{f.text}</p>
+              {f.href ? (
+                <span className="mt-1 inline-flex w-fit items-center gap-1 text-sm font-medium text-primary">
+                  {f.link_label || "Learn more"} →
+                </span>
+              ) : null}
             </div>
-            <h3 className="text-xl font-semibold">{f.title}</h3>
-            <p className="leading-relaxed text-muted">{f.text}</p>
-          </div>
-        ))}
+          );
+          return f.href ? <Link key={i} href={f.href} className="group">{card}</Link> : <div key={i}>{card}</div>;
+        })}
       </div>
     </div>
   );
@@ -443,6 +462,8 @@ async function CustomForm({ data, ctx }: BlockProps) {
 function IconCard({ data, ctx }: BlockProps) {
   const art = data.svg_id ? ctx.svgs[data.svg_id] : null;
   const boxed = !!data.box;
+  const iconStyle = data.icon_color ? ({ "--c-primary": data.icon_color, "--c-accent": data.icon_color } as React.CSSProperties) : undefined;
+  const solid = data.link_style !== "bordered";
   return (
     <div
       className={boxed
@@ -450,10 +471,17 @@ function IconCard({ data, ctx }: BlockProps) {
         : "flex h-full w-full flex-col items-start gap-3 py-6 md:gap-4 md:py-10"}
       style={boxed ? { background: data.box_bg || "var(--c-soft)" } : undefined}
     >
-      {art ? <Svg asset={art} label={art.name} className="h-10 w-10 md:h-14 md:w-14" /> : null}
+      {art ? <Svg asset={art} label={art.name} className="h-10 w-10 md:h-14 md:w-14" style={iconStyle} /> : null}
       {data.heading ? <h3 className="text-lg font-semibold md:text-xl">{data.heading}</h3> : null}
       {data.text ? <p className="text-[15px] leading-relaxed text-muted md:text-base">{data.text}</p> : null}
-      {data.link?.label ? <Link href={data.link.href} className="font-medium text-primary">{data.link.label} →</Link> : null}
+      {data.link?.label ? (
+        <Link
+          href={data.link.href}
+          className={`mt-1 inline-flex h-10 items-center rounded-full px-5 text-sm font-medium ${solid ? "bg-primary text-white hover:brightness-110" : "border border-ink text-ink hover:bg-ground"}`}
+        >
+          {data.link.label}
+        </Link>
+      ) : null}
     </div>
   );
 }

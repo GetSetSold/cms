@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { getSettings } from "@/lib/cms";
-import { themeFontHref, themeVars } from "@/lib/theme";
+import { getSettings, getLogo } from "@/lib/cms";
+import { themeFontHref, themeVars, themeIconOverrideCSS } from "@/lib/theme";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { CmsFormRenderer } from "@/components/blocks/CmsFormRenderer";
@@ -27,13 +27,15 @@ export default async function FormPage({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const [form, settings] = await Promise.all([getForm(slug), getSettings()]);
   if (!form) notFound();
+  const logo = await getLogo(settings);
 
   const themeVars_ = themeVars(settings);
 
   return (
     <div style={themeVars_} className="bg-ground text-ink">
       <link rel="stylesheet" href={themeFontHref(settings)} />
-      <SiteHeader settings={settings} />
+      {themeIconOverrideCSS(settings) ? <style dangerouslySetInnerHTML={{ __html: themeIconOverrideCSS(settings) }} /> : null}
+      <SiteHeader settings={settings} logo={logo} />
       <main className="mx-auto w-full max-w-2xl px-5 py-14 md:py-20">
         <div className="mb-8 flex flex-col gap-2">
           <h1 className="font-display text-4xl font-extrabold">{form.name}</h1>

@@ -46,3 +46,14 @@ export function themeFontHref(settings: SiteSettings): string {
     .join("&");
   return `https://fonts.googleapis.com/css2?${families}&display=swap`;
 }
+
+/** Optional CSS to force every icon's accent colors to one value at once
+ *  (Settings > Branding > "Force all icon colors"). Scoped to `.svg-box`
+ *  (our icon wrapper class) so it only ever touches icon fills/strokes —
+ *  buttons use Tailwind's own bg-primary/text-primary classes, a completely
+ *  different selector family, so they're untouched by this override. */
+export function themeIconOverrideCSS(settings: SiteSettings): string {
+  const color = settings.theme?.icon_override;
+  if (!color) return "";
+  return `.svg-box .c-primary,.svg-box .s-primary{fill:${color};stroke:${color}}.svg-box .c-accent,.svg-box .s-accent{fill:${color};stroke:${color}}`;
+}

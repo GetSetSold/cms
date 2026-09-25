@@ -11,6 +11,7 @@ const ta = (key: string, label: string): Field => ({ key, label, type: "textarea
 export const BLOCK_FIELDS: Record<string, Field[]> = {
   hero: [
     t("eyebrow", "Eyebrow"), t("heading", "Heading"), t("heading_accent", "Heading (accent part)"),
+    { key: "heading_accent_color", label: "Accent part color override", type: "color" },
     ta("subheading", "Subheading"),
     { key: "layout", label: "Layout", type: "select", options: ["split", "centered", "form", "search"] },
     { key: "tone", label: "Text tone (match to background)", type: "select", options: ["light", "dark"] },
@@ -22,6 +23,8 @@ export const BLOCK_FIELDS: Record<string, Field[]> = {
     { key: "primary_cta", label: "Primary button", type: "link" },
     { key: "secondary_cta", label: "Secondary button", type: "link" },
     { key: "badge", label: "Floating badge", type: "group", fields: [t("label", "Label"), t("value", "Value")] },
+    { key: "badge_size", label: "Badge size", type: "select", options: ["sm", "md", "lg"] },
+    { key: "badge_style", label: "Badge style", type: "select", options: ["solid", "bordered", "glass"] },
   ],
   logos: [t("heading", "Heading"), { key: "items", label: "Client names", type: "strings" }],
   services: [
@@ -32,7 +35,9 @@ export const BLOCK_FIELDS: Record<string, Field[]> = {
   ],
   features: [
     t("heading", "Heading"), ta("intro", "Intro"),
-    { key: "items", label: "Items", type: "list", itemLabel: "Item", fields: [t("title", "Title"), ta("text", "Text")] },
+    { key: "items", label: "Items", type: "list", itemLabel: "Item", fields: [
+      t("title", "Title"), ta("text", "Text"), t("href", "Links to (optional)"), t("link_label", "Button label (default: Learn more)"),
+    ] },
   ],
   stats: [{ key: "items", label: "Stats", type: "list", itemLabel: "Stat", fields: [t("value", "Value"), t("label", "Label")] }],
   testimonials: [
@@ -91,9 +96,11 @@ export const BLOCK_FIELDS: Record<string, Field[]> = {
   ],
   icon_card: [
     { key: "svg_id", label: "Icon", type: "svg" },
+    { key: "icon_color", label: "Icon color override", type: "color" },
     t("heading", "Title"),
     ta("text", "Content"),
-    { key: "link", label: "Link (optional)", type: "link" },
+    { key: "link", label: "Button (optional)", type: "link" },
+    { key: "link_style", label: "Button style", type: "select", options: ["solid", "bordered"] },
     { key: "box", label: "Show background box", type: "boolean" },
     { key: "box_bg", label: "Box background color (default: theme soft)", type: "color" },
   ],

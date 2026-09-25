@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { collectSvgIds, getPage, getSettings, getSvgs } from "@/lib/cms";
-import { themeFontHref, themeVars } from "@/lib/theme";
+import { themeFontHref, themeVars, themeIconOverrideCSS } from "@/lib/theme";
 import { createClient } from "@/lib/supabase/server";
 import { RenderSections } from "@/components/blocks";
 import { SiteHeader } from "@/components/site/SiteHeader";
@@ -69,6 +69,7 @@ export default async function SitePage(props: Props) {
   return (
     <div style={themeVars_} className="bg-ground text-ink">
       <link rel="stylesheet" href={themeFontHref(settings)} />
+      {themeIconOverrideCSS(settings) ? <style dangerouslySetInnerHTML={{ __html: themeIconOverrideCSS(settings) }} /> : null}
       {preview ? (
         <div className="bg-accent px-4 py-2 text-center text-sm text-white">Preview — status: {page.status}</div>
       ) : null}

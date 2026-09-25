@@ -77,6 +77,12 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
           </label>
         </div>
 
+        <div className="flex items-end gap-4">
+          <ColorField label="Force all icon colors (optional)" value={s.theme.icon_override} fallback={s.theme.primary}
+            onChange={(v) => set("theme", { ...s.theme, icon_override: v })} onReset={() => set("theme", { ...s.theme, icon_override: undefined })} />
+          <p className="pb-1.5 text-xs text-muted">Overrides every icon's accent color at once, sitewide. Leave unset to let each icon follow the normal Primary/Accent colors above.</p>
+        </div>
+
         <div className="flex flex-col gap-3 rounded-lg border border-line p-3">
           <strong className="text-sm">Header appearance</strong>
           <div className="grid grid-cols-2 gap-3">

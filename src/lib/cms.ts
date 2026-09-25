@@ -47,6 +47,16 @@ export async function getSvgs(ids: Iterable<string>): Promise<Record<string, Svg
   return Object.fromEntries((data ?? []).map((s) => [s.id, s as SvgAsset]));
 }
 
+/** Fetches the site logo, if one's set. Use this on every page that renders
+ *  SiteHeader — previously each page fetched (or forgot to fetch) the logo
+ *  independently, which is how listings/city/form pages ended up with no
+ *  logo at all while the main site pages had one. */
+export async function getLogo(settings: SiteSettings): Promise<SvgAsset | null> {
+  if (!settings.logo_svg_id) return null;
+  const svgs = await getSvgs([settings.logo_svg_id]);
+  return svgs[settings.logo_svg_id] ?? null;
+}
+
 export async function getPublishedSlugs() {
   const supabase = await createClient();
   const { data } = await supabase

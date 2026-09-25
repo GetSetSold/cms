@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { createMlsClient, daysOnMarket, displayValue, isSale, mediaItems, priceDisplay, resolveCitySlug, citySlug, type GridListing, type PropertyListing } from "@/lib/mls";
-import { getSettings } from "@/lib/cms";
-import { themeFontHref, themeVars } from "@/lib/theme";
+import { getSettings, getLogo } from "@/lib/cms";
+import { themeFontHref, themeVars, themeIconOverrideCSS } from "@/lib/theme";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter, MobileCtaBar } from "@/components/site/SiteFooter";
 import { ListingCard } from "@/components/listings/ListingCard";
@@ -61,6 +61,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
   }
 
   const [settings, similar] = await Promise.all([getSettings(), getSimilar(listing)]);
+  const logo = await getLogo(settings);
   const photos = mediaItems(listing.Media);
   const dom = daysOnMarket(listing.OriginalEntryTimestamp);
   const sale = isSale(listing);
@@ -79,7 +80,8 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
   return (
     <div style={themeVars_} className="bg-ground text-ink">
       <link rel="stylesheet" href={themeFontHref(settings)} />
-      <SiteHeader settings={settings} />
+      {themeIconOverrideCSS(settings) ? <style dangerouslySetInnerHTML={{ __html: themeIconOverrideCSS(settings) }} /> : null}
+      <SiteHeader settings={settings} logo={logo} />
       <main className="mx-auto w-full max-w-7xl px-5 py-8 md:px-10 md:py-12">
         <div className="mb-4 text-sm text-muted">
           <a href="/" className="hover:text-ink">Home</a> / <a href="/listings" className="hover:text-ink">Listings</a> / {listing.City}
