@@ -78,7 +78,7 @@ export interface SiteSettings {
     subline_size_desktop?: number; // px
     subline_weight?: "normal" | "bold";
   };
-  footer: { tagline?: string; rows: NavColumn[][]; bg?: string; text?: string; columns_per_row?: 3 | 4 };
+  footer: { tagline?: string; rows: NavColumn[][]; bg?: string; text?: string; columns_per_row?: 3 | 4; mobile_columns_per_row?: 1 | 2 };
   mobile_cta: { buttons: MobileCtaButton[]; shape: "square" | "rectangle"; size?: "xs" | "sm" | "md" | "lg" };
   blog_cta: { heading?: string; text?: string; button_label?: string; button_href?: string };
   contact: { phone?: string; email?: string; address?: string; hours?: string };

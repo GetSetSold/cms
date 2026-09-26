@@ -1,7 +1,8 @@
 import Link from "next/link";
 import type { MobileCtaButton, MobileCtaIcon, SiteSettings } from "@/lib/types";
 
-const ROW_COLS: Record<number, string> = { 1: "md:grid-cols-1", 2: "md:grid-cols-2", 3: "md:grid-cols-3", 4: "md:grid-cols-4" };
+const DESKTOP_COLS: Record<number, string> = { 1: "md:grid-cols-1", 2: "md:grid-cols-2", 3: "md:grid-cols-3", 4: "md:grid-cols-4" };
+const MOBILE_COLS: Record<number, string> = { 1: "grid-cols-1", 2: "grid-cols-2" };
 
 export function SiteFooter({ settings }: { settings: SiteSettings }) {
   const c = settings.contact ?? {};
@@ -36,7 +37,7 @@ export function SiteFooter({ settings }: { settings: SiteSettings }) {
             a track with the brand block, so column count changes never
             distort neighbouring content the way one shared grid did. */}
         {restRows.map((row, ri) => (
-          <div key={ri} className={`grid grid-cols-1 gap-8 ${ROW_COLS[Math.min(row.length, 4) as 1 | 2 | 3 | 4]}`}>
+          <div key={ri} className={`grid gap-8 ${MOBILE_COLS[f.mobile_columns_per_row ?? 1]} ${DESKTOP_COLS[f.columns_per_row ?? 4]}`}>
             {row.map((col, i) => (
               <div key={i} className="flex flex-col gap-2.5">
                 {col.heading ? <strong>{col.heading}</strong> : null}

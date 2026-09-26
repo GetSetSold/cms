@@ -701,6 +701,27 @@ function CustomCode({ data, ctx }: BlockProps) {
   );
 }
 
+const SOCIAL_SIZE: Record<string, string> = { xs: "h-6 w-6", sm: "h-8 w-8", md: "h-11 w-11", lg: "h-14 w-14" };
+
+function SocialLinks({ data, ctx }: BlockProps) {
+  const items = (data.items ?? []).filter((it: any) => it.svg_id && it.href);
+  if (!items.length) return null;
+  const size = SOCIAL_SIZE[data.size] || SOCIAL_SIZE.md;
+  return (
+    <div className={`${wrap} flex flex-col items-center gap-5 py-10 md:py-14`}>
+      {data.heading ? <h2 className={`${h2} text-center text-2xl ${heading(ctx)}`}>{data.heading}</h2> : null}
+      <div className="flex flex-wrap items-center justify-center gap-3">
+        {items.map((it: any, i: number) => (
+          <a key={i} href={it.href} target="_blank" rel="noopener noreferrer" aria-label={it.label || "Social link"}
+            className={`flex items-center justify-center overflow-hidden rounded-full bg-white p-2.5 transition hover:scale-105 ${size}`}>
+            <Svg asset={ctx.svgs[it.svg_id]} label={it.label} className="h-full w-full" />
+          </a>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function SectionHeader({ data, ctx }: BlockProps) {
   const centered = data.align === "center";
   return (
@@ -743,6 +764,7 @@ export const BLOCKS: Record<string, (p: BlockProps) => React.ReactNode> = {
   qa_block: QaBlock,
   faq_boxed: FaqBoxed,
   custom_code: CustomCode,
+  social_links: SocialLinks,
 };
 
 const BG: Record<string, string> = {

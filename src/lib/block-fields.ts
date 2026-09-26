@@ -151,4 +151,13 @@ export const BLOCK_FIELDS: Record<string, Field[]> = {
     t("heading", "Heading (optional)"),
     { key: "html", label: "Embed code (paste from Elfsight, a review widget, etc.)", type: "code" },
   ],
+  social_links: [
+    t("heading", "Heading (optional, e.g. Join Us Socially)"),
+    { key: "size", label: "Icon size", type: "select", options: ["xs", "sm", "md", "lg"] },
+    { key: "items", label: "Profiles", type: "list", itemLabel: "Profile", fields: [
+      { key: "svg_id", label: "Icon", type: "svg" },
+      t("href", "Profile link"),
+      t("label", "Label (for accessibility, e.g. Facebook)"),
+    ] },
+  ],
 };
