@@ -19,7 +19,7 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
     const { error } = await supabase.from("site_settings").update({
       site_name: s.site_name, logo_svg_id: s.logo_svg_id, theme: s.theme, seo_defaults: s.seo_defaults,
       navigation: s.navigation.filter((n) => n.label && n.href), header_cta: s.header_cta, header: s.header, footer: s.footer,
-      contact: s.contact, scripts: s.scripts, lead_settings: s.lead_settings, mobile_cta: s.mobile_cta, blog_cta: s.blog_cta,
+      contact: s.contact, scripts: s.scripts, lead_settings: s.lead_settings, mobile_cta: s.mobile_cta, blog_cta: s.blog_cta, social_links: s.social_links,
     }).eq("id", 1);
     setMsg(error ? error.message : "Saved");
   }
@@ -196,9 +196,15 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
               <option value="lg">Large</option>
             </select>
           </label>
+          <label className="label">Layout
+            <select className="input w-44" value={s.mobile_cta?.layout ?? "plain"} onChange={(e) => set("mobile_cta", { ...s.mobile_cta, layout: e.target.value as "plain" | "active-highlight" })}>
+              <option value="plain">Plain (last button filled)</option>
+              <option value="active-highlight">Highlight current page</option>
+            </select>
+          </label>
         </div>
         {(s.mobile_cta?.buttons ?? []).map((btn, i) => (
-          <div key={i} className="grid grid-cols-[120px_1fr_140px_1fr_auto] items-center gap-2 rounded-lg border border-line p-2">
+          <div key={i} className="grid grid-cols-[110px_1fr_180px_1fr_auto] items-start gap-2 rounded-lg border border-line p-2">
             <select className="input" value={btn.type} onChange={(e) => {
               const buttons = [...(s.mobile_cta?.buttons ?? [])]; buttons[i] = { ...btn, type: e.target.value as typeof btn.type }; set("mobile_cta", { ...s.mobile_cta, buttons });
             }}>
@@ -209,11 +215,18 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
             <input className="input" placeholder="Label" value={btn.label} onChange={(e) => {
               const buttons = [...(s.mobile_cta?.buttons ?? [])]; buttons[i] = { ...btn, label: e.target.value }; set("mobile_cta", { ...s.mobile_cta, buttons });
             }} />
-            <select className="input" value={btn.icon} onChange={(e) => {
-              const buttons = [...(s.mobile_cta?.buttons ?? [])]; buttons[i] = { ...btn, icon: e.target.value as typeof btn.icon }; set("mobile_cta", { ...s.mobile_cta, buttons });
-            }}>
-              {(["phone", "message", "star", "home", "mail", "calendar"] as const).map((ic) => <option key={ic} value={ic}>{ic}</option>)}
-            </select>
+            <div className="flex flex-col gap-1">
+              <SvgPicker value={btn.icon_svg_id} svgs={svgs} onChange={(id) => {
+                const buttons = [...(s.mobile_cta?.buttons ?? [])]; buttons[i] = { ...btn, icon_svg_id: id ?? undefined }; set("mobile_cta", { ...s.mobile_cta, buttons });
+              }} />
+              {!btn.icon_svg_id ? (
+                <select className="input h-8 text-xs" value={btn.icon} onChange={(e) => {
+                  const buttons = [...(s.mobile_cta?.buttons ?? [])]; buttons[i] = { ...btn, icon: e.target.value as typeof btn.icon }; set("mobile_cta", { ...s.mobile_cta, buttons });
+                }}>
+                  {(["phone", "message", "star", "home", "mail", "calendar"] as const).map((ic) => <option key={ic} value={ic}>{ic} (fallback icon)</option>)}
+                </select>
+              ) : null}
+            </div>
             <input className="input" placeholder={btn.type === "link" ? "/contact" : "Phone override (optional)"} value={btn.href ?? ""} onChange={(e) => {
               const buttons = [...(s.mobile_cta?.buttons ?? [])]; buttons[i] = { ...btn, href: e.target.value }; set("mobile_cta", { ...s.mobile_cta, buttons });
             }} />
@@ -248,6 +261,35 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
           <label className="label">Button label<input className="input" value={s.blog_cta?.button_label ?? ""} onChange={(e) => set("blog_cta", { ...s.blog_cta, button_label: e.target.value })} /></label>
           <label className="label">Button links to<input className="input" value={s.blog_cta?.button_href ?? ""} onChange={(e) => set("blog_cta", { ...s.blog_cta, button_href: e.target.value })} /></label>
         </div>
+      </section>
+
+      <section className="card flex flex-col gap-4">
+        <h2 className="text-lg font-semibold">Social profiles</h2>
+        <p className="text-xs text-muted">Set once here — the Social Links block reads this list automatically anywhere it's used, so you don't have to re-add your profiles every time.</p>
+        <label className="label">Icon size
+          <select className="input w-32" value={s.social_links?.size ?? "md"} onChange={(e) => set("social_links", { ...s.social_links, size: e.target.value as "xs" | "sm" | "md" | "lg" })}>
+            <option value="xs">X-Small</option><option value="sm">Small</option><option value="md">Medium</option><option value="lg">Large</option>
+          </select>
+        </label>
+        {(s.social_links?.items ?? []).map((it, i) => (
+          <div key={i} className="grid grid-cols-[110px_1fr_auto] items-start gap-2 rounded-lg border border-line p-2">
+            <SvgPicker value={it.svg_id} svgs={svgs} onChange={(id) => {
+              const items = [...(s.social_links?.items ?? [])]; items[i] = { ...it, svg_id: id ?? "" }; set("social_links", { ...s.social_links, items });
+            }} />
+            <div className="flex flex-col gap-1.5">
+              <input className="input" placeholder="Profile link" value={it.href} onChange={(e) => {
+                const items = [...(s.social_links?.items ?? [])]; items[i] = { ...it, href: e.target.value }; set("social_links", { ...s.social_links, items });
+              }} />
+              <input className="input" placeholder="Label (e.g. Facebook)" value={it.label ?? ""} onChange={(e) => {
+                const items = [...(s.social_links?.items ?? [])]; items[i] = { ...it, label: e.target.value }; set("social_links", { ...s.social_links, items });
+              }} />
+            </div>
+            <button type="button" aria-label="Remove" onClick={() => set("social_links", { ...s.social_links, items: (s.social_links?.items ?? []).filter((_, j) => j !== i) })}>✕</button>
+          </div>
+        ))}
+        <button type="button" className="btn self-start border-dashed" onClick={() => set("social_links", { ...s.social_links, items: [...(s.social_links?.items ?? []), { svg_id: "", href: "" }] })}>
+          + Add profile
+        </button>
       </section>
 
       <div className="flex items-center gap-3 xl:col-span-2">

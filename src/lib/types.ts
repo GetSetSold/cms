@@ -57,7 +57,7 @@ export type NavColumn = { heading?: string; links: NavLink[] };
 export type NavItem = { label: string; href: string; columns?: NavColumn[] };
 
 export type MobileCtaIcon = "phone" | "message" | "star" | "home" | "mail" | "calendar";
-export type MobileCtaButton = { type: "call" | "sms" | "link"; label: string; icon: MobileCtaIcon; href?: string };
+export type MobileCtaButton = { type: "call" | "sms" | "link"; label: string; icon: MobileCtaIcon; icon_svg_id?: string; href?: string };
 export interface SiteSettings {
   site_name: string;
   logo_svg_id: string | null;
@@ -80,10 +80,10 @@ export interface SiteSettings {
     subline_weight?: "normal" | "bold";
   };
   footer: { tagline?: string; rows: NavColumn[][]; bg?: string; text?: string; columns_per_row?: 3 | 4; mobile_columns_per_row?: 1 | 2 };
-  mobile_cta: { buttons: MobileCtaButton[]; shape: "square" | "rectangle"; size?: "xs" | "sm" | "md" | "lg" };
+  mobile_cta: { buttons: MobileCtaButton[]; shape: "square" | "rectangle"; size?: "xs" | "sm" | "md" | "lg"; layout?: "plain" | "active-highlight" };
   blog_cta: { heading?: string; text?: string; button_label?: string; button_href?: string };
   contact: { phone?: string; email?: string; address?: string; hours?: string };
-  social_links: Record<string, string>;
+  social_links: { size?: "xs" | "sm" | "md" | "lg"; items: { svg_id: string; href: string; label?: string }[] };
   scripts: { ga4_id?: string };
   lead_settings: { notify_emails: string[] };
 }

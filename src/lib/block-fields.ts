@@ -153,8 +153,8 @@ export const BLOCK_FIELDS: Record<string, Field[]> = {
   ],
   social_links: [
     t("heading", "Heading (optional, e.g. Join Us Socially)"),
-    { key: "size", label: "Icon size", type: "select", options: ["xs", "sm", "md", "lg"] },
-    { key: "items", label: "Profiles", type: "list", itemLabel: "Profile", fields: [
+    { key: "size", label: "Icon size (blank = use Settings default)", type: "select", options: ["xs", "sm", "md", "lg"] },
+    { key: "items", label: "Profiles (leave empty to use the list set in Settings)", type: "list", itemLabel: "Profile", fields: [
       { key: "svg_id", label: "Icon", type: "svg" },
       t("href", "Profile link"),
       t("label", "Label (for accessibility, e.g. Facebook)"),

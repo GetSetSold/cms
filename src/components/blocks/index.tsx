@@ -704,9 +704,11 @@ function CustomCode({ data, ctx }: BlockProps) {
 const SOCIAL_SIZE: Record<string, string> = { xs: "h-6 w-6", sm: "h-8 w-8", md: "h-11 w-11", lg: "h-14 w-14" };
 
 function SocialLinks({ data, ctx }: BlockProps) {
-  const items = (data.items ?? []).filter((it: any) => it.svg_id && it.href);
+  const perInstance = (data.items ?? []).filter((it: any) => it.svg_id && it.href);
+  const global = (ctx.settings.social_links?.items ?? []).filter((it) => it.svg_id && it.href);
+  const items = perInstance.length ? perInstance : global;
   if (!items.length) return null;
-  const size = SOCIAL_SIZE[data.size] || SOCIAL_SIZE.md;
+  const size = SOCIAL_SIZE[data.size || ctx.settings.social_links?.size || "md"] || SOCIAL_SIZE.md;
   return (
     <div className={`${wrap} flex flex-col items-center gap-5 py-10 md:py-14`}>
       {data.heading ? <h2 className={`${h2} text-center text-2xl ${heading(ctx)}`}>{data.heading}</h2> : null}
