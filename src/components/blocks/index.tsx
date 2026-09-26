@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { CmsForm } from "@/lib/types";
 import { EmbedHtml } from "./EmbedHtml";
 import { getFeaturedListings } from "@/lib/featuredListings";
+import { ListingCardShell } from "@/components/listings/ListingCardShell";
 
 export type BlockCtx = { svgs: Record<string, SvgAsset>; settings: SiteSettings; page?: Page; dark?: boolean; buttonStyle?: "solid" | "bordered"; inRow?: boolean };
 
@@ -666,21 +667,18 @@ async function FeaturedListingsGrid({ data }: BlockProps) {
           if (mlsListings[id]) return <ListingCard key={id} listing={mlsListings[id]} />;
           const p = privateListings[id];
           return (
-            <a key={id} href={p.href} className="flex flex-col overflow-hidden rounded-2xl bg-white">
-              <div className="relative aspect-[4/3] overflow-hidden bg-soft">
-                {p.image ? <img src={p.image} alt="" className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center text-sm text-muted">No photo</div>}
-                {p.note ? <span className="absolute left-3 top-3 rounded-full bg-ink/70 px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur">{p.note}</span> : null}
-              </div>
-              <div className="flex flex-col gap-1 p-4">
-                <div className="text-lg font-bold">{p.priceLabel}</div>
-                <div className="text-sm text-muted">{p.address}</div>
-                {p.bed || p.bath || p.sqft ? (
-                  <div className="flex gap-3 pt-1 text-xs text-muted">
-                    {p.bed ? <span>{p.bed} bd</span> : null}{p.bath ? <span>{p.bath} ba</span> : null}{p.sqft ? <span>{p.sqft.toLocaleString()} sqft</span> : null}
-                  </div>
-                ) : null}
-              </div>
-            </a>
+            <ListingCardShell
+              key={id}
+              href={p.href !== "#" ? p.href : undefined}
+              image={p.image}
+              statusLabel={p.note || "Private"}
+              statusTone="purple"
+              price={p.priceLabel}
+              address={p.address}
+              beds={p.bed}
+              baths={p.bath}
+              area={p.sqft ? `${p.sqft.toLocaleString()} sqft` : null}
+            />
           );
         })}
       </div>
