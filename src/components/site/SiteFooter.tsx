@@ -1,6 +1,8 @@
 import Link from "next/link";
 import type { MobileCtaButton, SiteSettings } from "@/lib/types";
 import { MobileCtaBarInner } from "./MobileCtaBarInner";
+import { Svg } from "./Svg";
+import { getSvgs } from "@/lib/cms";
 
 const DESKTOP_COLS: Record<number, string> = { 1: "md:grid-cols-1", 2: "md:grid-cols-2", 3: "md:grid-cols-3", 4: "md:grid-cols-4" };
 const MOBILE_COLS: Record<number, string> = { 1: "grid-cols-1", 2: "grid-cols-2" };
@@ -12,7 +14,10 @@ const BRAND_ROW_TEMPLATE: Record<number, string> = {
   4: "md:[grid-template-columns:1.4fr_repeat(4,1fr)]",
 };
 
-export function SiteFooter({ settings }: { settings: SiteSettings }) {
+export async function SiteFooter({ settings }: { settings: SiteSettings }) {
+  const socialItems = (settings.social_links?.items ?? []).filter((it) => it.svg_id && it.href);
+  const socialSvgs = await getSvgs(socialItems.map((it) => it.svg_id));
+  const socialSize = { xs: "h-7 w-7", sm: "h-9 w-9", md: "h-11 w-11", lg: "h-14 w-14" }[settings.social_links?.size ?? "md"];
   const c = settings.contact ?? {};
   const f = settings.footer ?? { rows: [] };
   const rows = f.rows ?? [];
@@ -54,6 +59,17 @@ export function SiteFooter({ settings }: { settings: SiteSettings }) {
             ))}
           </div>
         ))}
+
+        {socialItems.length ? (
+          <div className="flex flex-wrap items-center justify-center gap-3 border-t pt-6" style={{ borderColor: f.text ? `${f.text}33` : undefined }}>
+            {socialItems.map((it, i) => (
+              <a key={i} href={it.href} target="_blank" rel="noopener noreferrer" aria-label={it.label || "Social link"}
+                className={`flex items-center justify-center overflow-hidden rounded-full bg-white p-2 transition hover:scale-105 ${socialSize}`}>
+                <Svg asset={socialSvgs[it.svg_id]} label={it.label} className="h-full w-full" />
+              </a>
+            ))}
+          </div>
+        ) : null}
 
         <div className="flex flex-col gap-2.5 border-t pt-6 text-sm opacity-75" style={{ borderColor: f.text ? `${f.text}33` : undefined }}>
           <span>© {new Date().getFullYear()} {settings.site_name}</span>

@@ -81,12 +81,21 @@ export function SvgLibrary({ initial }: { initial: SvgAsset[] }) {
     await supabase.from("svg_assets").update({ name: newName }).eq("id", id);
   }
 
+  async function setTags(id: string, tags: string[]) {
+    await supabase.from("svg_assets").update({ tags }).eq("id", id);
+    setItems((l) => l.map((s) => (s.id === id ? { ...s, tags } : s)));
+  }
+
   async function remove(id: string) {
     if (!confirm("Delete this SVG? Sections using it will show nothing in its place.")) return;
     const { error } = await supabase.from("svg_assets").delete().eq("id", id);
     if (error) return setError(error.message);
     setItems((l) => l.filter((s) => s.id !== id));
   }
+
+  const categories = useMemo(() => [...new Set(items.flatMap((s) => s.tags ?? []))].sort(), [items]);
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const visible = activeCategory ? items.filter((s) => (s.tags ?? []).includes(activeCategory)) : items;
 
   return (
     <div className="flex flex-col gap-6">
@@ -104,17 +113,39 @@ export function SvgLibrary({ initial }: { initial: SvgAsset[] }) {
         </div>
       </div>
       {error ? <p className="rounded-lg bg-red-50 p-3 text-red-800" role="alert">{error}</p> : null}
+
+      {categories.length ? (
+        <div className="flex flex-wrap gap-1.5">
+          <button type="button" onClick={() => setActiveCategory(null)}
+            className={`h-8 rounded-full px-3 text-xs font-medium ${!activeCategory ? "bg-primary text-white" : "bg-ground text-muted"}`}>
+            All ({items.length})
+          </button>
+          {categories.map((c) => (
+            <button key={c} type="button" onClick={() => setActiveCategory(c)}
+              className={`h-8 rounded-full px-3 text-xs font-medium ${activeCategory === c ? "bg-primary text-white" : "bg-ground text-muted"}`}>
+              {c} ({items.filter((s) => (s.tags ?? []).includes(c)).length})
+            </button>
+          ))}
+        </div>
+      ) : null}
+
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4 xl:grid-cols-6">
-        {items.map((s) => (
-          <figure key={s.id} className="flex flex-col gap-2 rounded-xl bg-white p-3">
+        {visible.map((s) => (
+          <figure key={s.id} className="flex flex-col gap-1.5 rounded-xl bg-white p-3">
             <SvgThumb asset={s} className="aspect-[4/3] w-full" />
             <input className="input h-8 text-xs" defaultValue={s.name} onBlur={(e) => e.target.value !== s.name && rename(s.id, e.target.value)} aria-label="SVG name" />
+            <input className="input h-8 text-xs" placeholder="Categories, comma separated" defaultValue={(s.tags ?? []).join(", ")}
+              onBlur={(e) => {
+                const tags = e.target.value.split(",").map((t) => t.trim()).filter(Boolean);
+                if (JSON.stringify(tags) !== JSON.stringify(s.tags ?? [])) setTags(s.id, tags);
+              }} aria-label="Categories" />
             <div className="flex justify-between">
               <button className="text-xs text-primary" onClick={() => setEditing(s)}>Edit</button>
               <button className="text-xs text-red-700" onClick={() => remove(s.id)}>Delete</button>
             </div>
           </figure>
         ))}
+        {!visible.length ? <p className="col-span-full py-8 text-center text-muted">No icons in this category yet.</p> : null}
       </div>
       {editing ? (
         <EditSvgModal
