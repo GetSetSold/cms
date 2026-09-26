@@ -209,13 +209,15 @@ function Features({ data, ctx }: BlockProps) {
             : ctx.dark ? "border border-ground text-ground" : "border border-ink text-ink";
           const card = (
             <div className="flex h-full flex-col gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary-soft text-primary">
-                {art ? <Svg asset={art} label={art.name} className="h-6 w-6" /> : (
+              {art ? (
+                <Svg asset={art} label={art.name} className="h-10 w-10 md:h-14 md:w-14" colorOverride={f.icon_color} />
+              ) : (
+                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary-soft text-primary">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <circle cx="12" cy="12" r="9" />
                   </svg>
-                )}
-              </div>
+                </div>
+              )}
               <h3 className={`text-xl font-semibold ${heading(ctx)}`}>{f.title}</h3>
               <p className={`leading-relaxed ${muted(ctx)}`}>{f.text}</p>
               {f.href ? (
@@ -764,7 +766,7 @@ function renderOne(s: Section, ctx: BlockCtx) {
   const content = <Block data={s.data ?? {}} ctx={blockCtx} />;
 
   return (
-    <section key={s.id} id={st.anchor || undefined} className={cls} data-block={s.block_type}>
+    <section key={s.id} id={st.anchor || s.id} className={cls} data-block={s.block_type}>
       {st.box ? (
         <div className={`${wrap} py-8 md:py-12`}>
           <div className="rounded-2xl p-6 md:p-8" style={{ background: box.css }}>{content}</div>

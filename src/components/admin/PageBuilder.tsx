@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -20,6 +20,17 @@ export function PageBuilder({ page: initialPage, sections: initialSections, bloc
   const [sections, setSections] = useState(initialSections);
   const [savedIds, setSavedIds] = useState(() => initialSections.map((s) => s.id));
   const [selected, setSelected] = useState<string | null>(initialSections[0]?.id ?? null);
+  const previewRef = useRef<HTMLIFrameElement>(null);
+
+  function selectSection(id: string) {
+    setSelected(id);
+    // Preview is a same-origin iframe of the real page, not a live in-place
+    // render, so we can't just scroll it directly — but assigning its
+    // window's location.hash jumps to the matching element (every section
+    // now always has an id, see renderOne) without a full reload.
+    const win = previewRef.current?.contentWindow;
+    if (win) { try { win.location.hash = id; } catch { /* ignore */ } }
+  }
   const [tab, setTab] = useState<"content" | "style" | "seo">("content");
   const [device, setDevice] = useState<keyof typeof DEVICES>("Desktop");
   const [dirty, setDirty] = useState(false);
@@ -153,7 +164,7 @@ export function PageBuilder({ page: initialPage, sections: initialSections, bloc
           {sections.map((s, i) => (
             <div key={s.id}
               className={`group flex h-11 items-center gap-1 rounded-lg border px-2 ${s.id === selected ? "border-primary bg-[#E4F0EE] font-medium" : "border-transparent hover:bg-ground"} ${s.is_visible ? "" : "text-[#8A8E97]"}`}>
-              <button className="flex-1 truncate text-left" onClick={() => setSelected(s.id)}>{nameOf(s.block_type)}</button>
+              <button className="flex-1 truncate text-left" onClick={() => selectSection(s.id)}>{nameOf(s.block_type)}</button>
               {s.settings?.hide_on_mobile ? <span className="text-[10px] text-muted">desktop</span> : null}
               {s.settings?.row_id ? <span className="text-[10px] text-primary">row · {s.settings.row_columns ?? 2}col</span> : null}
               {s.settings?.hide_on_desktop ? <span className="text-[10px] text-muted">mobile</span> : null}
@@ -210,7 +221,7 @@ export function PageBuilder({ page: initialPage, sections: initialSections, bloc
         <section className="flex min-w-0 flex-1 justify-center overflow-auto bg-[#ECE8E0] p-6">
           <div className="flex w-full flex-col items-center gap-2">
             {dirty ? <p className="text-xs text-muted">Preview shows the last saved version — save to refresh.</p> : null}
-            <iframe key={previewKey} src={`${url}?preview=1`} title="Page preview"
+            <iframe ref={previewRef} key={previewKey} src={`${url}?preview=1`} title="Page preview"
               className="h-full min-h-[700px] rounded-xl bg-white shadow-[0_8px_30px_rgba(21,23,28,0.1)]"
               style={{ width: DEVICES[device], maxWidth: "100%" }} />
           </div>

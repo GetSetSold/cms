@@ -33,6 +33,7 @@ body { background: var(--c-ground); color: var(--c-ink); font-family: var(--font
 
 /* SVG theme classes used by the illustration library */
 .svg-box svg { display: block; width: 100%; height: 100%; }
+[data-block] { scroll-margin-top: 96px; }
 .c-primary { fill: var(--c-primary); }  .s-primary { stroke: var(--c-primary); }
 .c-accent  { fill: var(--c-accent); }   .s-accent  { stroke: var(--c-accent); }
 .c-ink     { fill: var(--c-ink); }      .s-ink     { stroke: var(--c-ink); }

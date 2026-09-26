@@ -37,6 +37,7 @@ export const BLOCK_FIELDS: Record<string, Field[]> = {
     t("heading", "Heading"), ta("intro", "Intro"),
     { key: "items", label: "Items", type: "list", itemLabel: "Item", fields: [
       { key: "svg_id", label: "Icon", type: "svg" },
+      { key: "icon_color", label: "Icon color override", type: "color" },
       t("title", "Title"), ta("text", "Text"), t("href", "Links to (optional)"), t("link_label", "Button label (default: Learn more)"),
     ] },
   ],
