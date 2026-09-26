@@ -5,7 +5,8 @@ export type LeadStatus = "new" | "contacted" | "qualified" | "proposal" | "won" 
 export type Json = Record<string, any>;
 
 export interface SectionSettings {
-  background?: "default" | "muted" | "dark" | "brand";
+  background?: "default" | "muted" | "dark" | "brand" | "white" | "custom";
+  background_color?: string; // used when background === "custom"
   hide_on_mobile?: boolean;
   hide_on_desktop?: boolean;
   /** Groups this block with other consecutive blocks sharing the same row_id

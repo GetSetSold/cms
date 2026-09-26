@@ -246,9 +246,22 @@ export function PageBuilder({ page: initialPage, sections: initialSections, bloc
                 <label className="label">Background
                   <select className="input" value={current.settings.background ?? "default"}
                     onChange={(e) => patchSection(current.id, { settings: { ...current.settings, background: e.target.value as any } })}>
-                    <option value="default">Default</option><option value="muted">Muted</option><option value="dark">Dark</option><option value="brand">Brand colour</option>
+                    <option value="default">Default</option><option value="white">White</option><option value="muted">Muted</option><option value="dark">Dark</option><option value="brand">Brand colour</option><option value="custom">Custom color…</option>
                   </select>
                 </label>
+                {current.settings.background === "custom" ? (
+                  <div className="flex items-center gap-2">
+                    {["#F4F2FC", "#E7E4FB", "#14142B", "#1B1145", "#FFFFFF"].map((c) => (
+                      <button key={c} type="button" title={c} onClick={() => patchSection(current.id, { settings: { ...current.settings, background_color: c } })}
+                        className={`h-7 w-7 rounded-full border ${current.settings.background_color === c ? "ring-2 ring-primary ring-offset-1" : "border-line"}`}
+                        style={{ background: c }} />
+                    ))}
+                    <input type="color" value={/^#[0-9a-f]{6}$/i.test(current.settings.background_color ?? "") ? current.settings.background_color : "#ffffff"}
+                      onChange={(e) => patchSection(current.id, { settings: { ...current.settings, background_color: e.target.value } })}
+                      className="h-7 w-9 cursor-pointer rounded border-0 bg-transparent" title="Custom color" />
+                    <span className="font-mono text-xs text-muted">{current.settings.background_color}</span>
+                  </div>
+                ) : null}
                 <label className="label">Anchor (for #links)
                   <input className="input" value={current.settings.anchor ?? ""} placeholder="quote"
                     onChange={(e) => patchSection(current.id, { settings: { ...current.settings, anchor: e.target.value.replace(/[^a-z0-9-]/gi, "") } })} />

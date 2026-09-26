@@ -9,7 +9,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { CmsForm } from "@/lib/types";
 import { EmbedHtml } from "./EmbedHtml";
 
-export type BlockCtx = { svgs: Record<string, SvgAsset>; settings: SiteSettings; page?: Page; dark?: boolean; buttonStyle?: "solid" | "bordered" };
+export type BlockCtx = { svgs: Record<string, SvgAsset>; settings: SiteSettings; page?: Page; dark?: boolean; buttonStyle?: "solid" | "bordered"; inRow?: boolean };
 
 /** Text tone that auto-adjusts to the section's background — use instead of
  *  a hardcoded text-muted/text-ink so copy stays readable on dark sections. */
@@ -724,8 +724,12 @@ function SocialLinks({ data, ctx }: BlockProps) {
 
 function SectionHeader({ data, ctx }: BlockProps) {
   const centered = data.align === "center";
+  // When grouped in a row, the row wrapper already supplies the page's
+  // edge padding — adding this block's own on top of that (via `wrap`)
+  // is what made a grouped instance look narrower than a full-width one.
+  const outer = ctx.inRow ? "w-full h-full" : wrap;
   return (
-    <div className={`${wrap} flex flex-col gap-4 py-10 md:py-14 ${centered ? "items-center text-center" : "items-start text-left"}`}>
+    <div className={`${outer} flex flex-col gap-4 py-10 md:py-14 ${centered ? "items-center text-center" : "items-start text-left"}`}>
       {data.eyebrow ? <div className="text-base font-extrabold text-accent md:text-lg">{data.eyebrow}</div> : null}
       {data.heading ? <h2 className={`font-display text-3xl font-extrabold md:text-5xl ${heading(ctx)}`}>{data.heading}</h2> : null}
       <div className={`h-px w-full ${ctx.dark ? "bg-white/20" : "bg-line"}`} />
@@ -772,6 +776,8 @@ const BG: Record<string, string> = {
   muted: "bg-soft/60",
   dark: "bg-gradient-to-br from-ink to-primary text-ground",
   brand: "bg-primary text-white",
+  white: "bg-white",
+  custom: "",
 };
 
 const ROW_COLS: Record<number, string> = { 1: "md:grid-cols-1", 2: "md:grid-cols-2", 3: "md:grid-cols-3", 4: "md:grid-cols-4" };
@@ -786,7 +792,8 @@ function renderOne(s: Section, ctx: BlockCtx) {
   const Block = BLOCKS[s.block_type];
   if (!Block) return null;
   const st = s.settings ?? {};
-  const sectionIsDark = st.background === "dark" || st.background === "brand";
+  const customBg = st.background === "custom" ? st.background_color : undefined;
+  const sectionIsDark = st.background === "dark" || st.background === "brand" || (st.background === "custom" && isDarkColor(customBg));
   const cls = [BG[st.background ?? "default"], st.hide_on_mobile && "hide-mobile", st.hide_on_desktop && "hide-desktop"]
     .filter(Boolean).join(" ");
 
@@ -800,7 +807,7 @@ function renderOne(s: Section, ctx: BlockCtx) {
   const content = <Block data={s.data ?? {}} ctx={blockCtx} />;
 
   return (
-    <section key={s.id} id={st.anchor || s.id} className={cls} data-block={s.block_type}>
+    <section key={s.id} id={st.anchor || s.id} className={cls} style={customBg ? { background: customBg } : undefined} data-block={s.block_type}>
       {st.box ? (
         <div className={`${wrap} py-8 md:py-12`}>
           <div className="rounded-2xl p-6 md:p-8" style={{ background: box.css }}>{content}</div>
@@ -830,7 +837,7 @@ export function RenderSections({ sections, ctx }: { sections: Section[]; ctx: Bl
         const cols = group[0].settings?.row_columns ?? Math.min(group.length, 4) as 1 | 2 | 3 | 4;
         return (
           <div key={group[0].id ?? gi} className={`mx-auto w-full max-w-7xl grid grid-cols-1 gap-x-8 gap-y-10 px-5 md:gap-y-8 md:px-10 ${ROW_COLS[cols]}`}>
-            {group.map((s) => renderOne(s, ctx))}
+            {group.map((s) => renderOne(s, { ...ctx, inRow: true }))}
           </div>
         );
       })}
