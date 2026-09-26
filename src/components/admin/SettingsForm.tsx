@@ -180,7 +180,21 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
 
       <section className="card flex flex-col gap-4">
         <h2 className="text-lg font-semibold">Mobile bottom bar</h2>
-        <p className="text-xs text-muted">Shown as a sticky bar on phones. Up to 3 buttons.</p>
+        <p className="text-xs text-muted">Shown as a sticky bar on phones. Up to 5 buttons.</p>
+        <div className="flex flex-wrap gap-4">
+          <label className="label">Style
+            <select className="input w-44" value={s.mobile_cta?.style ?? "buttons"} onChange={(e) => set("mobile_cta", { ...s.mobile_cta, style: e.target.value as "buttons" | "tabs" })}>
+              <option value="buttons">Buttons (pill/square)</option>
+              <option value="tabs">Tabs (icon over label)</option>
+            </select>
+          </label>
+          <label className="label">Bar background
+            <select className="input w-32" value={s.mobile_cta?.bar_bg ?? "light"} onChange={(e) => set("mobile_cta", { ...s.mobile_cta, bar_bg: e.target.value as "light" | "dark" })}>
+              <option value="light">Light (#FFFFFF)</option>
+              <option value="dark">Dark (#000000)</option>
+            </select>
+          </label>
+        </div>
         <div className="flex gap-4">
           <label className="label">Button shape
             <select className="input w-40" value={s.mobile_cta?.shape ?? "rectangle"} onChange={(e) => set("mobile_cta", { ...s.mobile_cta, shape: e.target.value as "square" | "rectangle" })}>
@@ -233,7 +247,7 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
             <button type="button" aria-label="Remove" onClick={() => set("mobile_cta", { ...s.mobile_cta, buttons: (s.mobile_cta?.buttons ?? []).filter((_, j) => j !== i) })}>✕</button>
           </div>
         ))}
-        {(s.mobile_cta?.buttons?.length ?? 0) < 3 ? (
+        {(s.mobile_cta?.buttons?.length ?? 0) < 5 ? (
           <button type="button" className="btn self-start border-dashed" onClick={() => set("mobile_cta", { ...s.mobile_cta, buttons: [...(s.mobile_cta?.buttons ?? []), { type: "link", label: "New button", icon: "star" }] })}>
             + Add button
           </button>

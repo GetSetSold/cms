@@ -76,7 +76,7 @@ function ctaHref(btn: MobileCtaButton, phone?: string) {
  *  everywhere it's already used, so no page call sites need to change. */
 export async function MobileCtaBar({ settings }: { settings: SiteSettings }) {
   const cfg = settings.mobile_cta ?? { buttons: [], shape: "rectangle" as const, size: "md" as const };
-  const buttons = (cfg.buttons ?? []).slice(0, 3);
+  const buttons = (cfg.buttons ?? []).slice(0, 5);
   if (!buttons.length) return null;
 
   const svgIds = buttons.map((b) => b.icon_svg_id).filter((id): id is string => !!id);
@@ -95,5 +95,5 @@ export async function MobileCtaBar({ settings }: { settings: SiteSettings }) {
     iconPreset: btn.icon,
   }));
 
-  return <MobileCtaBarInner buttons={resolved} shape={cfg.shape ?? "rectangle"} size={cfg.size ?? "md"} layout={cfg.layout ?? "plain"} />;
+  return <MobileCtaBarInner buttons={resolved} shape={cfg.shape ?? "rectangle"} size={cfg.size ?? "md"} layout={cfg.layout ?? "plain"} style={cfg.style ?? "buttons"} barBg={cfg.bar_bg ?? "light"} />;
 }
