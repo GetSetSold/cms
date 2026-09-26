@@ -103,7 +103,7 @@ export function PageBuilder({ page: initialPage, sections: initialSections, bloc
     const { error } = await supabase.rpc("publish_page", { p_page: page.id });
     setBusy("");
     if (error) return setMessage(error.message);
-    setPage((p) => ({ ...p, status: "published" })); setMessage("Published"); router.refresh();
+    setPage((p) => ({ ...p, status: "published" })); setMessage("Published");
   }
 
   async function unpublish() {
@@ -249,6 +249,36 @@ export function PageBuilder({ page: initialPage, sections: initialSections, bloc
                 <label className="flex items-center justify-between">Show on desktop
                   <input type="checkbox" checked={!current.settings.hide_on_desktop}
                     onChange={(e) => patchSection(current.id, { settings: { ...current.settings, hide_on_desktop: !e.target.checked } })} />
+                </label>
+
+                <div className="flex flex-col gap-3 rounded-lg border border-line p-3">
+                  <strong className="text-sm">Background box</strong>
+                  <label className="flex items-center justify-between text-sm">Show background box
+                    <input type="checkbox" checked={!!current.settings.box}
+                      onChange={(e) => patchSection(current.id, { settings: { ...current.settings, box: e.target.checked, box_bg: current.settings.box_bg || "white" } })} />
+                  </label>
+                  {current.settings.box ? (
+                    <div className="flex items-center gap-2">
+                      {["white", "transparent", "#F4F2FC", "#E7E4FB", "#14142B", "#1B1145"].map((c) => (
+                        <button key={c} type="button" title={c} onClick={() => patchSection(current.id, { settings: { ...current.settings, box_bg: c } })}
+                          className={`h-7 w-7 rounded-full border ${current.settings.box_bg === c ? "ring-2 ring-primary ring-offset-1" : "border-line"}`}
+                          style={{ background: c === "transparent" ? "repeating-conic-gradient(#ddd 0% 25%, #fff 0% 50%) 50% / 10px 10px" : c }} />
+                      ))}
+                      <input type="color" value={/^#[0-9a-f]{6}$/i.test(current.settings.box_bg ?? "") ? current.settings.box_bg : "#ffffff"}
+                        onChange={(e) => patchSection(current.id, { settings: { ...current.settings, box_bg: e.target.value } })}
+                        className="h-7 w-9 cursor-pointer rounded border-0 bg-transparent" title="Custom color" />
+                      <span className="font-mono text-xs text-muted">{current.settings.box_bg}</span>
+                    </div>
+                  ) : null}
+                  <p className="text-xs text-muted">Text inside automatically switches to light or dark based on this color's actual brightness — no separate setting needed.</p>
+                </div>
+
+                <label className="label">Button style (any button this block shows)
+                  <select className="input" value={current.settings.button_style ?? "solid"}
+                    onChange={(e) => patchSection(current.id, { settings: { ...current.settings, button_style: e.target.value as "solid" | "bordered" } })}>
+                    <option value="solid">Solid (filled)</option>
+                    <option value="bordered">Bordered (outline)</option>
+                  </select>
                 </label>
 
                 <div className="flex flex-col gap-2 rounded-lg border border-line p-3">

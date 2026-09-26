@@ -142,7 +142,7 @@ export function FormEditor({ initial }: { initial: CmsForm }) {
     const { error } = await createClient().from("forms").update(row).eq("id", form.id);
     setSaving(false);
     setMsg(error ? error.message : "Saved");
-    if (!error) { set("slug", row.slug); router.refresh(); }
+    if (!error) { set("slug", row.slug); }
   }
 
   async function remove() {

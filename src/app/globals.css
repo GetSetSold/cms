@@ -62,6 +62,15 @@ body { background: var(--c-ground); color: var(--c-ink); font-family: var(--font
 .prose-post h2 { font-family: var(--font-display); font-size: 28px; font-weight: 800; margin-top: 1.6em; }
 .prose-post h3 { font-family: var(--font-display); font-size: 22px; font-weight: 700; margin-top: 1.4em; }
 .prose-post ul { padding-left: 1.4em; display: flex; flex-direction: column; gap: 0.5em; list-style: disc; }
+.prose-post ul.checklist { padding-left: 0; list-style: none; }
+.prose-post ul.checklist li { display: flex; align-items: flex-start; gap: 10px; }
+.prose-post .check-mark { flex-shrink: 0; width: 20px; height: 20px; border-radius: 999px; background: var(--c-primary); color: white; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; margin-top: 2px; }
+
+.prose-post .content-box { padding: 20px 24px; border-radius: 14px; color: #14142B; }
+.prose-post .content-box p { margin: 0; }
+.prose-post .box-row { display: grid; grid-template-columns: 1fr; gap: 16px; align-items: stretch; }
+.prose-post .box-row .content-box { height: 100%; }
+@media (min-width: 768px) { .prose-post .box-row { grid-template-columns: 1fr 1fr; } }
 .prose-post blockquote { padding: 1.3em 1.5em; border-radius: 14px; background: var(--c-soft); border-left: 4px solid var(--c-primary); font-style: italic; }
 .prose-post a { color: var(--c-primary); text-decoration: underline; }
 .prose-post strong { font-weight: 700; }

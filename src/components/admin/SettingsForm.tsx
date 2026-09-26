@@ -21,7 +21,7 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
       navigation: s.navigation.filter((n) => n.label && n.href), header_cta: s.header_cta, header: s.header, footer: s.footer,
       contact: s.contact, scripts: s.scripts, lead_settings: s.lead_settings, mobile_cta: s.mobile_cta, blog_cta: s.blog_cta,
     }).eq("id", 1);
-    setMsg(error ? error.message : "Saved"); router.refresh();
+    setMsg(error ? error.message : "Saved");
   }
 
   const colors: [keyof SiteSettings["theme"], string][] = [["primary", "Primary"], ["accent", "Accent"], ["ink", "Text"], ["ground", "Background"]];

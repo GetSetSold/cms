@@ -14,6 +14,14 @@ export interface SectionSettings {
   row_id?: string;
   row_columns?: 1 | 2 | 3 | 4;
   anchor?: string;
+  /** Available on every block, not just certain ones — wraps the block's
+   *  content in a background box. Text color inside adjusts automatically
+   *  based on the actual color's real brightness, not an assumption. */
+  box?: boolean;
+  box_bg?: string; // hex, or the literal strings "white" / "transparent"
+  /** Available on every block — any button the block renders reads this
+   *  when the block itself doesn't hardcode its own style. */
+  button_style?: "solid" | "bordered";
 }
 
 export interface Section {

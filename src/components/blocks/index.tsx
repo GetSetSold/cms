@@ -8,12 +8,26 @@ import { CmsFormRenderer } from "./CmsFormRenderer";
 import { createClient } from "@/lib/supabase/server";
 import type { CmsForm } from "@/lib/types";
 
-export type BlockCtx = { svgs: Record<string, SvgAsset>; settings: SiteSettings; page?: Page; dark?: boolean };
+export type BlockCtx = { svgs: Record<string, SvgAsset>; settings: SiteSettings; page?: Page; dark?: boolean; buttonStyle?: "solid" | "bordered" };
 
 /** Text tone that auto-adjusts to the section's background — use instead of
  *  a hardcoded text-muted/text-ink so copy stays readable on dark sections. */
 const muted = (ctx: BlockCtx) => (ctx.dark ? "text-ground/75" : "text-muted");
 const heading = (ctx: BlockCtx) => (ctx.dark ? "text-ground" : "text-ink");
+
+/** True if a hex color is dark enough to need light text on it — actual
+ *  relative-luminance math, not a guess, so a custom color picker (like
+ *  icon_card's box background) gets readable text automatically instead of
+ *  assuming every custom color is light. */
+function isDarkColor(hex?: string): boolean {
+  if (!hex) return false;
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex.trim());
+  if (!m) return false;
+  const n = parseInt(m[1], 16);
+  const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luminance < 0.5;
+}
 type BlockProps = { data: any; ctx: BlockCtx };
 
 const wrap = "mx-auto w-full max-w-7xl px-5 md:px-10";
@@ -523,12 +537,17 @@ async function CustomForm({ data, ctx }: BlockProps) {
 function IconCard({ data, ctx }: BlockProps) {
   const art = data.svg_id ? ctx.svgs[data.svg_id] : null;
   const boxed = !!data.box;
-  // A boxed card has its own light surface, so it keeps normal dark-on-light
-  // text regardless of the section — only a "bare" card (text directly on
-  // the section background) needs to flip for a dark section.
-  const dark = !boxed && ctx.dark;
+  // Resolve the actual color this card's box will use, in the same priority
+  // the inline style below applies it: a per-card custom color first, then
+  // the sitewide "force all icon backgrounds" override, then the default
+  // (var(--c-soft), which is always light). Whichever one wins, we check
+  // its real luminance — a boxed card isn't automatically light just
+  // because it has its own background; that background could itself be dark.
+  const resolvedBoxColor = data.box_bg || ctx.settings.theme?.icon_bg_override || null;
+  const boxIsDark = boxed && isDarkColor(resolvedBoxColor ?? undefined);
+  const dark = boxIsDark || (!boxed && ctx.dark);
   const iconStyle = data.icon_color ? ({ "--c-primary": data.icon_color, "--c-accent": data.icon_color } as React.CSSProperties) : undefined;
-  const solid = data.link_style !== "bordered";
+  const solid = (data.link_style || ctx.buttonStyle || "solid") !== "bordered";
   const btnCls = solid
     ? dark ? "bg-white text-ink hover:brightness-95" : "bg-primary text-white hover:brightness-110"
     : dark ? "border border-ground text-ground hover:bg-white/10" : "border border-ink text-ink hover:bg-ground";
@@ -537,7 +556,7 @@ function IconCard({ data, ctx }: BlockProps) {
       className={boxed
         ? "flex h-full w-full flex-col items-start gap-3 rounded-2xl p-6 md:gap-4 md:p-7"
         : "flex h-full w-full flex-col items-start gap-3 py-6 md:gap-4 md:py-10"}
-      style={boxed ? { background: data.box_bg || "var(--c-icon-bg, var(--c-soft))" } : undefined}
+      style={boxed ? { background: resolvedBoxColor || "var(--c-soft)" } : undefined}
     >
       {art ? <Svg asset={art} label={art.name} className="h-10 w-10 md:h-14 md:w-14" style={iconStyle} /> : null}
       {data.heading ? <h3 className={`text-lg font-semibold md:text-xl ${dark ? "text-ground" : ""}`}>{data.heading}</h3> : null}
@@ -710,16 +729,36 @@ const BG: Record<string, string> = {
 
 const ROW_COLS: Record<number, string> = { 1: "md:grid-cols-1", 2: "md:grid-cols-2", 3: "md:grid-cols-3", 4: "md:grid-cols-4" };
 
+function resolveBoxColor(box_bg?: string): { css?: string; dark: boolean } {
+  if (!box_bg || box_bg === "transparent") return { css: undefined, dark: false };
+  if (box_bg === "white") return { css: "#FFFFFF", dark: false };
+  return { css: box_bg, dark: isDarkColor(box_bg) };
+}
+
 function renderOne(s: Section, ctx: BlockCtx) {
   const Block = BLOCKS[s.block_type];
   if (!Block) return null;
   const st = s.settings ?? {};
-  const isDark = st.background === "dark" || st.background === "brand";
+  const sectionIsDark = st.background === "dark" || st.background === "brand";
   const cls = [BG[st.background ?? "default"], st.hide_on_mobile && "hide-mobile", st.hide_on_desktop && "hide-desktop"]
     .filter(Boolean).join(" ");
+
+  const box = resolveBoxColor(st.box ? (st.box_bg || "white") : undefined);
+  // Once content sits on its own box, its contrast depends on the box's
+  // color, not the section behind it — the box supersedes the section for
+  // this purpose. Without a box, the section's own dark/light state applies
+  // exactly as before.
+  const blockCtx: BlockCtx = { ...ctx, dark: st.box ? box.dark : sectionIsDark, buttonStyle: st.button_style };
+
+  const content = <Block data={s.data ?? {}} ctx={blockCtx} />;
+
   return (
     <section key={s.id} id={st.anchor || undefined} className={cls} data-block={s.block_type}>
-      <Block data={s.data ?? {}} ctx={{ ...ctx, dark: isDark }} />
+      {st.box ? (
+        <div className={`${wrap} py-8 md:py-12`}>
+          <div className="rounded-2xl p-6 md:p-8" style={{ background: box.css }}>{content}</div>
+        </div>
+      ) : content}
     </section>
   );
 }

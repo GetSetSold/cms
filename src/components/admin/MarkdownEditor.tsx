@@ -9,10 +9,12 @@ const TOOLS: { label: string; wrap?: [string, string]; line?: string }[] = [
   { label: "H3", line: "### " },
   { label: "Link", wrap: ["[", "](https://)"] },
   { label: "•", line: "- " },
+  { label: "☑", line: "+ " },
   { label: "❝", line: "> " },
   { label: "Tip", line: "> [!tip] " },
   { label: "Warning", line: "> [!warning] " },
   { label: "Note", line: "> [!note] " },
+  { label: "Box", wrap: ["\n::: box light\n", "\n:::\n"] },
 ];
 
 export function MarkdownEditor({ value, onChange }: { value: string; onChange: (v: string) => void }) {
@@ -31,6 +33,15 @@ export function MarkdownEditor({ value, onChange }: { value: string; onChange: (
     if (tool.wrap) {
       next = `${before}${tool.wrap[0]}${selected}${tool.wrap[1]}${after}`;
       caret = s + tool.wrap[0].length + selected.length + (selected ? tool.wrap[1].length : 0);
+    } else if (tool.line && selected.includes("\n") && (tool.line === "- " || tool.line === "+ ")) {
+      // Multi-line selection with a list-style tool: prefix every line, not
+      // just the first — selecting a paragraph and clicking Checklist turns
+      // the whole thing into checked items, not just the first line.
+      const atLineStart = s === 0 || value[s - 1] === "\n";
+      const prefix = atLineStart ? "" : "\n";
+      const prefixed = selected.split("\n").map((line) => (line.trim() ? `${tool.line}${line}` : line)).join("\n");
+      next = `${before}${prefix}${prefixed}${after}`;
+      caret = s + prefix.length + prefixed.length;
     } else {
       const atLineStart = s === 0 || value[s - 1] === "\n";
       const prefix = atLineStart ? "" : "\n";

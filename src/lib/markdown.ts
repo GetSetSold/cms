@@ -52,14 +52,30 @@ const CALLOUT: Record<string, { cls: string; icon: string }> = {
   note: { cls: "callout-note", icon: "i" },
 };
 
+const BOX_BG: Record<string, string> = {
+  light: "#F4F2FC", // theme's own light tint — matches the rest of the site
+  gray: "#F1F1EF",
+  white: "#FFFFFF",
+};
+
 export function renderMarkdown(md: string): string {
   const lines = (md || "").replace(/\r\n/g, "\n").split("\n");
-  const out: string[] = [];
+  const rawBlocks: string[] = []; // each entry is either normal html, or a box marked with a data attribute for the pairing pass below
   const slug = makeSlugger(); // same dedupe sequence as extractToc, so ids line up
   let list: string[] = [];
+  let listType: "ul" | "check" = "ul";
   let quote: string[] = [];
+  let box: { bg: string; lines: string[] } | null = null;
 
-  const flushList = () => { if (list.length) { out.push(`<ul>${list.map((li) => `<li>${inline(li)}</li>`).join("")}</ul>`); list = []; } };
+  const flushList = () => {
+    if (!list.length) return;
+    if (listType === "check") {
+      rawBlocks.push(`<ul class="checklist">${list.map((li) => `<li><span class="check-mark">✓</span>${inline(li)}</li>`).join("")}</ul>`);
+    } else {
+      rawBlocks.push(`<ul>${list.map((li) => `<li>${inline(li)}</li>`).join("")}</ul>`);
+    }
+    list = [];
+  };
 
   const flushQuote = () => {
     if (!quote.length) return;
@@ -70,25 +86,44 @@ export function renderMarkdown(md: string): string {
     if (m) {
       const type = CALLOUT[m[1].toLowerCase()];
       const text = [m[2], ...quote.slice(1)].filter(Boolean).join(" ");
-      out.push(`<div class="callout ${type.cls}"><span class="callout-icon">${type.icon}</span><div>${inline(text)}</div></div>`);
+      rawBlocks.push(`<div class="callout ${type.cls}"><span class="callout-icon">${type.icon}</span><div>${inline(text)}</div></div>`);
     } else {
-      out.push(`<blockquote>${inline(quote.join(" "))}</blockquote>`);
+      rawBlocks.push(`<blockquote>${inline(quote.join(" "))}</blockquote>`);
     }
     quote = [];
   };
 
   let para: string[] = [];
-  const flushPara = () => { if (para.length) { out.push(`<p>${inline(para.join(" "))}</p>`); para = []; } };
+  const flushPara = () => { if (para.length) { rawBlocks.push(`<p>${inline(para.join(" "))}</p>`); para = []; } };
+
+  const BOX_MARK = "\u0000BOX\u0000"; // sentinel prefix so the pairing pass below can find boxes among plain html strings
 
   for (const raw of lines) {
     const line = raw.trimEnd();
+
+    // ::: box [light|gray|white]  … content …  :::
+    // A light/gray/white background only, by design — this syntax always
+    // keeps dark, readable text, so there's no contrast case to get wrong.
+    const boxStart = /^:::\s*box\s*(light|gray|white)?\s*$/i.exec(line.trim());
+    if (boxStart && !box) { flushPara(); flushList(); flushQuote(); box = { bg: (boxStart[1] || "light").toLowerCase(), lines: [] }; continue; }
+    if (box && line.trim() === ":::") {
+      const html = `<div>${inline(box.lines.join(" "))}</div>`;
+      rawBlocks.push(`${BOX_MARK}${JSON.stringify({ bg: BOX_BG[box.bg] ?? BOX_BG.light })}${BOX_MARK}${html}`);
+      box = null;
+      continue;
+    }
+    if (box) { if (line.trim()) box.lines.push(line.trim()); continue; }
+
     if (!line.trim()) { flushPara(); flushList(); flushQuote(); continue; }
 
     const h = /^(#{2,3})\s+(.*)$/.exec(line);
-    if (h) { flushPara(); flushList(); flushQuote(); const tag = h[1].length === 2 ? "h2" : "h3"; out.push(`<${tag} id="${slug(h[2])}">${inline(h[2])}</${tag}>`); continue; }
+    if (h) { flushPara(); flushList(); flushQuote(); const tag = h[1].length === 2 ? "h2" : "h3"; rawBlocks.push(`<${tag} id="${slug(h[2])}">${inline(h[2])}</${tag}>`); continue; }
 
     const li = /^[-*]\s+(.*)$/.exec(line);
-    if (li) { flushPara(); flushQuote(); list.push(li[1]); continue; }
+    if (li) { flushPara(); flushQuote(); if (listType !== "ul" && list.length) flushList(); listType = "ul"; list.push(li[1]); continue; }
+
+    const ci = /^\+\s+(.*)$/.exec(line);
+    if (ci) { flushPara(); flushQuote(); if (listType !== "check" && list.length) flushList(); listType = "check"; list.push(ci[1]); continue; }
 
     const bq = /^>\s?(.*)$/.exec(line);
     if (bq) { flushPara(); flushList(); quote.push(bq[1]); continue; }
@@ -97,7 +132,30 @@ export function renderMarkdown(md: string): string {
     para.push(line);
   }
   flushPara(); flushList(); flushQuote();
+
+  // Pair up consecutive boxes into an equal-height 2-column row (a lone,
+  // unpaired box just stays full width) — this is what makes "two boxes
+  // together" become a real side-by-side layout instead of two stacked ones.
+  const out: string[] = [];
+  for (let i = 0; i < rawBlocks.length; i++) {
+    const cur = rawBlocks[i];
+    if (!cur.startsWith(BOX_MARK)) { out.push(cur); continue; }
+    const next = rawBlocks[i + 1];
+    const curParsed = parseBox(cur);
+    if (next && next.startsWith(BOX_MARK)) {
+      const nextParsed = parseBox(next);
+      out.push(`<div class="box-row"><div class="content-box" style="background:${curParsed.bg}">${curParsed.html}</div><div class="content-box" style="background:${nextParsed.bg}">${nextParsed.html}</div></div>`);
+      i++; // consumed both
+    } else {
+      out.push(`<div class="content-box" style="background:${curParsed.bg}">${curParsed.html}</div>`);
+    }
+  }
   return out.join("\n");
+
+  function parseBox(marked: string) {
+    const parts = marked.split(BOX_MARK);
+    return { bg: JSON.parse(parts[1]).bg as string, html: parts[2] };
+  }
 }
 
 /** Rough reading time from word count — no need to store this, it's cheap to compute on read. */

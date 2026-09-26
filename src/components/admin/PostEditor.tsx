@@ -94,13 +94,13 @@ export function PostEditor({
     const { error } = await createClient().from("blog_posts").update(row).eq("id", post.id);
     setSaving(false);
     setMsg(error ? error.message : "Saved");
-    if (!error) { set("slug", row.slug); router.refresh(); }
+    if (!error) { set("slug", row.slug); }
   }
 
   async function publish() {
     await createClient().from("blog_posts").update({ status: "published", publish_at: post.publish_at ?? new Date().toISOString() }).eq("id", post.id);
     set("status", "published");
-    setMsg("Published"); router.refresh();
+    setMsg("Published");
   }
 
   async function remove() {
@@ -120,8 +120,8 @@ export function PostEditor({
   const url = `/updates/${category?.slug ?? "…"}/${post.slug}`;
 
   return (
-    <div className="flex flex-col gap-6 p-8">
-      <div className="flex items-center gap-3">
+    <div className="flex flex-col gap-6">
+      <div className="sticky top-0 z-10 flex items-center gap-3 border-b border-line bg-ground/95 px-8 py-4 backdrop-blur">
         <Link href="/admin/posts" className="text-muted">← Updates</Link>
         <h1 className="font-display text-2xl">{post.title}</h1>
         <span className="text-sm text-muted">{url}</span>
@@ -133,6 +133,8 @@ export function PostEditor({
           <button className="btn-success" onClick={publish}>{post.status === "published" ? "Update live" : "Publish"}</button>
         </div>
       </div>
+
+      <div className="flex flex-col gap-6 px-8 pb-8">
 
       <div className="grid gap-6 xl:grid-cols-[340px_1fr]">
         <section className="card flex flex-col gap-4">
@@ -191,6 +193,7 @@ export function PostEditor({
             <BlockListEditor label="Blocks after the writing area" blocks={post.blocks_after} blockTypes={blockTypes} svgs={svgs} forms={forms} onChange={(b) => set("blocks_after", b)} />
           </div>
         </section>
+      </div>
       </div>
     </div>
   );

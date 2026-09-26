@@ -31,6 +31,7 @@ export function BlockListEditor({
     onChange(n);
   };
   const setData = (i: number, data: Record<string, any>) => onChange(blocks.map((b, j) => (j === i ? { ...b, data } : b)));
+  const setSettings = (i: number, patch: Record<string, any>) => onChange(blocks.map((b, j) => (j === i ? { ...b, settings: { ...b.settings, ...patch } } : b)));
 
   return (
     <div className="flex flex-col gap-2">
@@ -46,9 +47,9 @@ export function BlockListEditor({
               <button type="button" aria-label="Remove" onClick={(e) => { e.preventDefault(); removeAt(i); }}>✕</button>
             </span>
           </summary>
-          <div className="border-t border-line p-3">
+          <div className="flex flex-col gap-3 border-t border-line p-3">
             {replacingAt === i ? (
-              <div className="mb-3 flex flex-col gap-2 rounded-lg bg-ground p-2">
+              <div className="mb-1 flex flex-col gap-2 rounded-lg bg-ground p-2">
                 <span className="px-1 text-xs text-muted">Replace this block with a different type — its content will reset to that type's defaults.</span>
                 <div className="grid grid-cols-2 gap-1.5">
                   {blockTypes.map((bt) => (
@@ -60,6 +61,31 @@ export function BlockListEditor({
               </div>
             ) : null}
             <FieldEditor fields={BLOCK_FIELDS[b.type] ?? []} value={b.data ?? {}} onChange={(d) => setData(i, d)} svgs={svgs} forms={forms} />
+
+            <div className="flex flex-col gap-2 rounded-lg bg-ground p-2.5">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-medium text-muted">Background box</span>
+                <input type="checkbox" checked={!!b.settings?.box} onChange={(e) => setSettings(i, { box: e.target.checked, box_bg: b.settings?.box_bg || "white" })} />
+              </div>
+              {b.settings?.box ? (
+                <div className="flex items-center gap-1.5">
+                  {["white", "transparent", "#F4F2FC", "#E7E4FB", "#14142B"].map((c) => (
+                    <button key={c} type="button" title={c} onClick={() => setSettings(i, { box_bg: c })}
+                      className={`h-6 w-6 rounded-full border ${b.settings?.box_bg === c ? "ring-2 ring-primary ring-offset-1" : "border-line"}`}
+                      style={{ background: c === "transparent" ? "repeating-conic-gradient(#ddd 0% 25%, #fff 0% 50%) 50% / 8px 8px" : c }} />
+                  ))}
+                  <input type="color" value={/^#[0-9a-f]{6}$/i.test(b.settings?.box_bg ?? "") ? b.settings!.box_bg : "#ffffff"}
+                    onChange={(e) => setSettings(i, { box_bg: e.target.value })} className="h-6 w-8 cursor-pointer rounded border-0 bg-transparent" />
+                </div>
+              ) : null}
+              <label className="flex items-center justify-between text-xs">
+                <span className="font-medium text-muted">Button style</span>
+                <select className="input h-7 w-32 text-xs" value={b.settings?.button_style ?? "solid"} onChange={(e) => setSettings(i, { button_style: e.target.value })}>
+                  <option value="solid">Solid</option>
+                  <option value="bordered">Bordered</option>
+                </select>
+              </label>
+            </div>
           </div>
         </details>
       ))}
