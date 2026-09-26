@@ -1,6 +1,6 @@
 // Describes the editable fields of each block. The builder's inspector is generated from this.
 export type Field =
-  | { key: string; label: string; type: "text" | "textarea" | "svg" | "link" | "boolean" | "strings" | "form" | "color" }
+  | { key: string; label: string; type: "text" | "textarea" | "svg" | "link" | "boolean" | "strings" | "form" | "color" | "code" }
   | { key: string; label: string; type: "select"; options: string[] }
   | { key: string; label: string; type: "group"; fields: Field[] }
   | { key: string; label: string; type: "list"; itemLabel: string; fields: Field[] };
@@ -146,5 +146,9 @@ export const BLOCK_FIELDS: Record<string, Field[]> = {
   faq_boxed: [
     t("heading", "Heading (e.g. Frequently Asked Questions)"),
     { key: "items", label: "Questions", type: "list", itemLabel: "Q&A", fields: [t("q", "Question"), ta("a", "Answer")] },
+  ],
+  custom_code: [
+    t("heading", "Heading (optional)"),
+    { key: "html", label: "Embed code (paste from Elfsight, a review widget, etc.)", type: "code" },
   ],
 };

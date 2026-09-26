@@ -17,6 +17,8 @@ export function FieldEditor({ fields, value, onChange, svgs, forms = [] }: Props
             return <label key={f.key} className="label">{f.label}<input className="input" value={v ?? ""} onChange={(e) => set(f.key, e.target.value)} /></label>;
           case "textarea":
             return <label key={f.key} className="label">{f.label}<textarea rows={3} className="textarea" value={v ?? ""} onChange={(e) => set(f.key, e.target.value)} /></label>;
+          case "code":
+            return <label key={f.key} className="label">{f.label}<textarea rows={12} className="textarea font-mono text-xs" spellCheck={false} value={v ?? ""} onChange={(e) => set(f.key, e.target.value)} /></label>;
           case "boolean":
             return (
               <label key={f.key} className="flex items-center justify-between gap-3">

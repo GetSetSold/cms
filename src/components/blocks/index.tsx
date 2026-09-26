@@ -7,6 +7,7 @@ import { ListingCard } from "@/components/listings/ListingCard";
 import { CmsFormRenderer } from "./CmsFormRenderer";
 import { createClient } from "@/lib/supabase/server";
 import type { CmsForm } from "@/lib/types";
+import { EmbedHtml } from "./EmbedHtml";
 
 export type BlockCtx = { svgs: Record<string, SvgAsset>; settings: SiteSettings; page?: Page; dark?: boolean; buttonStyle?: "solid" | "bordered" };
 
@@ -690,6 +691,16 @@ async function BlogGrid({ data, ctx }: BlockProps) {
   );
 }
 
+function CustomCode({ data, ctx }: BlockProps) {
+  if (!data.html) return null;
+  return (
+    <div className={`${wrap} flex flex-col gap-5 py-8 md:py-12`}>
+      {data.heading ? <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2> : null}
+      <EmbedHtml html={data.html} />
+    </div>
+  );
+}
+
 function SectionHeader({ data, ctx }: BlockProps) {
   const centered = data.align === "center";
   return (
@@ -731,6 +742,7 @@ export const BLOCKS: Record<string, (p: BlockProps) => React.ReactNode> = {
   blog_grid: BlogGrid,
   qa_block: QaBlock,
   faq_boxed: FaqBoxed,
+  custom_code: CustomCode,
 };
 
 const BG: Record<string, string> = {
