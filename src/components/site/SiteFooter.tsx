@@ -14,7 +14,7 @@ export function SiteFooter({ settings }: { settings: SiteSettings }) {
     <footer style={{ background: f.bg || undefined, color: f.text || undefined }}>
       <div className="mx-auto flex max-w-7xl flex-col gap-10 px-5 pb-28 pt-16 text-[15px] md:px-10 md:pb-12">
         {/* Row 1: brand block (wider) + this row's columns */}
-        <div className={`grid grid-cols-2 gap-8 md:[grid-template-columns:1.4fr_repeat(${firstRow?.length || 1},1fr)]`}>
+        <div className={`grid gap-8 ${MOBILE_COLS[f.mobile_columns_per_row ?? 1]} md:[grid-template-columns:1.4fr_repeat(${f.columns_per_row ?? 4},1fr)]`}>
           <div className="col-span-2 flex flex-col gap-3 md:col-span-1">
             <div className="font-display text-3xl">{settings.site_name}</div>
             {f.tagline ? <p className="opacity-75">{f.tagline}</p> : null}
