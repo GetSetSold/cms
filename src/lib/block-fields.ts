@@ -36,6 +36,7 @@ export const BLOCK_FIELDS: Record<string, Field[]> = {
   features: [
     t("heading", "Heading"), ta("intro", "Intro"),
     { key: "items", label: "Items", type: "list", itemLabel: "Item", fields: [
+      { key: "svg_id", label: "Icon", type: "svg" },
       t("title", "Title"), ta("text", "Text"), t("href", "Links to (optional)"), t("link_label", "Button label (default: Learn more)"),
     ] },
   ],
@@ -111,6 +112,7 @@ export const BLOCK_FIELDS: Record<string, Field[]> = {
   checklist: [
     t("heading", "Heading (optional)"),
     { key: "mobile_columns", label: "Columns on mobile", type: "select", options: ["1", "2"] },
+    { key: "desktop_columns", label: "Columns on desktop", type: "select", options: ["1", "2", "3"] },
     { key: "items", label: "Items", type: "list", itemLabel: "Item", fields: [t("text", "Text")] },
   ],
   spacer: [

@@ -202,17 +202,24 @@ function Features({ data, ctx }: BlockProps) {
       </div>
       <div className="grid gap-8 md:grid-cols-2">
         {(data.items ?? []).map((f: any, i: number) => {
+          const art = f.svg_id ? ctx.svgs[f.svg_id] : null;
+          const solid = ctx.buttonStyle !== "bordered";
+          const btnCls = solid
+            ? ctx.dark ? "bg-white text-ink" : "bg-primary text-white"
+            : ctx.dark ? "border border-ground text-ground" : "border border-ink text-ink";
           const card = (
             <div className="flex h-full flex-col gap-3">
               <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary-soft text-primary">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <circle cx="12" cy="12" r="9" />
-                </svg>
+                {art ? <Svg asset={art} label={art.name} className="h-6 w-6" /> : (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="9" />
+                  </svg>
+                )}
               </div>
               <h3 className={`text-xl font-semibold ${heading(ctx)}`}>{f.title}</h3>
               <p className={`leading-relaxed ${muted(ctx)}`}>{f.text}</p>
               {f.href ? (
-                <span className="mt-1 inline-flex w-fit items-center gap-1 text-sm font-medium text-primary">
+                <span className={`mt-1 inline-flex h-10 w-fit items-center rounded-full px-5 text-sm font-medium ${btnCls}`}>
                   {f.link_label || "Learn more"} →
                 </span>
               ) : null}
@@ -592,14 +599,18 @@ function ProcessSteps({ data, ctx }: BlockProps) {
   );
 }
 
+const DESKTOP_COLS: Record<number, string> = { 1: "md:grid-cols-1", 2: "md:grid-cols-2", 3: "md:grid-cols-3" };
+
 function Checklist({ data, ctx }: BlockProps) {
   const items = data.items ?? [];
   if (!items.length) return null;
   const mobileCols = STEP_COLS[Number(data.mobile_columns) === 2 ? 2 : 1];
+  const desktopColsN = [2, 3].includes(Number(data.desktop_columns)) ? Number(data.desktop_columns) : 1;
+  const desktopCols = DESKTOP_COLS[desktopColsN];
   return (
     <div className={`${wrap} flex flex-col gap-5 py-10 md:gap-6 md:py-16`}>
       {data.heading ? <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2> : null}
-      <ul className={`grid max-w-xl gap-3 ${mobileCols} md:grid-cols-1`}>
+      <ul className={`grid gap-3 ${mobileCols} ${desktopCols} ${desktopColsN === 1 ? "max-w-xl" : ""}`}>
         {items.map((it: any, i: number) => (
           <li key={i} className="flex items-start gap-3">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="mt-0.5 shrink-0" aria-hidden="true">
