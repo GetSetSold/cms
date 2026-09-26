@@ -69,7 +69,8 @@ export function SoldHistoryManager({ initial }: { initial: SoldHistoryRow[] }) {
 
   async function save(draft: Draft, id: string | null) {
     setError("");
-    const row = { ...draft, closed_at: new Date(draft.closed_at).toISOString() };
+    const { id: _drop, created_at: _c, updated_at: _u, ...rest } = draft as Draft & { id?: string; created_at?: string; updated_at?: string };
+    const row = { ...rest, closed_at: new Date(draft.closed_at).toISOString() };
     if (id) {
       const { data, error } = await supabase.from("sold_history").update(row).eq("id", id).select("*").single();
       if (error) return setError(error.message);

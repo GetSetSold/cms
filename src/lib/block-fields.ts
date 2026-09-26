@@ -160,4 +160,9 @@ export const BLOCK_FIELDS: Record<string, Field[]> = {
       t("label", "Label (for accessibility, e.g. Facebook)"),
     ] },
   ],
+  featured_listings_grid: [
+    t("heading", "Heading"),
+    t("count", "Number of listings to show"),
+    t("link_label", "\"View all\" link label"),
+  ],
 };

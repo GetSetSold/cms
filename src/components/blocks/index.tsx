@@ -8,6 +8,7 @@ import { CmsFormRenderer } from "./CmsFormRenderer";
 import { createClient } from "@/lib/supabase/server";
 import type { CmsForm } from "@/lib/types";
 import { EmbedHtml } from "./EmbedHtml";
+import { getFeaturedListings } from "@/lib/featuredListings";
 
 export type BlockCtx = { svgs: Record<string, SvgAsset>; settings: SiteSettings; page?: Page; dark?: boolean; buttonStyle?: "solid" | "bordered"; inRow?: boolean };
 
@@ -648,6 +649,45 @@ async function FeaturedListing({ data }: BlockProps) {
   );
 }
 
+async function FeaturedListingsGrid({ data }: BlockProps) {
+  const { order, mlsListings, privateListings } = await getFeaturedListings();
+  const count = Number(data.count) || 6;
+  const visible = order.slice(0, count);
+  if (!visible.length) return null;
+
+  return (
+    <div className={`${wrap} flex flex-col gap-6 py-12 md:py-16`}>
+      <div className="flex items-end justify-between gap-4">
+        {data.heading ? <h2 className={h2}>{data.heading}</h2> : <span />}
+        <Link href="/listings" prefetch={false} className="font-medium text-primary">{data.link_label || "View all listings"} →</Link>
+      </div>
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {visible.map((id) => {
+          if (mlsListings[id]) return <ListingCard key={id} listing={mlsListings[id]} />;
+          const p = privateListings[id];
+          return (
+            <a key={id} href={p.href} className="flex flex-col overflow-hidden rounded-2xl bg-white">
+              <div className="relative aspect-[4/3] overflow-hidden bg-soft">
+                {p.image ? <img src={p.image} alt="" className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center text-sm text-muted">No photo</div>}
+                {p.note ? <span className="absolute left-3 top-3 rounded-full bg-ink/70 px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur">{p.note}</span> : null}
+              </div>
+              <div className="flex flex-col gap-1 p-4">
+                <div className="text-lg font-bold">{p.priceLabel}</div>
+                <div className="text-sm text-muted">{p.address}</div>
+                {p.bed || p.bath || p.sqft ? (
+                  <div className="flex gap-3 pt-1 text-xs text-muted">
+                    {p.bed ? <span>{p.bed} bd</span> : null}{p.bath ? <span>{p.bath} ba</span> : null}{p.sqft ? <span>{p.sqft.toLocaleString()} sqft</span> : null}
+                  </div>
+                ) : null}
+              </div>
+            </a>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 async function BlogGrid({ data, ctx }: BlockProps) {
   const supabase = await createClient();
   const count = Number(data.count) || 3;
@@ -771,6 +811,7 @@ export const BLOCKS: Record<string, (p: BlockProps) => React.ReactNode> = {
   faq_boxed: FaqBoxed,
   custom_code: CustomCode,
   social_links: SocialLinks,
+  featured_listings_grid: FeaturedListingsGrid,
 };
 
 const BG: Record<string, string> = {
