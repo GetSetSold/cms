@@ -809,9 +809,13 @@ function renderOne(s: Section, ctx: BlockCtx) {
   return (
     <section key={s.id} id={st.anchor || s.id} className={cls} style={customBg ? { background: customBg } : undefined} data-block={s.block_type}>
       {st.box ? (
-        <div className={`${wrap} py-8 md:py-12`}>
-          <div className="rounded-2xl p-6 md:p-8" style={{ background: box.css }}>{content}</div>
-        </div>
+        ctx.inRow ? (
+          <div className="h-full rounded-2xl p-6 md:p-8" style={{ background: box.css }}>{content}</div>
+        ) : (
+          <div className={`${wrap} py-8 md:py-12`}>
+            <div className="rounded-2xl p-6 md:p-8" style={{ background: box.css }}>{content}</div>
+          </div>
+        )
       ) : content}
     </section>
   );
