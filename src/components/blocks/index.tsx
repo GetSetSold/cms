@@ -558,7 +558,7 @@ function IconCard({ data, ctx }: BlockProps) {
         : "flex h-full w-full flex-col items-start gap-3 py-6 md:gap-4 md:py-10"}
       style={boxed ? { background: resolvedBoxColor || "var(--c-soft)" } : undefined}
     >
-      {art ? <Svg asset={art} label={art.name} className="h-10 w-10 md:h-14 md:w-14" style={iconStyle} /> : null}
+      {art ? <Svg asset={art} label={art.name} className="h-10 w-10 md:h-14 md:w-14" style={iconStyle} colorOverride={data.icon_color} /> : null}
       {data.heading ? <h3 className={`text-lg font-semibold md:text-xl ${dark ? "text-ground" : ""}`}>{data.heading}</h3> : null}
       {data.text ? <p className={`text-[15px] leading-relaxed md:text-base ${dark ? "text-ground/75" : "text-muted"}`}>{data.text}</p> : null}
       {data.link?.label ? (

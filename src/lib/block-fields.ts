@@ -100,7 +100,6 @@ export const BLOCK_FIELDS: Record<string, Field[]> = {
     t("heading", "Title"),
     ta("text", "Content"),
     { key: "link", label: "Button (optional)", type: "link" },
-    { key: "link_style", label: "Button style", type: "select", options: ["solid", "bordered"] },
     { key: "box", label: "Show background box", type: "boolean" },
     { key: "box_bg", label: "Box background color (default: theme soft)", type: "color" },
   ],

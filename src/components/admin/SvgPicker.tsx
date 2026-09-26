@@ -15,7 +15,7 @@ export function SvgPicker({ value, svgs, onChange }: { value?: string | null; sv
       <div className="flex h-16 items-center gap-2.5 rounded-lg border border-line p-2">
         <SvgThumb asset={current} className="h-[46px] w-16 shrink-0" />
         <span className="truncate text-ink">{current?.name ?? "None"}</span>
-        <button type="button" className="ml-auto text-primary" onClick={() => setOpen(!open)}>{open ? "Close" : "Change"}</button>
+        <button type="button" className="ml-auto text-primary" onClick={() => setOpen(!open)}>{open ? "Close" : "Pick from library"}</button>
       </div>
       {open ? (
         <div className="grid max-h-64 grid-cols-3 gap-2 overflow-auto rounded-lg border border-line p-2">
