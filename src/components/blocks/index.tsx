@@ -141,17 +141,34 @@ function Hero({ data, ctx }: BlockProps) {
         <Svg asset={art} label={art?.name} className="aspect-[600/520] overflow-hidden rounded-3xl" />
         {data.badge?.value ? (() => {
           const size = data.badge_size || "md";
-          const sizeCls = { sm: "w-48 p-3.5 gap-0.5", md: "w-64 p-5 gap-1", lg: "w-80 p-6 gap-1.5" }[size as "sm" | "md" | "lg"];
-          const valueCls = { sm: "text-2xl", md: "text-4xl", lg: "text-5xl" }[size as "sm" | "md" | "lg"];
+          const sizeCls = {
+            sm: "w-32 p-2.5 gap-0.5 md:w-48 md:p-3.5",
+            md: "w-40 p-3 gap-1 md:w-64 md:p-5",
+            lg: "w-48 p-3.5 gap-1 md:w-80 md:p-6",
+          }[size as "sm" | "md" | "lg"];
+          const valueCls = {
+            sm: "text-lg md:text-2xl",
+            md: "text-xl md:text-4xl",
+            lg: "text-2xl md:text-5xl",
+          }[size as "sm" | "md" | "lg"];
           const style = data.badge_style || "solid";
           const styleCls = {
             solid: "bg-white shadow-[var(--shadow-card)]",
             bordered: "bg-white border-2 border-ink",
             glass: "bg-white/70 backdrop-blur-md shadow-[var(--shadow-card)]",
           }[style as "solid" | "bordered" | "glass"];
+          // Explicit left/center/right when set; otherwise the original
+          // behavior (opposite side from the image) for existing content
+          // that never set this.
+          const position = data.badge_position || (imageOnLeft ? "right" : "left");
+          const posCls = {
+            left: "left-4 md:-left-8",
+            right: "right-4 md:-right-8",
+            center: "left-1/2 -translate-x-1/2",
+          }[position as "left" | "right" | "center"];
           return (
-            <div className={`absolute -bottom-4 flex flex-col rounded-[var(--radius-lg)] md:bottom-9 ${sizeCls} ${styleCls} ${imageOnLeft ? "right-4 md:-right-8" : "left-4 md:-left-8"}`}>
-              <div className="text-[13px] text-muted">{data.badge.label}</div>
+            <div className={`absolute -bottom-4 flex flex-col rounded-[var(--radius-lg)] md:bottom-9 ${sizeCls} ${styleCls} ${posCls}`}>
+              <div className="text-[11px] text-muted md:text-[13px]">{data.badge.label}</div>
               <div className={`font-display font-bold ${valueCls}`}>{data.badge.value}</div>
             </div>
           );

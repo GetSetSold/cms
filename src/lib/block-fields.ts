@@ -25,6 +25,7 @@ export const BLOCK_FIELDS: Record<string, Field[]> = {
     { key: "badge", label: "Floating badge", type: "group", fields: [t("label", "Label"), t("value", "Value")] },
     { key: "badge_size", label: "Badge size", type: "select", options: ["sm", "md", "lg"] },
     { key: "badge_style", label: "Badge style", type: "select", options: ["solid", "bordered", "glass"] },
+    { key: "badge_position", label: "Badge position (blank = opposite the image)", type: "select", options: ["", "left", "center", "right"] },
   ],
   logos: [t("heading", "Heading"), { key: "items", label: "Client names", type: "strings" }],
   services: [
