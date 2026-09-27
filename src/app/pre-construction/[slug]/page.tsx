@@ -11,6 +11,7 @@ import { LeadForm } from "@/components/blocks/LeadForm";
 import { getCashbackAmount, formatCashback } from "@/lib/cashback";
 import { PreconSectionHeader } from "@/components/site/PreconSectionHeader";
 import { PromoBanner } from "@/components/site/PromoBanner";
+import { IconHome, IconBuilding, IconCheckBadge, IconPin, IconClock, IconCalendar, IconFile, IconLock } from "@/components/site/PreconIcons";
 
 const wrap = "mx-auto w-full max-w-7xl px-5 md:px-10";
 const card = "rounded-[var(--radius-lg)] border-[length:var(--border-card-width)] border-line shadow-[var(--shadow-card)] bg-white";
@@ -72,9 +73,9 @@ export default async function BuilderOrCityPage({ params }: { params: Promise<{ 
               <div className="flex flex-col gap-6">
                 {builder.description ? <p className="text-sm leading-relaxed md:text-base">{builder.description}</p> : null}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                  {[["🏠", projects.length, "Active Projects"], ["🏢", cities.size, "Communities"], ["✅", "Ontario", "Coverage Area"]].map(([icon, value, label]) => (
-                    <div key={label as string} className="flex items-center gap-3 rounded-lg bg-soft p-4">
-                      <span className="text-xl text-primary">{icon}</span>
+                  {[[IconHome, projects.length, "Active Projects"], [IconBuilding, cities.size, "Communities"], [IconCheckBadge, "Ontario", "Coverage Area"]].map(([Icon, value, label]: any) => (
+                    <div key={label} className="flex items-center gap-3 rounded-lg bg-soft p-4">
+                      <Icon className="h-6 w-6 shrink-0" />
                       <div><div className="text-sm font-bold">{value}</div><div className="text-xs text-muted">{label}</div></div>
                     </div>
                   ))}
@@ -132,7 +133,7 @@ export default async function BuilderOrCityPage({ params }: { params: Promise<{ 
                         </div>
                         <div className="flex flex-col gap-2 p-4">
                           <div className="font-display text-lg font-bold">{p.project_name}</div>
-                          <div className="flex items-center gap-1 text-xs text-muted">📍 {p.city}, ON</div>
+                          <div className="flex items-center gap-1 text-xs text-muted"><IconPin className="h-3.5 w-3.5" /> {p.city}, ON</div>
                           <div className="flex flex-wrap gap-2 pt-1">
                             {p.beds ? <span className="rounded-md bg-soft px-2 py-1 text-xs font-semibold">{p.beds} Beds</span> : null}
                             {p.baths ? <span className="rounded-md bg-soft px-2 py-1 text-xs font-semibold">{p.baths} Baths</span> : null}
@@ -175,13 +176,13 @@ export default async function BuilderOrCityPage({ params }: { params: Promise<{ 
                 <h3 className="font-display text-xl font-bold md:text-2xl">Let's Find Your Perfect Home</h3>
                 <p className="text-sm text-muted md:text-base">Our team is ready to connect you with the right project, floor plan, and payment plan to match your lifestyle and budget.</p>
                 {[
-                  ["Fast Response", "We respond to all inquiries within 24 hours."],
-                  ["Private Showings", "Book a private tour at a time that works for you."],
-                  ["Full Brochure", "Get pricing, floor plans, and availability packages."],
-                  ["No Obligation", "Your information stays private. No pressure, ever."],
-                ].map(([title, desc]) => (
+                  [IconClock, "Fast Response", "We respond to all inquiries within 24 hours."],
+                  [IconCalendar, "Private Showings", "Book a private tour at a time that works for you."],
+                  [IconFile, "Full Brochure", "Get pricing, floor plans, and availability packages."],
+                  [IconLock, "No Obligation", "Your information stays private. No pressure, ever."],
+                ].map(([Icon, title, desc]: any) => (
                   <div key={title} className="flex items-start gap-3">
-                    <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">●</span>
+                    <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-soft"><Icon className="h-4 w-4" /></span>
                     <div><div className="text-sm font-bold">{title}</div><div className="text-xs text-muted">{desc}</div></div>
                   </div>
                 ))}

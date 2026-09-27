@@ -12,6 +12,7 @@ import { PromoBanner } from "@/components/site/PromoBanner";
 import { LeadForm } from "@/components/blocks/LeadForm";
 import { getCashbackAmount, formatCashback } from "@/lib/cashback";
 import { PreconSectionHeader } from "@/components/site/PreconSectionHeader";
+import { IconCheckBadge, IconClock, IconCalendar, IconFile, IconLock } from "@/components/site/PreconIcons";
 
 const wrap = "mx-auto w-full max-w-7xl px-5 md:px-10";
 const card = "rounded-[var(--radius-lg)] border-[length:var(--border-card-width)] border-line shadow-[var(--shadow-card)] bg-white";
@@ -108,7 +109,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
                 const cb = getCashbackAmount(project.p_start_price, settings.precon_cashback);
                 return cb ? (
                   <div className="flex items-center gap-3 rounded-lg bg-gradient-to-br from-[#065f46] to-[#059669] p-4">
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/15 text-lg">✓</span>
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/15"><IconCheckBadge className="h-5 w-5" /></span>
                     <div><div className="font-display text-lg font-bold">{formatCashback(cb)} Cashback</div><div className="text-[11px] text-white/70">Your exclusive advantage when you buy with us</div></div>
                   </div>
                 ) : null;
@@ -207,13 +208,13 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
               <h3 className="font-display text-xl font-bold md:text-2xl">Let's Find Your Perfect Home</h3>
               <p className="text-sm text-muted md:text-base">Our team is ready to walk you through every detail of this project — from available lots to floor plans, upgrade options, and payment plans.</p>
               {[
-                ["Fast Response", "We respond to all inquiries within 24 hours."],
-                ["Private Showings", "Book a private tour at a time that works for you."],
-                ["Full Brochure", "Get detailed specs, pricing, and floor plan packages."],
-                ["No Obligation", "Your information stays private. No pressure, ever."],
-              ].map(([title, desc]) => (
+                [IconClock, "Fast Response", "We respond to all inquiries within 24 hours."],
+                [IconCalendar, "Private Showings", "Book a private tour at a time that works for you."],
+                [IconFile, "Full Brochure", "Get detailed specs, pricing, and floor plan packages."],
+                [IconLock, "No Obligation", "Your information stays private. No pressure, ever."],
+              ].map(([Icon, title, desc]: any) => (
                 <div key={title} className="flex items-start gap-3">
-                  <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">●</span>
+                  <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-soft"><Icon className="h-4 w-4" /></span>
                   <div><div className="text-sm font-bold">{title}</div><div className="text-xs text-muted">{desc}</div></div>
                 </div>
               ))}
