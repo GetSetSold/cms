@@ -3,11 +3,10 @@ import { createClient } from "@supabase/supabase-js";
 /** Read-only — safe to use from server components. RLS on that project only
  *  allows SELECT for anon, so this can never write even if misused. */
 export function createPreconClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_PRECON_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_PRECON_SUPABASE_ANON_KEY!,
-    { auth: { persistSession: false } },
-  );
+  const url = process.env.NEXT_PUBLIC_PRECON_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_PRECON_SUPABASE_ANON_KEY;
+  if (!url || !key) throw new Error("Pre-Con is not configured: NEXT_PUBLIC_PRECON_SUPABASE_URL and/or NEXT_PUBLIC_PRECON_SUPABASE_ANON_KEY are missing from the deployment environment.");
+  return createClient(url, key, { auth: { persistSession: false } });
 }
 
 /** Service-role — bypasses RLS entirely. SERVER-ONLY: import this exclusively
@@ -16,11 +15,10 @@ export function createPreconClient() {
  *  the CMS's own login session has no meaning to this separate project's
  *  "authenticated" RLS check. */
 export function createPreconServiceClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_PRECON_SUPABASE_URL!,
-    process.env.PRECON_SUPABASE_SERVICE_KEY!,
-    { auth: { persistSession: false } },
-  );
+  const url = process.env.NEXT_PUBLIC_PRECON_SUPABASE_URL;
+  const key = process.env.PRECON_SUPABASE_SERVICE_KEY;
+  if (!url || !key) throw new Error("Pre-Con admin is not configured: NEXT_PUBLIC_PRECON_SUPABASE_URL and/or the PRECON_SUPABASE_SERVICE_KEY secret are missing from the deployment environment.");
+  return createClient(url, key, { auth: { persistSession: false } });
 }
 
 // ---- Real schema types (confirmed from live sample data, not guessed) ----
@@ -58,7 +56,7 @@ export type Promo = {
 export type Amenity = { id: string; title: string | null; description: string | null; icon_url: string | null };
 export type Floorplan = { id: string; model_id: string | null; floorplan_image_url: string | null; floorplan_name: string | null };
 export type PaymentPlan = { id: string; project_id: string | null; home_type_id: string | null; title: string | null; total_amount: number | null; total_days: number | null; show: boolean | null };
-export type PaymentInstallment = { id: string; payment_plan_id: string | null; amount: number; due_days: number | null; sort_order: number | null; description: string | null };
+export type PaymentInstallment = { id: string; payment_plan_id: string | null; amount: number; due_days: number | null; sort_order: number | null; Description: string | null };
 
 /** Images are polymorphic — one shared library, attached to anything via
  *  image_assignments.related_type/related_id. This resolves all images for
@@ -82,6 +80,17 @@ export async function getPreconStats() {
   ]);
   const cities = new Set((cityRows ?? []).map((r) => r.city).filter(Boolean));
   return { projects: projects ?? 0, builders: builders ?? 0, cities: cities.size, vip: vip ?? 0 };
+}
+
+function slugToCityName(slug: string) {
+  return slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+export async function getProjectsByCitySlug(citySlug: string): Promise<(Project & { builder: Builder })[]> {
+  const supabase = createPreconClient();
+  const cityName = slugToCityName(citySlug);
+  const { data } = await supabase.from("projects").select("*, builder:builder_id(*)").ilike("city", `%${cityName}%`);
+  return (data ?? []) as any;
 }
 
 export async function getBuilders(): Promise<(Builder & { project_count: number })[]> {
@@ -157,10 +166,12 @@ export async function getModel(builderSlug: string, projectSlug: string, modelSl
   const siblings = found.models.filter((m) => m.slug !== modelSlug);
 
   const supabase = createPreconClient();
+  let planQuery = supabase.from("payment_plans").select("*").eq("project_id", found.project.id).eq("show", true);
+  if (model.home_type_id) planQuery = planQuery.eq("home_type_id", model.home_type_id);
   const [{ data: floorplans }, gallery, { data: paymentPlans }] = await Promise.all([
     supabase.from("floorplans").select("*").eq("model_id", model.id),
     getImagesFor("home_model", model.id),
-    supabase.from("payment_plans").select("*").eq("home_type_id", model.home_type_id ?? "").eq("show", true),
+    planQuery,
   ]);
 
   let installments: PaymentInstallment[] = [];
