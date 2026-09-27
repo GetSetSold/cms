@@ -21,10 +21,38 @@ function RecordForm({ initial, onSave, onCancel }: { initial: Draft; onSave: (d:
   const [d, setD] = useState<Draft>(initial);
   const set = <K extends keyof Draft>(k: K, v: Draft[K]) => setD((x) => ({ ...x, [k]: v }));
   const num = (v: string) => (v === "" ? null : Number(v));
+  const [lookupKey, setLookupKey] = useState("");
+  const [lookupError, setLookupError] = useState("");
+  const [lookupBusy, setLookupBusy] = useState(false);
+
+  async function lookup() {
+    setLookupError(""); setLookupBusy(true);
+    const res = await fetch(`/api/admin/mls-lookup?key=${encodeURIComponent(lookupKey.trim())}`);
+    const body = await res.json();
+    setLookupBusy(false);
+    if (!res.ok) return setLookupError(body.error || "Something went wrong.");
+    const l = body.listing;
+    setD((x) => ({
+      ...x,
+      address: [l.UnparsedAddress, l.City].filter(Boolean).join(", "),
+      image_url: l.Media || x.image_url,
+      listing_key: l.ListingKey,
+      listed_price: l.ListPrice ?? x.listed_price,
+    }));
+  }
 
   return (
     <div className="card flex max-w-2xl flex-col gap-4">
       <strong className="text-base">{initial.address ? "Edit record" : "Add record"}</strong>
+
+      <div className="flex flex-col gap-2 rounded-lg bg-ground p-3">
+        <span className="text-xs font-medium text-muted">Optional: pre-fill from MLS # (only works if the listing hasn't been purged from the sync yet — log sales quickly for the best chance)</span>
+        <div className="flex gap-2">
+          <input className="input" placeholder="MLS #" value={lookupKey} onChange={(e) => setLookupKey(e.target.value)} />
+          <button className="btn" onClick={lookup} disabled={!lookupKey.trim() || lookupBusy}>{lookupBusy ? "Looking up…" : "Look up"}</button>
+        </div>
+        {lookupError ? <p className="text-xs text-red-700">{lookupError}</p> : null}
+      </div>
       <div className="grid grid-cols-2 gap-3">
         <label className="label">Status
           <select className="input" value={d.status} onChange={(e) => set("status", e.target.value as Draft["status"])}>
