@@ -5,16 +5,19 @@ import type { FeaturedListingRow } from "@/lib/featuredListings";
 
 export default async function FeaturedListingsPage() {
   const { supabase } = await requireStaff(["admin", "editor"]);
-  const { data } = await supabase.from("featured_listings").select("*").order("sort_order");
+  const [{ data: rows }, { data: settings }] = await Promise.all([
+    supabase.from("featured_listings").select("*").order("sort_order"),
+    supabase.from("site_settings").select("mls_office_key").eq("id", 1).single(),
+  ]);
   return (
     <>
       <AdminPageHeader title="Featured Listings" />
       <div className="flex flex-col gap-6 p-8">
         <p className="text-muted">
-          Curated list shown on the site — separate from the full live listings feed. Add by MLS # (pulls live price/photo from the board-wide DDF feed —
-          works for your own brokerage's listings or a friend agent's) or as a fully private, off-MLS listing.
+          Curated list shown on the site — separate from the full live listings feed. Pull all of your brokerage's listings at once by office key,
+          add a friend agent's listing by MLS #, or add a fully private, off-MLS listing.
         </p>
-        <FeaturedListingsManager initial={(data ?? []) as FeaturedListingRow[]} />
+        <FeaturedListingsManager initial={(rows ?? []) as FeaturedListingRow[]} initialOfficeKey={settings?.mls_office_key ?? ""} />
       </div>
     </>
   );

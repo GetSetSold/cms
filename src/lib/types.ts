@@ -84,6 +84,7 @@ export interface SiteSettings {
   blog_cta: { heading?: string; text?: string; button_label?: string; button_href?: string };
   contact: { phone?: string; email?: string; address?: string; hours?: string };
   social_links: { size?: "xs" | "sm" | "md" | "lg"; items: { svg_id: string; href: string; label?: string }[] };
+  mls_office_key?: string;
   scripts: { ga4_id?: string };
   lead_settings: { notify_emails: string[] };
 }

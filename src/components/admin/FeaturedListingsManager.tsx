@@ -9,6 +9,75 @@ const SOURCE_STYLE: Record<string, string> = {
   brokerage: "bg-[#E4F0EE] text-[#0A4540]", friend: "bg-[#E6E9F7] text-[#2B3A8C]", private: "bg-[#EDEBFB] text-[#4B3F9E]",
 };
 
+function PullByOffice({ initialOfficeKey, existingKeys, onAdded }: { initialOfficeKey: string; existingKeys: Set<string>; onAdded: (rows: FeaturedListingRow[]) => void }) {
+  const supabase = useMemo(() => createClient(), []);
+  const [officeKey, setOfficeKey] = useState(initialOfficeKey);
+  const [results, setResults] = useState<{ ListingKey: string; UnparsedAddress: string | null; City: string | null; ListPrice: number | null; Media: string | null }[] | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function saveOfficeKey() {
+    await supabase.from("site_settings").update({ mls_office_key: officeKey.trim() }).eq("id", 1);
+  }
+
+  async function fetchListings() {
+    setError(""); setResults(null); setBusy(true);
+    await saveOfficeKey(); // remembered for next time, since this is a "set once" kind of value
+    const mls = createBrowserClient(process.env.NEXT_PUBLIC_MLS_SUPABASE_URL!, process.env.NEXT_PUBLIC_MLS_SUPABASE_ANON_KEY!);
+    const { data, error } = await mls.from("grid").select("ListingKey,UnparsedAddress,City,ListPrice,Media").eq("ListOfficeKey", officeKey.trim());
+    setBusy(false);
+    if (error) return setError(error.message);
+    if (!data?.length) return setError("No listings found for that office key. Double-check it against a real listing's ListOfficeKey field.");
+    setResults(data);
+    setSelected(new Set(data.filter((l) => !existingKeys.has(l.ListingKey)).map((l) => l.ListingKey)));
+  }
+
+  async function addSelected() {
+    setBusy(true);
+    const toAdd = [...selected].map((key) => ({ source_type: "brokerage" as const, listing_key: key, sort_order: 999 }));
+    const { data, error } = await supabase.from("featured_listings").insert(toAdd).select("*");
+    setBusy(false);
+    if (error) return setError(error.message);
+    onAdded(data as FeaturedListingRow[]);
+    setResults(null); setSelected(new Set());
+  }
+
+  return (
+    <div className="card flex flex-col gap-3">
+      <strong className="text-sm">Pull all listings for your brokerage</strong>
+      <p className="text-xs text-muted">Every active listing under your office key, in one go — pick which ones to feature.</p>
+      <div className="flex gap-2">
+        <input className="input" placeholder="Office key (ListOfficeKey)" value={officeKey} onChange={(e) => setOfficeKey(e.target.value)} />
+        <button className="btn" onClick={fetchListings} disabled={!officeKey.trim() || busy}>Fetch listings</button>
+      </div>
+      {error ? <p className="text-sm text-red-700">{error}</p> : null}
+      {results ? (
+        <div className="flex flex-col gap-2">
+          <div className="flex max-h-80 flex-col gap-1.5 overflow-y-auto">
+            {results.map((l) => {
+              const already = existingKeys.has(l.ListingKey);
+              return (
+                <label key={l.ListingKey} className={`flex items-center gap-3 rounded-lg border border-line p-2 ${already ? "opacity-50" : ""}`}>
+                  <input type="checkbox" disabled={already} checked={selected.has(l.ListingKey)}
+                    onChange={(e) => setSelected((s) => { const n = new Set(s); e.target.checked ? n.add(l.ListingKey) : n.delete(l.ListingKey); return n; })} />
+                  {l.Media ? <img src={l.Media} alt="" className="h-10 w-14 rounded-md object-cover" /> : <div className="h-10 w-14 rounded-md bg-soft" />}
+                  <div className="flex flex-col text-sm">
+                    <span className="font-medium">{l.ListPrice ? `$${l.ListPrice.toLocaleString()}` : "Call for price"}</span>
+                    <span className="text-muted">{[l.UnparsedAddress, l.City].filter(Boolean).join(", ")}</span>
+                  </div>
+                  {already ? <span className="ml-auto text-xs text-muted">Already added</span> : null}
+                </label>
+              );
+            })}
+          </div>
+          <button className="btn-primary self-start" onClick={addSelected} disabled={!selected.size || busy}>Add {selected.size} selected</button>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function AddByMls({ onAdded }: { onAdded: (row: FeaturedListingRow) => void }) {
   const supabase = useMemo(() => createClient(), []);
   const [key, setKey] = useState("");
@@ -104,9 +173,10 @@ function AddPrivate({ onAdded }: { onAdded: (row: FeaturedListingRow) => void })
   );
 }
 
-export function FeaturedListingsManager({ initial }: { initial: FeaturedListingRow[] }) {
+export function FeaturedListingsManager({ initial, initialOfficeKey }: { initial: FeaturedListingRow[]; initialOfficeKey: string }) {
   const supabase = useMemo(() => createClient(), []);
   const [rows, setRows] = useState(initial);
+  const existingKeys = useMemo(() => new Set(rows.map((r) => r.listing_key).filter((k): k is string => !!k)), [rows]);
 
   async function toggleActive(id: string, is_active: boolean) {
     await supabase.from("featured_listings").update({ is_active }).eq("id", id);
@@ -127,6 +197,8 @@ export function FeaturedListingsManager({ initial }: { initial: FeaturedListingR
 
   return (
     <div className="flex flex-col gap-5">
+      <PullByOffice initialOfficeKey={initialOfficeKey} existingKeys={existingKeys} onAdded={(added) => setRows([...rows, ...added])} />
+
       <div className="grid gap-4 md:grid-cols-2">
         <AddByMls onAdded={(row) => setRows([...rows, row])} />
         <AddPrivate onAdded={(row) => setRows([...rows, row])} />
