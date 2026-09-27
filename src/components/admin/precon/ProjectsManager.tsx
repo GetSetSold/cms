@@ -1,19 +1,8 @@
 "use client";
 import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
-
-type Project = {
-  id: string; builder_id: string; slug: string; name: string; city: string | null; address: string | null;
-  latitude: number | null; longitude: number | null; status: string; price_from: number | null;
-  beds_min: number | null; beds_max: number | null; baths_min: number | null; baths_max: number | null;
-  sqft_min: number | null; sqft_max: number | null; vip_release_date: string | null; cashback_amount: number | null;
-  description: string | null; gallery: string[]; amenities: string[];
-};
-type Builder = { id: string; name: string };
+import type { Project, Builder } from "@/lib/precon";
 
 const slugify = (s: string) => s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
-const numOrNull = (v: string) => (v === "" ? null : Number(v));
-const linesToArr = (v: string) => v.split("\n").map((s) => s.trim()).filter(Boolean);
 
 function Form({ initial, builders, onSave, onCancel }: { initial: Partial<Project>; builders: Builder[]; onSave: (d: Partial<Project>) => void; onCancel: () => void }) {
   const [d, setD] = useState<Partial<Project>>(initial);
@@ -23,78 +12,68 @@ function Form({ initial, builders, onSave, onCancel }: { initial: Partial<Projec
       <strong className="text-base">{initial.id ? "Edit project" : "Add project"}</strong>
       <div className="grid grid-cols-2 gap-3">
         <label className="label">Builder
-          <select className="input" value={d.builder_id ?? ""} onChange={(e) => set("builder_id", e.target.value)}>
+          <select className="input" value={d.builder_id ?? ""} onChange={(e) => set("builder_id", Number(e.target.value))}>
             <option value="">Select…</option>
-            {builders.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+            {builders.map((b) => <option key={b.id} value={b.id}>{b.builder_name}</option>)}
           </select>
         </label>
-        <label className="label">Status
-          <select className="input" value={d.status ?? "Coming Soon"} onChange={(e) => set("status", e.target.value)}>
-            <option>Selling Now</option><option>Coming Soon</option><option>Sold Out</option>
-          </select>
-        </label>
+        <label className="label">Status (free text, e.g. Selling)<input className="input" value={d.project_status ?? ""} onChange={(e) => set("project_status", e.target.value)} /></label>
       </div>
-      <label className="label">Project name<input className="input" value={d.name ?? ""} onChange={(e) => { set("name", e.target.value); if (!initial.id) set("slug", slugify(e.target.value)); }} /></label>
+      <label className="label">Project name<input className="input" value={d.project_name ?? ""} onChange={(e) => { set("project_name", e.target.value); if (!initial.id) set("slug", slugify(e.target.value)); }} /></label>
       <label className="label">URL slug<input className="input" value={d.slug ?? ""} onChange={(e) => set("slug", slugify(e.target.value))} /></label>
       <div className="grid grid-cols-2 gap-3">
         <label className="label">City<input className="input" value={d.city ?? ""} onChange={(e) => set("city", e.target.value)} /></label>
-        <label className="label">Address<input className="input" value={d.address ?? ""} onChange={(e) => set("address", e.target.value)} /></label>
+        <label className="label">Starting price<input className="input" value={d.p_start_price ?? ""} onChange={(e) => set("p_start_price", e.target.value)} /></label>
+      </div>
+      <div className="grid grid-cols-3 gap-3">
+        <label className="label">Beds<input className="input" value={d.beds ?? ""} onChange={(e) => set("beds", e.target.value)} /></label>
+        <label className="label">Baths<input className="input" value={d.baths ?? ""} onChange={(e) => set("baths", e.target.value)} /></label>
+        <label className="label">Sqft (range OK, e.g. "1396 - 1687")<input className="input" value={d.sqft ?? ""} onChange={(e) => set("sqft", e.target.value)} /></label>
       </div>
       <div className="grid grid-cols-2 gap-3">
-        <label className="label">Latitude<input className="input" type="number" step="any" value={d.latitude ?? ""} onChange={(e) => set("latitude", numOrNull(e.target.value))} /></label>
-        <label className="label">Longitude<input className="input" type="number" step="any" value={d.longitude ?? ""} onChange={(e) => set("longitude", numOrNull(e.target.value))} /></label>
+        <label className="label">Latitude<input className="input" type="number" step="any" value={d.lat ?? ""} onChange={(e) => set("lat", e.target.value === "" ? null : Number(e.target.value))} /></label>
+        <label className="label">Longitude<input className="input" type="number" step="any" value={d.lng ?? ""} onChange={(e) => set("lng", e.target.value === "" ? null : Number(e.target.value))} /></label>
       </div>
-      <div className="grid grid-cols-3 gap-3">
-        <label className="label">Price from<input className="input" type="number" value={d.price_from ?? ""} onChange={(e) => set("price_from", numOrNull(e.target.value))} /></label>
-        <label className="label">VIP release date<input className="input" type="date" value={d.vip_release_date ?? ""} onChange={(e) => set("vip_release_date", e.target.value || null)} /></label>
-        <label className="label">Cashback ($)<input className="input" type="number" value={d.cashback_amount ?? ""} onChange={(e) => set("cashback_amount", numOrNull(e.target.value))} /></label>
-      </div>
-      <div className="grid grid-cols-3 gap-3">
-        <label className="label">Beds min<input className="input" type="number" value={d.beds_min ?? ""} onChange={(e) => set("beds_min", numOrNull(e.target.value))} /></label>
-        <label className="label">Beds max<input className="input" type="number" value={d.beds_max ?? ""} onChange={(e) => set("beds_max", numOrNull(e.target.value))} /></label>
-        <span />
-        <label className="label">Baths min<input className="input" type="number" value={d.baths_min ?? ""} onChange={(e) => set("baths_min", numOrNull(e.target.value))} /></label>
-        <label className="label">Baths max<input className="input" type="number" value={d.baths_max ?? ""} onChange={(e) => set("baths_max", numOrNull(e.target.value))} /></label>
-        <span />
-        <label className="label">Sqft min<input className="input" type="number" value={d.sqft_min ?? ""} onChange={(e) => set("sqft_min", numOrNull(e.target.value))} /></label>
-        <label className="label">Sqft max<input className="input" type="number" value={d.sqft_max ?? ""} onChange={(e) => set("sqft_max", numOrNull(e.target.value))} /></label>
-      </div>
-      <label className="label">Description<textarea className="textarea" rows={3} value={d.description ?? ""} onChange={(e) => set("description", e.target.value)} /></label>
-      <label className="label">Gallery photo URLs (one per line)<textarea className="textarea font-mono text-xs" rows={4} value={(d.gallery ?? []).join("\n")} onChange={(e) => set("gallery", linesToArr(e.target.value))} /></label>
-      <label className="label">Amenities (one per line)<textarea className="textarea" rows={3} value={(d.amenities ?? []).join("\n")} onChange={(e) => set("amenities", linesToArr(e.target.value))} /></label>
-      <div className="flex gap-2"><button className="btn" onClick={onCancel}>Cancel</button><button className="btn-primary" onClick={() => onSave(d)} disabled={!d.name?.trim() || !d.slug?.trim() || !d.builder_id}>Save</button></div>
+      <label className="label">VIP release
+        <select className="input" value={d.vip_release ?? ""} onChange={(e) => set("vip_release", e.target.value)}>
+          <option value="">—</option><option value="Yes">Yes</option><option value="No">No</option>
+        </select>
+      </label>
+      <label className="label">Main image URL<input className="input" value={d.main_image_url ?? ""} onChange={(e) => set("main_image_url", e.target.value)} /></label>
+      <label className="label">Project message (marketing blurb)<textarea className="textarea" rows={3} value={d.project_message ?? ""} onChange={(e) => set("project_message", e.target.value)} /></label>
+      <label className="label">Description<textarea className="textarea" rows={3} value={d.project_description ?? ""} onChange={(e) => set("project_description", e.target.value)} /></label>
+      <div className="flex gap-2"><button className="btn" onClick={onCancel}>Cancel</button><button className="btn-primary" onClick={() => onSave(d)} disabled={!d.project_name?.trim() || !d.slug?.trim() || !d.builder_id}>Save</button></div>
     </div>
   );
 }
 
-export function ProjectsManager({ initial, builders }: { initial: (Project & { builder: Builder })[]; builders: Builder[] }) {
-  const [supabase] = useState(() => createClient());
+export function ProjectsManager({ initial, builders }: { initial: Project[]; builders: Builder[] }) {
   const [rows, setRows] = useState(initial);
   const [editing, setEditing] = useState<Partial<Project> | null>(null);
   const [error, setError] = useState("");
+  const builderName = (id: number) => builders.find((b) => b.id === id)?.builder_name ?? "—";
 
   async function save(d: Partial<Project>) {
     setError("");
-    if (d.id) {
-      const { data, error } = await supabase.from("precon_projects").update(d).eq("id", d.id).select("*, builder:precon_builders(id,name)").single();
-      if (error) return setError(error.message);
-      setRows(rows.map((r) => (r.id === d.id ? (data as any) : r)));
-    } else {
-      const { data, error } = await supabase.from("precon_projects").insert(d).select("*, builder:precon_builders(id,name)").single();
-      if (error) return setError(error.message);
-      setRows([...rows, data as any]);
-    }
+    const res = await fetch(d.id ? `/api/admin/precon/projects/${d.id}` : "/api/admin/precon/projects", {
+      method: d.id ? "PATCH" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(d),
+    });
+    const body = await res.json();
+    if (!res.ok) return setError(body.error || "Something went wrong.");
+    const saved = body.project as Project;
+    setRows(d.id ? rows.map((r) => (r.id === d.id ? saved : r)) : [...rows, saved]);
     setEditing(null);
   }
   async function remove(id: string) {
-    if (!confirm("Delete this project? Its models will also be removed.")) return;
-    await supabase.from("precon_projects").delete().eq("id", id);
+    if (!confirm("Delete this project?")) return;
+    const res = await fetch(`/api/admin/precon/projects/${id}`, { method: "DELETE" });
+    if (!res.ok) return setError((await res.json()).error || "Could not delete.");
     setRows(rows.filter((r) => r.id !== id));
   }
 
   return (
     <div className="flex flex-col gap-5">
-      <button className="btn-primary self-start" onClick={() => setEditing({ status: "Coming Soon", gallery: [], amenities: [] })}>+ Add project</button>
+      <button className="btn-primary self-start" onClick={() => setEditing({})}>+ Add project</button>
       {error ? <p className="text-sm text-red-700">{error}</p> : null}
       {editing ? <Form initial={editing} builders={builders} onCancel={() => setEditing(null)} onSave={save} /> : null}
       <div className="overflow-hidden rounded-2xl bg-white">
@@ -103,10 +82,10 @@ export function ProjectsManager({ initial, builders }: { initial: (Project & { b
           <tbody>
             {rows.map((r) => (
               <tr key={r.id} className="border-b border-line/60 last:border-0">
-                <td className="p-4 font-medium">{r.name}</td>
-                <td className="p-4 text-muted">{r.builder?.name}</td>
+                <td className="p-4 font-medium">{r.project_name}</td>
+                <td className="p-4 text-muted">{builderName(r.builder_id)}</td>
                 <td className="p-4 text-muted">{r.city}</td>
-                <td className="p-4 text-muted">{r.status}</td>
+                <td className="p-4 text-muted">{r.project_status}</td>
                 <td className="p-4"><div className="flex gap-3 text-xs"><button className="font-medium text-primary" onClick={() => setEditing(r)}>Edit</button><button className="font-medium text-red-700" onClick={() => remove(r.id)}>Delete</button></div></td>
               </tr>
             ))}

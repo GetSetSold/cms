@@ -1,119 +1,88 @@
 "use client";
 import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
-
-type Model = {
-  id: string; project_id: string; slug: string; name: string; status: string; price_from: number | null;
-  bedrooms: number | null; bathrooms: number | null; sqft: number | null; storeys: number | null;
-  building_type: string | null; move_in_date: string | null; cashback_amount: number | null;
-  gallery: string[]; floor_plans: string[]; payment_plan: { milestone: string; percent: number }[]; amenities: string[];
-};
-type Project = { id: string; name: string };
+import type { HomeModel, Project } from "@/lib/precon";
 
 const slugify = (s: string) => s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
-const numOrNull = (v: string) => (v === "" ? null : Number(v));
-const linesToArr = (v: string) => v.split("\n").map((s) => s.trim()).filter(Boolean);
 
-function Form({ initial, projects, onSave, onCancel }: { initial: Partial<Model>; projects: Project[]; onSave: (d: Partial<Model>) => void; onCancel: () => void }) {
-  const [d, setD] = useState<Partial<Model>>(initial);
-  const set = (k: keyof Model, v: any) => setD((x) => ({ ...x, [k]: v }));
-  const plan = d.payment_plan ?? [];
-  const setPlan = (p: typeof plan) => set("payment_plan", p);
-
+function Form({ initial, projects, onSave, onCancel }: { initial: Partial<HomeModel>; projects: Project[]; onSave: (d: Partial<HomeModel>) => void; onCancel: () => void }) {
+  const [d, setD] = useState<Partial<HomeModel>>(initial);
+  const set = (k: keyof HomeModel, v: any) => setD((x) => ({ ...x, [k]: v }));
   return (
     <div className="card flex max-w-3xl flex-col gap-3">
       <strong className="text-base">{initial.id ? "Edit model" : "Add model"}</strong>
-      <div className="grid grid-cols-2 gap-3">
-        <label className="label">Project
-          <select className="input" value={d.project_id ?? ""} onChange={(e) => set("project_id", e.target.value)}>
-            <option value="">Select…</option>
-            {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-          </select>
-        </label>
-        <label className="label">Status
-          <select className="input" value={d.status ?? "Pre-Construction"} onChange={(e) => set("status", e.target.value)}>
-            <option>Pre-Construction</option><option>Move-In Ready</option>
-          </select>
-        </label>
-      </div>
-      <label className="label">Model name<input className="input" value={d.name ?? ""} onChange={(e) => { set("name", e.target.value); if (!initial.id) set("slug", slugify(e.target.value)); }} /></label>
+      <label className="label">Project
+        <select className="input" value={d.project_id ?? ""} onChange={(e) => set("project_id", e.target.value)}>
+          <option value="">Select…</option>
+          {projects.map((p) => <option key={p.id} value={p.id}>{p.project_name}</option>)}
+        </select>
+      </label>
+      <label className="label">Model name<input className="input" value={d.model_name ?? ""} onChange={(e) => { set("model_name", e.target.value); if (!initial.id) set("slug", slugify(e.target.value)); }} /></label>
       <label className="label">URL slug<input className="input" value={d.slug ?? ""} onChange={(e) => set("slug", slugify(e.target.value))} /></label>
       <div className="grid grid-cols-4 gap-3">
-        <label className="label">Price from<input className="input" type="number" value={d.price_from ?? ""} onChange={(e) => set("price_from", numOrNull(e.target.value))} /></label>
-        <label className="label">Bedrooms<input className="input" type="number" value={d.bedrooms ?? ""} onChange={(e) => set("bedrooms", numOrNull(e.target.value))} /></label>
-        <label className="label">Bathrooms<input className="input" type="number" value={d.bathrooms ?? ""} onChange={(e) => set("bathrooms", numOrNull(e.target.value))} /></label>
-        <label className="label">Sqft<input className="input" type="number" value={d.sqft ?? ""} onChange={(e) => set("sqft", numOrNull(e.target.value))} /></label>
+        <label className="label">Bedrooms<input className="input" value={d.bedrooms ?? ""} onChange={(e) => set("bedrooms", e.target.value)} /></label>
+        <label className="label">Bathrooms<input className="input" value={d.bathrooms ?? ""} onChange={(e) => set("bathrooms", e.target.value)} /></label>
+        <label className="label">Sqft<input className="input" value={d.sqft ?? ""} onChange={(e) => set("sqft", e.target.value)} /></label>
+        <label className="label">Starting price<input className="input" value={d.starting_price ?? ""} onChange={(e) => set("starting_price", e.target.value)} /></label>
       </div>
-      <div className="grid grid-cols-4 gap-3">
-        <label className="label">Storeys<input className="input" type="number" value={d.storeys ?? ""} onChange={(e) => set("storeys", numOrNull(e.target.value))} /></label>
-        <label className="label">Building type<input className="input" placeholder="Condo / Townhome / Detached" value={d.building_type ?? ""} onChange={(e) => set("building_type", e.target.value)} /></label>
-        <label className="label">Move-in date<input className="input" placeholder="TBA, Fall 2027…" value={d.move_in_date ?? ""} onChange={(e) => set("move_in_date", e.target.value)} /></label>
-        <label className="label">Cashback ($)<input className="input" type="number" value={d.cashback_amount ?? ""} onChange={(e) => set("cashback_amount", numOrNull(e.target.value))} /></label>
+      <div className="grid grid-cols-3 gap-3">
+        <label className="label">Storeys<input className="input" value={d.storeys ?? ""} onChange={(e) => set("storeys", e.target.value)} /></label>
+        <label className="label">Building type<input className="input" placeholder="Townhome, Row/Townhome…" value={d.building_type ?? ""} onChange={(e) => set("building_type", e.target.value)} /></label>
+        <label className="label">Move-in ready
+          <select className="input" value={d.move_in_ready === true ? "true" : d.move_in_ready === false ? "false" : ""} onChange={(e) => set("move_in_ready", e.target.value === "" ? null : e.target.value === "true")}>
+            <option value="">—</option><option value="true">Yes</option><option value="false">No</option>
+          </select>
+        </label>
       </div>
-      <label className="label">Gallery photo URLs (one per line)<textarea className="textarea font-mono text-xs" rows={3} value={(d.gallery ?? []).join("\n")} onChange={(e) => set("gallery", linesToArr(e.target.value))} /></label>
-      <label className="label">Floor plan image URLs (one per line)<textarea className="textarea font-mono text-xs" rows={3} value={(d.floor_plans ?? []).join("\n")} onChange={(e) => set("floor_plans", linesToArr(e.target.value))} /></label>
-      <label className="label">Amenities (one per line)<textarea className="textarea" rows={3} value={(d.amenities ?? []).join("\n")} onChange={(e) => set("amenities", linesToArr(e.target.value))} /></label>
-
-      <div className="flex flex-col gap-2 rounded-lg bg-ground p-3">
-        <span className="text-sm font-medium">Payment plan</span>
-        {plan.map((step, i) => (
-          <div key={i} className="flex gap-2">
-            <input className="input" placeholder="Milestone (e.g. At signing)" value={step.milestone} onChange={(e) => setPlan(plan.map((s, j) => (j === i ? { ...s, milestone: e.target.value } : s)))} />
-            <input className="input w-28" type="number" placeholder="%" value={step.percent} onChange={(e) => setPlan(plan.map((s, j) => (j === i ? { ...s, percent: Number(e.target.value) } : s)))} />
-            <button className="text-red-700" onClick={() => setPlan(plan.filter((_, j) => j !== i))}>✕</button>
-          </div>
-        ))}
-        <button className="btn self-start" onClick={() => setPlan([...plan, { milestone: "", percent: 0 }])}>+ Add step</button>
-      </div>
-
-      <div className="flex gap-2"><button className="btn" onClick={onCancel}>Cancel</button><button className="btn-primary" onClick={() => onSave(d)} disabled={!d.name?.trim() || !d.slug?.trim() || !d.project_id}>Save</button></div>
+      <label className="label">Model image URL<input className="input" value={d.model_image_url ?? ""} onChange={(e) => set("model_image_url", e.target.value)} /></label>
+      <label className="label">Title (marketing title, may differ from name)<input className="input" value={d.title ?? ""} onChange={(e) => set("title", e.target.value)} /></label>
+      <label className="label">Description<textarea className="textarea" rows={3} value={d.description ?? ""} onChange={(e) => set("description", e.target.value)} /></label>
+      <p className="text-xs text-muted">Floor plans, payment plans, and gallery photos beyond the main image are managed directly in the pre-con database for now — ask if you'd like admin screens for those too.</p>
+      <div className="flex gap-2"><button className="btn" onClick={onCancel}>Cancel</button><button className="btn-primary" onClick={() => onSave(d)} disabled={!d.model_name?.trim() || !d.slug?.trim() || !d.project_id}>Save</button></div>
     </div>
   );
 }
 
-export function ModelsManager({ initial, projects }: { initial: (Model & { project: Project })[]; projects: Project[] }) {
-  const [supabase] = useState(() => createClient());
+export function ModelsManager({ initial, projects }: { initial: HomeModel[]; projects: Project[] }) {
   const [rows, setRows] = useState(initial);
-  const [editing, setEditing] = useState<Partial<Model> | null>(null);
+  const [editing, setEditing] = useState<Partial<HomeModel> | null>(null);
   const [error, setError] = useState("");
+  const projectName = (id: string | null) => projects.find((p) => p.id === id)?.project_name ?? "—";
 
-  async function save(d: Partial<Model>) {
+  async function save(d: Partial<HomeModel>) {
     setError("");
-    if (d.id) {
-      const { data, error } = await supabase.from("precon_models").update(d).eq("id", d.id).select("*, project:precon_projects(id,name)").single();
-      if (error) return setError(error.message);
-      setRows(rows.map((r) => (r.id === d.id ? (data as any) : r)));
-    } else {
-      const { data, error } = await supabase.from("precon_models").insert(d).select("*, project:precon_projects(id,name)").single();
-      if (error) return setError(error.message);
-      setRows([...rows, data as any]);
-    }
+    const res = await fetch(d.id ? `/api/admin/precon/models/${d.id}` : "/api/admin/precon/models", {
+      method: d.id ? "PATCH" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(d),
+    });
+    const body = await res.json();
+    if (!res.ok) return setError(body.error || "Something went wrong.");
+    const saved = body.model as HomeModel;
+    setRows(d.id ? rows.map((r) => (r.id === d.id ? saved : r)) : [...rows, saved]);
     setEditing(null);
   }
   async function remove(id: string) {
     if (!confirm("Delete this model?")) return;
-    await supabase.from("precon_models").delete().eq("id", id);
+    const res = await fetch(`/api/admin/precon/models/${id}`, { method: "DELETE" });
+    if (!res.ok) return setError((await res.json()).error || "Could not delete.");
     setRows(rows.filter((r) => r.id !== id));
   }
 
   return (
     <div className="flex flex-col gap-5">
-      <button className="btn-primary self-start" onClick={() => setEditing({ status: "Pre-Construction", gallery: [], floor_plans: [], amenities: [], payment_plan: [] })}>+ Add model</button>
+      <button className="btn-primary self-start" onClick={() => setEditing({})}>+ Add model</button>
       {error ? <p className="text-sm text-red-700">{error}</p> : null}
       {editing ? <Form initial={editing} projects={projects} onCancel={() => setEditing(null)} onSave={save} /> : null}
       <div className="overflow-hidden rounded-2xl bg-white">
         <table className="w-full text-left">
-          <thead className="border-b border-line text-xs uppercase tracking-wide text-muted"><tr><th className="p-4">Model</th><th className="p-4">Project</th><th className="p-4">Status</th><th className="p-4"></th></tr></thead>
+          <thead className="border-b border-line text-xs uppercase tracking-wide text-muted"><tr><th className="p-4">Model</th><th className="p-4">Project</th><th className="p-4"></th></tr></thead>
           <tbody>
             {rows.map((r) => (
               <tr key={r.id} className="border-b border-line/60 last:border-0">
-                <td className="p-4 font-medium">{r.name}</td>
-                <td className="p-4 text-muted">{r.project?.name}</td>
-                <td className="p-4 text-muted">{r.status}</td>
+                <td className="p-4 font-medium">{r.model_name}</td>
+                <td className="p-4 text-muted">{projectName(r.project_id)}</td>
                 <td className="p-4"><div className="flex gap-3 text-xs"><button className="font-medium text-primary" onClick={() => setEditing(r)}>Edit</button><button className="font-medium text-red-700" onClick={() => remove(r.id)}>Delete</button></div></td>
               </tr>
             ))}
-            {!rows.length ? <tr><td colSpan={4} className="p-8 text-center text-muted">No models yet.</td></tr> : null}
+            {!rows.length ? <tr><td colSpan={3} className="p-8 text-center text-muted">No models yet.</td></tr> : null}
           </tbody>
         </table>
       </div>

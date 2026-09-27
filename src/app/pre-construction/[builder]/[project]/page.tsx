@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: { params: Promise<{ builder: 
   const { builder, project } = await params;
   const found = await getProject(builder, project);
   if (!found) return {};
-  return { title: `${found.project.name} | Pre-Construction in ${found.project.city ?? "Ontario"}`, description: found.project.description ?? undefined };
+  return { title: `${found.project.project_name} | Pre-Construction in ${found.project.city ?? "Ontario"}` };
 }
 
 function Stat({ label, value }: { label: string; value: string | number | null }) {
@@ -33,11 +33,8 @@ export default async function ProjectPage({ params }: { params: Promise<{ builde
   const { builder: builderSlug, project: projectSlug } = await params;
   const [settings, found] = await Promise.all([getSettings(), getProject(builderSlug, projectSlug)]);
   if (!found) notFound();
-  const { builder, project, models } = found;
+  const { builder, project, models, promos, amenities, gallery } = found;
   const logo = await getLogo(settings);
-  const bedsRange = project.beds_min && project.beds_max ? (project.beds_min === project.beds_max ? `${project.beds_min}` : `${project.beds_min}-${project.beds_max}`) : null;
-  const bathsRange = project.baths_min && project.baths_max ? (project.baths_min === project.baths_max ? `${project.baths_min}` : `${project.baths_min}-${project.baths_max}`) : null;
-  const sqftRange = project.sqft_min && project.sqft_max ? `${project.sqft_min.toLocaleString()}-${project.sqft_max.toLocaleString()}` : null;
   const basePath = `/pre-construction/${builderSlug}/${projectSlug}`;
 
   return (
@@ -48,16 +45,14 @@ export default async function ProjectPage({ params }: { params: Promise<{ builde
 
       <main>
         <div className={`${wrap} pb-4 pt-6 text-sm text-muted`}>
-          <Link href="/pre-construction" prefetch={false}>Pre-Construction</Link> › <Link href={`/pre-construction/${builderSlug}`} prefetch={false}>{builder.name}</Link> › {project.name}
+          <Link href="/pre-construction" prefetch={false}>Pre-Construction</Link> › <Link href={`/pre-construction/${builderSlug}`} prefetch={false}>{builder.builder_name}</Link> › {project.project_name}
         </div>
 
         <section className={`${wrap} flex flex-col items-start gap-4 pb-8`}>
-          {builder.logo_url ? <img src={builder.logo_url} alt={builder.name} className="h-10 w-auto object-contain" /> : null}
-          <h1 className="font-display text-2xl font-extrabold md:text-5xl">{project.name}</h1>
-          {project.cashback_amount ? (
-            <span className="flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary md:text-sm">
-              Up to ${project.cashback_amount.toLocaleString()} Cashback — Exclusive Buyer Perk
-            </span>
+          {builder.logo_url ? <img src={builder.logo_url} alt={builder.builder_name} className="h-10 w-auto object-contain" /> : null}
+          <h1 className="font-display text-2xl font-extrabold md:text-5xl">{project.project_name}</h1>
+          {promos[0]?.badge ? (
+            <span className="flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary md:text-sm">{promos[0].badge} — {promos[0].title}</span>
           ) : null}
           <div className="flex gap-3 pt-1">
             <a href="#lead" className="flex h-11 items-center rounded-full bg-primary px-6 text-sm font-medium text-white md:h-13 md:px-7">Register Now</a>
@@ -68,39 +63,53 @@ export default async function ProjectPage({ params }: { params: Promise<{ builde
         <section className={`${wrap} pb-10`}>
           <div className={`grid grid-cols-3 gap-4 p-5 sm:grid-cols-4 md:grid-cols-7 md:p-8 ${card}`}>
             <Stat label="City" value={project.city} />
-            <Stat label="Status" value={project.status} />
-            <Stat label="From" value={project.price_from ? `$${project.price_from.toLocaleString()}` : "TBA"} />
-            <Stat label="Beds" value={bedsRange} />
-            <Stat label="Baths" value={bathsRange} />
-            <Stat label="Sq Ft" value={sqftRange} />
-            <Stat label="VIP Release" value={project.vip_release_date ? new Date(project.vip_release_date).toLocaleDateString(undefined, { month: "short", year: "numeric" }) : null} />
+            <Stat label="Status" value={project.project_status} />
+            <Stat label="From" value={project.p_start_price ? `$${Number(project.p_start_price).toLocaleString()}` : "TBA"} />
+            <Stat label="Beds" value={project.beds} />
+            <Stat label="Baths" value={project.baths} />
+            <Stat label="Sq Ft" value={project.sqft} />
+            <Stat label="VIP Release" value={project.vip_release} />
           </div>
         </section>
 
-        {project.description ? (
-          <section className={`${wrap} pb-10`}>
-            <p className="max-w-3xl text-sm leading-relaxed text-muted md:text-base">{project.description}</p>
+        {(project.project_message || project.project_description) ? (
+          <section className={`${wrap} flex flex-col gap-3 pb-10`}>
+            {project.project_message ? <p className="max-w-3xl text-sm leading-relaxed md:text-base">{project.project_message}</p> : null}
+            {project.project_description ? <p className="max-w-3xl text-sm leading-relaxed text-muted md:text-base">{project.project_description}</p> : null}
           </section>
         ) : null}
 
-        {project.gallery.length ? (
-          <section className={`${wrap} flex flex-col gap-5 pb-14`}>
-            <h2 className="text-xl font-extrabold md:text-3xl">Image Gallery</h2>
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-              {project.gallery.map((src, i) => (
-                <div key={i} className="aspect-[4/3] overflow-hidden rounded-[var(--radius-md)] bg-soft">
-                  <img src={src} alt={`${project.name} photo ${i + 1}`} className="h-full w-full object-cover" />
+        {promos.length ? (
+          <section className={`${wrap} flex flex-col gap-3 pb-10`}>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
+              {promos.map((promo) => (
+                <div key={promo.id} className={`flex flex-col gap-1 p-4 ${card}`}>
+                  {promo.badge ? <span className="w-fit rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-bold text-primary">{promo.badge}</span> : null}
+                  <strong className="text-sm">{promo.title}</strong>
+                  {promo.description ? <span className="text-xs text-muted">{promo.description}</span> : null}
                 </div>
               ))}
             </div>
           </section>
         ) : null}
 
-        {(project.latitude && project.longitude) ? (
+        {(gallery.length || project.main_image_url) ? (
+          <section className={`${wrap} flex flex-col gap-5 pb-14`}>
+            <h2 className="text-xl font-extrabold md:text-3xl">Image Gallery</h2>
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+              {(gallery.length ? gallery.map((g) => g.image_url) : [project.main_image_url]).map((src, i) => (
+                <div key={i} className="aspect-[4/3] overflow-hidden rounded-[var(--radius-md)] bg-soft">
+                  <img src={src ?? ""} alt={`${project.project_name} photo ${i + 1}`} className="h-full w-full object-cover" />
+                </div>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
+        {(project.lat && project.lng) ? (
           <section className={`${wrap} flex flex-col gap-5 pb-14`}>
             <h2 className="text-xl font-extrabold md:text-3xl">Location</h2>
-            {project.address ? <p className="text-sm text-muted">{project.address}</p> : null}
-            <div className="h-72 md:h-96"><PointsMap points={[{ lat: project.latitude, lng: project.longitude, label: project.name, href: "#" }]} /></div>
+            <div className="h-72 md:h-96"><PointsMap points={[{ lat: project.lat, lng: project.lng, label: project.project_name, href: "#" }]} /></div>
           </section>
         ) : null}
 
@@ -109,14 +118,14 @@ export default async function ProjectPage({ params }: { params: Promise<{ builde
           <ModelsTabs models={models} basePath={basePath} />
         </section>
 
-        {project.amenities.length ? (
+        {amenities.length ? (
           <section className={`${wrap} flex flex-col gap-4 pb-14`}>
             <h2 className="text-xl font-extrabold md:text-3xl">Amenities &amp; Inclusions</h2>
-            <ul className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 md:grid-cols-3">
-              {project.amenities.map((a, i) => (
-                <li key={i} className="flex items-start gap-2 text-sm">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="mt-0.5 shrink-0 text-primary"><path d="M20 6 9 17l-5-5" /></svg>
-                  {a}
+            <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
+              {amenities.map((a) => (
+                <li key={a.id} className="flex items-center gap-2.5 text-sm">
+                  {a.icon_url ? <img src={a.icon_url} alt="" className="h-5 w-5" /> : null}
+                  {a.title}
                 </li>
               ))}
             </ul>
