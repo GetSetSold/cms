@@ -19,7 +19,7 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
     const { error } = await supabase.from("site_settings").update({
       site_name: s.site_name, logo_svg_id: s.logo_svg_id, theme: s.theme, seo_defaults: s.seo_defaults,
       navigation: s.navigation.filter((n) => n.label && n.href), header_cta: s.header_cta, header: s.header, footer: s.footer,
-      contact: s.contact, scripts: s.scripts, lead_settings: s.lead_settings, mobile_cta: s.mobile_cta, blog_cta: s.blog_cta, social_links: s.social_links,
+      contact: s.contact, scripts: s.scripts, lead_settings: s.lead_settings, mobile_cta: s.mobile_cta, blog_cta: s.blog_cta, social_links: s.social_links, precon_cashback: s.precon_cashback,
     }).eq("id", 1);
     setMsg(error ? error.message : "Saved");
   }
@@ -107,6 +107,31 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
               </select>
             </label>
           </div>
+        </div>
+
+        <div className="flex flex-col gap-3 rounded-lg border border-line p-3">
+          <strong className="text-sm">Pre-Construction Cashback</strong>
+          <p className="text-xs text-muted">Controls the cashback badge shown on Pre-Construction pages. Off by default — nothing shows until you turn this on.</p>
+          <label className="flex items-center justify-between text-sm">Show cashback badges
+            <input type="checkbox" checked={s.precon_cashback?.enabled ?? false}
+              onChange={(e) => set("precon_cashback", { ...(s.precon_cashback ?? { type: "percent", value: 1 }), enabled: e.target.checked })} />
+          </label>
+          {s.precon_cashback?.enabled ? (
+            <div className="flex items-end gap-3">
+              <label className="label">Type
+                <select className="input w-32" value={s.precon_cashback?.type ?? "percent"}
+                  onChange={(e) => set("precon_cashback", { ...s.precon_cashback!, type: e.target.value as "percent" | "flat" })}>
+                  <option value="percent">Percent</option>
+                  <option value="flat">Flat $</option>
+                </select>
+              </label>
+              <label className="label">{s.precon_cashback?.type === "flat" ? "Amount ($)" : "Percent (%)"}
+                <input className="input w-32" type="number" min={0} step={s.precon_cashback?.type === "flat" ? 100 : 0.25}
+                  value={s.precon_cashback?.value ?? 1}
+                  onChange={(e) => set("precon_cashback", { ...s.precon_cashback!, value: Number(e.target.value) })} />
+              </label>
+            </div>
+          ) : null}
         </div>
 
         <div className="flex flex-col gap-3 rounded-lg border border-line p-3">

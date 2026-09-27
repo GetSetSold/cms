@@ -3,6 +3,8 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { PointsMap } from "./PointsMap";
 import type { Project, Builder } from "@/lib/precon";
+import { getCashbackAmount, formatCashback } from "@/lib/cashback";
+import type { SiteSettings } from "@/lib/types";
 
 type ProjectWithBuilder = Project & { builder: Builder & { project_count?: number } };
 type CityCount = { city: string; count: number };
@@ -12,8 +14,8 @@ const card = "rounded-[var(--radius-lg)] border-[length:var(--border-card-width)
 const PAGE_SIZE = 9;
 
 export function PreconGridClient({
-  projects, cities, builders, stats, showFilters, showStats, showMap,
-}: { projects: ProjectWithBuilder[]; cities: CityCount[]; builders: (Builder & { project_count: number })[]; stats: Stats; showFilters: boolean; showStats: boolean; showMap: boolean }) {
+  projects, cities, builders, stats, showFilters, showStats, showMap, cashback,
+}: { projects: ProjectWithBuilder[]; cities: CityCount[]; builders: (Builder & { project_count: number })[]; stats: Stats; showFilters: boolean; showStats: boolean; showMap: boolean; cashback?: SiteSettings["precon_cashback"] }) {
   const [city, setCity] = useState("");
   const [status, setStatus] = useState("");
   const [vipOnly, setVipOnly] = useState(false);
@@ -63,20 +65,24 @@ export function PreconGridClient({
       ) : null}
 
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {visible.map((p) => (
-          <Link key={p.id} href={`/pre-construction/${p.builder.slug}/${p.slug}`} prefetch={false} className={`flex flex-col overflow-hidden ${card}`}>
-            <div className="relative aspect-[4/3] bg-soft">
-              {p.main_image_url ? <img src={p.main_image_url} alt={p.project_name} className="h-full w-full object-cover" /> : null}
-              {p.project_status ? <span className="absolute left-3 top-3 rounded-full bg-primary px-2.5 py-1 text-[11px] font-semibold text-white">{p.project_status}</span> : null}
-              {p.vip_release === "Yes" ? <span className="absolute right-3 top-3 rounded-full bg-ink/70 px-2.5 py-1 text-[11px] font-semibold text-white backdrop-blur">VIP</span> : null}
-            </div>
-            <div className="flex flex-col gap-1 p-4">
-              <div className="text-base font-bold text-primary md:text-lg">{p.p_start_price ? `From $${Number(p.p_start_price).toLocaleString()}` : "Price TBA"}</div>
-              <div className="text-sm font-medium">{p.project_name}</div>
-              <div className="text-xs text-muted">{p.builder.builder_name} · {p.city}</div>
-            </div>
-          </Link>
-        ))}
+        {visible.map((p) => {
+          const cb = getCashbackAmount(p.p_start_price, cashback);
+          return (
+            <Link key={p.id} href={`/pre-construction/${p.builder.slug}/${p.slug}`} prefetch={false} className={`flex flex-col overflow-hidden ${card}`}>
+              <div className="relative aspect-[4/3] bg-soft">
+                {p.main_image_url ? <img src={p.main_image_url} alt={p.project_name} className="h-full w-full object-cover" /> : null}
+                {p.project_status ? <span className="absolute left-3 top-3 rounded-full bg-primary px-2.5 py-1 text-[11px] font-semibold text-white">{p.project_status}</span> : null}
+                {p.vip_release === "Yes" ? <span className="absolute right-3 top-3 rounded-full bg-ink/70 px-2.5 py-1 text-[11px] font-semibold text-white backdrop-blur">VIP</span> : null}
+                {cb ? <span className="absolute right-3 top-11 flex items-center gap-1 rounded-full bg-gradient-to-r from-[#065f46] to-[#059669] px-2.5 py-1 text-[11px] font-semibold text-white">{formatCashback(cb)} cashback</span> : null}
+              </div>
+              <div className="flex flex-col gap-1 p-4">
+                <div className="text-base font-bold text-primary md:text-lg">{p.p_start_price ? `From $${Number(p.p_start_price).toLocaleString()}` : "Price TBA"}</div>
+                <div className="text-sm font-medium">{p.project_name}</div>
+                <div className="text-xs text-muted">{p.builder.builder_name} · {p.city}</div>
+              </div>
+            </Link>
+          );
+        })}
       </div>
       {!filtered.length ? <p className="text-center text-muted">No projects match your filters. Try adjusting your search.</p> : null}
       {visibleCount < filtered.length ? (

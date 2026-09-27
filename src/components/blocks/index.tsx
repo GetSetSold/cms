@@ -757,7 +757,7 @@ async function SoldHistoryGrid({ data }: BlockProps) {
   );
 }
 
-async function PreconProjectsGrid({ data }: BlockProps) {
+async function PreconProjectsGrid({ data, ctx }: BlockProps) {
   const [projects, cities, builders, stats] = await Promise.all([
     getProjects(), getCities(), getBuilders(), getPreconStats(),
   ]);
@@ -767,6 +767,7 @@ async function PreconProjectsGrid({ data }: BlockProps) {
       <PreconGridClient
         projects={projects as any} cities={cities} builders={builders} stats={stats}
         showFilters={data.show_filters !== false} showStats={data.show_stats !== false} showMap={data.show_map !== false}
+        cashback={ctx.settings.precon_cashback}
       />
     </div>
   );

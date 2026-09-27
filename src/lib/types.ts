@@ -85,6 +85,7 @@ export interface SiteSettings {
   contact: { phone?: string; email?: string; address?: string; hours?: string };
   social_links: { size?: "xs" | "sm" | "md" | "lg"; items: { svg_id: string; href: string; label?: string }[] };
   mls_office_key?: string;
+  precon_cashback?: { enabled: boolean; type: "percent" | "flat"; value: number };
   scripts: { ga4_id?: string };
   lead_settings: { notify_emails: string[] };
 }
