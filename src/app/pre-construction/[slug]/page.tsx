@@ -8,6 +8,7 @@ import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter, MobileCtaBar } from "@/components/site/SiteFooter";
 import { PointsMap } from "@/components/site/PointsMap";
 import { LeadForm } from "@/components/blocks/LeadForm";
+import { getCashbackAmount, formatCashback } from "@/lib/cashback";
 
 const wrap = "mx-auto w-full max-w-7xl px-5 md:px-10";
 const card = "rounded-[var(--radius-lg)] border-[length:var(--border-card-width)] border-line shadow-[var(--shadow-card)] bg-white";
@@ -40,16 +41,22 @@ export default async function BuilderOrCityPage({ params }: { params: Promise<{ 
           <div className={`${wrap} pb-4 pt-6 text-sm text-muted`}>
             <Link href="/pre-construction" prefetch={false}>Pre-Construction</Link> › {builder.builder_name}
           </div>
-          <section className={`${wrap} flex flex-col items-start gap-4 pb-10`}>
-            {builder.logo_url ? <img src={builder.logo_url} alt={builder.builder_name} className="h-12 w-auto object-contain" /> : null}
-            <h1 className="font-display text-2xl font-extrabold md:text-5xl">{builder.builder_name}</h1>
-            <div className="flex gap-3 pt-2">
-              <a href="#lead" className="flex h-11 items-center rounded-full bg-primary px-6 text-sm font-medium text-white md:h-13 md:px-7 md:text-base">Register Interest</a>
-              <a href="#projects" className="flex h-11 items-center rounded-full border border-ink px-6 text-sm font-medium md:h-13 md:px-7 md:text-base">View Projects</a>
+          <section
+            className="relative flex min-h-[50vh] flex-col justify-end overflow-hidden bg-ink bg-cover bg-center"
+            style={builder.banner_url ? { backgroundImage: `url(${builder.banner_url})` } : undefined}
+          >
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-black/10" />
+            <div className={`${wrap} relative z-10 flex flex-col items-start gap-4 py-12`}>
+              {builder.logo_url ? <img src={builder.logo_url} alt={builder.builder_name} className="h-12 w-auto rounded-lg bg-white/90 object-contain p-2" /> : null}
+              <h1 className="font-display text-2xl font-extrabold text-white md:text-5xl">{builder.builder_name}</h1>
+              <div className="flex gap-3 pt-2">
+                <a href="#lead" className="flex h-11 items-center rounded-full bg-primary px-6 text-sm font-medium text-white md:h-13 md:px-7 md:text-base">Register Interest</a>
+                <a href="#projects" className="flex h-11 items-center rounded-full border border-white/50 px-6 text-sm font-medium text-white md:h-13 md:px-7 md:text-base">View Projects</a>
+              </div>
             </div>
           </section>
           {builder.description ? (
-            <section className={`${wrap} pb-10`}>
+            <section className={`${wrap} pb-10 pt-10`}>
               <div className={`${card} p-5 md:p-8`}>
                 <h2 className="mb-2 text-lg font-bold md:text-2xl">About {builder.builder_name}</h2>
                 <p className="whitespace-pre-line text-sm leading-relaxed text-muted md:text-base">{builder.description}</p>
@@ -71,19 +78,23 @@ export default async function BuilderOrCityPage({ params }: { params: Promise<{ 
             <h2 className="text-xl font-extrabold md:text-3xl">Active Projects</h2>
             {projects.length ? (
               <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                {projects.map((p) => (
-                  <Link key={p.id} href={`/pre-construction/${slug}/${p.slug}`} prefetch={false} className={`flex flex-col overflow-hidden ${card}`}>
-                    <div className="relative aspect-[4/3] bg-soft">
-                      {p.main_image_url ? <img src={p.main_image_url} alt={p.project_name} className="h-full w-full object-cover" /> : null}
-                      {p.project_status ? <span className="absolute left-3 top-3 rounded-full bg-primary px-2.5 py-1 text-[11px] font-semibold text-white">{p.project_status}</span> : null}
-                    </div>
-                    <div className="flex flex-col gap-1 p-4">
-                      <div className="text-base font-bold text-primary md:text-lg">{p.p_start_price ? `From $${Number(p.p_start_price).toLocaleString()}` : "Price TBA"}</div>
-                      <div className="text-sm font-medium">{p.project_name}</div>
-                      <div className="text-xs text-muted">{p.city}</div>
-                    </div>
-                  </Link>
-                ))}
+                {projects.map((p) => {
+                  const cb = getCashbackAmount(p.p_start_price, settings.precon_cashback);
+                  return (
+                    <Link key={p.id} href={`/pre-construction/${slug}/${p.slug}`} prefetch={false} className={`flex flex-col overflow-hidden ${card}`}>
+                      <div className="relative aspect-[4/3] bg-soft">
+                        {p.main_image_url ? <img src={p.main_image_url} alt={p.project_name} className="h-full w-full object-cover" /> : null}
+                        {p.project_status ? <span className="absolute left-3 top-3 rounded-full bg-primary px-2.5 py-1 text-[11px] font-semibold text-white">{p.project_status}</span> : null}
+                        {cb ? <span className="absolute right-3 top-3 flex items-center gap-1 rounded-full bg-gradient-to-r from-[#065f46] to-[#059669] px-2.5 py-1 text-[11px] font-semibold text-white">{formatCashback(cb)} cashback</span> : null}
+                      </div>
+                      <div className="flex flex-col gap-1 p-4">
+                        <div className="text-base font-bold text-primary md:text-lg">{p.p_start_price ? `From $${Number(p.p_start_price).toLocaleString()}` : "Price TBA"}</div>
+                        <div className="text-sm font-medium">{p.project_name}</div>
+                        <div className="text-xs text-muted">{p.city}</div>
+                      </div>
+                    </Link>
+                  );
+                })}
               </div>
             ) : <p className="text-muted">No active projects at this time.</p>}
           </section>
@@ -142,19 +153,23 @@ export default async function BuilderOrCityPage({ params }: { params: Promise<{ 
         <section id="projects" className={`${wrap} flex flex-col gap-5 pb-14`}>
           <h2 className="text-xl font-extrabold md:text-3xl">Pre-Construction Projects in {cityName}</h2>
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {projects.map((p) => (
-              <Link key={p.id} href={`/pre-construction/${p.builder.slug}/${p.slug}`} prefetch={false} className={`flex flex-col overflow-hidden ${card}`}>
-                <div className="relative aspect-[4/3] bg-soft">
-                  {p.main_image_url ? <img src={p.main_image_url} alt={p.project_name} className="h-full w-full object-cover" /> : null}
-                  {p.project_status ? <span className="absolute left-3 top-3 rounded-full bg-primary px-2.5 py-1 text-[11px] font-semibold text-white">{p.project_status}</span> : null}
-                </div>
-                <div className="flex flex-col gap-1 p-4">
-                  <div className="text-base font-bold text-primary md:text-lg">{p.p_start_price ? `From $${Number(p.p_start_price).toLocaleString()}` : "Price TBA"}</div>
-                  <div className="text-sm font-medium">{p.project_name}</div>
-                  <div className="text-xs text-muted">{p.builder.builder_name}</div>
-                </div>
+            {projects.map((p) => {
+              const cb = getCashbackAmount(p.p_start_price, settings.precon_cashback);
+              return (
+                <Link key={p.id} href={`/pre-construction/${p.builder.slug}/${p.slug}`} prefetch={false} className={`flex flex-col overflow-hidden ${card}`}>
+                  <div className="relative aspect-[4/3] bg-soft">
+                    {p.main_image_url ? <img src={p.main_image_url} alt={p.project_name} className="h-full w-full object-cover" /> : null}
+                    {p.project_status ? <span className="absolute left-3 top-3 rounded-full bg-primary px-2.5 py-1 text-[11px] font-semibold text-white">{p.project_status}</span> : null}
+                    {cb ? <span className="absolute right-3 top-3 flex items-center gap-1 rounded-full bg-gradient-to-r from-[#065f46] to-[#059669] px-2.5 py-1 text-[11px] font-semibold text-white">{formatCashback(cb)} cashback</span> : null}
+                  </div>
+                  <div className="flex flex-col gap-1 p-4">
+                    <div className="text-base font-bold text-primary md:text-lg">{p.p_start_price ? `From $${Number(p.p_start_price).toLocaleString()}` : "Price TBA"}</div>
+                    <div className="text-sm font-medium">{p.project_name}</div>
+                    <div className="text-xs text-muted">{p.builder.builder_name}</div>
+                  </div>
               </Link>
-            ))}
+              );
+            })}
           </div>
         </section>
         {points.length ? (

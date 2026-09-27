@@ -7,6 +7,8 @@ import { themeFontHref, themeVars, themeIconOverrideCSS } from "@/lib/theme";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter, MobileCtaBar } from "@/components/site/SiteFooter";
 import { LeadForm } from "@/components/blocks/LeadForm";
+import { PromoBanner } from "@/components/site/PromoBanner";
+import { getCashbackAmount, formatCashback } from "@/lib/cashback";
 
 const wrap = "mx-auto w-full max-w-7xl px-5 md:px-10";
 const card = "rounded-[var(--radius-lg)] border-[length:var(--border-card-width)] border-line shadow-[var(--shadow-card)] bg-white";
@@ -31,7 +33,7 @@ export default async function ModelPage({ params }: { params: Promise<{ slug: st
   const { slug: builderSlug, project: projectSlug, model: modelSlug } = await params;
   const [settings, found] = await Promise.all([getSettings(), getModel(builderSlug, projectSlug, modelSlug)]);
   if (!found) notFound();
-  const { builder, project, model, siblings, floorplans, gallery, paymentPlan, installments } = found;
+  const { builder, project, model, siblings, floorplans, gallery, limitedTimePromo, paymentPlan, installments } = found;
   const logo = await getLogo(settings);
   const basePath = `/pre-construction/${builderSlug}/${projectSlug}`;
 
@@ -46,18 +48,33 @@ export default async function ModelPage({ params }: { params: Promise<{ slug: st
           <Link href="/pre-construction" prefetch={false}>Pre-Construction</Link> › <Link href={`/pre-construction/${builderSlug}`} prefetch={false}>{builder.builder_name}</Link> › <Link href={basePath} prefetch={false}>{project.project_name}</Link> › {model.model_name}
         </div>
 
-        <section className={`${wrap} flex flex-col items-start gap-4 pb-8`}>
-          {builder.logo_url ? <img src={builder.logo_url} alt={builder.builder_name} className="h-10 w-auto object-contain" /> : null}
-          <h1 className="font-display text-2xl font-extrabold md:text-5xl">{model.model_name}</h1>
-          {model.title && model.title !== model.model_name ? <p className="text-sm text-muted">{model.title}</p> : null}
-          <p className="text-sm text-muted">Part of <Link href={basePath} prefetch={false} className="font-medium text-primary">{project.project_name}</Link> by {builder.builder_name}</p>
-          <div className="flex gap-3 pt-1">
-            <a href="#lead" className="flex h-11 items-center rounded-full bg-primary px-6 text-sm font-medium text-white md:h-13 md:px-7">Register Interest</a>
-            <a href="#lead" className="flex h-11 items-center rounded-full border border-ink px-6 text-sm font-medium md:h-13 md:px-7">Book a Showing</a>
+        <section
+          className="relative flex min-h-[55vh] flex-col justify-end overflow-hidden bg-ink bg-cover bg-center"
+          style={model.model_image_url ? { backgroundImage: `url(${model.model_image_url})` } : undefined}
+        >
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-black/10" />
+          <div className={`${wrap} relative z-10 flex flex-col items-start gap-4 py-12`}>
+            {builder.logo_url ? <img src={builder.logo_url} alt={builder.builder_name} className="h-10 w-auto rounded-lg bg-white/90 object-contain p-1.5" /> : null}
+            <h1 className="font-display text-2xl font-extrabold text-white md:text-5xl">{model.model_name}</h1>
+            {model.title && model.title !== model.model_name ? <p className="text-sm text-white/70">{model.title}</p> : null}
+            <p className="text-sm text-white/70">Part of <Link href={basePath} prefetch={false} className="font-medium text-white underline">{project.project_name}</Link> by {builder.builder_name}</p>
+            {(() => {
+              const cb = getCashbackAmount(model.starting_price, settings.precon_cashback);
+              return cb ? (
+                <span className="flex items-center gap-2 rounded-full bg-gradient-to-r from-[#065f46] via-[#059669] to-[#10b981] px-4 py-2 text-sm font-bold text-white">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>
+                  Up to {formatCashback(cb)} Cashback — Exclusive Buyer Perk
+                </span>
+              ) : null;
+            })()}
+            <div className="flex gap-3 pt-1">
+              <a href="#lead" className="flex h-11 items-center rounded-full bg-primary px-6 text-sm font-medium text-white md:h-13 md:px-7">Register Interest</a>
+              <a href="#lead" className="flex h-11 items-center rounded-full border border-white/50 px-6 text-sm font-medium text-white md:h-13 md:px-7">Book a Showing</a>
+            </div>
           </div>
         </section>
 
-        <section className={`${wrap} pb-10`}>
+        <section className={`${wrap} pb-10 pt-10`}>
           <div className={`grid grid-cols-3 gap-4 p-5 sm:grid-cols-4 md:grid-cols-7 md:p-8 ${card}`}>
             <Stat label="City" value={project.city} />
             <Stat label="Price" value={model.starting_price ? `$${Number(model.starting_price).toLocaleString()}` : "TBA"} />
@@ -72,6 +89,12 @@ export default async function ModelPage({ params }: { params: Promise<{ slug: st
         {model.description ? (
           <section className={`${wrap} pb-10`}>
             <p className="max-w-3xl whitespace-pre-line text-sm leading-relaxed text-muted md:text-base">{model.description}</p>
+          </section>
+        ) : null}
+
+        {limitedTimePromo ? (
+          <section className={`${wrap} pb-10`}>
+            <PromoBanner promo={limitedTimePromo} />
           </section>
         ) : null}
 
@@ -118,15 +141,21 @@ export default async function ModelPage({ params }: { params: Promise<{ slug: st
           <section className={`${wrap} flex flex-col gap-5 pb-14`}>
             <h2 className="text-xl font-extrabold md:text-3xl">Similar Homes</h2>
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {siblings.map((m) => (
-                <Link key={m.id} href={`${basePath}/${m.slug}`} prefetch={false} className={`flex flex-col overflow-hidden ${card}`}>
-                  <div className="aspect-[4/3] bg-soft">{m.model_image_url ? <img src={m.model_image_url} alt={m.model_name ?? ""} className="h-full w-full object-cover" /> : null}</div>
-                  <div className="flex flex-col gap-1 p-4">
-                    <div className="text-base font-bold text-primary">{m.starting_price ? `$${Number(m.starting_price).toLocaleString()}` : "Price TBA"}</div>
-                    <div className="text-sm font-medium">{m.model_name}</div>
-                  </div>
-                </Link>
-              ))}
+              {siblings.map((m) => {
+                const cb = getCashbackAmount(m.starting_price, settings.precon_cashback);
+                return (
+                  <Link key={m.id} href={`${basePath}/${m.slug}`} prefetch={false} className={`flex flex-col overflow-hidden ${card}`}>
+                    <div className="relative aspect-[4/3] bg-soft">
+                      {m.model_image_url ? <img src={m.model_image_url} alt={m.model_name ?? ""} className="h-full w-full object-cover" /> : null}
+                      {cb ? <span className="absolute right-3 top-3 flex items-center gap-1 rounded-full bg-gradient-to-r from-[#065f46] to-[#059669] px-2.5 py-1 text-[11px] font-semibold text-white">{formatCashback(cb)} cashback</span> : null}
+                    </div>
+                    <div className="flex flex-col gap-1 p-4">
+                      <div className="text-base font-bold text-primary">{m.starting_price ? `$${Number(m.starting_price).toLocaleString()}` : "Price TBA"}</div>
+                      <div className="text-sm font-medium">{m.model_name}</div>
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
           </section>
         ) : null}

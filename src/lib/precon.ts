@@ -82,6 +82,20 @@ export async function getPreconStats() {
   return { projects: projects ?? 0, builders: builders ?? 0, cities: cities.size, vip: vip ?? 0 };
 }
 
+/** promos.bullets might be a real array, a JSON-encoded string, or a plain
+ *  comma-separated string depending on how it was entered — handle all three. */
+export function parsePromoBullets(bullets: unknown): string[] {
+  if (!bullets) return [];
+  if (Array.isArray(bullets)) return bullets.filter(Boolean);
+  if (typeof bullets === "string") {
+    const trimmed = bullets.trim();
+    if (!trimmed) return [];
+    try { const parsed = JSON.parse(trimmed); if (Array.isArray(parsed)) return parsed.filter(Boolean); } catch { /* fall through */ }
+    return trimmed.split(",").map((s) => s.trim()).filter(Boolean);
+  }
+  return [];
+}
+
 function slugToCityName(slug: string) {
   return slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
@@ -102,15 +116,27 @@ export async function getBuilders(): Promise<(Builder & { project_count: number 
   return (builders ?? []).map((b) => ({ ...b, project_count: counts.get(b.id) ?? 0 }));
 }
 
+/** Promos with show=true, filtered to ones currently within their date
+ *  window. A null start/end date is treated as "always active" — matching
+ *  how the promo rows we've seen so far are actually filled in. */
+function isPromoActive(p: Promo): boolean {
+  if (!p.show) return false;
+  const today = new Date().toISOString().slice(0, 10);
+  if (p.start_date && p.start_date > today) return false;
+  if (p.end_date && p.end_date < today) return false;
+  return true;
+}
+
 export async function getBuilder(slug: string) {
   const supabase = createPreconClient();
   const { data: builder } = await supabase.from("builders").select("*").eq("slug", slug).maybeSingle();
   if (!builder) return null;
-  const [{ data: projects }, { data: promos }] = await Promise.all([
+  const [{ data: projects }, { data: promoRows }] = await Promise.all([
     supabase.from("projects").select("*").eq("builder_id", builder.id),
-    supabase.from("promos").select("*").eq("builder_id", builder.id).is("project_id", null).eq("show", true),
+    supabase.from("promos").select("*").eq("builder_id", builder.id).is("project_id", null).eq("promo_type", "builder"),
   ]);
-  return { builder: builder as Builder, projects: (projects ?? []) as Project[], promos: (promos ?? []) as Promo[] };
+  const promos = (promoRows ?? []).filter(isPromoActive) as Promo[];
+  return { builder: builder as Builder, projects: (projects ?? []) as Project[], promos };
 }
 
 export async function getProjects(): Promise<(Project & { builder: Builder })[]> {
@@ -136,13 +162,23 @@ export async function getProject(builderSlug: string, projectSlug: string) {
   const { data: project } = await supabase.from("projects").select("*").eq("builder_id", builder.id).eq("slug", projectSlug).maybeSingle();
   if (!project) return null;
 
-  const [{ data: phases }, { data: models }, { data: promos }, { data: projectAmenities }, gallery] = await Promise.all([
+  const [{ data: phases }, { data: models }, { data: projectPromos }, { data: builderPromos }, { data: projectAmenities }, gallery] = await Promise.all([
     supabase.from("phases").select("*").eq("project_id", project.id),
     supabase.from("home_models").select("*").eq("project_id", project.id),
-    supabase.from("promos").select("*").eq("project_id", project.id).eq("show", true),
+    supabase.from("promos").select("*").eq("project_id", project.id).eq("promo_type", "limited_time"),
+    supabase.from("promos").select("*").eq("builder_id", builder.id).is("project_id", null),
     supabase.from("project_amenities").select("amenity_id").eq("project_id", project.id),
     getImagesFor("project", project.id),
   ]);
+
+  // Limited-time banner: a promo tied directly to this project, or — if none — a
+  // builder-wide limited_time promo (matches the reference site's fallback).
+  const activeProjectPromos = (projectPromos ?? []).filter(isPromoActive);
+  const activeBuilderLimited = ((builderPromos ?? []) as Promo[]).filter((p) => p.promo_type === "limited_time").filter(isPromoActive);
+  const limitedTimePromo = (activeProjectPromos[0] ?? activeBuilderLimited[0]) as Promo | undefined;
+
+  // Small builder-wide incentive cards (same ones shown on the builder page).
+  const promos = ((builderPromos ?? []) as Promo[]).filter((p) => p.promo_type === "builder").filter(isPromoActive);
 
   let amenities: Amenity[] = [];
   const amenityIds = (projectAmenities ?? []).map((a) => a.amenity_id);
@@ -154,7 +190,7 @@ export async function getProject(builderSlug: string, projectSlug: string) {
   return {
     builder: builder as Builder, project: project as Project,
     phases: (phases ?? []) as Phase[], models: (models ?? []) as HomeModel[],
-    promos: (promos ?? []) as Promo[], amenities, gallery,
+    promos, limitedTimePromo, amenities, gallery,
   };
 }
 
@@ -182,7 +218,7 @@ export async function getModel(builderSlug: string, projectSlug: string, modelSl
 
   return {
     builder: found.builder, project: found.project, model, siblings,
-    floorplans: (floorplans ?? []) as Floorplan[], gallery,
+    floorplans: (floorplans ?? []) as Floorplan[], gallery, limitedTimePromo: found.limitedTimePromo,
     paymentPlan: paymentPlans?.[0] as PaymentPlan | undefined, installments,
   };
 }
