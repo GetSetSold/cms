@@ -133,10 +133,12 @@ export async function getBuilder(slug: string) {
   if (!builder) return null;
   const [{ data: projects }, { data: promoRows }] = await Promise.all([
     supabase.from("projects").select("*").eq("builder_id", builder.id),
-    supabase.from("promos").select("*").eq("builder_id", builder.id).is("project_id", null).eq("promo_type", "builder"),
+    supabase.from("promos").select("*").eq("builder_id", builder.id).is("project_id", null),
   ]);
-  const promos = (promoRows ?? []).filter(isPromoActive) as Promo[];
-  return { builder: builder as Builder, projects: (projects ?? []) as Project[], promos };
+  const active = ((promoRows ?? []) as Promo[]).filter(isPromoActive);
+  const promos = active.filter((p) => p.promo_type === "builder");
+  const limitedTimePromo = active.find((p) => p.promo_type === "limited_time");
+  return { builder: builder as Builder, projects: (projects ?? []) as Project[], promos, limitedTimePromo };
 }
 
 export async function getProjects(): Promise<(Project & { builder: Builder })[]> {
