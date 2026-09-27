@@ -1,6 +1,5 @@
 "use client";
 import { useMemo, useState } from "react";
-import { createBrowserClient } from "@supabase/ssr";
 import { createClient } from "@/lib/supabase/client";
 import type { FeaturedListingRow } from "@/lib/featuredListings";
 
@@ -17,20 +16,14 @@ function PullByOffice({ initialOfficeKey, existingKeys, onAdded }: { initialOffi
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
-  async function saveOfficeKey() {
-    await supabase.from("site_settings").update({ mls_office_key: officeKey.trim() }).eq("id", 1);
-  }
-
   async function fetchListings() {
     setError(""); setResults(null); setBusy(true);
-    await saveOfficeKey(); // remembered for next time, since this is a "set once" kind of value
-    const mls = createBrowserClient(process.env.NEXT_PUBLIC_MLS_SUPABASE_URL!, process.env.NEXT_PUBLIC_MLS_SUPABASE_ANON_KEY!);
-    const { data, error } = await mls.from("grid").select("ListingKey,UnparsedAddress,City,ListPrice,Media").eq("ListOfficeKey", officeKey.trim());
+    const res = await fetch(`/api/admin/mls-by-office?office=${encodeURIComponent(officeKey.trim())}`);
+    const body = await res.json();
     setBusy(false);
-    if (error) return setError(error.message);
-    if (!data?.length) return setError("No listings found for that office key. Double-check it against a real listing's ListOfficeKey field.");
-    setResults(data);
-    setSelected(new Set(data.filter((l) => !existingKeys.has(l.ListingKey)).map((l) => l.ListingKey)));
+    if (!res.ok) return setError(body.error || "Something went wrong.");
+    setResults(body.listings);
+    setSelected(new Set(body.listings.filter((l: any) => !existingKeys.has(l.ListingKey)).map((l: any) => l.ListingKey)));
   }
 
   async function addSelected() {
@@ -86,12 +79,17 @@ function AddByMls({ onAdded }: { onAdded: (row: FeaturedListingRow) => void }) {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
+  function clear() {
+    setKey(""); setPreview(null); setError("");
+  }
+
   async function lookup() {
     setError(""); setPreview(null); setBusy(true);
-    const mls = createBrowserClient(process.env.NEXT_PUBLIC_MLS_SUPABASE_URL!, process.env.NEXT_PUBLIC_MLS_SUPABASE_ANON_KEY!);
-    const { data } = await mls.from("grid").select("UnparsedAddress,City,ListPrice,Media").eq("ListingKey", key.trim()).maybeSingle();
+    const res = await fetch(`/api/admin/mls-lookup?key=${encodeURIComponent(key.trim())}`);
+    const body = await res.json();
     setBusy(false);
-    if (!data) return setError("No listing found with that MLS #. Double-check the number.");
+    if (!res.ok) return setError(body.error || "Something went wrong.");
+    const data = body.listing;
     setPreview({ address: [data.UnparsedAddress, data.City].filter(Boolean).join(", "), price: data.ListPrice, image: data.Media });
   }
 
@@ -116,6 +114,7 @@ function AddByMls({ onAdded }: { onAdded: (row: FeaturedListingRow) => void }) {
         </select>
         <input className="input" placeholder="MLS # (e.g. 30238883)" value={key} onChange={(e) => setKey(e.target.value)} />
         <button className="btn" onClick={lookup} disabled={!key.trim() || busy}>Look up</button>
+        {key || preview || error ? <button className="btn" onClick={clear}>Clear</button> : null}
       </div>
       {error ? <p className="text-sm text-red-700">{error}</p> : null}
       {preview ? (
