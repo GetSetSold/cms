@@ -36,6 +36,13 @@ type BlockProps = { data: any; ctx: BlockCtx };
 
 const wrap = "mx-auto w-full max-w-7xl px-5 md:px-10";
 const h2 = "font-display font-bold tracking-tight text-[40px] leading-none md:text-[56px]";
+// Shared card/box shape — reads the site's radius+shadow tokens (Settings >
+// Branding > Shape) instead of a hardcoded value, so every card sitewide
+// changes together when that setting changes. `cardLg` for large panels
+// (feature cards, testimonials), `cardMd` for smaller ones (icon boxes).
+const cardShadow = "border-[length:var(--border-card-width)] border-line shadow-[var(--shadow-card)]";
+const cardLg = `rounded-[var(--radius-lg)] ${cardShadow}`;
+const cardMd = `rounded-[var(--radius-md)] ${cardShadow}`;
 const paragraphs = (text?: string) =>
   (text ?? "").split(/\n{2,}/).filter(Boolean).map((p, i) => <p key={i}>{p}</p>);
 
@@ -65,7 +72,7 @@ function Hero({ data, ctx }: BlockProps) {
     <>
       {data.layout === "centered" && data.centered_icon_svg_id && ctx.svgs[data.centered_icon_svg_id] ? (
         <div
-          className="flex shrink-0 items-center justify-center overflow-hidden rounded-full shadow-[0_8px_24px_rgba(20,20,43,0.12)]"
+          className="flex shrink-0 items-center justify-center overflow-hidden rounded-full shadow-[var(--shadow-card)]"
           style={{
             width: (Number(data.centered_icon_radius) || 64) * 2,
             height: (Number(data.centered_icon_radius) || 64) * 2,
@@ -91,7 +98,7 @@ function Hero({ data, ctx }: BlockProps) {
             <span key={t} className={`-mb-px border-b-2 pb-2.5 ${i === 0 ? "border-primary font-medium text-primary" : "border-transparent text-muted"}`}>{t}</span>
           ))}
         </div>
-        <form action="/listings" className="flex w-full flex-col gap-3 rounded-2xl bg-white p-3 shadow-[0_12px_40px_rgba(20,20,43,0.08)] sm:flex-row sm:items-center">
+        <form action="/listings" className={`flex w-full flex-col gap-3 bg-white p-3 sm:flex-row sm:items-center ${cardLg}`}>
           <label className="flex flex-1 flex-col gap-1 px-3 py-1">
             <span className="text-xs text-muted">Location</span>
             <input name="city" placeholder="City or neighbourhood" className="border-0 p-0 text-[15px] outline-none placeholder:text-muted/70" />
@@ -116,7 +123,7 @@ function Hero({ data, ctx }: BlockProps) {
     return (
       <div className={`${wrap} grid items-center gap-10 py-12 md:grid-cols-2 md:gap-16 md:py-20`}>
         <div className="flex flex-col gap-6">{copy}</div>
-        <div className="rounded-3xl bg-white p-6 shadow-[0_12px_40px_rgba(21,23,28,0.08)] md:p-8">
+        <div className={`bg-white p-6 md:p-8 ${cardLg}`}>
           <LeadForm data={{ form_key: "landing", submit_label: data.primary_cta?.label || "Get my quote", show_message: false }} pageId={ctx.page?.id} siteName={ctx.settings.site_name} />
         </div>
       </div>
@@ -138,12 +145,12 @@ function Hero({ data, ctx }: BlockProps) {
           const valueCls = { sm: "text-2xl", md: "text-4xl", lg: "text-5xl" }[size as "sm" | "md" | "lg"];
           const style = data.badge_style || "solid";
           const styleCls = {
-            solid: "bg-white shadow-[0_12px_40px_rgba(21,23,28,0.12)]",
+            solid: "bg-white shadow-[var(--shadow-card)]",
             bordered: "bg-white border-2 border-ink",
-            glass: "bg-white/70 backdrop-blur-md shadow-[0_12px_40px_rgba(21,23,28,0.12)]",
+            glass: "bg-white/70 backdrop-blur-md shadow-[var(--shadow-card)]",
           }[style as "solid" | "bordered" | "glass"];
           return (
-            <div className={`absolute -bottom-4 flex flex-col rounded-2xl md:bottom-9 ${sizeCls} ${styleCls} ${imageOnLeft ? "right-4 md:-right-8" : "left-4 md:-left-8"}`}>
+            <div className={`absolute -bottom-4 flex flex-col rounded-[var(--radius-lg)] md:bottom-9 ${sizeCls} ${styleCls} ${imageOnLeft ? "right-4 md:-right-8" : "left-4 md:-left-8"}`}>
               <div className="text-[13px] text-muted">{data.badge.label}</div>
               <div className={`font-display font-bold ${valueCls}`}>{data.badge.value}</div>
             </div>
@@ -177,8 +184,8 @@ function Services({ data, ctx }: BlockProps) {
       <div className="grid gap-4 md:grid-cols-3 md:gap-6">
         {(data.items ?? []).map((s: any, i: number) => {
           const card = (
-            <article className="flex h-full items-center gap-4 rounded-2xl bg-white p-3 md:flex-col md:items-stretch md:gap-4 md:rounded-[20px] md:p-4">
-              <Svg asset={ctx.svgs[s.svg_id]} className="aspect-square w-22 shrink-0 overflow-hidden rounded-xl md:aspect-[360/220] md:w-full" />
+            <article className="flex h-full items-center gap-4 rounded-[var(--radius-lg)] bg-white p-3 md:flex-col md:items-stretch md:gap-4 md:p-4">
+              <Svg asset={ctx.svgs[s.svg_id]} className="aspect-square w-22 shrink-0 overflow-hidden rounded-[var(--radius-md)] md:aspect-[360/220] md:w-full" />
               <div className="flex flex-col gap-1.5 md:p-2">
                 <h3 className="text-lg font-semibold md:text-[22px]">{s.title}</h3>
                 <p className="text-sm leading-relaxed text-muted md:text-base">{s.text}</p>
@@ -310,7 +317,7 @@ function FaqBoxed({ data, ctx }: BlockProps) {
       {data.heading ? <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2> : null}
       <div className="flex flex-col gap-3">
         {items.map((f: any, i: number) => (
-          <details key={i} className={`group overflow-hidden rounded-2xl p-6 ${ctx.dark ? "bg-white/10" : "bg-white shadow-[0_2px_10px_rgba(20,20,43,0.05)]"}`} open={i === 0}>
+          <details key={i} className={`group overflow-hidden rounded-[var(--radius-lg)] p-6 ${ctx.dark ? "bg-white/10" : `bg-white ${cardShadow}`}`} open={i === 0}>
             <summary className={`flex cursor-pointer list-none items-center justify-between gap-4 text-lg font-semibold ${heading(ctx)}`}>
               {f.q}
               <span className="relative h-5 w-5 shrink-0">
@@ -567,7 +574,7 @@ function IconCard({ data, ctx }: BlockProps) {
   return (
     <div
       className={boxed
-        ? "flex h-full w-full flex-col items-start gap-3 rounded-2xl p-6 md:gap-4 md:p-7"
+        ? "flex h-full w-full flex-col items-start gap-3 rounded-[var(--radius-lg)] p-6 md:gap-4 md:p-7"
         : "flex h-full w-full flex-col items-start gap-3 py-6 md:gap-4 md:py-10"}
       style={boxed ? { background: resolvedBoxColor || "var(--c-soft)" } : undefined}
     >
@@ -748,7 +755,7 @@ async function BlogGrid({ data, ctx }: BlockProps) {
   const swipe = data.layout === "swipe";
   const card = (p: any) => (
     <Link key={p.id} href={`/updates/${p.blog_categories?.slug ?? "post"}/${p.slug}`} prefetch={false}
-      className={`flex flex-col gap-3 overflow-hidden rounded-2xl bg-white shadow-[0_4px_16px_rgba(20,20,43,0.05)] ${swipe ? "w-80 shrink-0" : ""}`}>
+      className={`flex flex-col gap-3 overflow-hidden bg-white ${cardLg} ${swipe ? "w-80 shrink-0" : ""}`}>
       <Svg asset={p.cover_svg_id ? ctx.svgs[p.cover_svg_id] : undefined} fill className="aspect-[16/10] overflow-hidden" />
       <div className="flex flex-col gap-2 px-4 pb-4">
         {p.blog_categories?.name ? <span className="text-[11px] font-bold uppercase tracking-wide text-primary">{p.blog_categories.name}</span> : null}
@@ -896,10 +903,10 @@ function renderOne(s: Section, ctx: BlockCtx) {
     <section key={s.id} id={st.anchor || s.id} className={cls} style={customBg ? { background: customBg } : undefined} data-block={s.block_type}>
       {st.box ? (
         ctx.inRow ? (
-          <div className="h-full rounded-2xl px-6 py-8 md:px-8 md:py-10" style={{ background: box.css }}>{content}</div>
+          <div className={`h-full rounded-[var(--radius-lg)] px-6 py-8 md:px-8 md:py-10 ${cardShadow}`} style={{ background: box.css }}>{content}</div>
         ) : (
           <div className={`${wrap} py-8 md:py-12`}>
-            <div className="rounded-2xl p-6 md:p-8" style={{ background: box.css }}>{content}</div>
+            <div className={`rounded-[var(--radius-lg)] p-6 md:p-8 ${cardShadow}`} style={{ background: box.css }}>{content}</div>
           </div>
         )
       ) : content}

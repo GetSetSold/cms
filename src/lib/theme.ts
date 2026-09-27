@@ -13,12 +13,26 @@ function bodyFont(settings: SiteSettings) {
   return settings.theme?.font_body || settings.theme?.font || FALLBACK;
 }
 
+const RADIUS_PRESETS = {
+  sharp: { sm: "4px", md: "6px", lg: "8px" },
+  soft: { sm: "12px", md: "16px", lg: "20px" }, // matches the look every block was originally built with
+  round: { sm: "16px", md: "24px", lg: "32px" },
+} as const;
+
+const SHADOW_PRESETS = {
+  none: { shadow: "none", borderWidth: "1px" },
+  soft: { shadow: "0 4px 16px rgba(20,20,43,0.06)", borderWidth: "0px" }, // matches the original look
+  crisp: { shadow: "0 1px 3px rgba(20,20,43,0.12)", borderWidth: "0px" },
+} as const;
+
 /** CSS var overrides for a page's root element, driven by Settings > Branding.
  *  Set as literal values (not var() references) so they win regardless of
  *  Tailwind's own token defaults — this is what makes runtime theme changes
  *  actually take effect on every themed page. */
 export function themeVars(settings: SiteSettings): React.CSSProperties {
   const t = settings.theme ?? ({} as SiteSettings["theme"]);
+  const radius = RADIUS_PRESETS[t.radius ?? "soft"];
+  const shadow = SHADOW_PRESETS[t.shadow ?? "soft"];
   const vars: Record<string, string> = {
     "--c-primary": t.primary,
     "--c-accent": t.accent,
@@ -36,6 +50,16 @@ export function themeVars(settings: SiteSettings): React.CSSProperties {
     "--color-ground": t.ground,
     "--font-display": `'${headingFont(settings)}', ui-sans-serif, system-ui, sans-serif`,
     "--font-sans": `'${bodyFont(settings)}', ui-sans-serif, system-ui, sans-serif`,
+    // Shape tokens (Settings > Branding > Shape) — every public block that
+    // uses a card/box reads these instead of a hardcoded radius/shadow, so
+    // switching the preset here changes the whole site's visual language at
+    // once. Radius has three sizes since a small icon-card and a big hero
+    // panel shouldn't share one number even within the same preset.
+    "--radius-sm": radius.sm,
+    "--radius-md": radius.md,
+    "--radius-lg": radius.lg,
+    "--shadow-card": shadow.shadow,
+    "--border-card-width": shadow.borderWidth,
   };
   // Forces the background behind every icon (hero's centered icon circle,
   // icon_card's box) to one color at once, sitewide — distinct from

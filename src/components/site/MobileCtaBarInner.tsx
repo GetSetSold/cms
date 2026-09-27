@@ -49,7 +49,7 @@ export function MobileCtaBarInner({
       </svg>
     );
 
-  const barCls = `fixed inset-x-0 bottom-0 z-40 grid ${cols} gap-1 border-t px-2 pb-[max(8px,env(safe-area-inset-bottom))] pt-2 shadow-[0_-4px_16px_rgba(20,20,43,0.06)] backdrop-blur md:hidden ${dark ? "border-white/10 bg-black/95" : "border-line bg-white/95"}`;
+  const barCls = `fixed inset-x-0 bottom-0 z-40 grid ${cols} gap-1 border-t px-2 pb-[max(8px,env(safe-area-inset-bottom))] pt-2 shadow-[var(--shadow-card)] backdrop-blur md:hidden ${dark ? "border-white/10 bg-black/95" : "border-line bg-white/95"}`;
 
   if (style === "tabs") {
     return (
@@ -77,7 +77,7 @@ export function MobileCtaBarInner({
           ? "bg-primary text-white"
           : dark ? "border border-white/30 text-white" : "border border-ink text-ink";
         const cls = square
-          ? `flex ${sizing.sq} flex-col items-center justify-center gap-1 rounded-2xl font-medium ${base}`
+          ? `flex ${sizing.sq} flex-col items-center justify-center gap-1 rounded-[var(--radius-md)] font-medium ${base}`
           : `flex ${sizing.rect} items-center justify-center gap-2 rounded-full font-medium ${base}`;
         return (
           <a key={i} href={btn.href} className={cls}>

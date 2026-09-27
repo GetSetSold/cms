@@ -65,8 +65,8 @@ export function ListingCardShell(d: ListingCardData) {
   );
 
   return d.href ? (
-    <Link href={d.href} prefetch={false} className="group flex flex-col overflow-hidden rounded-2xl bg-white">{body}</Link>
+    <Link href={d.href} prefetch={false} className="group flex flex-col overflow-hidden rounded-[var(--radius-lg)] border-[length:var(--border-card-width)] border-line bg-white shadow-[var(--shadow-card)]">{body}</Link>
   ) : (
-    <div className="group flex flex-col overflow-hidden rounded-2xl bg-white">{body}</div>
+    <div className="group flex flex-col overflow-hidden rounded-[var(--radius-lg)] border-[length:var(--border-card-width)] border-line bg-white shadow-[var(--shadow-card)]">{body}</div>
   );
 }

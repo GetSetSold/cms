@@ -67,7 +67,7 @@ export function SiteHeader({ settings, logo }: { settings: SiteSettings; logo?: 
                 </button>
                 {openMega === n.href ? (
                   <div className="absolute left-1/2 top-full z-50 w-[560px] -translate-x-1/2 pt-3">
-                    <div className="grid grid-cols-[repeat(auto-fit,minmax(160px,1fr))] gap-8 rounded-2xl bg-white p-6 text-ink shadow-[0_16px_50px_rgba(20,20,43,0.15)]">
+                    <div className="grid grid-cols-[repeat(auto-fit,minmax(160px,1fr))] gap-8 rounded-[var(--radius-lg)] border-[length:var(--border-card-width)] border-line bg-white p-6 text-ink shadow-[var(--shadow-card)]">
                       {n.columns.map((col, i) => (
                         <div key={i} className="flex flex-col gap-2.5">
                           {col.heading ? <div className="text-xs font-semibold uppercase tracking-wide text-muted">{col.heading}</div> : null}

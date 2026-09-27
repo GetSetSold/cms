@@ -89,6 +89,27 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
         </div>
 
         <div className="flex flex-col gap-3 rounded-lg border border-line p-3">
+          <strong className="text-sm">Shape</strong>
+          <p className="text-xs text-muted">Changes the visual language across every card, button, and box on the site at once — corners and shadows, not colors.</p>
+          <div className="flex gap-4">
+            <label className="label">Corners
+              <select className="input w-36" value={s.theme.radius ?? "soft"} onChange={(e) => set("theme", { ...s.theme, radius: e.target.value as "sharp" | "soft" | "round" })}>
+                <option value="sharp">Sharp</option>
+                <option value="soft">Soft (default)</option>
+                <option value="round">Round</option>
+              </select>
+            </label>
+            <label className="label">Depth
+              <select className="input w-40" value={s.theme.shadow ?? "soft"} onChange={(e) => set("theme", { ...s.theme, shadow: e.target.value as "none" | "soft" | "crisp" })}>
+                <option value="none">Flat (hairline border)</option>
+                <option value="soft">Soft shadow (default)</option>
+                <option value="crisp">Crisp shadow</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-3 rounded-lg border border-line p-3">
           <strong className="text-sm">Header appearance</strong>
           <div className="grid grid-cols-2 gap-3">
             <ColorField label="Background" value={s.header?.bg} fallback="#ffffff" onChange={(v) => set("header", { ...s.header, bg: v })} onReset={() => set("header", { ...s.header, bg: undefined })} />
