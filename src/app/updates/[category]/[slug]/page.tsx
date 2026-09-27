@@ -101,7 +101,7 @@ export default async function PostPage({ params, searchParams }: { params: Promi
 
             <article className="overflow-hidden rounded-3xl bg-white px-6 py-10 md:px-14 md:py-14">
               <span className="mb-4 inline-block w-fit rounded-full bg-primary-soft px-3 py-1 text-xs font-bold uppercase tracking-wide text-primary">{cat.name}</span>
-              <h1 className="mb-4 font-display text-3xl font-extrabold leading-tight md:text-5xl">{post.title}</h1>
+              <h1 className="mb-4 font-display text-2xl font-extrabold leading-tight md:text-5xl">{post.title}</h1>
               {post.excerpt ? <p className="mb-6 text-lg text-muted">{post.excerpt}</p> : null}
 
               <div className="mb-8 flex items-center gap-3 border-y border-line py-4 text-sm text-muted">
@@ -169,7 +169,7 @@ export default async function PostPage({ params, searchParams }: { params: Promi
                 {related.map((p: any) => (
                   <Link key={p.id} href={`/updates/${cat.slug}/${p.slug}`} prefetch={false} className="flex flex-col gap-3 overflow-hidden rounded-2xl bg-white p-3 shadow-[0_4px_16px_rgba(20,20,43,0.05)]">
                     <Svg asset={p.cover_svg_id ? relatedSvgs[p.cover_svg_id] : undefined} fill className="aspect-[16/10] overflow-hidden rounded-xl" />
-                    <span className="px-1 pb-1 text-[15px] font-bold leading-snug">{p.title}</span>
+                    <span className="px-1 pb-1 text-[13px] md:text-[15px] font-bold leading-snug">{p.title}</span>
                   </Link>
                 ))}
               </div>

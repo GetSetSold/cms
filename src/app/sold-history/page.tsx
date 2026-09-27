@@ -58,7 +58,7 @@ export default async function SoldHistoryPage({ searchParams }: { searchParams: 
       <SiteHeader settings={settings} logo={logo} />
       <main className="mx-auto w-full max-w-7xl px-5 py-14 md:px-10">
         <div className="mb-8 flex flex-col gap-3">
-          <h1 className="font-display text-4xl font-extrabold md:text-5xl">Sold, Leased &amp; Purchased</h1>
+          <h1 className="font-display text-2xl font-extrabold md:text-5xl">Sold, Leased &amp; Purchased</h1>
           <p className="max-w-xl text-lg text-muted">A record of homes we've helped sell, lease, and buy.</p>
         </div>
 
