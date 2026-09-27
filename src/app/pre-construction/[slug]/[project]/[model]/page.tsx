@@ -8,6 +8,7 @@ import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter, MobileCtaBar } from "@/components/site/SiteFooter";
 import { LeadForm } from "@/components/blocks/LeadForm";
 import { PromoBanner } from "@/components/site/PromoBanner";
+import { CardArrowButton } from "@/components/site/CardArrowButton";
 import { getCashbackAmount, formatCashback } from "@/lib/cashback";
 
 const wrap = "mx-auto w-full max-w-7xl px-5 md:px-10";
@@ -144,10 +145,11 @@ export default async function ModelPage({ params }: { params: Promise<{ slug: st
               {siblings.map((m) => {
                 const cb = getCashbackAmount(m.starting_price, settings.precon_cashback);
                 return (
-                  <Link key={m.id} href={`${basePath}/${m.slug}`} prefetch={false} className={`flex flex-col overflow-hidden ${card}`}>
+                  <Link key={m.id} href={`${basePath}/${m.slug}`} prefetch={false} className={`group flex flex-col overflow-hidden ${card}`}>
                     <div className="relative aspect-[4/3] bg-soft">
                       {m.model_image_url ? <img src={m.model_image_url} alt={m.model_name ?? ""} className="h-full w-full object-cover" /> : null}
                       {cb ? <span className="absolute right-3 top-3 flex items-center gap-1 rounded-full bg-gradient-to-r from-[#065f46] to-[#059669] px-2.5 py-1 text-[11px] font-semibold text-white">{formatCashback(cb)} cashback</span> : null}
+                      <CardArrowButton />
                     </div>
                     <div className="flex flex-col gap-1 p-4">
                       <div className="text-base font-bold text-primary">{m.starting_price ? `$${Number(m.starting_price).toLocaleString()}` : "Price TBA"}</div>

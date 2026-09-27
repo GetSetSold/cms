@@ -65,9 +65,5 @@ export function PointsMap({ points }: { points: MapPoint[] }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [points]);
 
-  return (
-    <div className="relative h-full w-full overflow-hidden rounded-[var(--radius-lg)]">
-      <div ref={containerRef} className="h-full w-full" />
-    </div>
-  );
+  return <div ref={containerRef} className="h-full w-full" />;
 }

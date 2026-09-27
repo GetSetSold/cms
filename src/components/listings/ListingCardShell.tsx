@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CardArrowButton } from "@/components/site/CardArrowButton";
 
 export type ListingCardData = {
   href?: string;
@@ -48,6 +49,7 @@ export function ListingCardShell(d: ListingCardData) {
         <span className={`absolute bottom-3 left-3 rounded px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-white ${TONE[d.statusTone]}`}>
           {d.statusLabel}
         </span>
+        {d.href ? <CardArrowButton /> : null}
       </div>
       <div className="flex flex-col gap-1 p-4">
         <div className="text-lg font-semibold text-primary">{d.price}</div>

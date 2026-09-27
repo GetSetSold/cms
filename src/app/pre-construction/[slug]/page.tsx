@@ -11,6 +11,7 @@ import { LeadForm } from "@/components/blocks/LeadForm";
 import { getCashbackAmount, formatCashback } from "@/lib/cashback";
 import { PreconSectionHeader } from "@/components/site/PreconSectionHeader";
 import { PromoBanner } from "@/components/site/PromoBanner";
+import { CardArrowButton } from "@/components/site/CardArrowButton";
 import { IconHome, IconBuilding, IconCheckBadge, IconPin, IconClock, IconCalendar, IconFile, IconLock } from "@/components/site/PreconIcons";
 
 const wrap = "mx-auto w-full max-w-7xl px-5 md:px-10";
@@ -123,13 +124,14 @@ export default async function BuilderOrCityPage({ params }: { params: Promise<{ 
                   {projects.map((p) => {
                     const cb = getCashbackAmount(p.p_start_price, settings.precon_cashback);
                     return (
-                      <Link key={p.id} href={`/pre-construction/${slug}/${p.slug}`} prefetch={false} className={`flex flex-col overflow-hidden ${card}`}>
+                      <Link key={p.id} href={`/pre-construction/${slug}/${p.slug}`} prefetch={false} className={`group flex flex-col overflow-hidden ${card}`}>
                         <div className="relative aspect-[4/3] bg-soft">
                           {p.main_image_url ? <img src={p.main_image_url} alt={p.project_name} className="h-full w-full object-cover" /> : null}
                           {p.project_status ? <span className="absolute left-3 top-3 rounded-full bg-primary px-2.5 py-1 text-[11px] font-semibold text-white">{p.project_status}</span> : null}
                           {p.vip_release === "Yes" ? <span className="absolute right-3 top-3 rounded-full bg-amber-500 px-2.5 py-1 text-[11px] font-semibold text-white">VIP Access</span> : null}
                           {cb ? <span className="absolute right-3 top-11 flex items-center gap-1 rounded-full bg-gradient-to-r from-[#065f46] to-[#059669] px-2.5 py-1 text-[11px] font-semibold text-white">{formatCashback(cb)} cashback</span> : null}
                           <span className="absolute bottom-3 left-3 rounded-full bg-white/95 px-3 py-1.5 text-sm font-bold">{p.p_start_price ? `From $${Number(p.p_start_price).toLocaleString()}` : "Price TBA"}</span>
+                          <CardArrowButton />
                         </div>
                         <div className="flex flex-col gap-2 p-4">
                           <div className="font-display text-lg font-bold">{p.project_name}</div>
@@ -150,7 +152,7 @@ export default async function BuilderOrCityPage({ params }: { params: Promise<{ 
           </section>
 
           {points.length ? (
-            <section className="bg-ink pb-14 pt-2">
+            <section className="bg-[#1e293b] pb-14 pt-2">
               <div className={`${wrap} flex flex-col gap-6`}>
                 <PreconSectionHeader eyebrow="Locations" heading="Building Across Ontario" dark />
                 <div className="grid grid-cols-1 gap-0 overflow-hidden rounded-[var(--radius-lg)] md:grid-cols-[1fr_320px]">
@@ -241,11 +243,12 @@ export default async function BuilderOrCityPage({ params }: { params: Promise<{ 
             {projects.map((p) => {
               const cb = getCashbackAmount(p.p_start_price, settings.precon_cashback);
               return (
-                <Link key={p.id} href={`/pre-construction/${p.builder.slug}/${p.slug}`} prefetch={false} className={`flex flex-col overflow-hidden ${card}`}>
+                <Link key={p.id} href={`/pre-construction/${p.builder.slug}/${p.slug}`} prefetch={false} className={`group flex flex-col overflow-hidden ${card}`}>
                   <div className="relative aspect-[4/3] bg-soft">
                     {p.main_image_url ? <img src={p.main_image_url} alt={p.project_name} className="h-full w-full object-cover" /> : null}
                     {p.project_status ? <span className="absolute left-3 top-3 rounded-full bg-primary px-2.5 py-1 text-[11px] font-semibold text-white">{p.project_status}</span> : null}
                     {cb ? <span className="absolute right-3 top-3 flex items-center gap-1 rounded-full bg-gradient-to-r from-[#065f46] to-[#059669] px-2.5 py-1 text-[11px] font-semibold text-white">{formatCashback(cb)} cashback</span> : null}
+                    <CardArrowButton />
                   </div>
                   <div className="flex flex-col gap-1 p-4">
                     <div className="text-base font-bold text-primary md:text-lg">{p.p_start_price ? `From $${Number(p.p_start_price).toLocaleString()}` : "Price TBA"}</div>
@@ -260,7 +263,7 @@ export default async function BuilderOrCityPage({ params }: { params: Promise<{ 
         {points.length ? (
           <section className={`${wrap} flex flex-col gap-5 pb-14`}>
             <h2 className="text-xl font-extrabold md:text-3xl">Project Locations in {cityName}</h2>
-            <div className="h-80 md:h-[420px]"><PointsMap points={points} /></div>
+            <div className="h-80 overflow-hidden rounded-[var(--radius-lg)] md:h-[420px]"><PointsMap points={points} /></div>
           </section>
         ) : null}
         {builders.length ? (
