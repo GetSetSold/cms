@@ -151,30 +151,32 @@ function Hero({ data, ctx }: BlockProps) {
           // behavior (opposite side from the image) for existing content
           // that never set this.
           const position = data.badge_position || (imageOnLeft ? "right" : "left");
-          const horizCls = { left: "left-4", right: "right-4", center: "left-1/2 -translate-x-1/2" }[position as "left" | "right" | "center"];
           const icon = data.badge_icon_svg_id ? ctx.svgs[data.badge_icon_svg_id] : null;
           const Wrap = data.badge_href ? Link : "div";
           const wrapProps = data.badge_href ? { href: data.badge_href } : {};
 
           if (layout === "ribbon") {
-            // Compact top-corner pill — icon, label+value, and an arrow only
-            // when it actually links somewhere. Deliberately one fixed
-            // compact size regardless of badge_size, since the whole point
-            // of this layout is staying small.
+            // Compact top-corner pill, flush to the edge — flat on the side
+            // that touches the corner, rounded on the outer side, like a
+            // dock tab rather than a floating pill. Label (small) then value
+            // (bold) reads as one phrase ("Free Home" + "Valuation"), not
+            // reversed. One fixed compact size regardless of badge_size.
+            const ribbonHorizCls = { left: "left-0", right: "right-0", center: "left-1/2 -translate-x-1/2" }[position as "left" | "right" | "center"];
+            const flatSideCls = position === "right" ? "rounded-l-full" : "rounded-r-full";
             return (
-              <Wrap {...(wrapProps as any)} className={`absolute top-4 flex max-w-[calc(100%-2rem)] items-center gap-3 rounded-full py-2 pl-2 pr-3 md:top-6 ${styleCls} ${horizCls}`}>
+              <Wrap {...(wrapProps as any)} className={`absolute top-0 z-10 flex max-w-[calc(100%-1rem)] items-center gap-1.5 py-1 pl-1 pr-1.5 ${flatSideCls} ${styleCls} ${ribbonHorizCls}`}>
                 {icon ? (
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary">
-                    <Svg asset={icon} className="h-5 w-5" colorOverride="#FFFFFF" />
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary">
+                    <Svg asset={icon} className="h-3 w-3" colorOverride="#FFFFFF" />
                   </span>
                 ) : null}
                 <span className="flex min-w-0 flex-col">
-                  <span className="truncate text-sm font-bold leading-tight">{data.badge.value}</span>
-                  {data.badge.label ? <span className="truncate text-[11px] text-muted leading-tight">{data.badge.label}</span> : null}
+                  {data.badge.label ? <span className="truncate text-[9px] text-muted leading-tight">{data.badge.label}</span> : null}
+                  <span className="truncate text-xs font-bold leading-tight">{data.badge.value}</span>
                 </span>
                 {data.badge_href ? (
-                  <span className="ml-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-white">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary text-white">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
                   </span>
                 ) : null}
               </Wrap>
@@ -184,9 +186,9 @@ function Hero({ data, ctx }: BlockProps) {
           // "callout" — the original floating stat panel at the bottom of the image
           const size = data.badge_size || "md";
           const sizeCls = {
-            sm: "w-32 p-2.5 gap-0.5 md:w-48 md:p-3.5",
-            md: "w-40 p-3 gap-1 md:w-64 md:p-5",
-            lg: "w-48 p-3.5 gap-1 md:w-80 md:p-6",
+            sm: "w-32 p-2.5 md:w-48 md:p-3.5",
+            md: "w-40 p-3 md:w-64 md:p-5",
+            lg: "w-48 p-3.5 md:w-80 md:p-6",
           }[size as "sm" | "md" | "lg"];
           const valueCls = {
             sm: "text-lg md:text-2xl",
@@ -195,11 +197,13 @@ function Hero({ data, ctx }: BlockProps) {
           }[size as "sm" | "md" | "lg"];
           const vertPosCls = { left: "left-4 md:-left-8", right: "right-4 md:-right-8", center: "left-1/2 -translate-x-1/2" }[position as "left" | "right" | "center"];
           return (
-            <Wrap {...(wrapProps as any)} className={`absolute -bottom-4 flex flex-col rounded-[var(--radius-lg)] md:bottom-9 ${sizeCls} ${styleCls} ${vertPosCls}`}>
-              <div className="text-[11px] text-muted md:text-[13px]">{data.badge.label}</div>
-              <div className={`font-display font-bold ${valueCls}`}>{data.badge.value}</div>
+            <Wrap {...(wrapProps as any)} className={`absolute -bottom-4 flex items-center justify-between gap-3 rounded-[var(--radius-lg)] md:bottom-9 ${sizeCls} ${styleCls} ${vertPosCls}`}>
+              <span className="flex min-w-0 flex-col gap-1">
+                <span className="truncate text-[11px] text-muted md:text-[13px]">{data.badge.label}</span>
+                <span className={`truncate font-display font-bold ${valueCls}`}>{data.badge.value}</span>
+              </span>
               {data.badge_href ? (
-                <span className="mt-1 flex h-7 w-7 items-center justify-center rounded-full bg-primary text-white">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-white">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
                 </span>
               ) : null}
