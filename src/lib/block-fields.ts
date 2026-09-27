@@ -175,4 +175,10 @@ export const BLOCK_FIELDS: Record<string, Field[]> = {
     { key: "status_filter", label: "Only show (leave blank for all)", type: "select", options: ["", "sold", "leased", "purchased"] },
     t("link_label", "\"View all\" link label"),
   ],
+  precon_projects_grid: [
+    t("heading", "Heading"),
+    { key: "show_filters", label: "Show filters", type: "boolean" },
+    { key: "show_stats", label: "Show stats bar", type: "boolean" },
+    { key: "show_map", label: "Show map", type: "boolean" },
+  ],
 };

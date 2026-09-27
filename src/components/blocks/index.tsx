@@ -9,6 +9,8 @@ import { createClient } from "@/lib/supabase/server";
 import type { CmsForm } from "@/lib/types";
 import { EmbedHtml } from "./EmbedHtml";
 import { getFeaturedListings } from "@/lib/featuredListings";
+import { getProjects, getCities, getBuilders, getPreconStats } from "@/lib/precon";
+import { PreconGridClient } from "@/components/site/PreconGridClient";
 import { getSoldHistory } from "@/lib/soldHistory";
 import { ListingCardShell } from "@/components/listings/ListingCardShell";
 
@@ -755,6 +757,21 @@ async function SoldHistoryGrid({ data }: BlockProps) {
   );
 }
 
+async function PreconProjectsGrid({ data }: BlockProps) {
+  const [projects, cities, builders, stats] = await Promise.all([
+    getProjects(), getCities(), getBuilders(), getPreconStats(),
+  ]);
+  return (
+    <div className={`${wrap} flex flex-col gap-6 py-12 md:py-16`}>
+      {data.heading ? <h2 className={h2}>{data.heading}</h2> : null}
+      <PreconGridClient
+        projects={projects as any} cities={cities} builders={builders} stats={stats}
+        showFilters={data.show_filters !== false} showStats={data.show_stats !== false} showMap={data.show_map !== false}
+      />
+    </div>
+  );
+}
+
 async function FeaturedListingsGrid({ data }: BlockProps) {
   const { order, mlsListings, privateListings } = await getFeaturedListings();
   const count = Number(data.count) || 6;
@@ -916,6 +933,7 @@ export const BLOCKS: Record<string, (p: BlockProps) => React.ReactNode> = {
   social_links: SocialLinks,
   featured_listings_grid: FeaturedListingsGrid,
   sold_history_grid: SoldHistoryGrid,
+  precon_projects_grid: PreconProjectsGrid,
 };
 
 const BG: Record<string, string> = {
