@@ -23,9 +23,12 @@ export const BLOCK_FIELDS: Record<string, Field[]> = {
     { key: "primary_cta", label: "Primary button", type: "link" },
     { key: "secondary_cta", label: "Secondary button", type: "link" },
     { key: "badge", label: "Floating badge", type: "group", fields: [t("label", "Label"), t("value", "Value")] },
-    { key: "badge_size", label: "Badge size", type: "select", options: ["sm", "md", "lg"] },
+    { key: "badge_size", label: "Badge size (callout layout only)", type: "select", options: ["sm", "md", "lg"] },
     { key: "badge_style", label: "Badge style", type: "select", options: ["solid", "bordered", "glass"] },
     { key: "badge_position", label: "Badge position (blank = opposite the image)", type: "select", options: ["", "left", "center", "right"] },
+    { key: "badge_layout", label: "Badge layout", type: "select", options: ["callout", "ribbon"] },
+    { key: "badge_icon_svg_id", label: "Badge icon (ribbon layout only)", type: "svg" },
+    { key: "badge_href", label: "Badge links to (optional — adds an arrow)", type: "text" },
   ],
   logos: [t("heading", "Heading"), { key: "items", label: "Client names", type: "strings" }],
   services: [

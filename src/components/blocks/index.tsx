@@ -140,6 +140,48 @@ function Hero({ data, ctx }: BlockProps) {
       <div className={`relative ${imageOnLeft ? "order-1" : ""}`}>
         <Svg asset={art} label={art?.name} className="aspect-[600/520] overflow-hidden rounded-3xl" />
         {data.badge?.value ? (() => {
+          const layout = data.badge_layout || "callout";
+          const style = data.badge_style || "solid";
+          const styleCls = {
+            solid: "bg-white shadow-[var(--shadow-card)]",
+            bordered: "bg-white border-2 border-ink",
+            glass: "bg-white/70 backdrop-blur-md shadow-[var(--shadow-card)]",
+          }[style as "solid" | "bordered" | "glass"];
+          // Explicit left/center/right when set; otherwise the original
+          // behavior (opposite side from the image) for existing content
+          // that never set this.
+          const position = data.badge_position || (imageOnLeft ? "right" : "left");
+          const horizCls = { left: "left-4", right: "right-4", center: "left-1/2 -translate-x-1/2" }[position as "left" | "right" | "center"];
+          const icon = data.badge_icon_svg_id ? ctx.svgs[data.badge_icon_svg_id] : null;
+          const Wrap = data.badge_href ? Link : "div";
+          const wrapProps = data.badge_href ? { href: data.badge_href } : {};
+
+          if (layout === "ribbon") {
+            // Compact top-corner pill — icon, label+value, and an arrow only
+            // when it actually links somewhere. Deliberately one fixed
+            // compact size regardless of badge_size, since the whole point
+            // of this layout is staying small.
+            return (
+              <Wrap {...(wrapProps as any)} className={`absolute top-4 flex max-w-[calc(100%-2rem)] items-center gap-3 rounded-full py-2 pl-2 pr-3 md:top-6 ${styleCls} ${horizCls}`}>
+                {icon ? (
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary">
+                    <Svg asset={icon} className="h-5 w-5" colorOverride="#FFFFFF" />
+                  </span>
+                ) : null}
+                <span className="flex min-w-0 flex-col">
+                  <span className="truncate text-sm font-bold leading-tight">{data.badge.value}</span>
+                  {data.badge.label ? <span className="truncate text-[11px] text-muted leading-tight">{data.badge.label}</span> : null}
+                </span>
+                {data.badge_href ? (
+                  <span className="ml-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-white">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+                  </span>
+                ) : null}
+              </Wrap>
+            );
+          }
+
+          // "callout" — the original floating stat panel at the bottom of the image
           const size = data.badge_size || "md";
           const sizeCls = {
             sm: "w-32 p-2.5 gap-0.5 md:w-48 md:p-3.5",
@@ -151,26 +193,17 @@ function Hero({ data, ctx }: BlockProps) {
             md: "text-xl md:text-4xl",
             lg: "text-2xl md:text-5xl",
           }[size as "sm" | "md" | "lg"];
-          const style = data.badge_style || "solid";
-          const styleCls = {
-            solid: "bg-white shadow-[var(--shadow-card)]",
-            bordered: "bg-white border-2 border-ink",
-            glass: "bg-white/70 backdrop-blur-md shadow-[var(--shadow-card)]",
-          }[style as "solid" | "bordered" | "glass"];
-          // Explicit left/center/right when set; otherwise the original
-          // behavior (opposite side from the image) for existing content
-          // that never set this.
-          const position = data.badge_position || (imageOnLeft ? "right" : "left");
-          const posCls = {
-            left: "left-4 md:-left-8",
-            right: "right-4 md:-right-8",
-            center: "left-1/2 -translate-x-1/2",
-          }[position as "left" | "right" | "center"];
+          const vertPosCls = { left: "left-4 md:-left-8", right: "right-4 md:-right-8", center: "left-1/2 -translate-x-1/2" }[position as "left" | "right" | "center"];
           return (
-            <div className={`absolute -bottom-4 flex flex-col rounded-[var(--radius-lg)] md:bottom-9 ${sizeCls} ${styleCls} ${posCls}`}>
+            <Wrap {...(wrapProps as any)} className={`absolute -bottom-4 flex flex-col rounded-[var(--radius-lg)] md:bottom-9 ${sizeCls} ${styleCls} ${vertPosCls}`}>
               <div className="text-[11px] text-muted md:text-[13px]">{data.badge.label}</div>
               <div className={`font-display font-bold ${valueCls}`}>{data.badge.value}</div>
-            </div>
+              {data.badge_href ? (
+                <span className="mt-1 flex h-7 w-7 items-center justify-center rounded-full bg-primary text-white">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+                </span>
+              ) : null}
+            </Wrap>
           );
         })() : null}
       </div>
