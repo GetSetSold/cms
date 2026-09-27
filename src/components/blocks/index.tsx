@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { CmsForm } from "@/lib/types";
 import { EmbedHtml } from "./EmbedHtml";
 import { getFeaturedListings } from "@/lib/featuredListings";
+import { getSoldHistory } from "@/lib/soldHistory";
 import { ListingCardShell } from "@/components/listings/ListingCardShell";
 
 export type BlockCtx = { svgs: Record<string, SvgAsset>; settings: SiteSettings; page?: Page; dark?: boolean; buttonStyle?: "solid" | "bordered"; inRow?: boolean };
@@ -650,6 +651,49 @@ async function FeaturedListing({ data }: BlockProps) {
   );
 }
 
+const SOLD_STATUS_MAP: Record<string, { label: string; tone: "green" | "blue" | "purple" }> = {
+  sold: { label: "Sold", tone: "green" },
+  leased: { label: "Leased", tone: "blue" },
+  purchased: { label: "Purchased", tone: "purple" },
+};
+
+async function SoldHistoryGrid({ data }: BlockProps) {
+  const count = Number(data.count) || 6;
+  const rows = (await getSoldHistory(data.status_filter || undefined)).slice(0, count);
+  if (!rows.length) return null;
+
+  return (
+    <div className={`${wrap} flex flex-col gap-6 py-12 md:py-16`}>
+      <div className="flex items-end justify-between gap-4">
+        {data.heading ? <h2 className={h2}>{data.heading}</h2> : <span />}
+        <Link href="/sold-history" prefetch={false} className="font-medium text-primary">{data.link_label || "View all"} →</Link>
+      </div>
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {rows.map((r) => {
+          const priceLabel = r.status === "leased"
+            ? r.price ? `$${r.price.toLocaleString()} / mo` : "Call for price"
+            : r.price ? `$${r.price.toLocaleString()}` : "Call for price";
+          const status = SOLD_STATUS_MAP[r.status] ?? { label: r.status, tone: "purple" as const };
+          return (
+            <ListingCardShell
+              key={r.id}
+              href={r.link ? (r.link.startsWith("http") ? r.link : `https://${r.link}`) : undefined}
+              image={r.image_url}
+              statusLabel={status.label}
+              statusTone={status.tone}
+              price={priceLabel}
+              address={r.address}
+              beds={r.bed}
+              baths={r.bath}
+              area={r.sqft ? `${r.sqft.toLocaleString()} sqft` : null}
+            />
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 async function FeaturedListingsGrid({ data }: BlockProps) {
   const { order, mlsListings, privateListings } = await getFeaturedListings();
   const count = Number(data.count) || 6;
@@ -810,6 +854,7 @@ export const BLOCKS: Record<string, (p: BlockProps) => React.ReactNode> = {
   custom_code: CustomCode,
   social_links: SocialLinks,
   featured_listings_grid: FeaturedListingsGrid,
+  sold_history_grid: SoldHistoryGrid,
 };
 
 const BG: Record<string, string> = {
