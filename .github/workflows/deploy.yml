@@ -16,7 +16,7 @@ jobs:
       supabase: ${{ steps.filter.outputs.supabase }}
       web: ${{ steps.filter.outputs.web }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - id: filter
         uses: dorny/paths-filter@v3
         with:
@@ -40,7 +40,7 @@ jobs:
       SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
       SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: supabase/setup-cli@v1
         with:
           version: latest
@@ -59,8 +59,8 @@ jobs:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
