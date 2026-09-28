@@ -275,6 +275,7 @@ export function PageBuilder({ page: initialPage, sections: initialSections, bloc
                     onChange={(e) => patchSection(current.id, { settings: { ...current.settings, hide_on_desktop: !e.target.checked } })} />
                 </label>
 
+                {current.block_type !== "feature_section" ? (
                 <div className="flex flex-col gap-3 rounded-lg border border-line p-3">
                   <strong className="text-sm">Background box</strong>
                   <label className="flex items-center justify-between text-sm">Show background box
@@ -296,6 +297,7 @@ export function PageBuilder({ page: initialPage, sections: initialSections, bloc
                   ) : null}
                   <p className="text-xs text-muted">Text inside automatically switches to light or dark based on this color's actual brightness — no separate setting needed.</p>
                 </div>
+                ) : null}
 
                 <label className="label">Button style (any button this block shows)
                   <select className="input" value={current.settings.button_style ?? "solid"}

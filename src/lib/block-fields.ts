@@ -129,6 +129,20 @@ export const BLOCK_FIELDS: Record<string, Field[]> = {
     t("subline", "Subline (bold, below the divider)"),
     { key: "align", label: "Alignment", type: "select", options: ["left", "center"] },
   ],
+  feature_section: [
+    { key: "layout", label: "Layout — simple: one card · lines: dividers with row links · cross: filled grid · bands: dark left, light right", type: "select", options: ["simple", "lines", "cross", "bands"] },
+    { key: "color", label: "Section color (one color for the whole section — Reset keeps the layout's own look)", type: "color" },
+    t("eyebrow", "Eyebrow (small colored line above the headline)"),
+    t("heading", "Headline"),
+    ta("text", "Text under the headline"),
+    ta("footnote", "Small note (shown under a divider line)"),
+    { key: "link", label: "Main link (e.g. Explore the seller plan)", type: "link" },
+    { key: "items", label: "Feature rows", type: "list", itemLabel: "Row", fields: [
+      { key: "svg_id", label: "Icon", type: "svg" },
+      { key: "icon_color", label: "Icon color override", type: "color" },
+      t("title", "Title"), ta("text", "Description"), t("href", "Link (optional)"), t("link_label", "Link label (default: Learn more)"),
+    ] },
+  ],
   featured_listing: [
     t("heading", "Heading"),
     t("listing_key", "MLS listing key"),

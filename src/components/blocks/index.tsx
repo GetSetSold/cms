@@ -13,6 +13,8 @@ import { getProjects, getCities, getBuilders, getPreconStats } from "@/lib/preco
 import { PreconGridClient } from "@/components/site/PreconGridClient";
 import { getSoldHistory } from "@/lib/soldHistory";
 import { ListingCardShell } from "@/components/listings/ListingCardShell";
+import { isDarkColor } from "@/lib/color";
+import { FeatureSection } from "./FeatureSection";
 
 export type BlockCtx = { svgs: Record<string, SvgAsset>; settings: SiteSettings; page?: Page; dark?: boolean; buttonStyle?: "solid" | "bordered"; inRow?: boolean };
 
@@ -21,19 +23,6 @@ export type BlockCtx = { svgs: Record<string, SvgAsset>; settings: SiteSettings;
 const muted = (ctx: BlockCtx) => (ctx.dark ? "text-ground/75" : "text-muted");
 const heading = (ctx: BlockCtx) => (ctx.dark ? "text-ground" : "text-ink");
 
-/** True if a hex color is dark enough to need light text on it — actual
- *  relative-luminance math, not a guess, so a custom color picker (like
- *  icon_card's box background) gets readable text automatically instead of
- *  assuming every custom color is light. */
-function isDarkColor(hex?: string): boolean {
-  if (!hex) return false;
-  const m = /^#?([0-9a-f]{6})$/i.exec(hex.trim());
-  if (!m) return false;
-  const n = parseInt(m[1], 16);
-  const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
-  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-  return luminance < 0.5;
-}
 type BlockProps = { data: any; ctx: BlockCtx };
 
 const wrap = "mx-auto w-full max-w-7xl px-5 md:px-10";
@@ -935,6 +924,7 @@ export const BLOCKS: Record<string, (p: BlockProps) => React.ReactNode> = {
   featured_listings_grid: FeaturedListingsGrid,
   sold_history_grid: SoldHistoryGrid,
   precon_projects_grid: PreconProjectsGrid,
+  feature_section: FeatureSection,
 };
 
 const BG: Record<string, string> = {
@@ -963,18 +953,21 @@ function renderOne(s: Section, ctx: BlockCtx) {
   const cls = [BG[st.background ?? "default"], st.hide_on_mobile && "hide-mobile", st.hide_on_desktop && "hide-desktop"]
     .filter(Boolean).join(" ");
 
-  const box = resolveBoxColor(st.box ? (st.box_bg || "white") : undefined);
+  // feature_section is its own card (its color option replaces the generic box),
+  // so the central background box would only wrap it a second time.
+  const boxed = !!st.box && s.block_type !== "feature_section";
+  const box = resolveBoxColor(boxed ? (st.box_bg || "white") : undefined);
   // Once content sits on its own box, its contrast depends on the box's
   // color, not the section behind it — the box supersedes the section for
   // this purpose. Without a box, the section's own dark/light state applies
   // exactly as before.
-  const blockCtx: BlockCtx = { ...ctx, dark: st.box ? box.dark : sectionIsDark, buttonStyle: st.button_style };
+  const blockCtx: BlockCtx = { ...ctx, dark: boxed ? box.dark : sectionIsDark, buttonStyle: st.button_style };
 
   const content = <Block data={s.data ?? {}} ctx={blockCtx} />;
 
   return (
     <section key={s.id} id={st.anchor || s.id} className={cls} style={customBg ? { background: customBg } : undefined} data-block={s.block_type}>
-      {st.box ? (
+      {boxed ? (
         ctx.inRow ? (
           <div className={`h-full rounded-[var(--radius-lg)] px-6 py-8 md:px-8 md:py-10 ${cardShadow}`} style={{ background: box.css }}>{content}</div>
         ) : (
