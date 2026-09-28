@@ -84,3 +84,12 @@ body { background: var(--c-ground); color: var(--c-ink); font-family: var(--font
 .prose-post .callout-warning .callout-icon { background: #8A3F12; }
 .prose-post .callout-note { background: #E6E9F7; }
 .prose-post .callout-note .callout-icon { background: #2B3A8C; }
+
+/* Blocks placed inside a merged header+block card: the card owns the width and
+   padding, so a block's own page-width wrapper (max-w-7xl + side/vertical padding)
+   is neutralized. Only wrapper roots are touched — a boxed card's own padding stays. */
+.embed > [class*="max-w-7xl"] { max-width: none !important; margin-left: 0 !important; margin-right: 0 !important; padding: 0 !important; }
+/* In the narrower side-by-side layout, evenly-split grids (md:grid-cols-2/3/4) fit
+   as many columns as the space allows instead of squeezing three across. Custom
+   templates like md:grid-cols-[320px_1fr] are left alone. */
+.embed-side [class*="md:grid-cols-"]:not([class*="md:grid-cols-["]) { grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)) !important; }

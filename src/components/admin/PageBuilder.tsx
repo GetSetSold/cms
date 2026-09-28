@@ -7,6 +7,7 @@ import { BLOCK_FIELDS } from "@/lib/block-fields";
 import { Spinner } from "./Spinner";
 import type { Page, Section, SvgAsset, CmsForm, SectionPreset } from "@/lib/types";
 import { FieldEditor } from "./FieldEditor";
+import { ColorField } from "./ColorField";
 
 type BlockType = { key: string; name: string; category: string; default_data: Record<string, any> };
 type Props = { page: Page; sections: Section[]; blockTypes: BlockType[]; svgs: SvgAsset[]; forms: CmsForm[]; presets: SectionPreset[] };
@@ -41,6 +42,20 @@ export function PageBuilder({ page: initialPage, sections: initialSections, bloc
   const [addTab, setAddTab] = useState<"blocks" | "presets">("presets");
 
   const current = sections.find((s) => s.id === selected);
+  // Which Section Headers are merged with the block below them — computed the
+  // same way the site renders it (visible sections only, left to right, and a
+  // block in a row group never merges), so the tags here match the real page.
+  const { mergePairs, partnerIds } = useMemo(() => {
+    const pairs = new Map<string, string>();
+    const vis = sections.filter((x) => x.is_visible);
+    for (let i = 0; i < vis.length; i++) {
+      const a = vis[i], b = vis[i + 1];
+      if (a.block_type === "section_header" && a.settings?.merge_next && !a.settings?.row_id && b && !b.settings?.row_id) { pairs.set(a.id, b.id); i++; }
+    }
+    return { mergePairs: pairs, partnerIds: new Set(pairs.values()) };
+  }, [sections]);
+  const isMergedHeader = !!current && mergePairs.has(current.id);
+  const isMergedPartner = !!current && partnerIds.has(current.id);
   const nameOf = (key: string) => blockTypes.find((b) => b.key === key)?.name ?? key;
 
   const patchSection = (id: string, patch: Partial<Section>) => {
@@ -167,6 +182,7 @@ export function PageBuilder({ page: initialPage, sections: initialSections, bloc
               <button className="flex-1 truncate text-left" onClick={() => selectSection(s.id)}>{nameOf(s.block_type)}</button>
               {s.settings?.hide_on_mobile ? <span className="text-[10px] text-muted">desktop</span> : null}
               {s.settings?.row_id ? <span className="text-[10px] text-primary">row · {s.settings.row_columns ?? 2}col</span> : null}
+              {mergePairs.has(s.id) ? <span className="text-[10px] text-primary">merged ↓</span> : partnerIds.has(s.id) ? <span className="text-[10px] text-primary">merged ↑</span> : null}
               {s.settings?.hide_on_desktop ? <span className="text-[10px] text-muted">mobile</span> : null}
               <span className="hidden gap-0.5 text-muted group-hover:flex">
                 <button aria-label="Move up" onClick={() => move(i, -1)}>↑</button>
@@ -275,7 +291,7 @@ export function PageBuilder({ page: initialPage, sections: initialSections, bloc
                     onChange={(e) => patchSection(current.id, { settings: { ...current.settings, hide_on_desktop: !e.target.checked } })} />
                 </label>
 
-                {current.block_type !== "feature_section" ? (
+                {current.block_type !== "feature_section" && !isMergedHeader && !isMergedPartner ? (
                 <div className="flex flex-col gap-3 rounded-lg border border-line p-3">
                   <strong className="text-sm">Background box</strong>
                   <label className="flex items-center justify-between text-sm">Show background box
@@ -308,10 +324,47 @@ export function PageBuilder({ page: initialPage, sections: initialSections, bloc
                   </select>
                 </label>
 
+                {current.block_type === "section_header" && !current.settings.row_id ? (
+                  <div className="flex flex-col gap-3 rounded-lg border border-line p-3">
+                    <strong className="text-sm">Merge with the block below</strong>
+                    <p className="text-xs text-muted">Draws this header and the block right below it as one card — side by side or stacked, in one color. Alignment is ignored while merged.</p>
+                    <label className="flex items-center justify-between text-sm">Merge into one card
+                      <input type="checkbox" checked={!!current.settings.merge_next}
+                        onChange={(e) => patchSection(current.id, { settings: { ...current.settings, merge_next: e.target.checked } })} />
+                    </label>
+                    {current.settings.merge_next && !isMergedHeader ? (
+                      <p className="text-xs text-amber-700">Nothing to merge with yet — add a visible block below this header (one that isn't in a row group).</p>
+                    ) : null}
+                    {current.settings.merge_next ? (
+                      <>
+                        <label className="label">Layout
+                          <select className="input" value={current.settings.merge_layout ?? "side"}
+                            onChange={(e) => patchSection(current.id, { settings: { ...current.settings, merge_layout: e.target.value as "side" | "stacked" } })}>
+                            <option value="side">Side by side — header left, block right</option>
+                            <option value="stacked">Stacked — header on top, block below</option>
+                          </select>
+                        </label>
+                        <ColorField label="Card color (one color for the header and the block — text switches light/dark automatically)"
+                          value={current.settings.merge_color} fallback="#ffffff"
+                          onChange={(v) => patchSection(current.id, { settings: { ...current.settings, merge_color: v } })}
+                          onReset={() => patchSection(current.id, { settings: { ...current.settings, merge_color: undefined } })} />
+                        <p className="text-xs text-muted">The block below keeps its Button style and its Show-on-mobile/desktop settings; its Background and Box are replaced by this card. This header's Background setting still colors the band around the card.</p>
+                      </>
+                    ) : null}
+                  </div>
+                ) : null}
+                {isMergedPartner ? (
+                  <div className="rounded-lg border border-line bg-soft p-3 text-xs text-muted">
+                    <strong className="text-sm text-ink">Merged with the header above.</strong> The card's color and layout are set on that header; this block's own Background and Box don't apply.
+                  </div>
+                ) : null}
+
                 <div className="flex flex-col gap-2 rounded-lg border border-line p-3">
                   <strong className="text-sm">Row layout</strong>
                   <p className="text-xs text-muted">Group this block with a neighbour to place them side by side (1–4 columns on desktop; always stacked on mobile).</p>
-                  {current.settings.row_id ? (
+                  {isMergedHeader || isMergedPartner ? (
+                    <p className="text-xs text-muted">This block is part of a merged card, so it can't also be grouped into a row. Turn off the merge on the header to use rows.</p>
+                  ) : current.settings.row_id ? (
                     <>
                       <label className="label">Columns in this row
                         <select className="input" value={current.settings.row_columns ?? 2}
@@ -342,8 +395,8 @@ export function PageBuilder({ page: initialPage, sections: initialSections, bloc
                       };
                       return (
                         <div className="flex gap-2">
-                          {prev ? <button className="btn" onClick={() => groupWith(prev)}>Group with block above</button> : null}
-                          {next ? <button className="btn" onClick={() => groupWith(next)}>Group with block below</button> : null}
+                          {prev && !mergePairs.has(prev.id) && !partnerIds.has(prev.id) ? <button className="btn" onClick={() => groupWith(prev)}>Group with block above</button> : null}
+                          {next && !mergePairs.has(next.id) && !partnerIds.has(next.id) ? <button className="btn" onClick={() => groupWith(next)}>Group with block below</button> : null}
                           {!prev && !next ? <span className="text-xs text-muted">Add another block to group with it.</span> : null}
                         </div>
                       );

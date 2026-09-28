@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import Link from "next/link";
 import type { Page, Section, SiteSettings, SvgAsset } from "@/lib/types";
 import { Svg } from "@/components/site/Svg";
@@ -15,8 +16,9 @@ import { getSoldHistory } from "@/lib/soldHistory";
 import { ListingCardShell } from "@/components/listings/ListingCardShell";
 import { isDarkColor } from "@/lib/color";
 import { FeatureSection } from "./FeatureSection";
+import { MergedCard } from "./MergedCard";
 
-export type BlockCtx = { svgs: Record<string, SvgAsset>; settings: SiteSettings; page?: Page; dark?: boolean; buttonStyle?: "solid" | "bordered"; inRow?: boolean };
+export type BlockCtx = { svgs: Record<string, SvgAsset>; settings: SiteSettings; page?: Page; dark?: boolean; buttonStyle?: "solid" | "bordered"; inRow?: boolean; /** Set when the block sits inside a merged header+block card. */ embedded?: "side" | "stacked" };
 
 /** Text tone that auto-adjusts to the section's background — use instead of
  *  a hardcoded text-muted/text-ink so copy stays readable on dark sections. */
@@ -521,9 +523,12 @@ function Timeline({ data }: BlockProps) {
 
 function TeamProfile({ data, ctx }: BlockProps) {
   const art = data.svg_id ? ctx.svgs[data.svg_id] : null;
+  // In the narrow side-by-side merged card there is no room for photo + text in
+  // two columns, so the photo goes above the text.
+  const stack = ctx.embedded === "side";
   return (
-    <div className={`${wrap} grid items-center gap-14 py-16 md:grid-cols-[320px_1fr] md:py-20`}>
-      <Svg asset={art} label={art?.name} className="aspect-[8/9] overflow-hidden rounded-3xl" />
+    <div className={`${wrap} grid items-center ${stack ? "gap-8" : "gap-14 py-16 md:grid-cols-[320px_1fr] md:py-20"}`}>
+      <Svg asset={art} label={art?.name} className={`aspect-[8/9] overflow-hidden rounded-3xl ${stack ? "w-full max-w-[280px]" : ""}`} />
       <div className="flex flex-col gap-3.5">
         {data.eyebrow ? <div className="text-xs font-bold uppercase tracking-[0.08em] text-primary">{data.eyebrow}</div> : null}
         <h2 className={`font-display text-[24px] md:text-[32px] font-bold ${heading(ctx)}`}>{data.name}</h2>
@@ -980,22 +985,57 @@ function renderOne(s: Section, ctx: BlockCtx) {
   );
 }
 
+/** A Section Header with "Merge with the block below" on, plus the block under it,
+ *  drawn as ONE card. The header's own Background setting still styles the band
+ *  around the card; the block below gives up its Background/Box (the card owns them)
+ *  but keeps its Button style and visibility. */
+function renderMerged(h: Section, p: Section, ctx: BlockCtx) {
+  const Block = BLOCKS[p.block_type];
+  if (!Block) return <Fragment key={h.id}>{renderOne(h, ctx)}{renderOne(p, ctx)}</Fragment>;
+  const hs = h.settings ?? {}, ps = p.settings ?? {};
+  const layout = hs.merge_layout === "stacked" ? "stacked" : "side";
+  const color = /^#[0-9a-f]{6}$/i.test(hs.merge_color ?? "") ? hs.merge_color! : "#FFFFFF";
+  const customBg = hs.background === "custom" ? hs.background_color : undefined;
+  const cls = [BG[hs.background ?? "default"], hs.hide_on_mobile && "hide-mobile", hs.hide_on_desktop && "hide-desktop"].filter(Boolean).join(" ");
+  const partnerCtx: BlockCtx = { ...ctx, dark: isDarkColor(color), buttonStyle: ps.button_style, inRow: true, embedded: layout };
+  const partnerCls = [ps.hide_on_mobile && "hide-mobile", ps.hide_on_desktop && "hide-desktop"].filter(Boolean).join(" ");
+  return (
+    <section key={h.id} id={hs.anchor || h.id} className={cls} style={customBg ? { background: customBg } : undefined} data-block="merged">
+      <div className={`${wrap} py-5 md:py-12`}>
+        <MergedCard header={h.data ?? {}} layout={layout} color={color} ctx={ctx}
+          partner={<Block data={p.data ?? {}} ctx={partnerCtx} />} partnerId={ps.anchor || p.id} partnerClass={partnerCls} />
+      </div>
+    </section>
+  );
+}
+
 export function RenderSections({ sections, ctx }: { sections: Section[]; ctx: BlockCtx }) {
   // Group consecutive sections that share a row_id (set in the builder's
   // Style tab) into one CSS-grid row — up to 4 columns on desktop, always
   // 1 column on mobile. Sections without a row_id render individually,
   // exactly as before.
   const groups: Section[][] = [];
-  for (const s of sections) {
+  const mergedPairs = new Set<Section[]>();
+  for (let i = 0; i < sections.length; i++) {
+    const s = sections[i], next = sections[i + 1];
+    // A merging Section Header takes the block right below it — unless either one
+    // is part of a row group, which always wins (rows and merges don't combine).
+    if (s.block_type === "section_header" && s.settings?.merge_next && !s.settings?.row_id && next && !next.settings?.row_id) {
+      const pair = [s, next];
+      groups.push(pair); mergedPairs.add(pair);
+      i++;
+      continue;
+    }
     const rid = s.settings?.row_id;
     const last = groups[groups.length - 1];
-    if (rid && last?.[0]?.settings?.row_id === rid) last.push(s);
+    if (rid && !mergedPairs.has(last) && last?.[0]?.settings?.row_id === rid) last.push(s);
     else groups.push([s]);
   }
 
   return (
     <>
       {groups.map((group, gi) => {
+        if (mergedPairs.has(group)) return renderMerged(group[0], group[1], ctx);
         if (group.length === 1 && !group[0].settings?.row_id) return renderOne(group[0], ctx);
         const cols = group[0].settings?.row_columns ?? Math.min(group.length, 4) as 1 | 2 | 3 | 4;
         return (

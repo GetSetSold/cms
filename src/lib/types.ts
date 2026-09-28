@@ -23,6 +23,11 @@ export interface SectionSettings {
   /** Available on every block — any button the block renders reads this
    *  when the block itself doesn't hardcode its own style. */
   button_style?: "solid" | "bordered";
+  /** Section Header only — draw this header and the visible block right below
+   *  it as ONE card. Layout: header beside the block, or header above it. */
+  merge_next?: boolean;
+  merge_layout?: "side" | "stacked";
+  merge_color?: string; // one hex color for the whole merged card (default white)
 }
 
 export interface Section {
