@@ -17,6 +17,7 @@ import { ListingCardShell } from "@/components/listings/ListingCardShell";
 import { isDarkColor } from "@/lib/color";
 import { FeatureSection } from "./FeatureSection";
 import { MergedCard } from "./MergedCard";
+import { ServiceCard, SERVICE_CARD_STYLES, type ServiceCardStyle } from "./ServiceCard";
 
 export type BlockCtx = { svgs: Record<string, SvgAsset>; settings: SiteSettings; page?: Page; dark?: boolean; buttonStyle?: "solid" | "bordered"; inRow?: boolean; /** Set when the block sits inside a merged header+block card. */ embedded?: "side" | "stacked" };
 
@@ -220,16 +221,24 @@ function Logos({ data, ctx }: BlockProps) {
 }
 
 function Services({ data, ctx }: BlockProps) {
+  // "classic" (or nothing set) is the original layout, unchanged. The three newer
+  // styles are stacked cards that look the same on phone and desktop.
+  const cardStyle: ServiceCardStyle | null = SERVICE_CARD_STYLES.includes(data.card_style) ? data.card_style : null;
+  const align = ["left", "center", "right"].includes(data.icon_align) ? data.icon_align : "left";
   return (
     <div className={`${wrap} flex flex-col gap-8 py-16 md:gap-12 md:py-24`}>
       {data.heading || data.link?.label ? (
         <div className="flex items-end justify-between gap-4">
-          {data.heading ? <h2 className={h2}>{data.heading}</h2> : <span />}
+          {data.heading ? <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2> : <span />}
           {data.link?.label ? <Link href={data.link.href} className="font-medium text-primary">{data.link.label} →</Link> : null}
         </div>
       ) : null}
-      <div className="grid gap-4 md:grid-cols-3 md:gap-6">
+      <div className={`grid md:grid-cols-3 md:gap-6 ${cardStyle ? "gap-5" : "gap-4"}`}>
         {(data.items ?? []).map((s: any, i: number) => {
+          if (cardStyle) {
+            const card = <ServiceCard s={s} style={cardStyle} align={align} color={data.card_color} ctx={ctx} />;
+            return s.href ? <Link key={i} href={s.href} className="group block h-full">{card}</Link> : <div key={i} className="h-full">{card}</div>;
+          }
           const card = (
             <article className="flex h-full items-center gap-4 rounded-[var(--radius-lg)] bg-white p-3 md:flex-col md:items-stretch md:gap-4 md:p-4">
               <Svg asset={ctx.svgs[s.svg_id]} className="aspect-square w-22 shrink-0 overflow-hidden rounded-[var(--radius-md)] md:aspect-[360/220] md:w-full" />

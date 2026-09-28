@@ -33,8 +33,11 @@ export const BLOCK_FIELDS: Record<string, Field[]> = {
   logos: [t("heading", "Heading"), { key: "items", label: "Client names", type: "strings" }],
   services: [
     t("heading", "Heading"), { key: "link", label: "Heading link", type: "link" },
+    { key: "card_style", label: "Card style — classic: current look · solid: filled card · panel: colored top · tile: white card with icon tile", type: "select", options: ["classic", "solid", "panel", "tile"] },
+    { key: "icon_align", label: "Icon position (solid / panel / tile styles)", type: "select", options: ["left", "center", "right"] },
+    { key: "card_color", label: "Card color (solid / panel / tile — default: your brand color)", type: "color" },
     { key: "items", label: "Services", type: "list", itemLabel: "Service", fields: [
-      t("title", "Title"), ta("text", "Text"), { key: "svg_id", label: "Illustration", type: "svg" }, t("href", "Links to"), t("link_label", "Button label (default: Learn more)"),
+      t("title", "Title"), ta("text", "Text"), { key: "svg_id", label: "Icon / illustration", type: "svg" }, t("href", "Links to"), t("link_label", "Button label (default: Learn more)"),
     ] },
   ],
   features: [
