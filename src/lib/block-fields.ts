@@ -53,7 +53,12 @@ export const BLOCK_FIELDS: Record<string, Field[]> = {
     t("heading", "Heading"),
     { key: "items", label: "Testimonials", type: "list", itemLabel: "Testimonial", fields: [ta("quote", "Quote"), t("name", "Name"), t("role", "Role, company")] },
   ],
-  faq: [t("heading", "Heading"), { key: "items", label: "Questions", type: "list", itemLabel: "Question", fields: [t("q", "Question"), ta("a", "Answer")] }],
+  faq: [
+    t("heading", "Heading"),
+    { key: "style", label: "Style — classic: current look · lines: plain rows · numbered: 01, 02 with a round button · cards: boxed cards", type: "select", options: ["classic", "lines", "numbered", "cards"] },
+    { key: "columns", label: "Columns on desktop (phones always show 1; classic ignores this)", type: "select", options: ["1", "2", "3"] },
+    { key: "items", label: "Questions", type: "list", itemLabel: "Question", fields: [t("q", "Question"), ta("a", "Answer")] },
+  ],
   cta: [t("heading", "Heading"), ta("text", "Text"), { key: "button", label: "Button", type: "link" }],
   lead_form: [
     t("heading", "Heading"), ta("text", "Text"), t("form_key", "Form name (used for follow-up rules)"),

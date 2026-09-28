@@ -17,9 +17,10 @@ import { ListingCardShell } from "@/components/listings/ListingCardShell";
 import { isDarkColor } from "@/lib/color";
 import { FeatureSection } from "./FeatureSection";
 import { MergedCard } from "./MergedCard";
+import { FaqList, FAQ_STYLES, type FaqStyle } from "./FaqList";
 import { ServiceCard, SERVICE_CARD_STYLES, type ServiceCardStyle } from "./ServiceCard";
 
-export type BlockCtx = { svgs: Record<string, SvgAsset>; settings: SiteSettings; page?: Page; dark?: boolean; buttonStyle?: "solid" | "bordered"; inRow?: boolean; /** Set when the block sits inside a merged header+block card. */ embedded?: "side" | "stacked" };
+export type BlockCtx = { svgs: Record<string, SvgAsset>; settings: SiteSettings; page?: Page; dark?: boolean; buttonStyle?: "solid" | "bordered"; inRow?: boolean; /** Set when the block sits inside a merged header+block card. */ embedded?: "side" | "stacked"; /** The real background color behind the block when known (custom color, brand, box, merged card) — lets a block check contrast instead of guessing. */ bg?: string };
 
 /** Text tone that auto-adjusts to the section's background — use instead of
  *  a hardcoded text-muted/text-ink so copy stays readable on dark sections. */
@@ -339,10 +340,23 @@ function Testimonials({ data }: BlockProps) {
 
 function Faq({ data, ctx }: BlockProps) {
   const items = data.items ?? [];
-  const jsonLd = {
-    "@context": "https://schema.org", "@type": "FAQPage",
-    mainEntity: items.map((f: any) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
-  };
+  // "classic" (or nothing set) is the original heading-left layout, unchanged. The
+  // newer styles put the heading on top and use the full width, so they can split
+  // into 1–3 columns on desktop (always 1 on phones).
+  const style: FaqStyle | null = FAQ_STYLES.includes(data.style) ? data.style : null;
+  if (style) {
+    // Only complete rows (a question AND an answer) are shown, so what visitors see
+    // is exactly what the page's FAQ structured data lists.
+    const shown = items.filter((f: any) => String(f?.q ?? "").trim() && String(f?.a ?? "").trim());
+    if (!shown.length) return null;
+    const columns = Math.min(Math.max(Number(data.columns) || 1, 1), 3);
+    return (
+      <div className={`${wrap} flex flex-col gap-8 py-10 md:gap-12 md:py-20`}>
+        {data.heading ? <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2> : null}
+        <FaqList items={shown} style={style} columns={columns} ctx={ctx} />
+      </div>
+    );
+  }
   return (
     <div className={`${wrap} grid gap-8 py-16 md:grid-cols-3 md:gap-16 md:py-20`}>
       <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2>
@@ -356,7 +370,6 @@ function Faq({ data, ctx }: BlockProps) {
           </details>
         ))}
       </div>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
     </div>
   );
 }
@@ -364,10 +377,6 @@ function Faq({ data, ctx }: BlockProps) {
 function FaqBoxed({ data, ctx }: BlockProps) {
   const items = data.items ?? [];
   if (!items.length) return null;
-  const jsonLd = {
-    "@context": "https://schema.org", "@type": "FAQPage",
-    mainEntity: items.map((f: any) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
-  };
   return (
     <div className={`${wrap} flex flex-col gap-6 py-7 md:py-20`}>
       {data.heading ? <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2> : null}
@@ -384,7 +393,6 @@ function FaqBoxed({ data, ctx }: BlockProps) {
           </details>
         ))}
       </div>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
     </div>
   );
 }
@@ -392,10 +400,6 @@ function FaqBoxed({ data, ctx }: BlockProps) {
 function QaBlock({ data, ctx }: BlockProps) {
   const items = data.items ?? [];
   if (!items.length) return null;
-  const jsonLd = {
-    "@context": "https://schema.org", "@type": "FAQPage",
-    mainEntity: items.map((f: any) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
-  };
   return (
     <div className={`${wrap} flex flex-col gap-10 py-7 md:py-20`}>
       {data.heading ? <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2> : null}
@@ -411,7 +415,6 @@ function QaBlock({ data, ctx }: BlockProps) {
           </div>
         ))}
       </div>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
     </div>
   );
 }
@@ -975,7 +978,13 @@ function renderOne(s: Section, ctx: BlockCtx) {
   // color, not the section behind it — the box supersedes the section for
   // this purpose. Without a box, the section's own dark/light state applies
   // exactly as before.
-  const blockCtx: BlockCtx = { ...ctx, dark: boxed ? box.dark : sectionIsDark, buttonStyle: st.button_style };
+  const theme = ctx.settings.theme;
+  const bgHex = boxed ? box.css
+    : st.background === "custom" ? customBg
+    : st.background === "brand" ? theme?.primary
+    : st.background === "dark" ? theme?.ink
+    : undefined;
+  const blockCtx: BlockCtx = { ...ctx, dark: boxed ? box.dark : sectionIsDark, buttonStyle: st.button_style, bg: bgHex && /^#[0-9a-f]{6}$/i.test(bgHex) ? bgHex : undefined };
 
   const content = <Block data={s.data ?? {}} ctx={blockCtx} />;
 
@@ -1006,7 +1015,7 @@ function renderMerged(h: Section, p: Section, ctx: BlockCtx) {
   const color = /^#[0-9a-f]{6}$/i.test(hs.merge_color ?? "") ? hs.merge_color! : "#FFFFFF";
   const customBg = hs.background === "custom" ? hs.background_color : undefined;
   const cls = [BG[hs.background ?? "default"], hs.hide_on_mobile && "hide-mobile", hs.hide_on_desktop && "hide-desktop"].filter(Boolean).join(" ");
-  const partnerCtx: BlockCtx = { ...ctx, dark: isDarkColor(color), buttonStyle: ps.button_style, inRow: true, embedded: layout };
+  const partnerCtx: BlockCtx = { ...ctx, dark: isDarkColor(color), buttonStyle: ps.button_style, inRow: true, embedded: layout, bg: color };
   const partnerCls = [ps.hide_on_mobile && "hide-mobile", ps.hide_on_desktop && "hide-desktop"].filter(Boolean).join(" ");
   return (
     <section key={h.id} id={hs.anchor || h.id} className={cls} style={customBg ? { background: customBg } : undefined} data-block="merged">
@@ -1016,6 +1025,27 @@ function renderMerged(h: Section, p: Section, ctx: BlockCtx) {
       </div>
     </section>
   );
+}
+
+const FAQ_BLOCK_TYPES = ["faq", "faq_boxed", "qa_block"];
+
+/** One FAQPage for the whole page, built from every FAQ-type block on it. Google wants a
+ *  single FAQPage per page (several show up as "duplicate field" errors in Search Console),
+ *  rejects entries with an empty question or answer, and expects each question once. */
+function faqPageSchema(sections: Section[]) {
+  const seen = new Set<string>();
+  const mainEntity: any[] = [];
+  for (const s of sections) {
+    if (!FAQ_BLOCK_TYPES.includes(s.block_type)) continue;
+    for (const f of s.data?.items ?? []) {
+      const name = String(f?.q ?? "").trim(), text = String(f?.a ?? "").trim();
+      const key = name.toLowerCase();
+      if (!name || !text || seen.has(key)) continue;
+      seen.add(key);
+      mainEntity.push({ "@type": "Question", name, acceptedAnswer: { "@type": "Answer", text } });
+    }
+  }
+  return mainEntity.length ? { "@context": "https://schema.org", "@type": "FAQPage", mainEntity } : null;
 }
 
 export function RenderSections({ sections, ctx }: { sections: Section[]; ctx: BlockCtx }) {
@@ -1041,6 +1071,7 @@ export function RenderSections({ sections, ctx }: { sections: Section[]; ctx: Bl
     else groups.push([s]);
   }
 
+  const faqLd = faqPageSchema(sections);
   return (
     <>
       {groups.map((group, gi) => {
@@ -1053,6 +1084,7 @@ export function RenderSections({ sections, ctx }: { sections: Section[]; ctx: Bl
           </div>
         );
       })}
+      {faqLd ? <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd).replace(/</g, "\\u003c") }} /> : null}
     </>
   );
 }
