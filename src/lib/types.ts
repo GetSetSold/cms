@@ -187,7 +187,13 @@ export type FormField = {
   /** subform only: exactly as many entries as the answer to this earlier question (people can't add/remove). */
   repeat_from?: string;
   entry_label?: string; // title of each entry, e.g. "Working adult {n}"
+  /** subform only, and only when the form is paginated: each entry gets its own step instead of
+   *  piling them all onto one long page. Only meaningful when this is the only field in its section. */
+  paginate_entries?: boolean;
 };
+
+export type FormChoiceStyle = "simple" | "boxed";
+export type FormTheme = "light" | "dark";
 
 export type FormConditionOp = "answered" | "equals" | "not_equals" | "greater_than" | "less_than";
 export type FormCondition = { field: string; op: FormConditionOp; value?: string };
@@ -220,6 +226,8 @@ export interface CmsForm {
   form_key: string;
   is_active: boolean;
   paginate: boolean; // one section per step, with Next/Back — for longer forms
+  choice_style?: FormChoiceStyle; // "boxed": bigger radio/checkbox buttons, every question in a bordered card
+  theme?: FormTheme; // defaults to "light"
 }
 
 /** A one-click starting block for every new form: First name, Last name, Email, Phone —

@@ -83,10 +83,12 @@ const OPS: { value: FormConditionOp; label: string }[] = [
 ];
 const askName = (q: QuestionRef) => (q.label || q.key).slice(0, 70);
 
-function FieldRow({ field, showSpan, duplicate, earlier, problems, onRenameKey, onChange, onRemove }: {
+function FieldRow({ field, showSpan, duplicate, earlier, problems, formPaginate, onRenameKey, onChange, onRemove }: {
   field: FormField; showSpan: boolean; duplicate?: boolean;
   /** Questions above this one, for logic. Absent for fields inside a repeatable group (they only get fixed limits). */
   earlier?: QuestionRef[]; problems?: string[];
+  /** Whether the form itself is set to Paginate — a subform can only step through its entries when it does. */
+  formPaginate?: boolean;
   /** Rename this question's key and everything that points at it. */
   onRenameKey?: (to: string) => void;
   onChange: (f: FormField) => void; onRemove: () => void;
@@ -234,6 +236,13 @@ function FieldRow({ field, showSpan, duplicate, earlier, problems, onRenameKey, 
                   {!numericEarlier.length ? <span className="text-xs text-amber-700">Add a number question above this one first — it will say how many entries are needed.</span> : null}
                   <input className="input h-9" aria-label="Entry title" placeholder="Title of each entry, e.g. Working adult {n} of {count}" value={field.entry_label ?? ""} onChange={(e) => set({ entry_label: e.target.value || undefined })} />
                   <span className="text-xs text-muted">Entries appear automatically (no add/remove buttons). Use {"{n}"} for the entry number and {"{count}"} for how many. At most {field.max || 12} entries are ever shown — change “Max entries” below.</span>
+                  {formPaginate ? (
+                    <label className="flex items-center gap-2 text-sm">One entry per step (like the rest of a paginated form)
+                      <input type="checkbox" checked={!!field.paginate_entries} onChange={(e) => set({ paginate_entries: e.target.checked || undefined })} />
+                    </label>
+                  ) : (
+                    <span className="text-xs text-amber-700">Turn on “Paginate” for the whole form (in Details) to also step through these entries one at a time.</span>
+                  )}
                 </>
               ) : null}
             </div>
@@ -276,6 +285,7 @@ function cleanLogic(sections: FormSection[]): FormSection[] {
     if (!o.show_if?.field) delete o.show_if;
     if (!o.max_from) delete o.max_from;
     if (o.repeat_from === "" || o.type !== "subform") delete o.repeat_from;
+    if (!o.repeat_from || o.type !== "subform") delete o.paginate_entries;
     if (!o.entry_label?.trim() || o.type !== "subform") delete o.entry_label;
     if (!NUMERIC_TYPES.includes(o.type)) { delete o.min_value; delete o.max_value; delete o.max_from; }
     if (o.min_value === undefined || Number.isNaN(o.min_value)) delete o.min_value;
@@ -306,11 +316,12 @@ function Chevron({ open }: { open: boolean }) {
   );
 }
 
-function SectionEditor({ section, label, open, onToggle, takenKeys, keyCounts, priorFields, onRenameKey, onChange, onRemove }: {
+function SectionEditor({ section, label, open, onToggle, takenKeys, keyCounts, priorFields, formPaginate, onRenameKey, onChange, onRemove }: {
   section: FormSection; label: string; open: boolean; onToggle: () => void;
   takenKeys: string[]; keyCounts: Map<string, number>;
   /** Every question in the sections above this one (what this section's questions can refer to). */
   priorFields: QuestionRef[];
+  formPaginate?: boolean;
   onRenameKey: (fieldIndex: number, to: string) => void;
   onChange: (s: FormSection) => void; onRemove: () => void;
 }) {
@@ -381,7 +392,7 @@ function SectionEditor({ section, label, open, onToggle, takenKeys, keyCounts, p
           const earlier = earlierFor(i, f.key);
           return (
             <FieldRow key={i} field={f} showSpan={section.columns === 2} duplicate={(keyCounts.get(f.key) ?? 0) > 1}
-              earlier={earlier} problems={brokenRefs(f, new Set(earlier.map((q) => q.key)))}
+              earlier={earlier} problems={brokenRefs(f, new Set(earlier.map((q) => q.key)))} formPaginate={formPaginate}
               onRenameKey={(to) => onRenameKey(i, to)}
               onChange={(nf) => setField(i, nf)} onRemove={() => removeField(i)} />
           );
@@ -493,6 +504,22 @@ export function FormEditor({ initial }: { initial: CmsForm }) {
               <input type="checkbox" checked={form.paginate} onChange={(e) => set("paginate", e.target.checked)} />
             </label>
           ) : null}
+          {mode === "fields" ? (
+            <>
+              <label className="label">Choice style
+                <select className="input" value={form.choice_style ?? "simple"} onChange={(e) => set("choice_style", e.target.value === "boxed" ? "boxed" : undefined)}>
+                  <option value="simple">Simple (small radio/checkbox, plain text)</option>
+                  <option value="boxed">Boxed (bigger buttons, every question in a bordered card)</option>
+                </select>
+              </label>
+              <label className="label">Appearance
+                <select className="input" value={form.theme ?? "light"} onChange={(e) => set("theme", e.target.value === "dark" ? "dark" : undefined)}>
+                  <option value="light">Light</option>
+                  <option value="dark">Dark</option>
+                </select>
+              </label>
+            </>
+          ) : null}
           {form.paginate && form.sections.length <= 1 ? (
             <p className="text-xs text-muted">Add more than one section for pagination to take effect.</p>
           ) : null}
@@ -518,7 +545,7 @@ export function FormEditor({ initial }: { initial: CmsForm }) {
                 <SectionEditor key={s.id} section={s} label={`${form.paginate ? "Step" : "Section"} ${i + 1}`}
                   open={!collapsed.has(s.id)} onToggle={() => toggleSection(s.id)}
                   takenKeys={allKeys} keyCounts={keyCounts}
-                  priorFields={form.sections.slice(0, i).flatMap((x) => x.fields.map(toRef))}
+                  priorFields={form.sections.slice(0, i).flatMap((x) => x.fields.map(toRef))} formPaginate={form.paginate}
                   onRenameKey={(fi, to) => renameFieldKey(i, fi, to)}
                   onChange={(ns) => setSection(i, ns)} onRemove={() => removeSection(i)} />
               ))}

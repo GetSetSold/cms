@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import type { CmsForm, FormField, FormSection } from "@/lib/types";
-import { limitsFor, NUMERIC_TYPES, pipe, repeatCount, resolve, uid, type Resolved, type Row, type Value, type Values } from "@/lib/formLogic";
+import { buildSteps, limitsFor, NUMERIC_TYPES, paginatedEntryField, pipe, repeatCount, resolve, uid, type Resolved, type Row, type Step, type Value, type Values } from "@/lib/formLogic";
 
 type Errors = Record<string, string>;
 type Limits = { min?: number; max?: number };
@@ -70,7 +70,26 @@ function sectionErrors(sec: FormSection, values: Values, r: Resolved): Errors {
   return out;
 }
 
-function BasicField({ field, id, value, onChange, onBlur, error, limits }: { field: FormField; id: string; value: string; onChange: (v: string) => void; onBlur?: () => void; error?: string; limits?: Limits }) {
+
+/** One selectable row in the "boxed" choice style: a custom radio/checkmark, the option text, the
+ *  whole row clickable, and the row itself highlights when selected — matching the reference design,
+ *  but colored from the theme (var(--fq-accent)) instead of a hardcoded blue. */
+function BoxChoice({ kind, label, checked, onClick, inputProps }: { kind: "radio" | "check"; label: React.ReactNode; checked: boolean; onClick: () => void; inputProps: Record<string, unknown> }) {
+  return (
+    <label className={`flex min-h-[52px] cursor-pointer items-start gap-3 rounded-xl border px-4 py-3.5 text-[15px] leading-relaxed transition-colors ${checked ? "border-[var(--fq-accent)] bg-[var(--fq-accent-soft)]" : "border-[var(--fq-line)] bg-[var(--fq-surface)] hover:border-[var(--fq-accent)]"}`}>
+      <input type={kind === "radio" ? "radio" : "checkbox"} checked={checked} onChange={onClick} className="sr-only" {...inputProps} />
+      <span aria-hidden className={`mt-0.5 flex h-[18px] w-[18px] shrink-0 items-center justify-center border-[1.5px] ${kind === "radio" ? "rounded-full" : "rounded-[5px]"} ${checked ? "border-0 bg-[var(--fq-accent)]" : "border-[var(--fq-choice-border)]"}`}>
+        {checked && kind === "radio" ? <span className="h-[9px] w-[9px] rounded-full bg-white" /> : null}
+        {checked && kind === "check" ? (
+          <svg viewBox="0 0 16 16" width="10" height="10" fill="none" stroke="white" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M3 8.5l3 3 7-7" /></svg>
+        ) : null}
+      </span>
+      <span className="text-[var(--fq-ink)]">{label}</span>
+    </label>
+  );
+}
+
+function BasicField({ field, id, value, onChange, onBlur, error, limits, boxed }: { field: FormField; id: string; value: string; onChange: (v: string) => void; onBlur?: () => void; error?: string; limits?: Limits; boxed?: boolean }) {
   const base = "input h-12 text-base";
   const a11y = { "aria-invalid": error ? true : undefined, "aria-required": field.required || undefined, "aria-describedby": error ? `${id}-err` : undefined } as const;
   switch (field.type) {
@@ -85,7 +104,11 @@ function BasicField({ field, id, value, onChange, onBlur, error, limits }: { fie
         </select>
       );
     case "radio":
-      return (
+      return boxed ? (
+        <div role="radiogroup" aria-labelledby={`${id}-label`} className="grid gap-2.5">
+          {(field.options ?? []).map((o) => <BoxChoice key={o} kind="radio" label={o} checked={value === o} onClick={() => onChange(o)} inputProps={{ name: id, value: o, ...a11y }} />)}
+        </div>
+      ) : (
         <div role="radiogroup" aria-labelledby={`${id}-label`} className="flex flex-wrap gap-4 pt-1.5">
           {(field.options ?? []).map((o) => (
             <label key={o} className="flex items-center gap-1.5 text-sm">
@@ -96,19 +119,27 @@ function BasicField({ field, id, value, onChange, onBlur, error, limits }: { fie
       );
     case "multiple_choice": {
       const selected = value ? value.split(",") : [];
-      return (
+      const toggle = (o: string) => onChange(selected.includes(o) ? selected.filter((s) => s !== o).join(",") : [...selected, o].join(","));
+      return boxed ? (
+        <div role="group" aria-labelledby={`${id}-label`} className="grid gap-2.5">
+          {(field.options ?? []).map((o) => <BoxChoice key={o} kind="check" label={o} checked={selected.includes(o)} onClick={() => toggle(o)} inputProps={a11y} />)}
+        </div>
+      ) : (
         <div role="group" aria-labelledby={`${id}-label`} className="flex flex-wrap gap-4 pt-1.5">
           {(field.options ?? []).map((o) => (
             <label key={o} className="flex items-center gap-1.5 text-sm">
-              <input type="checkbox" checked={selected.includes(o)} {...a11y}
-                onChange={(e) => onChange(e.target.checked ? [...selected, o].join(",") : selected.filter((s) => s !== o).join(","))} /> {o}
+              <input type="checkbox" checked={selected.includes(o)} {...a11y} onChange={() => toggle(o)} /> {o}
             </label>
           ))}
         </div>
       );
     }
     case "checkbox":
-      return (
+      // Boxed style: the whole statement is the clickable row (not a separate heading plus a
+      // generic "Yes" box) — Question skips its own heading for this type, see below.
+      return boxed ? (
+        <BoxChoice kind="check" label={<>{field.label}{field.required ? <span className="text-[var(--fq-accent)]"> *</span> : null}</>} checked={value === "yes"} onClick={() => onChange(value === "yes" ? "" : "yes")} inputProps={a11y} />
+      ) : (
         <label className="flex items-center gap-2 text-sm">
           <input id={id} type="checkbox" checked={value === "yes"} onChange={(e) => onChange(e.target.checked ? "yes" : "")} aria-labelledby={`${id}-label`} {...a11y} />
           Yes
@@ -124,50 +155,64 @@ function BasicField({ field, id, value, onChange, onBlur, error, limits }: { fie
 /** Label + control + inline error. Groups (radio / checkbox sets) get a text label tied to the
  *  group, not a <label> — a <label> around several inputs makes clicking the question toggle the
  *  first option, and checkbox fields previously showed no question text at all. */
-function Question({ field, id, label, error, className = "", children }: { field: FormField; id: string; label?: string; error?: string; className?: string; children: React.ReactNode }) {
-  const star = field.required ? <span className="text-primary"> *</span> : null;
+function Question({ field, id, label, error, className = "", boxed, children }: { field: FormField; id: string; label?: string; error?: string; className?: string; boxed?: boolean; children: React.ReactNode }) {
+  const star = field.required ? <span className="text-[var(--fq-accent)]"> *</span> : null;
   const grouped = GROUP_TYPES.includes(field.type);
+  const soloCheckbox = boxed && field.type === "checkbox"; // its own clickable row already states the question — see BasicField
   return (
-    <div className={`flex flex-col gap-1.5 text-[15px] ${className}`}>
-      {grouped
-        ? <span id={`${id}-label`} className="font-medium text-ink">{label ?? field.label}{star}</span>
-        : <label htmlFor={id} className="font-medium text-ink">{label ?? field.label}{star}</label>}
+    <div className={`flex flex-col gap-2.5 text-[15px] ${boxed ? "rounded-2xl border border-[var(--fq-line)] bg-[var(--fq-surface)] p-5 shadow-[var(--fq-shadow)] md:p-6" : "gap-1.5"} ${className}`}>
+      {soloCheckbox ? null : grouped
+        ? <span id={`${id}-label`} className={`${boxed ? "text-base font-bold" : "font-medium"} text-[var(--fq-ink)]`}>{label ?? field.label}{star}</span>
+        : <label htmlFor={id} className={`${boxed ? "text-base font-bold" : "font-medium"} text-[var(--fq-ink)]`}>{label ?? field.label}{star}</label>}
       {children}
       {error ? <p id={`${id}-err`} role="alert" className="text-sm text-red-700">{error}</p> : null}
     </div>
   );
 }
 
-function Subform({ field, id, rows, errors, count, values, resolved, onChange, onNumberBlur }: {
-  field: FormField; id: string; rows: Row[]; errors: Errors; count?: number; values: Values; resolved: Resolved; onChange: (rows: Row[]) => void; onNumberBlur: (id: string, f: FormField, v: string, lim: Limits) => void;
+function Subform({ field, id, rows, errors, count, values, resolved, boxed, onlyIndex, onChange, onNumberBlur }: {
+  field: FormField; id: string; rows: Row[]; errors: Errors; count?: number; values: Values; resolved: Resolved; boxed?: boolean;
+  /** Per-entry pagination: render just this one entry (its own step) instead of the whole list. */
+  onlyIndex?: number;
+  onChange: (rows: Row[]) => void; onNumberBlur: (id: string, f: FormField, v: string, lim: Limits) => void;
 }) {
   const subfields = field.subfields ?? [];
   const fixed = count !== undefined; // the number of entries follows an earlier answer
-  const canAddMore = !fixed && (!field.max || rows.length < field.max);
+  const canAddMore = !fixed && onlyIndex === undefined && (!field.max || rows.length < field.max);
   const addRow = () => onChange([...rows, {}]);
   const removeRow = (i: number) => onChange(rows.filter((_, j) => j !== i));
   const setCell = (i: number, key: string, v: string) => onChange(rows.map((r, j) => (j === i ? { ...r, [key]: v } : r)));
   const title = (i: number) => pipe(field.entry_label || `${field.label} {n}`, values, resolved, { n: String(i + 1), count: String(rows.length) });
 
+  const indices = onlyIndex === undefined ? rows.map((_, i) => i) : [onlyIndex];
   return (
     <div className="flex flex-col gap-3 sm:col-span-2" role="group" aria-labelledby={`${id}-label`}>
-      <div id={`${id}-label`} className="text-sm font-medium">{pipe(field.label, values, resolved)}{field.required && !fixed ? <span className="text-primary"> *</span> : null}</div>
-      {rows.map((row, i) => (
-        <div key={i} className="flex flex-col gap-3 rounded-xl border border-line p-4">
-          {fixed ? <div className="text-base font-semibold">{title(i)}</div> : null}
-          <div className="grid gap-3 sm:grid-cols-2">
-            {subfields.map((sf) => {
-              const cellId = `${id}.${i}.${sf.key}`;
-              return (
-                <Question key={sf.key} field={sf} id={cellId} label={pipe(sf.label, values, resolved, { n: String(i + 1), count: String(rows.length) })} error={errors[cellId]} className={sf.span === 2 ? "sm:col-span-2" : ""}>
-                  <BasicField field={sf} id={cellId} value={row[sf.key] ?? ""} onChange={(v) => setCell(i, sf.key, v)} onBlur={() => onNumberBlur(cellId, sf, row[sf.key] ?? "", { min: sf.min_value, max: sf.max_value })} error={errors[cellId]} limits={{ min: sf.min_value, max: sf.max_value }} />
-                </Question>
-              );
-            })}
+      {onlyIndex === undefined ? <div id={`${id}-label`} className="text-sm font-medium text-[var(--fq-ink)]">{pipe(field.label, values, resolved)}{field.required && !fixed ? <span className="text-[var(--fq-accent)]"> *</span> : null}</div> : null}
+      {indices.map((i) => {
+        const row = rows[i] ?? {};
+        const entry = (
+          <div key={i} className={boxed ? "flex flex-col gap-4" : "flex flex-col gap-3 rounded-xl border border-[var(--fq-line)] p-4"}>
+            {fixed && !boxed ? <div className="text-base font-semibold text-[var(--fq-ink)]">{title(i)}</div> : null}
+            <div className={`grid gap-3 sm:grid-cols-2 ${boxed ? "gap-4" : ""}`}>
+              {subfields.map((sf) => {
+                const cellId = `${id}.${i}.${sf.key}`;
+                return (
+                  <Question key={sf.key} field={sf} id={cellId} label={pipe(sf.label, values, resolved, { n: String(i + 1), count: String(rows.length) })} error={errors[cellId]} className={sf.span === 2 ? "sm:col-span-2" : ""} boxed={boxed}>
+                    <BasicField field={sf} id={cellId} value={row[sf.key] ?? ""} onChange={(v) => setCell(i, sf.key, v)} onBlur={() => onNumberBlur(cellId, sf, row[sf.key] ?? "", { min: sf.min_value, max: sf.max_value })} error={errors[cellId]} limits={{ min: sf.min_value, max: sf.max_value }} boxed={boxed} />
+                  </Question>
+                );
+              })}
+            </div>
+            {!fixed ? <button type="button" onClick={() => removeRow(i)} className="self-start text-sm text-red-700">Remove</button> : null}
           </div>
-          {!fixed ? <button type="button" onClick={() => removeRow(i)} className="self-start text-sm text-red-700">Remove</button> : null}
-        </div>
-      ))}
+        );
+        return onlyIndex === undefined && boxed
+          ? <div key={i} className="rounded-2xl border border-[var(--fq-line)] bg-[var(--fq-surface)] p-5 shadow-[var(--fq-shadow)] md:p-6">
+              {fixed ? <div className="mb-4 text-base font-bold text-[var(--fq-ink)]">{title(i)}</div> : null}
+              {entry}
+            </div>
+          : entry;
+      })}
       {errors[id] ? <p id={`${id}-err`} role="alert" className="text-sm text-red-700">{errors[id]}</p> : null}
       {canAddMore ? (
         <button type="button" onClick={addRow} aria-invalid={errors[id] ? true : undefined} className="btn self-start border-dashed">+ {field.repeat_label || "Add another"}</button>
@@ -176,27 +221,32 @@ function Subform({ field, id, rows, errors, count, values, resolved, onChange, o
   );
 }
 
-function SectionBlock({ section, active, values, errors, resolved, onFieldChange, onNumberBlur }: {
-  section: FormSection; active: boolean; values: Values; errors: Errors; resolved: Resolved; onFieldChange: (id: string, v: Value) => void; onNumberBlur: (id: string, f: FormField, v: string, lim: Limits) => void;
+function SectionBlock({ section, active, values, errors, resolved, boxed, onlyEntry, onFieldChange, onNumberBlur }: {
+  section: FormSection; active: boolean; values: Values; errors: Errors; resolved: Resolved; boxed?: boolean;
+  /** This section is showing as one step per subform entry — render just this entry's fields. */
+  onlyEntry?: { fieldKey: string; entryIndex: number };
+  onFieldChange: (id: string, v: Value) => void; onNumberBlur: (id: string, f: FormField, v: string, lim: Limits) => void;
 }) {
   const shown = section.fields.filter((f) => resolved.visible.has(uid(section.id, f.key)));
   if (!shown.length) return null; // nothing in this section applies yet — don't show a lone heading
   // `hidden` (not unmounting) keeps entered values intact when navigating back in a paginated form.
   // Validation is our own (see fieldError), so hidden steps can never block Next or Submit.
   return (
-    <div hidden={!active} role="group" aria-label={section.heading} className={`flex flex-col gap-4 ${section.background ? "rounded-2xl p-6" : ""}`} style={section.background ? { background: section.background } : undefined}>
-      {section.heading ? <div className="border-b border-line pb-2.5 text-lg font-semibold">{section.heading}</div> : null}
-      <div className={`grid gap-4 ${section.columns === 2 ? "sm:grid-cols-2" : ""}`}>
+    <div hidden={!active} role="group" aria-label={section.heading} className={`flex flex-col gap-4 ${section.background && !boxed ? "rounded-2xl p-6" : ""}`} style={section.background && !boxed ? { background: section.background } : undefined}>
+      {section.heading && !onlyEntry ? <div className="border-b border-[var(--fq-line)] pb-2.5 text-lg font-semibold text-[var(--fq-ink)]">{section.heading}</div> : null}
+      <div className={`grid gap-4 ${section.columns === 2 && !onlyEntry ? "sm:grid-cols-2" : ""}`}>
         {shown.map((f) => {
           const id = uid(section.id, f.key);
           if (f.type === "subform") {
             const count = repeatCount(f, values, resolved);
             if (count === 0) return null; // size follows an answer that isn't a positive number yet
-            return <Subform key={id} field={f} id={id} rows={rowsFor(values[id] as Row[] | undefined, count)} count={count} errors={errors} values={values} resolved={resolved} onChange={(rows) => onFieldChange(id, rows)} onNumberBlur={onNumberBlur} />;
+            return <Subform key={id} field={f} id={id} rows={rowsFor(values[id] as Row[] | undefined, count)} count={count} errors={errors} values={values} resolved={resolved} boxed={boxed}
+              onlyIndex={onlyEntry?.fieldKey === f.key ? onlyEntry.entryIndex : undefined}
+              onChange={(rows) => onFieldChange(id, rows)} onNumberBlur={onNumberBlur} />;
           }
           return (
-            <Question key={id} field={f} id={id} label={pipe(f.label, values, resolved)} error={errors[id]} className={f.span === 2 || section.columns === 1 ? "sm:col-span-2" : ""}>
-              <BasicField field={f} id={id} value={typeof values[id] === "string" ? (values[id] as string) : ""} onChange={(v) => onFieldChange(id, v)} onBlur={() => onNumberBlur(id, f, typeof values[id] === "string" ? (values[id] as string) : "", limitsFor(f, values, resolved))} error={errors[id]} limits={limitsFor(f, values, resolved)} />
+            <Question key={id} field={f} id={id} label={pipe(f.label, values, resolved)} error={errors[id]} className={f.span === 2 || section.columns === 1 ? "sm:col-span-2" : ""} boxed={boxed}>
+              <BasicField field={f} id={id} value={typeof values[id] === "string" ? (values[id] as string) : ""} onChange={(v) => onFieldChange(id, v)} onBlur={() => onNumberBlur(id, f, typeof values[id] === "string" ? (values[id] as string) : "", limitsFor(f, values, resolved))} error={errors[id]} limits={limitsFor(f, values, resolved)} boxed={boxed} />
             </Question>
           );
         })}
@@ -217,16 +267,27 @@ export function CmsFormRenderer({ form, pageId }: { form: CmsForm; pageId?: stri
   const firstRender = useRef(true);
 
   const sections = form.sections ?? [];
-  // Which questions apply right now (conditional questions, and everything that depended on a hidden one).
+  const boxed = form.choice_style === "boxed";
+  const dark = form.theme === "dark";
+  // Scoped to this form (not the page's own light/dark), and colored from the site's own brand
+  // color rather than a fixed blue, so "boxed" looks right on any client's theme.
+  const themeVars: React.CSSProperties = dark
+    ? { "--fq-ink": "#F6F7FA", "--fq-surface": "#171A21", "--fq-line": "#323744", "--fq-choice-border": "#4B5563",
+        "--fq-accent": "var(--color-primary)", "--fq-accent-soft": "color-mix(in srgb, var(--color-primary) 24%, #171A21)",
+        "--fq-shadow": "0 10px 28px rgba(0,0,0,.35)", background: "#0E1015", color: "#F6F7FA" } as React.CSSProperties
+    : { "--fq-ink": "var(--color-ink, #14142B)", "--fq-surface": "#FFFFFF", "--fq-line": "var(--color-line, #E5E7EB)", "--fq-choice-border": "#AAB1BC",
+        "--fq-accent": "var(--color-primary)", "--fq-accent-soft": "color-mix(in srgb, var(--color-primary) 10%, white)",
+        "--fq-shadow": "0 8px 24px rgba(16,24,40,.06)" } as React.CSSProperties;
+
+  // Which questions currently apply (conditional questions, and everything that depended on a
+  // hidden one), and — when paginated — the step list, exploding a per-entry-paginated subform
+  // into one step per entry instead of one long page.
   const resolved = resolve(sections, values);
-  const hasShown = (sec: FormSection) => sec.fields.some((f) => resolved.visible.has(uid(sec.id, f.key)));
-  // Steps are the sections that currently have something to answer — a step whose questions are all
-  // conditional and not triggered is skipped (and the "Step x of y" count follows).
-  const stepSections = sections.map((sec, i) => (hasShown(sec) ? i : -1)).filter((i) => i >= 0);
-  const paginated = !!form.paginate && stepSections.length > 1;
-  const curStep = Math.min(step, Math.max(stepSections.length - 1, 0));
-  const lastStep = curStep === stepSections.length - 1;
-  const activeSection = stepSections[curStep];
+  const steps: Step[] = form.paginate ? buildSteps(sections, values, resolved) : [];
+  const paginated = form.paginate && steps.length > 1;
+  const curStep = Math.min(step, Math.max(steps.length - 1, 0));
+  const lastStep = curStep === steps.length - 1;
+  const activeStep = steps[curStep];
 
   const set = (id: string, v: Value) => {
     setValues((s) => ({ ...s, [id]: v }));
@@ -237,17 +298,6 @@ export function CmsFormRenderer({ form, pageId }: { form: CmsForm; pageId?: stri
       const next = { ...prev };
       stale.forEach((k) => delete next[k]);
       return next;
-    });
-  };
-
-  // A number is checked the moment the person leaves it (only when something is typed — so tabbing
-  // through blanks doesn't flash "required" everywhere). Submit/Next still check everything.
-  const onNumberBlur = (id: string, f: FormField, v: string, lim: Limits) => {
-    if (!NUMERIC_TYPES.includes(f.type) || !v.trim()) return;
-    const e = fieldError(f, v, lim);
-    setErrors((prev) => {
-      if (!e) { if (!(id in prev)) return prev; const n = { ...prev }; delete n[id]; return n; }
-      return prev[id] === e ? prev : { ...prev, [id]: e };
     });
   };
 
@@ -273,15 +323,42 @@ export function CmsFormRenderer({ form, pageId }: { form: CmsForm; pageId?: stri
     el?.scrollIntoView({ block: "center", behavior: "smooth" });
   }, [focusTick]);
 
+  // A number is checked the moment the person leaves it (only when something is typed — so tabbing
+  // through blanks doesn't flash "required" everywhere). Submit/Next still check everything.
+  const onNumberBlur = (id: string, f: FormField, v: string, lim: Limits) => {
+    if (!NUMERIC_TYPES.includes(f.type) || !v.trim()) return;
+    const e = fieldError(f, v, lim);
+    setErrors((prev) => {
+      if (!e) { if (!(id in prev)) return prev; const n = { ...prev }; delete n[id]; return n; }
+      return prev[id] === e ? prev : { ...prev, [id]: e };
+    });
+  };
+
   if (form.embed_html) {
     // Admin/editor-authored embed (e.g. Zoho) — same trust boundary as other admin HTML in this CMS.
     return <div dangerouslySetInnerHTML={{ __html: form.embed_html }} />;
   }
 
+  // Errors that belong to ONE step: the whole section normally, or — on an entry step — just that
+  // one entry's cells (so Next on entry 1 of 4 can't be blocked by entry 3 not existing yet).
+  function stepErrors(st: Step): Errors {
+    const sec = sections[st.sectionIndex];
+    if (st.kind === "section") return sectionErrors(sec, values, resolved);
+    const f = sec.fields.find((x) => x.key === st.fieldKey)!;
+    const id = uid(sec.id, f.key);
+    const row = (values[id] as Row[] | undefined)?.[st.entryIndex] ?? {};
+    const out: Errors = {};
+    for (const sf of f.subfields ?? []) {
+      const e = fieldError(sf, row[sf.key], { min: sf.min_value, max: sf.max_value });
+      if (e) out[`${id}.${st.entryIndex}.${sf.key}`] = e;
+    }
+    return out;
+  }
+
   function goNext() {
-    const errs = sectionErrors(sections[activeSection], values, resolved);
+    const errs = stepErrors(activeStep);
     if (Object.keys(errs).length) { setErrors((prev) => ({ ...prev, ...errs })); setFocusTick((t) => t + 1); return; }
-    setStep(Math.min(curStep + 1, stepSections.length - 1));
+    setStep(Math.min(curStep + 1, steps.length - 1));
   }
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -289,17 +366,20 @@ export function CmsFormRenderer({ form, pageId }: { form: CmsForm; pageId?: stri
     if (state === "sending") return;
     if (paginated && !lastStep) { goNext(); return; }
 
-    // Check every section (not just the visible one) so nothing can be skipped; if a problem is on an
-    // earlier step, go back to it.
+    // Check every section (not just the visible one) so nothing can be skipped; if a problem is on
+    // an earlier step, go back to it.
     const all: Errors = {};
-    let firstBad = -1;
+    let firstBadStep = -1;
     sections.forEach((sec, i) => {
       const errs = sectionErrors(sec, values, resolved);
-      if (Object.keys(errs).length) { Object.assign(all, errs); if (firstBad < 0) firstBad = i; }
+      if (Object.keys(errs).length) {
+        Object.assign(all, errs);
+        if (firstBadStep < 0) firstBadStep = steps.findIndex((st) => st.sectionIndex === i);
+      }
     });
-    if (firstBad >= 0) {
+    if (Object.keys(all).length) {
       setErrors(all);
-      if (paginated) setStep(Math.max(stepSections.indexOf(firstBad), 0));
+      if (paginated) setStep(Math.max(firstBadStep, 0));
       setFocusTick((t) => t + 1);
       return;
     }
@@ -333,26 +413,50 @@ export function CmsFormRenderer({ form, pageId }: { form: CmsForm; pageId?: stri
     // The spam-trap field. The server drops the submission if a bot filled it in.
     const honeypot = (formRef.current?.elements.namedItem("contact_extra") as HTMLInputElement | null)?.value ?? "";
 
-    const res = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/submit-lead`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
-      },
-      body: JSON.stringify({
-        name, email: str("email"), phone: str("phone"),
-        form_key: form.form_key,
-        page_id: pageId,
-        path: window.location.pathname,
-        custom_fields: customFields,
-        website: honeypot,
-        elapsed_ms: Date.now() - started.current,
-      }),
-    }).catch(() => null);
-    const body = await res?.json().catch(() => ({}));
-    if (res?.ok) setState("done");
-    else { setState("error"); setError(body?.error ?? "Something went wrong. Please try again."); }
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    if (!url || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      // A missing/misconfigured env var used to reach the generic catch below and show "Something
+      // went wrong" with nothing in the console pointing at why. This is the one failure that's
+      // never the visitor's fault, so it says so plainly instead of guessing at a network problem.
+      console.error("CmsFormRenderer: Supabase URL/anon key is not configured");
+      setState("error"); setError("This form isn't fully set up yet. Please contact us another way.");
+      return;
+    }
+
+    let res: Response | null = null;
+    let networkError: unknown = null;
+    try {
+      res = await fetch(`${url}/functions/v1/submit-lead`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+          Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify({
+          name, email: str("email"), phone: str("phone"),
+          form_key: form.form_key,
+          page_id: pageId,
+          path: window.location.pathname,
+          custom_fields: customFields,
+          website: honeypot,
+          elapsed_ms: Date.now() - started.current,
+        }),
+      });
+    } catch (e) { networkError = e; }
+
+    if (res?.ok) { setState("done"); return; }
+    setState("error");
+    if (networkError) {
+      // fetch throws for an actual connectivity/CORS failure, not for a 4xx/5xx — those still reach
+      // res.ok === false above with a real response to read the message from.
+      console.error("CmsFormRenderer: submit-lead request failed", networkError);
+      setError("Couldn't reach the server. Please check your connection and try again.");
+      return;
+    }
+    const body = await res!.json().catch((e) => { console.error("CmsFormRenderer: submit-lead returned a non-JSON response", e); return null; });
+    if (body?.error) setError(body.error);
+    else { console.error("CmsFormRenderer: submit-lead failed with status", res!.status); setError(`Something went wrong (error ${res!.status}). Please try again.`); }
   }
 
   if (state === "done") {
@@ -360,30 +464,42 @@ export function CmsFormRenderer({ form, pageId }: { form: CmsForm; pageId?: stri
   }
 
   // Errors on the questions currently on screen (for the summary line).
-  const onScreen = new Set(sections.filter((_, i) => !paginated || i === activeSection).map((sec) => sec.id));
-  const shownErrors = Object.keys(errors).filter((k) => {
-    const top = k.split(".")[0];
-    return resolved.visible.has(top) && onScreen.has(top.split("__")[0]);
-  }).length;
+  const shownErrors = paginated ? Object.keys(stepErrors(activeStep)).length : Object.keys(errors).length;
+  const stepLabel = activeStep?.kind === "entry"
+    ? pipe(sections[activeStep.sectionIndex].fields.find((f) => f.key === activeStep.fieldKey)?.entry_label || "Entry {n} of {count}", values, resolved, { n: String(activeStep.entryIndex + 1), count: String(activeStep.total) })
+    : sections[activeStep?.sectionIndex ?? 0]?.heading;
 
   return (
-    <form ref={formRef} onSubmit={onSubmit} noValidate className="flex scroll-mt-24 flex-col gap-6">
+    <form ref={formRef} onSubmit={onSubmit} noValidate style={themeVars} className="flex scroll-mt-24 flex-col gap-6 text-[var(--fq-ink)]">
       {/* Spam trap: invisible to people, filled in by bots. Deliberately NOT named "website" — browsers and password managers autofill that, and a filled trap makes the server drop the lead. */}
       <input type="text" name="contact_extra" tabIndex={-1} autoComplete="off" className="hidden" aria-hidden="true" />
 
       {paginated ? (
-        <div className="flex items-center gap-3">
-          <span className="text-sm font-medium text-muted" aria-live="polite">Step {curStep + 1} of {stepSections.length}</span>
-          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-soft">
-            <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${((curStep + 1) / stepSections.length) * 100}%` }} />
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-medium text-muted" aria-live="polite">Step {curStep + 1} of {steps.length}</span>
+            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-soft">
+              <div className="h-full rounded-full bg-[var(--fq-accent)] transition-all" style={{ width: `${((curStep + 1) / steps.length) * 100}%` }} />
+            </div>
           </div>
+          {stepLabel ? <span className="text-xs font-medium text-muted">{stepLabel}</span> : null}
         </div>
       ) : null}
 
       <div className="flex flex-col gap-8">
-        {sections.map((section, i) => (
-          <SectionBlock key={section.id} section={section} active={!paginated || i === activeSection} values={values} errors={errors} resolved={resolved} onFieldChange={set} onNumberBlur={onNumberBlur} />
-        ))}
+        {sections.map((section, i) => {
+          if (!paginated) return <SectionBlock key={section.id} section={section} active values={values} errors={errors} resolved={resolved} boxed={boxed} onFieldChange={set} onNumberBlur={onNumberBlur} />;
+          // In a paginated form, a section that exploded into per-entry steps renders once per
+          // matching step (all `hidden` except the one that's active), so Back/Next can move
+          // between entries without losing what's on the other entries.
+          const stepsForSection = steps.map((st, si) => ({ st, si })).filter(({ st }) => st.sectionIndex === i);
+          if (!stepsForSection.length) return null;
+          return stepsForSection.map(({ st, si }) => (
+            <SectionBlock key={st.kind === "entry" ? `${section.id}:${st.entryIndex}` : section.id} section={section} active={si === curStep} values={values} errors={errors} resolved={resolved} boxed={boxed}
+              onlyEntry={st.kind === "entry" ? { fieldKey: st.fieldKey, entryIndex: st.entryIndex } : undefined}
+              onFieldChange={set} onNumberBlur={onNumberBlur} />
+          ));
+        })}
       </div>
 
       {shownErrors ? <p className="text-sm font-medium text-red-700" role="alert">Please complete the {shownErrors === 1 ? "highlighted question" : `${shownErrors} highlighted questions`} to continue.</p> : null}

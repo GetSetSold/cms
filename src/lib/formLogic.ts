@@ -126,3 +126,37 @@ export function brokenRefs(f: FormField, earlierKeys: Set<string>): string[] {
   tokens(f.entry_label, ENTRY_TOKENS, "The entry title");
   return out;
 }
+
+export type Step =
+  | { kind: "section"; sectionIndex: number }
+  /** One entry of a subform whose size follows an answer AND is set to paginate — its own step,
+   *  showing just that entry, so a count of 6 doesn't become one very long page. */
+  | { kind: "entry"; sectionIndex: number; fieldKey: string; entryIndex: number; total: number };
+
+/** The field this section shows on its own, one-per-step, if it has exactly one field and that
+ *  field is a subform with both an answer-driven count and pagination turned on. A section mixing
+ *  the paginated group with other questions falls back to showing everything as one normal step —
+ *  simpler to reason about than interleaving unrelated questions between entry steps. */
+export function paginatedEntryField(sec: FormSection): FormField | null {
+  const f = sec.fields[0];
+  return sec.fields.length === 1 && f?.type === "subform" && f.repeat_from && f.paginate_entries ? f : null;
+}
+
+/** The step list for a form: normally one step per section-with-visible-content, except a section
+ *  built for per-entry pagination becomes as many steps as it currently has entries (0 if the count
+ *  isn't answered yet, so the whole section is skipped until it is — same as any other empty section). */
+export function buildSteps(sections: FormSection[], values: Values, r: Resolved): Step[] {
+  const steps: Step[] = [];
+  sections.forEach((sec, si) => {
+    const shown = sec.fields.some((f) => r.visible.has(uid(sec.id, f.key)));
+    if (!shown) return;
+    const pf = paginatedEntryField(sec);
+    if (pf) {
+      const n = repeatCount(pf, values, r) ?? 0;
+      for (let i = 0; i < n; i++) steps.push({ kind: "entry", sectionIndex: si, fieldKey: pf.key, entryIndex: i, total: n });
+    } else {
+      steps.push({ kind: "section", sectionIndex: si });
+    }
+  });
+  return steps;
+}

@@ -34,6 +34,15 @@ Deno.serve(async (req) => {
   const db = admin();
   const name = clip(body.name, 200) ?? "";
   const [first, ...rest] = name.split(/\s+/);
+  // JSON.stringify rejects a value containing a BigInt or a circular reference and throws — caught
+  // below so a single malformed answer becomes a normal error reply, not a raw 500.
+  let customFields: Record<string, unknown> = {};
+  try {
+    if (body.custom_fields && typeof body.custom_fields === "object") {
+      JSON.stringify(body.custom_fields);
+      customFields = body.custom_fields;
+    }
+  } catch { /* left as {} — the rest of the lead still saves */ }
 
   const { data: lead, error } = await db.from("leads").insert({
     first_name: clip(body.first_name, 100) ?? (first || null),
@@ -47,11 +56,14 @@ Deno.serve(async (req) => {
     source_page: typeof body.page_id === "string" && /^[0-9a-f-]{36}$/.test(body.page_id) ? body.page_id : null,
     source_path: clip(body.path, 500),
     utm: body.utm && typeof body.utm === "object" ? body.utm : {},
+    custom_fields: customFields,
     sms_opt_in: Boolean(body.sms_opt_in) && Boolean(phone),
   }).select().single();
 
   if (error) {
-    console.error(error);
+    // Logged with which form and page it came from, since "Could not save" alone isn't enough to
+    // find the submission again if someone reports it.
+    console.error("submit-lead insert failed", { form_key: body.form_key, path: body.path, error });
     return json(req, { error: "Could not save your request. Please call us instead." }, 500);
   }
 
