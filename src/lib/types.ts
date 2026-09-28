@@ -174,8 +174,23 @@ export type FormField = {
   // subform only: a repeatable group of its own fields
   subfields?: FormField[];
   repeat_label?: string; // e.g. "Add another applicant"
-  max?: number;           // max repeats, default unlimited
+  max?: number;           // max repeats, default unlimited (or the cap when the count comes from an answer)
+
+  // ---- logic (all optional; a form without any of these behaves exactly as before) ----
+  /** Show this question only once an earlier question has a matching answer. */
+  show_if?: FormCondition;
+  /** number / decimal / currency: fixed limits, and/or a limit taken from an earlier answer. */
+  min_value?: number;
+  max_value?: number;
+  max_from?: string;   // key of an earlier question: this answer can't be higher than that one
+  whole?: boolean;     // number only: whole numbers (2, not 2.5)
+  /** subform only: exactly as many entries as the answer to this earlier question (people can't add/remove). */
+  repeat_from?: string;
+  entry_label?: string; // title of each entry, e.g. "Working adult {n}"
 };
+
+export type FormConditionOp = "answered" | "equals" | "not_equals" | "greater_than" | "less_than";
+export type FormCondition = { field: string; op: FormConditionOp; value?: string };
 
 export type FormSection = {
   id: string;

@@ -1,10 +1,11 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { CONTACT_BLOCK_FIELDS } from "@/lib/types";
-import type { CmsForm, FormField, FormFieldType, FormSection } from "@/lib/types";
+import type { CmsForm, FormConditionOp, FormField, FormFieldType, FormSection } from "@/lib/types";
+import { brokenRefs, NUMERIC_TYPES, OPS_WITHOUT_VALUE, TOKEN_RE } from "@/lib/formLogic";
 import { Spinner } from "./Spinner";
 
 const FIELD_TYPES: FormFieldType[] = [
@@ -70,41 +71,194 @@ function OptionsEditor({ options, onChange }: { options: string[]; onChange: (o:
   );
 }
 
-function FieldRow({ field, showSpan, duplicate, onChange, onRemove }: { field: FormField; showSpan: boolean; duplicate?: boolean; onChange: (f: FormField) => void; onRemove: () => void }) {
+/** What a question can refer to in its logic: an earlier question's key, label, type and options. */
+type QuestionRef = { key: string; label: string; type: FormFieldType; options?: string[] };
+const toRef = (f: FormField): QuestionRef => ({ key: f.key, label: f.label, type: f.type, options: f.options });
+const OPS: { value: FormConditionOp; label: string }[] = [
+  { value: "answered", label: "is answered" },
+  { value: "equals", label: "equals" },
+  { value: "not_equals", label: "doesn't equal" },
+  { value: "greater_than", label: "is greater than" },
+  { value: "less_than", label: "is less than" },
+];
+const askName = (q: QuestionRef) => (q.label || q.key).slice(0, 70);
+
+function FieldRow({ field, showSpan, duplicate, earlier, problems, onRenameKey, onChange, onRemove }: {
+  field: FormField; showSpan: boolean; duplicate?: boolean;
+  /** Questions above this one, for logic. Absent for fields inside a repeatable group (they only get fixed limits). */
+  earlier?: QuestionRef[]; problems?: string[];
+  /** Rename this question's key and everything that points at it. */
+  onRenameKey?: (to: string) => void;
+  onChange: (f: FormField) => void; onRemove: () => void;
+}) {
   const [showSubBuilder, setShowSubBuilder] = useState(field.type === "subform");
+  const labelRef = useRef<HTMLInputElement>(null);
+  const [keyDraft, setKeyDraft] = useState(field.key);
+  useEffect(() => setKeyDraft(field.key), [field.key]);
+
+  const isNumeric = NUMERIC_TYPES.includes(field.type);
+  const canLogic = !!earlier;
+  const numericEarlier = (earlier ?? []).filter((q) => NUMERIC_TYPES.includes(q.type));
+  const hasLogic = !!(field.show_if || field.max_from || field.repeat_from !== undefined || field.min_value !== undefined || field.max_value !== undefined || field.whole);
+  const [logicOpen, setLogicOpen] = useState(hasLogic);
+  const set = (patch: Partial<FormField>) => onChange({ ...field, ...patch });
+  const num = (v: string) => (v === "" ? undefined : Number(v));
+
+  // The key is committed when you leave the box (not per keystroke) so a rename can safely update
+  // every question, condition and label that points at it.
+  const commitKey = () => {
+    const k = keyDraft.replace(/[^a-z0-9_]/gi, "_");
+    if (!k) { setKeyDraft(field.key); return; }
+    setKeyDraft(k);
+    if (k === field.key) return;
+    if (onRenameKey) onRenameKey(k); else set({ key: k });
+  };
+  const insertToken = (key: string) => {
+    const el = labelRef.current, tok = `{${key}}`;
+    const at = el?.selectionStart ?? field.label.length, end = el?.selectionEnd ?? at;
+    set({ label: field.label.slice(0, at) + tok + field.label.slice(end) });
+    requestAnimationFrame(() => { el?.focus(); el?.setSelectionRange(at + tok.length, at + tok.length); });
+  };
+  const source = field.show_if ? (earlier ?? []).find((q) => q.key === field.show_if!.field) : undefined;
+  const setShowIf = (key: string) => set({ show_if: key ? { field: key, op: field.show_if?.op ?? "answered", value: field.show_if?.value } : undefined });
+  const inList = (key: string | undefined) => !key || (earlier ?? []).some((q) => q.key === key);
+
+  const summary = [field.show_if ? "conditional" : "", field.max_from ? "limit follows an answer" : "", field.repeat_from !== undefined ? "entries follow an answer" : ""].filter(Boolean).join(" · ");
+
   return (
     <div className="flex flex-col gap-2 rounded-lg border border-line p-3">
       <div className="grid grid-cols-2 gap-2">
-        <input className="input" placeholder="Label" value={field.label} onChange={(e) => onChange({ ...field, label: e.target.value })} />
-        <select className="input" value={field.type} onChange={(e) => { const t = e.target.value as FormFieldType; onChange({ ...field, type: t }); setShowSubBuilder(t === "subform"); }}>
+        <input ref={labelRef} className="input" placeholder="Label" value={field.label} onChange={(e) => set({ label: e.target.value })} />
+        <select className="input" value={field.type} onChange={(e) => {
+          const t = e.target.value as FormFieldType;
+          // counts are whole numbers by default; other number types are unchanged
+          set({ type: t, ...(t === "number" && field.whole === undefined ? { whole: true } : {}) });
+          setShowSubBuilder(t === "subform");
+        }}>
           {FIELD_TYPES.map((t) => <option key={t} value={t}>{t.replace("_", " ")}</option>)}
         </select>
       </div>
+      {canLogic && earlier!.length ? (
+        <select className="input h-9 w-auto self-start text-xs" aria-label="Insert an earlier answer into the question text" value="" onChange={(e) => { if (e.target.value) insertToken(e.target.value); }}>
+          <option value="">Insert an earlier answer into the question text…</option>
+          {earlier!.map((q) => <option key={q.key} value={q.key}>{askName(q)}  →  {`{${q.key}}`}</option>)}
+        </select>
+      ) : null}
       <div className="flex flex-wrap items-center gap-3">
-        <input className="input w-40" placeholder="Field key" value={field.key} onChange={(e) => onChange({ ...field, key: e.target.value.replace(/[^a-z0-9_]/gi, "_") })} />
-        <label className="flex shrink-0 items-center gap-1.5 text-sm">Required<input type="checkbox" checked={!!field.required} onChange={(e) => onChange({ ...field, required: e.target.checked })} /></label>
+        <input className="input w-40" placeholder="Field key" value={keyDraft} onChange={(e) => setKeyDraft(e.target.value)} onBlur={commitKey} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); commitKey(); } }} />
+        <label className="flex shrink-0 items-center gap-1.5 text-sm">Required<input type="checkbox" checked={!!field.required} onChange={(e) => set({ required: e.target.checked })} /></label>
         {showSpan ? (
-          <label className="flex shrink-0 items-center gap-1.5 text-sm">Full width<input type="checkbox" checked={field.span === 2} onChange={(e) => onChange({ ...field, span: e.target.checked ? 2 : 1 })} /></label>
+          <label className="flex shrink-0 items-center gap-1.5 text-sm">Full width<input type="checkbox" checked={field.span === 2} onChange={(e) => set({ span: e.target.checked ? 2 : 1 })} /></label>
+        ) : null}
+        {(canLogic || isNumeric) ? (
+          <button type="button" aria-expanded={logicOpen} onClick={() => setLogicOpen((o) => !o)} className="shrink-0 text-sm font-medium text-primary">
+            {canLogic ? "Logic & limits" : "Limits"}{hasLogic ? " •" : ""} {logicOpen ? "▾" : "▸"}
+          </button>
         ) : null}
         <button type="button" className="ml-auto shrink-0 text-sm text-red-700" onClick={onRemove}>Remove</button>
       </div>
+      {summary && !logicOpen ? <p className="text-xs text-muted">{summary}</p> : null}
       {duplicate ? <p className="text-xs text-red-700">Another question uses the key “{field.key}”, so their answers would clash. It will be renamed automatically when you save — or change it here.</p> : null}
+      {(problems ?? []).map((m, i) => <p key={i} className="text-xs text-red-700">{m}</p>)}
+
+      {logicOpen && (canLogic || isNumeric) ? (
+        <div className="flex flex-col gap-3 rounded-lg bg-ground p-3">
+          {canLogic ? (
+            <div className="flex flex-col gap-1.5">
+              <span className="text-xs font-medium text-muted">Show this question only when…</span>
+              <div className="flex flex-wrap gap-2">
+                <select className="input h-9 w-60" aria-label="Show only when this question" value={field.show_if?.field ?? ""} onChange={(e) => setShowIf(e.target.value)}>
+                  <option value="">— always show —</option>
+                  {!inList(field.show_if?.field) ? <option value={field.show_if!.field}>{field.show_if!.field} (not found above)</option> : null}
+                  {earlier!.map((q) => <option key={q.key} value={q.key}>{askName(q)}</option>)}
+                </select>
+                {field.show_if ? (
+                  <select className="input h-9 w-40" aria-label="Condition" value={field.show_if.op} onChange={(e) => set({ show_if: { ...field.show_if!, op: e.target.value as FormConditionOp } })}>
+                    {OPS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  </select>
+                ) : null}
+                {field.show_if && !OPS_WITHOUT_VALUE.includes(field.show_if.op) ? (
+                  source?.options?.length ? (
+                    <select className="input h-9 w-44" aria-label="Value" value={field.show_if.value ?? ""} onChange={(e) => set({ show_if: { ...field.show_if!, value: e.target.value } })}>
+                      <option value="">Choose…</option>
+                      {source.options.map((o) => <option key={o} value={o}>{o}</option>)}
+                    </select>
+                  ) : (
+                    <input className="input h-9 w-40" aria-label="Value" placeholder="value" value={field.show_if.value ?? ""} onChange={(e) => set({ show_if: { ...field.show_if!, value: e.target.value } })} />
+                  )
+                ) : null}
+              </div>
+              <span className="text-xs text-muted">It stays hidden (and isn't required or sent) until that answer is given. Hiding a question also hides everything that depends on it.</span>
+            </div>
+          ) : null}
+
+          {isNumeric ? (
+            <div className="flex flex-col gap-1.5">
+              <span className="text-xs font-medium text-muted">Limits</span>
+              <div className="flex flex-wrap items-center gap-2">
+                <input className="input h-9 w-28" type="number" aria-label="Minimum" placeholder="Minimum" value={field.min_value ?? ""} onChange={(e) => set({ min_value: num(e.target.value) })} />
+                <input className="input h-9 w-28" type="number" aria-label="Maximum" placeholder="Maximum" value={field.max_value ?? ""} onChange={(e) => set({ max_value: num(e.target.value) })} />
+                {field.type === "number" ? <label className="flex items-center gap-1.5 text-sm">Whole numbers only<input type="checkbox" checked={!!field.whole} onChange={(e) => set({ whole: e.target.checked })} /></label> : null}
+              </div>
+              {canLogic ? (
+                <label className="flex flex-wrap items-center gap-2 text-sm">No higher than the answer to
+                  <select className="input h-9 w-60" aria-label="No higher than the answer to" value={field.max_from ?? ""} onChange={(e) => set({ max_from: e.target.value || undefined })}>
+                    <option value="">— none —</option>
+                    {!inList(field.max_from) ? <option value={field.max_from}>{field.max_from} (not found above)</option> : null}
+                    {numericEarlier.map((q) => <option key={q.key} value={q.key}>{askName(q)}</option>)}
+                  </select>
+                </label>
+              ) : null}
+            </div>
+          ) : null}
+
+          {field.type === "subform" && canLogic ? (
+            <div className="flex flex-col gap-1.5">
+              <span className="text-xs font-medium text-muted">Number of entries</span>
+              <div className="flex flex-wrap items-center gap-2">
+                <select className="input h-9 w-72" aria-label="Number of entries" value={field.repeat_from !== undefined ? "answer" : "free"}
+                  onChange={(e) => set({ repeat_from: e.target.value === "answer" ? (numericEarlier[0]?.key ?? "") : undefined })}>
+                  <option value="free">People add as many as they need</option>
+                  <option value="answer">Exactly as many as an earlier answer</option>
+                </select>
+                {field.repeat_from !== undefined ? (
+                  <select className="input h-9 w-60" aria-label="Entries follow the answer to" value={field.repeat_from} onChange={(e) => set({ repeat_from: e.target.value })}>
+                    <option value="">Choose a question…</option>
+                    {!inList(field.repeat_from) ? <option value={field.repeat_from}>{field.repeat_from} (not found above)</option> : null}
+                    {numericEarlier.map((q) => <option key={q.key} value={q.key}>{askName(q)}</option>)}
+                  </select>
+                ) : null}
+              </div>
+              {field.repeat_from !== undefined ? (
+                <>
+                  {!numericEarlier.length ? <span className="text-xs text-amber-700">Add a number question above this one first — it will say how many entries are needed.</span> : null}
+                  <input className="input h-9" aria-label="Entry title" placeholder="Title of each entry, e.g. Working adult {n} of {count}" value={field.entry_label ?? ""} onChange={(e) => set({ entry_label: e.target.value || undefined })} />
+                  <span className="text-xs text-muted">Entries appear automatically (no add/remove buttons). Use {"{n}"} for the entry number and {"{count}"} for how many. At most {field.max || 12} entries are ever shown — change “Max entries” below.</span>
+                </>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+
       {HAS_OPTIONS.includes(field.type) ? (
-        <OptionsEditor options={field.options ?? []} onChange={(options) => onChange({ ...field, options })} />
+        <OptionsEditor options={field.options ?? []} onChange={(options) => set({ options })} />
       ) : null}
       {field.type === "subform" && showSubBuilder ? (
         <div className="flex flex-col gap-2 rounded-lg bg-ground p-3">
           <div className="flex flex-wrap gap-3">
-            <input className="input flex-1" placeholder={'"Add another…" button label'} value={field.repeat_label ?? ""} onChange={(e) => onChange({ ...field, repeat_label: e.target.value })} />
-            <input className="input w-28" type="number" min={1} placeholder="Max entries" value={field.max ?? ""} onChange={(e) => onChange({ ...field, max: e.target.value ? Number(e.target.value) : undefined })} />
+            {field.repeat_from === undefined ? (
+              <input className="input flex-1" placeholder={'"Add another…" button label'} value={field.repeat_label ?? ""} onChange={(e) => set({ repeat_label: e.target.value })} />
+            ) : <span className="flex-1 self-center text-xs text-muted">Entries follow an earlier answer, so there is no “Add another” button.</span>}
+            <input className="input w-28" type="number" min={1} placeholder="Max entries" value={field.max ?? ""} onChange={(e) => set({ max: e.target.value ? Number(e.target.value) : undefined })} />
           </div>
-          <div className="text-xs text-muted">Fields repeated for each entry:</div>
+          <div className="text-xs text-muted">Fields repeated for each entry (labels can use {"{n}"}, e.g. “Income for adult {"{n}"}”):</div>
           {(field.subfields ?? []).map((sf, i) => (
             <FieldRow key={i} field={sf} showSpan
-              onChange={(nf) => onChange({ ...field, subfields: (field.subfields ?? []).map((x, j) => (j === i ? nf : x)) })}
-              onRemove={() => onChange({ ...field, subfields: (field.subfields ?? []).filter((_, j) => j !== i) })} />
+              onChange={(nf) => set({ subfields: (field.subfields ?? []).map((x, j) => (j === i ? nf : x)) })}
+              onRemove={() => set({ subfields: (field.subfields ?? []).filter((_, j) => j !== i) })} />
           ))}
-          <button type="button" className="btn self-start border-dashed" onClick={() => onChange({ ...field, subfields: [...(field.subfields ?? []), newField(nextFieldKey((field.subfields ?? []).map((x) => x.key)))] })}>
+          <button type="button" className="btn self-start border-dashed" onClick={() => set({ subfields: [...(field.subfields ?? []), newField(nextFieldKey((field.subfields ?? []).map((x) => x.key)))] })}>
             + Add field to subform
           </button>
         </div>
@@ -115,6 +269,35 @@ function FieldRow({ field, showSpan, duplicate, onChange, onRemove }: { field: F
 
 const BG_PRESETS = ["", "#FFFFFF", "#F4F2FC", "#E7E4FB", "#14142B"];
 
+/** Drop logic settings that were opened but never filled in, or that no longer apply to the question's type. */
+function cleanLogic(sections: FormSection[]): FormSection[] {
+  const clean = (f: FormField): FormField => {
+    const o: FormField = { ...f };
+    if (!o.show_if?.field) delete o.show_if;
+    if (!o.max_from) delete o.max_from;
+    if (o.repeat_from === "" || o.type !== "subform") delete o.repeat_from;
+    if (!o.entry_label?.trim() || o.type !== "subform") delete o.entry_label;
+    if (!NUMERIC_TYPES.includes(o.type)) { delete o.min_value; delete o.max_value; delete o.max_from; }
+    if (o.min_value === undefined || Number.isNaN(o.min_value)) delete o.min_value;
+    if (o.max_value === undefined || Number.isNaN(o.max_value)) delete o.max_value;
+    if (!o.whole || o.type !== "number") delete o.whole;
+    if (o.subfields) o.subfields = o.subfields.map(clean);
+    return o;
+  };
+  return sections.map((sec) => ({ ...sec, fields: sec.fields.map(clean) }));
+}
+
+/** How many logic settings point at a question that isn't above them (those questions would never show). */
+function countLogicProblems(sections: FormSection[]): number {
+  const seen = new Set<string>();
+  let n = 0;
+  for (const sec of sections) for (const f of sec.fields) {
+    n += brokenRefs(f, seen).length;
+    seen.add(f.key);
+  }
+  return n;
+}
+
 function Chevron({ open }: { open: boolean }) {
   return (
     <svg aria-hidden width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`shrink-0 transition-transform ${open ? "rotate-90" : ""}`}>
@@ -123,11 +306,23 @@ function Chevron({ open }: { open: boolean }) {
   );
 }
 
-function SectionEditor({ section, label, open, onToggle, takenKeys, keyCounts, onChange, onRemove }: {
+function SectionEditor({ section, label, open, onToggle, takenKeys, keyCounts, priorFields, onRenameKey, onChange, onRemove }: {
   section: FormSection; label: string; open: boolean; onToggle: () => void;
   takenKeys: string[]; keyCounts: Map<string, number>;
+  /** Every question in the sections above this one (what this section's questions can refer to). */
+  priorFields: QuestionRef[];
+  onRenameKey: (fieldIndex: number, to: string) => void;
   onChange: (s: FormSection) => void; onRemove: () => void;
 }) {
+  // Questions above field `i`: all earlier sections plus the fields before it here (first of each key).
+  const earlierFor = (i: number, own: string): QuestionRef[] => {
+    const seen = new Set<string>();
+    return [...priorFields, ...section.fields.slice(0, i).map(toRef)].filter((q) => {
+      if (!q.key || q.key === own || seen.has(q.key)) return false;
+      seen.add(q.key); return true;
+    });
+  };
+  const problemCount = section.fields.reduce((n, f, i) => n + brokenRefs(f, new Set(earlierFor(i, f.key).map((q) => q.key))).length, 0);
   const [contactNote, setContactNote] = useState("");
   const setField = (i: number, f: FormField) => onChange({ ...section, fields: section.fields.map((x, j) => (j === i ? f : x)) });
   const addField = () => onChange({ ...section, fields: [...section.fields, newField(nextFieldKey(takenKeys))] });
@@ -156,6 +351,7 @@ function SectionEditor({ section, label, open, onToggle, takenKeys, keyCounts, o
             {section.fields.length} {section.fields.length === 1 ? "field" : "fields"}{requiredCount ? ` · ${requiredCount} required` : ""}
           </span>
           {dupCount ? <span className="shrink-0 rounded-full bg-red-50 px-2 py-0.5 text-xs text-red-700">duplicate key</span> : null}
+          {problemCount ? <span className="shrink-0 rounded-full bg-red-50 px-2 py-0.5 text-xs text-red-700">logic issue</span> : null}
         </button>
         <button type="button" className="text-sm text-red-700" onClick={onRemove}>Remove section</button>
       </div>
@@ -181,9 +377,15 @@ function SectionEditor({ section, label, open, onToggle, takenKeys, keyCounts, o
           <input type="color" value={section.background || "#ffffff"} onChange={(e) => onChange({ ...section, background: e.target.value })} className="h-7 w-9 cursor-pointer rounded border-0 bg-transparent" />
         </div>
 
-        {section.fields.map((f, i) => (
-          <FieldRow key={i} field={f} showSpan={section.columns === 2} duplicate={(keyCounts.get(f.key) ?? 0) > 1} onChange={(nf) => setField(i, nf)} onRemove={() => removeField(i)} />
-        ))}
+        {section.fields.map((f, i) => {
+          const earlier = earlierFor(i, f.key);
+          return (
+            <FieldRow key={i} field={f} showSpan={section.columns === 2} duplicate={(keyCounts.get(f.key) ?? 0) > 1}
+              earlier={earlier} problems={brokenRefs(f, new Set(earlier.map((q) => q.key)))}
+              onRenameKey={(to) => onRenameKey(i, to)}
+              onChange={(nf) => setField(i, nf)} onRemove={() => removeField(i)} />
+          );
+        })}
         <div className="flex flex-wrap items-center gap-2">
           <button type="button" className="btn border-dashed" onClick={addField}>+ Add field</button>
           <button type="button" className="btn border-dashed" onClick={addContactBlock}>+ Add contact block (Name, Email, Phone)</button>
@@ -212,10 +414,32 @@ export function FormEditor({ initial }: { initial: CmsForm }) {
   const addSection = () => set("sections", [...form.sections, { id: `s${Date.now().toString(36)}`, columns: 1, fields: [] }]);
   const removeSection = (i: number) => set("sections", form.sections.filter((_, j) => j !== i));
 
+  // Rename one question's key. If nothing else still uses the old key, every condition, limit, entry
+  // count and {answer} in a label that pointed at it follows the rename, so logic never silently breaks.
+  const renameFieldKey = (si: number, fi: number, to: string) => setForm((f) => {
+    const from = f.sections[si].fields[fi].key;
+    const sections = f.sections.map((sec, i) => ({ ...sec, fields: sec.fields.map((fld, j) => (i === si && j === fi ? { ...fld, key: to } : fld)) }));
+    if (sections.some((sec) => sec.fields.some((fld) => fld.key === from))) return { ...f, sections }; // another question still has that key
+    const swap = (k: string | undefined) => (k === from ? to : k);
+    const swapTokens = (t: string | undefined) => t?.replace(TOKEN_RE, (m, k: string) => (k === from ? `{${to}}` : m));
+    return { ...f, sections: sections.map((sec) => ({ ...sec, fields: sec.fields.map((fld) => ({
+      ...fld,
+      label: swapTokens(fld.label) ?? fld.label,
+      entry_label: swapTokens(fld.entry_label),
+      max_from: swap(fld.max_from),
+      repeat_from: swap(fld.repeat_from),
+      show_if: fld.show_if ? { ...fld.show_if, field: swap(fld.show_if.field) as string } : undefined,
+      subfields: fld.subfields?.map((sf) => ({ ...sf, label: swapTokens(sf.label) ?? sf.label })),
+    })) })) };
+  });
+
   async function save() {
     setMsg(""); setSaving(true);
     // Two questions with the same key share one answer, so make every key unique before saving.
-    const { sections: cleanSections, renamed } = dedupeKeys(form.sections);
+    const { sections: dedupedSections, renamed } = dedupeKeys(cleanLogic(form.sections));
+    // Exactly what gets stored — a JSON round-trip drops any leftover `undefined` settings.
+    const cleanSections: FormSection[] = JSON.parse(JSON.stringify(dedupedSections));
+    const logicProblems = countLogicProblems(cleanSections);
     const row = {
       name: form.name, slug: slugify(form.slug || form.name), description: form.description || null,
       sections: mode === "fields" ? cleanSections : [],
@@ -226,7 +450,11 @@ export function FormEditor({ initial }: { initial: CmsForm }) {
     };
     const { error } = await createClient().from("forms").update(row).eq("id", form.id);
     setSaving(false);
-    setMsg(error ? error.message : renamed.length ? `Saved. Renamed ${renamed.length} duplicate question key${renamed.length === 1 ? "" : "s"}: ${renamed.map((r) => `${r.from} → ${r.to}`).join(", ")}` : "Saved");
+    const notes = [
+      renamed.length ? `Renamed ${renamed.length} duplicate question key${renamed.length === 1 ? "" : "s"}: ${renamed.map((r) => `${r.from} → ${r.to}`).join(", ")}.` : "",
+      logicProblems ? `⚠ ${logicProblems} logic setting${logicProblems === 1 ? "" : "s"} point${logicProblems === 1 ? "s" : ""} at a question that isn't above it — that question will stay hidden until fixed.` : "",
+    ].filter(Boolean).join(" ");
+    setMsg(error ? error.message : notes ? `Saved. ${notes}` : "Saved");
     if (!error) setForm((f) => ({ ...f, slug: row.slug, sections: cleanSections }));
   }
 
@@ -290,6 +518,8 @@ export function FormEditor({ initial }: { initial: CmsForm }) {
                 <SectionEditor key={s.id} section={s} label={`${form.paginate ? "Step" : "Section"} ${i + 1}`}
                   open={!collapsed.has(s.id)} onToggle={() => toggleSection(s.id)}
                   takenKeys={allKeys} keyCounts={keyCounts}
+                  priorFields={form.sections.slice(0, i).flatMap((x) => x.fields.map(toRef))}
+                  onRenameKey={(fi, to) => renameFieldKey(i, fi, to)}
                   onChange={(ns) => setSection(i, ns)} onRemove={() => removeSection(i)} />
               ))}
               <button type="button" className="btn self-start border-dashed" onClick={addSection}>+ Add {form.paginate ? "step" : "section"}</button>

@@ -1,19 +1,13 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import type { CmsForm, FormField, FormSection } from "@/lib/types";
+import { limitsFor, NUMERIC_TYPES, pipe, repeatCount, resolve, uid, type Resolved, type Row, type Value, type Values } from "@/lib/formLogic";
 
-type Row = Record<string, string>;
-type Value = string | Row[];
-type Values = Record<string, Value>;
 type Errors = Record<string, string>;
+type Limits = { min?: number; max?: number };
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const GROUP_TYPES: FormField["type"][] = ["radio", "multiple_choice", "checkbox"];
-
-/** State and DOM ids are namespaced by section. Forms built before the editor guaranteed unique
- *  keys can have two fields sharing a key (every section's first field used to be "field_1");
- *  keyed this way they stay independent instead of sharing one answer. */
-const uid = (sectionId: string, key: string) => `${sectionId}__${key}`;
 
 function inputType(t: FormField["type"]) {
   if (t === "number" || t === "decimal" || t === "currency") return "number";
@@ -26,7 +20,7 @@ function inputType(t: FormField["type"]) {
  *  form — including ones on steps that are hidden — and silently refuses to continue when one of
  *  those is empty, which is what made "Next" do nothing on multi-step forms. It also can't enforce a
  *  required checkbox group or repeatable group at all. */
-function fieldError(f: FormField, v: Value | undefined): string | null {
+function fieldError(f: FormField, v: Value | undefined, lim: Limits = {}): string | null {
   const s = typeof v === "string" ? v.trim() : "";
   if (f.type === "checkbox") return f.required && v !== "yes" ? "Please tick this box to continue." : null;
   if (!s) {
@@ -37,30 +31,46 @@ function fieldError(f: FormField, v: Value | undefined): string | null {
   }
   if (f.type === "email" && !EMAIL_RE.test(s)) return "Enter a valid email address.";
   if (f.type === "url") { try { new URL(s); } catch { return "Enter a valid web address, including https://"; } }
-  if ((f.type === "number" || f.type === "decimal" || f.type === "currency") && !Number.isFinite(Number(s))) return "Enter a valid number.";
+  if (NUMERIC_TYPES.includes(f.type)) {
+    const n = Number(s);
+    if (!Number.isFinite(n)) return "Enter a valid number.";
+    if (f.whole && !Number.isInteger(n)) return "Enter a whole number.";
+    if (lim.min !== undefined && n < lim.min) return `Must be at least ${lim.min}.`;
+    if (lim.max !== undefined && n > lim.max) return `Must be no more than ${lim.max}.`;
+  }
   return null;
 }
 
-function sectionErrors(sec: FormSection, values: Values): Errors {
+/** The entries currently shown for a repeatable group: exactly `count` when its size follows an
+ *  answer (keeping whatever was already typed), otherwise whatever the person has added. */
+function rowsFor(stored: Row[] | undefined, count: number | undefined): Row[] {
+  const rows = stored ?? [];
+  return count === undefined ? rows : Array.from({ length: count }, (_, i) => rows[i] ?? {});
+}
+
+function sectionErrors(sec: FormSection, values: Values, r: Resolved): Errors {
   const out: Errors = {};
   for (const f of sec.fields) {
     const id = uid(sec.id, f.key);
+    if (!r.visible.has(id)) continue; // a question that isn't showing can't block anything
     if (f.type === "subform") {
-      const rows = (values[id] as Row[] | undefined) ?? [];
-      if (f.required && rows.length === 0) out[id] = "Please add at least one entry.";
+      const count = repeatCount(f, values, r);
+      if (count === 0) continue;
+      const rows = rowsFor(values[id] as Row[] | undefined, count);
+      if (count === undefined && f.required && rows.length === 0) out[id] = "Please add at least one entry.";
       rows.forEach((row, i) => (f.subfields ?? []).forEach((sf) => {
-        const e = fieldError(sf, row[sf.key]);
+        const e = fieldError(sf, row[sf.key], { min: sf.min_value, max: sf.max_value });
         if (e) out[`${id}.${i}.${sf.key}`] = e;
       }));
     } else {
-      const e = fieldError(f, values[id]);
+      const e = fieldError(f, values[id], limitsFor(f, values, r));
       if (e) out[id] = e;
     }
   }
   return out;
 }
 
-function BasicField({ field, id, value, onChange, error }: { field: FormField; id: string; value: string; onChange: (v: string) => void; error?: string }) {
+function BasicField({ field, id, value, onChange, onBlur, error, limits }: { field: FormField; id: string; value: string; onChange: (v: string) => void; onBlur?: () => void; error?: string; limits?: Limits }) {
   const base = "input h-12 text-base";
   const a11y = { "aria-invalid": error ? true : undefined, "aria-required": field.required || undefined, "aria-describedby": error ? `${id}-err` : undefined } as const;
   switch (field.type) {
@@ -105,51 +115,57 @@ function BasicField({ field, id, value, onChange, error }: { field: FormField; i
         </label>
       );
     default:
-      return <input id={id} name={id} type={inputType(field.type)} step={field.type === "decimal" || field.type === "currency" ? "0.01" : undefined}
-        className={base} value={value} onChange={(e) => onChange(e.target.value)} {...a11y} />;
+      return <input id={id} name={id} type={inputType(field.type)} step={field.type === "decimal" || field.type === "currency" ? "0.01" : field.whole ? 1 : undefined}
+        min={limits?.min} max={limits?.max} inputMode={field.whole ? "numeric" : undefined}
+        className={base} value={value} onChange={(e) => onChange(e.target.value)} onBlur={onBlur} {...a11y} />;
   }
 }
 
 /** Label + control + inline error. Groups (radio / checkbox sets) get a text label tied to the
  *  group, not a <label> — a <label> around several inputs makes clicking the question toggle the
  *  first option, and checkbox fields previously showed no question text at all. */
-function Question({ field, id, error, className = "", children }: { field: FormField; id: string; error?: string; className?: string; children: React.ReactNode }) {
+function Question({ field, id, label, error, className = "", children }: { field: FormField; id: string; label?: string; error?: string; className?: string; children: React.ReactNode }) {
   const star = field.required ? <span className="text-primary"> *</span> : null;
   const grouped = GROUP_TYPES.includes(field.type);
   return (
     <div className={`flex flex-col gap-1.5 text-[15px] ${className}`}>
       {grouped
-        ? <span id={`${id}-label`} className="font-medium text-ink">{field.label}{star}</span>
-        : <label htmlFor={id} className="font-medium text-ink">{field.label}{star}</label>}
+        ? <span id={`${id}-label`} className="font-medium text-ink">{label ?? field.label}{star}</span>
+        : <label htmlFor={id} className="font-medium text-ink">{label ?? field.label}{star}</label>}
       {children}
       {error ? <p id={`${id}-err`} role="alert" className="text-sm text-red-700">{error}</p> : null}
     </div>
   );
 }
 
-function Subform({ field, id, rows, errors, onChange }: { field: FormField; id: string; rows: Row[]; errors: Errors; onChange: (rows: Row[]) => void }) {
+function Subform({ field, id, rows, errors, count, values, resolved, onChange, onNumberBlur }: {
+  field: FormField; id: string; rows: Row[]; errors: Errors; count?: number; values: Values; resolved: Resolved; onChange: (rows: Row[]) => void; onNumberBlur: (id: string, f: FormField, v: string, lim: Limits) => void;
+}) {
   const subfields = field.subfields ?? [];
-  const canAddMore = !field.max || rows.length < field.max;
+  const fixed = count !== undefined; // the number of entries follows an earlier answer
+  const canAddMore = !fixed && (!field.max || rows.length < field.max);
   const addRow = () => onChange([...rows, {}]);
   const removeRow = (i: number) => onChange(rows.filter((_, j) => j !== i));
   const setCell = (i: number, key: string, v: string) => onChange(rows.map((r, j) => (j === i ? { ...r, [key]: v } : r)));
+  const title = (i: number) => pipe(field.entry_label || `${field.label} {n}`, values, resolved, { n: String(i + 1), count: String(rows.length) });
 
   return (
     <div className="flex flex-col gap-3 sm:col-span-2" role="group" aria-labelledby={`${id}-label`}>
-      <div id={`${id}-label`} className="text-sm font-medium">{field.label}{field.required ? <span className="text-primary"> *</span> : null}</div>
+      <div id={`${id}-label`} className="text-sm font-medium">{pipe(field.label, values, resolved)}{field.required && !fixed ? <span className="text-primary"> *</span> : null}</div>
       {rows.map((row, i) => (
         <div key={i} className="flex flex-col gap-3 rounded-xl border border-line p-4">
+          {fixed ? <div className="text-base font-semibold">{title(i)}</div> : null}
           <div className="grid gap-3 sm:grid-cols-2">
             {subfields.map((sf) => {
               const cellId = `${id}.${i}.${sf.key}`;
               return (
-                <Question key={sf.key} field={sf} id={cellId} error={errors[cellId]} className={sf.span === 2 ? "sm:col-span-2" : ""}>
-                  <BasicField field={sf} id={cellId} value={row[sf.key] ?? ""} onChange={(v) => setCell(i, sf.key, v)} error={errors[cellId]} />
+                <Question key={sf.key} field={sf} id={cellId} label={pipe(sf.label, values, resolved, { n: String(i + 1), count: String(rows.length) })} error={errors[cellId]} className={sf.span === 2 ? "sm:col-span-2" : ""}>
+                  <BasicField field={sf} id={cellId} value={row[sf.key] ?? ""} onChange={(v) => setCell(i, sf.key, v)} onBlur={() => onNumberBlur(cellId, sf, row[sf.key] ?? "", { min: sf.min_value, max: sf.max_value })} error={errors[cellId]} limits={{ min: sf.min_value, max: sf.max_value }} />
                 </Question>
               );
             })}
           </div>
-          <button type="button" onClick={() => removeRow(i)} className="self-start text-sm text-red-700">Remove</button>
+          {!fixed ? <button type="button" onClick={() => removeRow(i)} className="self-start text-sm text-red-700">Remove</button> : null}
         </div>
       ))}
       {errors[id] ? <p id={`${id}-err`} role="alert" className="text-sm text-red-700">{errors[id]}</p> : null}
@@ -160,23 +176,27 @@ function Subform({ field, id, rows, errors, onChange }: { field: FormField; id: 
   );
 }
 
-function SectionBlock({ section, active, values, errors, onFieldChange }: {
-  section: FormSection; active: boolean; values: Values; errors: Errors; onFieldChange: (id: string, v: Value) => void;
+function SectionBlock({ section, active, values, errors, resolved, onFieldChange, onNumberBlur }: {
+  section: FormSection; active: boolean; values: Values; errors: Errors; resolved: Resolved; onFieldChange: (id: string, v: Value) => void; onNumberBlur: (id: string, f: FormField, v: string, lim: Limits) => void;
 }) {
+  const shown = section.fields.filter((f) => resolved.visible.has(uid(section.id, f.key)));
+  if (!shown.length) return null; // nothing in this section applies yet — don't show a lone heading
   // `hidden` (not unmounting) keeps entered values intact when navigating back in a paginated form.
   // Validation is our own (see fieldError), so hidden steps can never block Next or Submit.
   return (
     <div hidden={!active} role="group" aria-label={section.heading} className={`flex flex-col gap-4 ${section.background ? "rounded-2xl p-6" : ""}`} style={section.background ? { background: section.background } : undefined}>
       {section.heading ? <div className="border-b border-line pb-2.5 text-lg font-semibold">{section.heading}</div> : null}
       <div className={`grid gap-4 ${section.columns === 2 ? "sm:grid-cols-2" : ""}`}>
-        {section.fields.map((f) => {
+        {shown.map((f) => {
           const id = uid(section.id, f.key);
           if (f.type === "subform") {
-            return <Subform key={id} field={f} id={id} rows={(values[id] as Row[]) ?? []} errors={errors} onChange={(rows) => onFieldChange(id, rows)} />;
+            const count = repeatCount(f, values, resolved);
+            if (count === 0) return null; // size follows an answer that isn't a positive number yet
+            return <Subform key={id} field={f} id={id} rows={rowsFor(values[id] as Row[] | undefined, count)} count={count} errors={errors} values={values} resolved={resolved} onChange={(rows) => onFieldChange(id, rows)} onNumberBlur={onNumberBlur} />;
           }
           return (
-            <Question key={id} field={f} id={id} error={errors[id]} className={f.span === 2 || section.columns === 1 ? "sm:col-span-2" : ""}>
-              <BasicField field={f} id={id} value={typeof values[id] === "string" ? (values[id] as string) : ""} onChange={(v) => onFieldChange(id, v)} error={errors[id]} />
+            <Question key={id} field={f} id={id} label={pipe(f.label, values, resolved)} error={errors[id]} className={f.span === 2 || section.columns === 1 ? "sm:col-span-2" : ""}>
+              <BasicField field={f} id={id} value={typeof values[id] === "string" ? (values[id] as string) : ""} onChange={(v) => onFieldChange(id, v)} onBlur={() => onNumberBlur(id, f, typeof values[id] === "string" ? (values[id] as string) : "", limitsFor(f, values, resolved))} error={errors[id]} limits={limitsFor(f, values, resolved)} />
             </Question>
           );
         })}
@@ -197,8 +217,17 @@ export function CmsFormRenderer({ form, pageId }: { form: CmsForm; pageId?: stri
   const firstRender = useRef(true);
 
   const sections = form.sections ?? [];
-  const paginated = !!form.paginate && sections.length > 1;
-  const lastStep = step === sections.length - 1;
+  // Which questions apply right now (conditional questions, and everything that depended on a hidden one).
+  const resolved = resolve(sections, values);
+  const hasShown = (sec: FormSection) => sec.fields.some((f) => resolved.visible.has(uid(sec.id, f.key)));
+  // Steps are the sections that currently have something to answer — a step whose questions are all
+  // conditional and not triggered is skipped (and the "Step x of y" count follows).
+  const stepSections = sections.map((sec, i) => (hasShown(sec) ? i : -1)).filter((i) => i >= 0);
+  const paginated = !!form.paginate && stepSections.length > 1;
+  const curStep = Math.min(step, Math.max(stepSections.length - 1, 0));
+  const lastStep = curStep === stepSections.length - 1;
+  const activeSection = stepSections[curStep];
+
   const set = (id: string, v: Value) => {
     setValues((s) => ({ ...s, [id]: v }));
     // an answer changed: drop that question's error (and any of its repeat-row errors)
@@ -208,6 +237,17 @@ export function CmsFormRenderer({ form, pageId }: { form: CmsForm; pageId?: stri
       const next = { ...prev };
       stale.forEach((k) => delete next[k]);
       return next;
+    });
+  };
+
+  // A number is checked the moment the person leaves it (only when something is typed — so tabbing
+  // through blanks doesn't flash "required" everywhere). Submit/Next still check everything.
+  const onNumberBlur = (id: string, f: FormField, v: string, lim: Limits) => {
+    if (!NUMERIC_TYPES.includes(f.type) || !v.trim()) return;
+    const e = fieldError(f, v, lim);
+    setErrors((prev) => {
+      if (!e) { if (!(id in prev)) return prev; const n = { ...prev }; delete n[id]; return n; }
+      return prev[id] === e ? prev : { ...prev, [id]: e };
     });
   };
 
@@ -223,7 +263,7 @@ export function CmsFormRenderer({ form, pageId }: { form: CmsForm; pageId?: stri
       const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
       window.scrollTo({ top: window.scrollY + top - 96, behavior: reduce ? "auto" : "smooth" });
     }
-  }, [step]);
+  }, [curStep]);
 
   // After a failed Next/Submit, move to the first question that needs attention.
   useEffect(() => {
@@ -239,9 +279,9 @@ export function CmsFormRenderer({ form, pageId }: { form: CmsForm; pageId?: stri
   }
 
   function goNext() {
-    const errs = sectionErrors(sections[step], values);
+    const errs = sectionErrors(sections[activeSection], values, resolved);
     if (Object.keys(errs).length) { setErrors((prev) => ({ ...prev, ...errs })); setFocusTick((t) => t + 1); return; }
-    setStep((s) => Math.min(s + 1, sections.length - 1));
+    setStep(Math.min(curStep + 1, stepSections.length - 1));
   }
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -254,24 +294,32 @@ export function CmsFormRenderer({ form, pageId }: { form: CmsForm; pageId?: stri
     const all: Errors = {};
     let firstBad = -1;
     sections.forEach((sec, i) => {
-      const errs = sectionErrors(sec, values);
+      const errs = sectionErrors(sec, values, resolved);
       if (Object.keys(errs).length) { Object.assign(all, errs); if (firstBad < 0) firstBad = i; }
     });
     if (firstBad >= 0) {
       setErrors(all);
-      if (paginated) setStep(firstBad);
+      if (paginated) setStep(Math.max(stepSections.indexOf(firstBad), 0));
       setFocusTick((t) => t + 1);
       return;
     }
 
     setState("sending"); setError("");
 
-    // Flatten to plain question keys for the lead pipeline. If two questions share a key, the later
-    // ones are saved as key_2, key_3… so no answer overwrites another.
+    // Flatten to plain question keys for the lead pipeline — only questions that applied (a hidden
+    // question's leftover answer is not sent). If two questions share a key, the later ones are saved
+    // as key_2, key_3… so no answer overwrites another.
     const flat: Record<string, Value> = {};
     const seen: Record<string, number> = {};
     for (const sec of sections) for (const f of sec.fields) {
-      const v = values[uid(sec.id, f.key)];
+      const id = uid(sec.id, f.key);
+      if (!resolved.visible.has(id)) continue;
+      let v = values[id];
+      if (f.type === "subform") {
+        const count = repeatCount(f, values, resolved);
+        if (count === 0) continue;
+        v = rowsFor(v as Row[] | undefined, count); // exactly the entries that were shown
+      }
       if (v === undefined) continue;
       let key = f.key;
       if (key in flat) { seen[f.key] = (seen[f.key] ?? 1) + 1; key = `${f.key}_${seen[f.key]}`; }
@@ -311,8 +359,12 @@ export function CmsFormRenderer({ form, pageId }: { form: CmsForm; pageId?: stri
     return <div className="rounded-2xl bg-white p-8 text-center" role="status"><p className="font-display text-2xl font-bold">{form.success_message}</p></div>;
   }
 
-  // Errors on the steps/sections currently on screen (for the summary line).
-  const shownErrors = sections.reduce((n, sec, i) => (!paginated || i === step ? n + Object.keys(errors).filter((k) => k.startsWith(`${sec.id}__`)).length : n), 0);
+  // Errors on the questions currently on screen (for the summary line).
+  const onScreen = new Set(sections.filter((_, i) => !paginated || i === activeSection).map((sec) => sec.id));
+  const shownErrors = Object.keys(errors).filter((k) => {
+    const top = k.split(".")[0];
+    return resolved.visible.has(top) && onScreen.has(top.split("__")[0]);
+  }).length;
 
   return (
     <form ref={formRef} onSubmit={onSubmit} noValidate className="flex scroll-mt-24 flex-col gap-6">
@@ -321,16 +373,16 @@ export function CmsFormRenderer({ form, pageId }: { form: CmsForm; pageId?: stri
 
       {paginated ? (
         <div className="flex items-center gap-3">
-          <span className="text-sm font-medium text-muted" aria-live="polite">Step {step + 1} of {sections.length}</span>
+          <span className="text-sm font-medium text-muted" aria-live="polite">Step {curStep + 1} of {stepSections.length}</span>
           <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-soft">
-            <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${((step + 1) / sections.length) * 100}%` }} />
+            <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${((curStep + 1) / stepSections.length) * 100}%` }} />
           </div>
         </div>
       ) : null}
 
       <div className="flex flex-col gap-8">
         {sections.map((section, i) => (
-          <SectionBlock key={section.id} section={section} active={!paginated || i === step} values={values} errors={errors} onFieldChange={set} />
+          <SectionBlock key={section.id} section={section} active={!paginated || i === activeSection} values={values} errors={errors} resolved={resolved} onFieldChange={set} onNumberBlur={onNumberBlur} />
         ))}
       </div>
 
@@ -339,7 +391,7 @@ export function CmsFormRenderer({ form, pageId }: { form: CmsForm; pageId?: stri
 
       {paginated ? (
         <div className="flex gap-3">
-          {step > 0 ? <button type="button" onClick={() => setStep((s) => s - 1)} className="btn h-13 flex-1">Back</button> : null}
+          {curStep > 0 ? <button type="button" onClick={() => setStep(curStep - 1)} className="btn h-13 flex-1">Back</button> : null}
           <button type="submit" disabled={state === "sending"} className="h-13 flex-1 rounded-full bg-ink py-3.5 text-base font-medium text-white disabled:opacity-60">
             {lastStep ? (state === "sending" ? "Sending…" : form.submit_label) : "Next"}
           </button>
