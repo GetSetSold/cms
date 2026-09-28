@@ -14,8 +14,8 @@ const shell = "overflow-hidden rounded-[var(--radius-lg)] border-[length:var(--b
  *  single custom color (or the layout's default) always leaves readable text. */
 function tone(dark: boolean) {
   return dark
-    ? { head: "text-white", body: "text-white/75", accent: "text-white", rule: "border-white/25", divide: "divide-white/25", ruleBg: "bg-white/25", iconBox: "border-white/40", icon: "#FFFFFF" as string | undefined }
-    : { head: "text-ink", body: "text-muted", accent: "text-primary", rule: "border-line", divide: "divide-line", ruleBg: "bg-line", iconBox: "border-line", icon: undefined as string | undefined };
+    ? { dark: true, head: "text-white", body: "text-white/75", accent: "text-white", rule: "border-white/25", divide: "divide-white/25", ruleBg: "bg-white/25", iconBox: "border-white/40", icon: "#FFFFFF" as string | undefined }
+    : { dark: false, head: "text-ink", body: "text-muted", accent: "text-primary", rule: "border-line", divide: "divide-line", ruleBg: "bg-line", iconBox: "border-line", icon: undefined as string | undefined };
 }
 type Tone = ReturnType<typeof tone>;
 
@@ -29,16 +29,28 @@ function Icon({ it, ctx, t, boxed }: { it: Item; ctx: BlockCtx; t: Tone; boxed?:
     : <span className="shrink-0">{glyph}</span>;
 }
 
-function Cta({ href, label, t, className = "" }: { href: string; label: string; t: Tone; className?: string }) {
+/** With no button style chosen this stays a text link with an arrow (the default look).
+ *  Solid / Bordered from the Style tab turns every link in the block into a real button. */
+function Cta({ href, label, t, style, textSize = "", className = "" }: { href: string; label: string; t: Tone; style?: "solid" | "bordered"; textSize?: string; className?: string }) {
+  if (!style) {
+    return (
+      <Link href={href} className={`inline-flex w-fit items-center gap-1.5 font-semibold ${t.accent} ${textSize} ${className}`}>
+        {label} <span aria-hidden>→</span>
+      </Link>
+    );
+  }
+  const look = style === "solid"
+    ? t.dark ? "bg-white text-ink hover:brightness-95" : "bg-primary text-white hover:brightness-110"
+    : t.dark ? "border border-white text-white hover:bg-white/10" : "border border-ink text-ink hover:bg-ground";
   return (
-    <Link href={href} className={`inline-flex w-fit items-center gap-1.5 font-semibold ${t.accent} ${className}`}>
+    <Link href={href} className={`inline-flex h-11 w-fit items-center justify-center gap-1.5 rounded-full px-5 text-sm font-semibold transition md:h-12 md:px-6 md:text-base ${look} ${className}`}>
       {label} <span aria-hidden>→</span>
     </Link>
   );
 }
 
 /** The header half: eyebrow, headline, text, small note under a divider, main link. */
-function Intro({ data, t, topRule }: { data: any; t: Tone; topRule?: boolean }) {
+function Intro({ data, t, topRule, bs }: { data: any; t: Tone; topRule?: boolean; bs?: "solid" | "bordered" }) {
   const link = data.link?.label && data.link?.href ? data.link : null;
   return (
     <div className="flex flex-col gap-5">
@@ -52,13 +64,13 @@ function Intro({ data, t, topRule }: { data: any; t: Tone; topRule?: boolean }) 
           <p className={`text-[15px] font-medium leading-relaxed md:text-lg ${t.head}`}>{data.footnote}</p>
         </>
       ) : null}
-      {link ? <Cta href={link.href} label={link.label} t={t} className="text-base md:text-xl" /> : null}
+      {link ? <Cta href={link.href} label={link.label} t={t} style={bs} textSize="text-base md:text-xl" /> : null}
     </div>
   );
 }
 
 /** Icon + short vertical line + title/description, link on the right (lines & bands layouts). */
-function Row({ it, ctx, t }: { it: Item; ctx: BlockCtx; t: Tone }) {
+function Row({ it, ctx, t, bs }: { it: Item; ctx: BlockCtx; t: Tone; bs?: "solid" | "bordered" }) {
   return (
     <div className="grid grid-cols-[auto_1fr] items-center gap-x-5 gap-y-4 px-6 py-7 md:grid-cols-[auto_1fr_auto] md:px-10 md:py-10">
       <div className="flex items-center gap-5">
@@ -69,13 +81,13 @@ function Row({ it, ctx, t }: { it: Item; ctx: BlockCtx; t: Tone }) {
         {it.title ? <h3 className={`text-lg font-semibold md:text-2xl ${t.head}`}>{it.title}</h3> : null}
         {it.text ? <p className={`text-sm leading-relaxed md:text-base ${t.body}`}>{it.text}</p> : null}
       </div>
-      {it.href ? <Cta href={it.href} label={it.link_label || "Learn more"} t={t} className="col-span-2 whitespace-nowrap md:col-span-1 md:justify-self-end" /> : null}
+      {it.href ? <Cta href={it.href} label={it.link_label || "Learn more"} t={t} style={bs} className="col-span-2 whitespace-nowrap md:col-span-1 md:justify-self-end" /> : null}
     </div>
   );
 }
 
 /** One cell of the cross grid: 2 per row, an odd last item spans the full width. */
-function Cell({ it, ctx, t, i, n }: { it: Item; ctx: BlockCtx; t: Tone; i: number; n: number }) {
+function Cell({ it, ctx, t, i, n, bs }: { it: Item; ctx: BlockCtx; t: Tone; i: number; n: number; bs?: "solid" | "bordered" }) {
   const spans = n % 2 === 1 && i === n - 1;
   const lastRow = Math.floor(i / 2) === Math.floor((n - 1) / 2);
   const cls = [
@@ -91,7 +103,7 @@ function Cell({ it, ctx, t, i, n }: { it: Item; ctx: BlockCtx; t: Tone; i: numbe
       <Icon it={it} ctx={ctx} t={t} boxed />
       {it.title ? <h3 className={`text-xl font-semibold md:text-2xl ${t.head}`}>{it.title}</h3> : null}
       {it.text ? <p className={`text-sm leading-relaxed md:text-base ${t.body}`}>{it.text}</p> : null}
-      {it.href ? <Cta href={it.href} label={it.link_label || "Learn more"} t={t} /> : null}
+      {it.href ? <Cta href={it.href} label={it.link_label || "Learn more"} t={t} style={bs} /> : null}
     </div>
   );
 }
@@ -100,6 +112,7 @@ export function FeatureSection({ data, ctx }: { data: any; ctx: BlockCtx }) {
   const layout: Layout = LAYOUTS.includes(data.layout) ? data.layout : "simple";
   const custom: string | undefined = /^#[0-9a-f]{6}$/i.test(data.color ?? "") ? data.color : undefined;
   const items: Item[] = data.items ?? [];
+  const bs = ctx.buttonStyle;
   const outer = ctx.inRow ? "h-full w-full" : `${wrap} py-5 md:py-12`;
 
   // One custom color colors the WHOLE section (both halves) and drives the
@@ -114,7 +127,7 @@ export function FeatureSection({ data, ctx }: { data: any; ctx: BlockCtx }) {
   if (layout === "simple") {
     body = (
       <div className="grid gap-10 p-6 md:grid-cols-[1.1fr_1fr] md:items-center md:gap-16 md:p-16">
-        <Intro data={data} t={tl} />
+        <Intro data={data} t={tl} bs={bs} />
         <div className={`flex flex-col divide-y border-y ${tr.rule} ${tr.divide}`}>
           {items.map((it, i) => (
             <div key={i} className="flex items-start gap-5 py-6 md:py-8">
@@ -122,7 +135,7 @@ export function FeatureSection({ data, ctx }: { data: any; ctx: BlockCtx }) {
               <div className="flex flex-col gap-1.5">
                 {it.title ? <h3 className={`text-lg font-semibold md:text-2xl ${tr.head}`}>{it.title}</h3> : null}
                 {it.text ? <p className={`text-sm leading-relaxed md:text-base ${tr.body}`}>{it.text}</p> : null}
-                {it.href ? <Cta href={it.href} label={it.link_label || "Learn more"} t={tr} className="mt-1 text-[15px]" /> : null}
+                {it.href ? <Cta href={it.href} label={it.link_label || "Learn more"} t={tr} style={bs} textSize="text-[15px]" className="mt-1" /> : null}
               </div>
             </div>
           ))}
@@ -132,18 +145,18 @@ export function FeatureSection({ data, ctx }: { data: any; ctx: BlockCtx }) {
   } else if (layout === "lines") {
     body = (
       <div className="grid md:grid-cols-[40%_60%]">
-        <div className="flex flex-col justify-center p-6 md:p-14"><Intro data={data} t={tl} /></div>
+        <div className="flex flex-col justify-center p-6 md:p-14"><Intro data={data} t={tl} bs={bs} /></div>
         <div className={`flex flex-col divide-y border-t md:border-l md:border-t-0 ${tr.rule} ${tr.divide}`}>
-          {items.map((it, i) => <Row key={i} it={it} ctx={ctx} t={tr} />)}
+          {items.map((it, i) => <Row key={i} it={it} ctx={ctx} t={tr} bs={bs} />)}
         </div>
       </div>
     );
   } else if (layout === "cross") {
     body = (
       <div className="grid md:grid-cols-[34%_66%]">
-        <div className={`flex flex-col justify-center p-6 md:p-12 ${leftDark ? "bg-white/5" : "bg-black/[0.03]"}`}><Intro data={data} t={tl} /></div>
+        <div className={`flex flex-col justify-center p-6 md:p-12 ${leftDark ? "bg-white/5" : "bg-black/[0.03]"}`}><Intro data={data} t={tl} bs={bs} /></div>
         <div className={`grid grid-cols-1 border-t md:grid-cols-2 md:border-l md:border-t-0 ${tr.rule}`}>
-          {items.map((it, i) => <Cell key={i} it={it} ctx={ctx} t={tr} i={i} n={items.length} />)}
+          {items.map((it, i) => <Cell key={i} it={it} ctx={ctx} t={tr} i={i} n={items.length} bs={bs} />)}
         </div>
       </div>
     );
@@ -151,9 +164,9 @@ export function FeatureSection({ data, ctx }: { data: any; ctx: BlockCtx }) {
     // bands: dark left / light right by default; a custom color makes it one color with a divider
     body = (
       <div className="grid md:grid-cols-[38%_62%]">
-        <div className={`flex flex-col p-6 md:p-12 ${custom ? "" : "bg-ink"}`}><Intro data={data} t={tl} topRule /></div>
+        <div className={`flex flex-col p-6 md:p-12 ${custom ? "" : "bg-ink"}`}><Intro data={data} t={tl} topRule bs={bs} /></div>
         <div className={`flex flex-col divide-y ${tr.divide} ${custom ? `border-t md:border-l md:border-t-0 ${tr.rule}` : "bg-soft"}`}>
-          {items.map((it, i) => <Row key={i} it={it} ctx={ctx} t={tr} />)}
+          {items.map((it, i) => <Row key={i} it={it} ctx={ctx} t={tr} bs={bs} />)}
         </div>
       </div>
     );

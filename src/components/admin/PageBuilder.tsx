@@ -300,8 +300,9 @@ export function PageBuilder({ page: initialPage, sections: initialSections, bloc
                 ) : null}
 
                 <label className="label">Button style (any button this block shows)
-                  <select className="input" value={current.settings.button_style ?? "solid"}
-                    onChange={(e) => patchSection(current.id, { settings: { ...current.settings, button_style: e.target.value as "solid" | "bordered" } })}>
+                  <select className="input" value={current.settings.button_style ?? (current.block_type === "feature_section" ? "" : "solid")}
+                    onChange={(e) => patchSection(current.id, { settings: { ...current.settings, button_style: (e.target.value || undefined) as "solid" | "bordered" | undefined } })}>
+                    {current.block_type === "feature_section" ? <option value="">Text link with arrow (default)</option> : null}
                     <option value="solid">Solid (filled)</option>
                     <option value="bordered">Bordered (outline)</option>
                   </select>
