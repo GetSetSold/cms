@@ -21,13 +21,23 @@ const catLabel = (c: string) => LEAD_FLOW_CATEGORIES.find((x) => x.value === c)?
 function FieldValue({ v }: { v: unknown }) {
   if (Array.isArray(v)) {
     if (!v.length) return <span className="text-muted">—</span>;
-    const cols = [...new Set(v.flatMap((row) => Object.keys(row ?? {})))];
+    // Stacked, not a wide table — a subform entry with several fields would otherwise force
+    // horizontal scrolling, especially on the narrow admin layout or a phone.
     return (
-      <div className="overflow-x-auto rounded-lg border border-line">
-        <table className="w-full text-left text-[13px]">
-          <thead className="bg-ground text-xs uppercase tracking-wide text-muted"><tr>{cols.map((c) => <th key={c} className="p-2 whitespace-nowrap">{c.replace(/_/g, " ")}</th>)}</tr></thead>
-          <tbody>{v.map((row, i) => <tr key={i} className="border-t border-line/60">{cols.map((c) => <td key={c} className="p-2 whitespace-nowrap">{String(row?.[c] ?? "—")}</td>)}</tr>)}</tbody>
-        </table>
+      <div className="flex flex-col gap-3">
+        {v.map((row, i) => (
+          <div key={i} className="rounded-lg border border-line p-3">
+            <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">Entry {i + 1}</div>
+            <dl className="flex flex-col gap-2">
+              {Object.entries(row ?? {}).map(([k, val]) => (
+                <div key={k} className="flex flex-col gap-0.5">
+                  <dt className="text-xs text-muted">{k.replace(/_/g, " ")}</dt>
+                  <dd className="text-[14px]">{String(val ?? "") || "—"}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        ))}
       </div>
     );
   }

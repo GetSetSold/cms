@@ -2,6 +2,17 @@ import Link from "next/link";
 import { requireStaff } from "@/lib/auth";
 import { LEAD_STATUSES, type Lead } from "@/lib/types";
 
+// One color per stage — light column tint, a matching dot/border accent — so the board reads at a
+// glance instead of every column looking the same.
+const STATUS_STYLE: Record<string, { bg: string; text: string; dot: string; border: string }> = {
+  new: { bg: "bg-[#EAF1FD]", text: "text-[#1D4ED8]", dot: "bg-[#3B82F6]", border: "border-[#3B82F6]" },
+  contacted: { bg: "bg-[#FDF3E4]", text: "text-[#92600B]", dot: "bg-[#F59E0B]", border: "border-[#F59E0B]" },
+  qualified: { bg: "bg-[#F1ECFB]", text: "text-[#6D28D9]", dot: "bg-[#8B5CF6]", border: "border-[#8B5CF6]" },
+  proposal: { bg: "bg-[#FCEAE4]", text: "text-[#B4480F]", dot: "bg-[#F97316]", border: "border-[#F97316]" },
+  won: { bg: "bg-[#E7F5EC]", text: "text-[#0F7A3D]", dot: "bg-[#22C55E]", border: "border-[#22C55E]" },
+  lost: { bg: "bg-[#F1F1F2]", text: "text-[#6B7280]", dot: "bg-[#9CA3AF]", border: "border-[#9CA3AF]" },
+};
+
 const ago = (iso: string) => {
   const m = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
   if (m < 60) return `${m} min`;
@@ -45,20 +56,24 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
       </form>
 
       {board ? (
-        <div className="grid gap-3 overflow-x-auto md:grid-cols-6">
+        <div className="grid gap-2.5 overflow-x-auto md:grid-cols-6">
           {LEAD_STATUSES.map((st) => {
             const col = leads.filter((l) => l.status === st);
+            const c = STATUS_STYLE[st];
             return (
-              <div key={st} className="flex min-w-[200px] flex-col gap-2 rounded-2xl bg-[#ECE8E0] p-2.5">
-                <div className="flex justify-between px-1 pb-1 capitalize"><strong>{st}</strong><span className="text-muted">{col.length}</span></div>
+              <div key={st} className={`flex min-w-[180px] flex-col gap-1.5 rounded-xl p-2 ${c.bg}`}>
+                <div className="flex items-center justify-between px-1 pb-0.5">
+                  <div className="flex items-center gap-1.5"><span className={`h-2 w-2 rounded-full ${c.dot}`} /><strong className={`text-[13px] capitalize ${c.text}`}>{st}</strong></div>
+                  <span className="text-xs text-muted">{col.length}</span>
+                </div>
                 {col.map((l) => (
-                  <Link key={l.id} href={`/admin/leads/${l.id}`} className="flex flex-col gap-1.5 rounded-xl bg-white p-3 hover:ring-2 hover:ring-primary">
-                    <div className="flex justify-between gap-2"><strong className="truncate">{name(l)}</strong><span className="shrink-0 text-xs text-muted">{ago(l.created_at)}</span></div>
-                    <div className="truncate text-[13px] text-muted">{[l.service, l.form_key].filter(Boolean).join(" · ")}</div>
-                    <div className="flex flex-wrap gap-1 text-[11px]">
-                      {l.sms_opt_in && !l.sms_opted_out ? <span className="rounded-full bg-[#E4F0EE] px-2 py-0.5 text-[#0A4540]">SMS ok</span> : null}
-                      {l.sms_opted_out ? <span className="rounded-full bg-[#FBEBDD] px-2 py-0.5 text-[#8A3F12]">Opted out</span> : null}
-                      {l.utm?.utm_source ? <span className="rounded-full bg-soft px-2 py-0.5 text-muted">{l.utm.utm_source}</span> : null}
+                  <Link key={l.id} href={`/admin/leads/${l.id}`} className={`flex flex-col gap-1 rounded-lg border-l-[3px] bg-white p-2 hover:ring-2 hover:ring-primary ${c.border}`}>
+                    <div className="flex justify-between gap-2"><strong className="truncate text-[13px]">{name(l)}</strong><span className="shrink-0 text-[11px] text-muted">{ago(l.created_at)}</span></div>
+                    <div className="truncate text-[12px] text-muted">{[l.service, l.form_key].filter(Boolean).join(" · ")}</div>
+                    <div className="flex flex-wrap gap-1 text-[10px]">
+                      {l.sms_opt_in && !l.sms_opted_out ? <span className="rounded-full bg-[#E4F0EE] px-1.5 py-0.5 text-[#0A4540]">SMS ok</span> : null}
+                      {l.sms_opted_out ? <span className="rounded-full bg-[#FBEBDD] px-1.5 py-0.5 text-[#8A3F12]">Opted out</span> : null}
+                      {l.utm?.utm_source ? <span className="rounded-full bg-soft px-1.5 py-0.5 text-muted">{l.utm.utm_source}</span> : null}
                     </div>
                   </Link>
                 ))}

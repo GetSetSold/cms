@@ -136,17 +136,17 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
 
         <div className="flex flex-col gap-3 rounded-lg border border-line p-3">
           <strong className="text-sm">Header appearance</strong>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid gap-3 sm:grid-cols-2">
             <ColorField label="Background" value={s.header?.bg} fallback="#ffffff" onChange={(v) => set("header", { ...s.header, bg: v })} onReset={() => set("header", { ...s.header, bg: undefined })} />
             <ColorField label="Text color" value={s.header?.text} fallback="#14142B" onChange={(v) => set("header", { ...s.header, text: v })} onReset={() => set("header", { ...s.header, text: undefined })} />
           </div>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+          <div className="grid gap-x-4 gap-y-2 text-sm sm:grid-cols-2">
             <label className="flex items-center justify-between">Logo on mobile<input type="checkbox" checked={s.header?.show_logo_mobile !== false} onChange={(e) => set("header", { ...s.header, show_logo_mobile: e.target.checked })} /></label>
             <label className="flex items-center justify-between">Logo on desktop<input type="checkbox" checked={s.header?.show_logo_desktop !== false} onChange={(e) => set("header", { ...s.header, show_logo_desktop: e.target.checked })} /></label>
             <label className="flex items-center justify-between">Site name on mobile<input type="checkbox" checked={s.header?.show_name_mobile !== false} onChange={(e) => set("header", { ...s.header, show_name_mobile: e.target.checked })} /></label>
             <label className="flex items-center justify-between">Site name on desktop<input type="checkbox" checked={s.header?.show_name_desktop !== false} onChange={(e) => set("header", { ...s.header, show_name_desktop: e.target.checked })} /></label>
           </div>
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <label className="label">Logo size (px)<input type="number" min={16} max={80} className="input" value={s.header?.logo_size ?? 32} onChange={(e) => set("header", { ...s.header, logo_size: Number(e.target.value) })} /></label>
             <label className="label">Logo–name gap (px)<input type="number" min={0} max={40} className="input" value={s.header?.logo_gap ?? 10} onChange={(e) => set("header", { ...s.header, logo_gap: Number(e.target.value) })} /></label>
             <label className="label">Name size, mobile (px)<input type="number" min={12} max={48} className="input" value={s.header?.name_size_mobile ?? 24} onChange={(e) => set("header", { ...s.header, name_size_mobile: Number(e.target.value) })} /></label>
@@ -162,7 +162,7 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
             <label className="label">Subline (tagline shown under the site name)
               <input className="input" placeholder="e.g. Real Estate Brokerage" value={s.header?.subline ?? ""} onChange={(e) => set("header", { ...s.header, subline: e.target.value })} />
             </label>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid gap-3 sm:grid-cols-3">
               <label className="label">Size, mobile (px)<input type="number" min={9} max={24} className="input" value={s.header?.subline_size_mobile ?? 12} onChange={(e) => set("header", { ...s.header, subline_size_mobile: Number(e.target.value) })} /></label>
               <label className="label">Size, desktop (px)<input type="number" min={9} max={28} className="input" value={s.header?.subline_size_desktop ?? 13} onChange={(e) => set("header", { ...s.header, subline_size_desktop: Number(e.target.value) })} /></label>
               <label className="label">Weight
@@ -197,13 +197,13 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
           />
         ))}
         <button className="btn self-start border-dashed" onClick={() => set("navigation", [...s.navigation, { label: "", href: "" }])}>+ Add link</button>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid gap-2 sm:grid-cols-2">
           <label className="label">Header button<input className="input" value={s.header_cta?.label ?? ""} onChange={(e) => set("header_cta", { ...s.header_cta, label: e.target.value })} /></label>
           <label className="label">Links to<input className="input" value={s.header_cta?.href ?? ""} onChange={(e) => set("header_cta", { ...s.header_cta, href: e.target.value })} /></label>
         </div>
 
         <label className="label">Footer tagline<input className="input" value={s.footer?.tagline ?? ""} onChange={(e) => set("footer", { ...s.footer, tagline: e.target.value })} /></label>
-        <div className="grid grid-cols-3 gap-3 rounded-lg border border-line p-3">
+        <div className="grid gap-3 rounded-lg border border-line p-3 sm:grid-cols-3">
           <ColorField label="Footer background" value={s.footer?.bg} fallback="#14142B" onChange={(v) => set("footer", { ...s.footer, bg: v })} onReset={() => set("footer", { ...s.footer, bg: undefined })} />
           <ColorField label="Footer text color" value={s.footer?.text} fallback="#FFFFFF" onChange={(v) => set("footer", { ...s.footer, text: v })} onReset={() => set("footer", { ...s.footer, text: undefined })} />
           <label className="label">Columns per row (desktop)
@@ -264,7 +264,7 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
           </label>
         </div>
         {(s.mobile_cta?.buttons ?? []).map((btn, i) => (
-          <div key={i} className="grid grid-cols-[110px_1fr_180px_1fr_auto] items-start gap-2 rounded-lg border border-line p-2">
+          <div key={i} className="flex flex-col gap-2 rounded-lg border border-line p-2 sm:grid sm:grid-cols-[110px_1fr_180px_1fr_auto] sm:items-start">
             <select className="input" value={btn.type} onChange={(e) => {
               const buttons = [...(s.mobile_cta?.buttons ?? [])]; buttons[i] = { ...btn, type: e.target.value as typeof btn.type }; set("mobile_cta", { ...s.mobile_cta, buttons });
             }}>
@@ -317,7 +317,7 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
         <p className="text-xs text-muted">Set once — shown automatically on every blog post's sidebar. No per-post setup needed.</p>
         <label className="label">Heading<input className="input" value={s.blog_cta?.heading ?? ""} onChange={(e) => set("blog_cta", { ...s.blog_cta, heading: e.target.value })} /></label>
         <label className="label">Text<textarea rows={2} className="textarea" value={s.blog_cta?.text ?? ""} onChange={(e) => set("blog_cta", { ...s.blog_cta, text: e.target.value })} /></label>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid gap-3 sm:grid-cols-2">
           <label className="label">Button label<input className="input" value={s.blog_cta?.button_label ?? ""} onChange={(e) => set("blog_cta", { ...s.blog_cta, button_label: e.target.value })} /></label>
           <label className="label">Button links to<input className="input" value={s.blog_cta?.button_href ?? ""} onChange={(e) => set("blog_cta", { ...s.blog_cta, button_href: e.target.value })} /></label>
         </div>
@@ -332,7 +332,7 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
           </select>
         </label>
         {(s.social_links?.items ?? []).map((it, i) => (
-          <div key={i} className="grid grid-cols-[110px_1fr_auto] items-start gap-2 rounded-lg border border-line p-2">
+          <div key={i} className="flex flex-col gap-2 rounded-lg border border-line p-2 sm:grid sm:grid-cols-[110px_1fr_auto] sm:items-start">
             <SvgPicker value={it.svg_id} svgs={svgs} onChange={(id) => {
               const items = [...(s.social_links?.items ?? [])]; items[i] = { ...it, svg_id: id ?? "" }; set("social_links", { ...s.social_links, items });
             }} />

@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { LEAD_FLOW_CATEGORIES, type LeadFlowCategory } from "@/lib/types";
+import { Modal } from "@/components/admin/Modal";
 
 type Step = { delay_minutes: number; channel: "sms" | "email"; subject?: string; template: string };
 type Seq = { id?: string; name: string; description: string | null; category: LeadFlowCategory; trigger: string; form_key: string | null; is_active: boolean; steps: Step[] };
@@ -18,7 +19,9 @@ export function SequenceEditor({ initial }: { initial: Seq | null }) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const [seq, setSeq] = useState<Seq>(initial ?? BLANK);
-  const [open, setOpen] = useState(!!initial);
+  // Every saved flow used to render fully expanded, all at once — the exact "doesn't fit" problem
+  // the modal is meant to fix. Both a saved flow and a fresh one now start collapsed.
+  const [open, setOpen] = useState(false);
   const [msg, setMsg] = useState("");
 
   const setStep = (i: number, patch: Partial<Step>) => setSeq({ ...seq, steps: seq.steps.map((s, j) => (j === i ? { ...s, ...patch } : s)) });
@@ -38,10 +41,22 @@ export function SequenceEditor({ initial }: { initial: Seq | null }) {
     router.refresh();
   }
 
-  if (!open) return <button className="btn self-start border-dashed" onClick={() => setOpen(true)}>+ New flow</button>;
+  if (!open) {
+    // A saved flow shows a compact summary row instead of an "open the form" button, so the list of
+    // flows itself stays scannable — the button is only for actually starting a new one.
+    return initial ? (
+      <button type="button" onClick={() => setOpen(true)} className="card flex items-center gap-3 text-left hover:ring-2 hover:ring-primary">
+        <span className={`h-2 w-2 shrink-0 rounded-full ${seq.is_active ? "bg-primary" : "bg-line"}`} />
+        <div className="min-w-0 flex-1">
+          <div className="truncate font-medium">{seq.name || "Untitled"}</div>
+          <div className="truncate text-xs text-muted">{seq.steps.length} step{seq.steps.length === 1 ? "" : "s"}{seq.form_key ? ` · auto-enrolls from “${seq.form_key}”` : " · added manually"}</div>
+        </div>
+      </button>
+    ) : <button className="btn self-start border-dashed" onClick={() => setOpen(true)}>+ New flow</button>;
+  }
 
-  return (
-    <section className="card flex flex-col gap-4">
+  const form = (
+    <div className="flex flex-col gap-4">
       <div className="grid gap-3 md:grid-cols-[1fr_200px_1fr_auto] md:items-end">
         <label className="label">Name<input className="input" value={seq.name} onChange={(e) => setSeq({ ...seq, name: e.target.value })} /></label>
         <label className="label">Lead type
@@ -75,6 +90,8 @@ export function SequenceEditor({ initial }: { initial: Seq | null }) {
         {seq.id ? <button className="btn text-red-700" onClick={remove}>Delete</button> : <button className="btn" onClick={() => setOpen(false)}>Cancel</button>}
         {msg ? <span className="self-center text-sm text-muted">{msg}</span> : null}
       </div>
-    </section>
+    </div>
   );
+
+  return <Modal title={seq.id ? "Edit flow" : "New flow"} onClose={() => (initial ? setOpen(false) : (setSeq(BLANK), setOpen(false)))} wide>{form}</Modal>;
 }
