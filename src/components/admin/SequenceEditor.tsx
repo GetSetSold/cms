@@ -28,44 +28,77 @@ const SAMPLE: Record<string, string> = {
   first_name: "Maya", last_name: "Thompson", email: "maya@example.com", phone: "555-0100", service: "Rental",
   site_name: "GetSetSold", property_address: "142 Elm Street", agent_name: "Rohit Sharma", booking_link: "getsetsold.ca/book/rohit", match_count: "6",
 };
+const BROKERAGE = "Lombard Group Real Estate Inc., Brokerage"; // preview-only — matches brandedEmailHtml's optional `brokerage` field
+const initials = (name: string) => name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
 const fill = (tpl: string) => tpl.replace(/\{\{\s*(\w+)\s*\}\}/g, (_, k: string) => SAMPLE[k] ?? "");
 
-/** An SMS bubble or a branded-email card previewing exactly what the lead will see, using sample
- *  values for the {{tokens}} — so a flow can be checked for tone and layout before it ever sends. */
+/** A realistic phone-frame SMS preview or a browser-chrome branded-email preview, matching the
+ *  approved template mockup — so a flow can be checked for tone and layout before it ever sends.
+ *  Sample values fill the {{tokens}}. */
 function StepPreview({ s }: { s: Step }) {
   if (s.channel === "sms") {
     const text = fill(s.template) + (s.template.trim() ? "\nReply STOP to opt out." : "");
     return (
-      <div className="w-full max-w-[240px] shrink-0 self-start rounded-2xl bg-[#0B0B0F] p-3">
-        <div className="rounded-xl bg-white p-3">
-          <div className="mb-2 text-[10px] font-medium text-muted">Today · Preview</div>
-          {text.trim() ? (
-            <div className="rounded-2xl rounded-bl-sm bg-[#E9E9EB] px-3 py-2 text-[13px] leading-snug text-ink">{text}</div>
-          ) : <p className="text-[13px] text-muted">Start typing to preview the message…</p>}
+      <div className="w-full max-w-[300px] shrink-0 self-start">
+        <div className="mb-2 flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-muted">
+          <span>Live preview</span>
+        </div>
+        <div className="overflow-hidden rounded-[32px] border-[6px] border-[#0B0B0F] bg-white shadow-lg">
+          <div className="relative flex h-6 items-center justify-center bg-[#0B0B0F]">
+            <div className="h-3.5 w-20 rounded-full bg-black" />
+          </div>
+          <div className="flex flex-col items-center gap-1 border-b border-line py-3">
+            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#2563eb] text-xs font-bold text-white">{initials(SAMPLE.agent_name)}</span>
+            <strong className="text-sm">{SAMPLE.agent_name}</strong>
+          </div>
+          <div className="flex min-h-[180px] flex-col gap-1.5 bg-[#F4F4F6] px-3 py-4">
+            <div className="mb-1 text-center text-[10px] text-muted">Today {new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}</div>
+            {text.trim() ? (
+              <>
+                <div className="max-w-[85%] self-start rounded-2xl rounded-bl-sm bg-[#E9E9EB] px-3 py-2 text-[13px] leading-snug text-ink">{text}</div>
+                <span className="self-start pl-1 text-[10px] text-muted">Delivered</span>
+              </>
+            ) : <p className="mt-6 text-center text-[13px] text-muted">Start typing to preview the message…</p>}
+          </div>
+          <div className="border-t border-line bg-white px-3 py-2">
+            <div className="rounded-full bg-[#F4F4F6] px-3 py-1.5 text-xs text-muted">Text Message</div>
+          </div>
         </div>
       </div>
     );
   }
+
   const subject = fill(s.subject ?? "");
   const body = fill(s.template);
-  if ((s.layout ?? "plain") !== "branded") {
-    return (
-      <div className="w-full max-w-[280px] shrink-0 self-start rounded-xl border border-line bg-white p-4 text-[13px]">
-        <div className="mb-2 border-b border-line pb-2"><span className="text-xs text-muted">Subject: </span><strong>{subject || "(no subject yet)"}</strong></div>
-        <p className="whitespace-pre-line text-muted">{body || "Start typing to preview the message…"}</p>
-      </div>
-    );
-  }
+  const branded = (s.layout ?? "plain") === "branded";
   return (
-    <div className="w-full max-w-[280px] shrink-0 self-start overflow-hidden rounded-xl border border-line bg-white text-[13px]">
-      <div className="bg-[#14142B] px-4 py-3 text-white">
-        <div className="text-sm font-bold">{SAMPLE.site_name}</div>
-      </div>
-      <div className="p-4">
-        <div className="mb-1.5 text-[10px] font-bold uppercase tracking-wide text-[#2563eb]">Personal real estate guidance</div>
-        <div className="mb-2 font-semibold text-ink">{subject || "(no subject yet)"}</div>
-        <p className="whitespace-pre-line text-muted">{body || "Start typing to preview the message…"}</p>
-        <span className="mt-3 inline-block rounded-full bg-[#2563eb] px-4 py-1.5 text-xs font-semibold text-white">View your next step</span>
+    <div className="w-full max-w-[320px] shrink-0 self-start">
+      <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">Live preview</div>
+      <div className="overflow-hidden rounded-xl border border-line bg-white shadow-md">
+        <div className="flex gap-1.5 border-b border-line bg-[#F4F4F6] px-3 py-2">
+          <span className="h-2.5 w-2.5 rounded-full bg-[#D8D8DC]" /><span className="h-2.5 w-2.5 rounded-full bg-[#D8D8DC]" /><span className="h-2.5 w-2.5 rounded-full bg-[#D8D8DC]" />
+        </div>
+        {branded ? (
+          <div className="bg-[#14142B] px-5 py-4 text-white">
+            <div className="text-base font-bold">{SAMPLE.site_name}</div>
+            <div className="mt-0.5 text-[10px] uppercase tracking-wide text-white/60">{BROKERAGE}</div>
+          </div>
+        ) : null}
+        <div className="p-5 text-[13px]">
+          {branded ? <div className="mb-1.5 text-[10px] font-bold uppercase tracking-wide text-[#2563eb]">Personal real estate guidance</div>
+            : <div className="mb-2 border-b border-line pb-2 text-xs text-muted">Subject: <strong className="text-ink">{subject || "(no subject yet)"}</strong></div>}
+          {branded ? <div className="mb-3 text-lg font-bold leading-tight text-ink">{subject || "(no subject yet)"}</div> : null}
+          <p className="whitespace-pre-line leading-relaxed text-muted">{body || "Start typing to preview the message…"}</p>
+          {branded ? (
+            <>
+              <span className="mt-4 inline-block rounded-full bg-[#2563eb] px-5 py-2 text-xs font-semibold text-white">View your next step</span>
+              <div className="mt-5 border-t border-line pt-3 text-xs text-muted">
+                <strong className="text-ink">{SAMPLE.agent_name}, REALTOR®</strong><br />{BROKERAGE}
+              </div>
+            </>
+          ) : null}
+        </div>
+        {branded ? <div className="border-t border-line px-5 py-2.5 text-[10px] text-muted">You're receiving this message because you requested real estate information.</div> : null}
       </div>
     </div>
   );
@@ -105,7 +138,7 @@ export function SequenceEditor({ initial }: { initial: Seq | null }) {
         <span className={`h-2 w-2 shrink-0 rounded-full ${seq.is_active ? "bg-primary" : "bg-line"}`} />
         <div className="min-w-0 flex-1">
           <div className="truncate font-medium">{seq.name || "Untitled"}</div>
-          <div className="truncate text-xs text-muted">{seq.steps.length} step{seq.steps.length === 1 ? "" : "s"}{seq.form_key ? ` · auto-enrolls from "${seq.form_key}"` : " · added manually"}</div>
+          <div className="truncate text-xs text-muted">{seq.steps.length} step{seq.steps.length === 1 ? "" : "s"}{seq.form_key ? ` · auto-enrolls from “${seq.form_key}”` : " · added manually"}</div>
         </div>
       </button>
     ) : <button className="btn self-start border-dashed" onClick={() => setOpen(true)}>+ New flow</button>;
@@ -154,7 +187,7 @@ export function SequenceEditor({ initial }: { initial: Seq | null }) {
               <textarea className="textarea" rows={s.channel === "email" ? 5 : 2} value={s.template} onChange={(e) => setStep(i, { template: e.target.value })} />
               {s.channel === "sms" ? (
                 <span className={`text-xs ${s.template.length + 23 > 160 ? "font-medium text-amber-700" : "text-muted"}`}>
-                  {s.template.length + 23} characters incl. "Reply STOP to opt out." {s.template.length + 23 > 160 ? "— over one SMS segment (160), may send as 2 messages" : "(160 = 1 SMS segment)"}
+                  {s.template.length + 23} characters incl. “Reply STOP to opt out.” {s.template.length + 23 > 160 ? "— over one SMS segment (160), may send as 2 messages" : "(160 = 1 SMS segment)"}
                 </span>
               ) : null}
             </div>
@@ -171,5 +204,5 @@ export function SequenceEditor({ initial }: { initial: Seq | null }) {
     </div>
   );
 
-  return <Modal title={seq.id ? "Edit flow" : "New flow"} onClose={() => (initial ? setOpen(false) : (setSeq(BLANK), setOpen(false)))} wide>{form}</Modal>;
+  return <Modal title={seq.id ? "Edit flow" : "New flow"} onClose={() => (initial ? setOpen(false) : (setSeq(BLANK), setOpen(false)))} size="xl">{form}</Modal>;
 }
