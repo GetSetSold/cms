@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { LEAD_FLOW_CATEGORIES, type LeadFlowCategory } from "@/lib/types";
 import { Modal } from "@/components/admin/Modal";
 
-type Step = { delay_minutes: number; channel: "sms" | "email"; subject?: string; template: string };
+type Step = { delay_minutes: number; channel: "sms" | "email"; subject?: string; template: string; layout?: "plain" | "branded" };
 type Seq = { id?: string; name: string; description: string | null; category: LeadFlowCategory; trigger: string; form_key: string | null; is_active: boolean; steps: Step[] };
 
 const DELAYS = [
@@ -14,6 +14,62 @@ const DELAYS = [
 ] as const;
 
 const BLANK: Seq = { name: "", description: null, category: "general", trigger: "lead_created", form_key: null, is_active: false, steps: [] };
+
+// Only tokens that actually resolve today (process-follow-ups fills these from the lead record and
+// site settings) — no "property" or "booking link" yet, since nothing populates them until the
+// matching-listings step type exists.
+const FIELD_TOKENS = ["first_name", "last_name", "email", "phone", "service", "site_name", "property_address", "agent_name", "booking_link", "match_count"];
+// These four aren't populated by the automation yet — matching listings, a per-flow booking link and
+// an assigned agent name are follow-on work — but the token is safe to use now: it just renders blank
+// until then, and the flow's message won't need editing again once it is.
+const PENDING_TOKENS = new Set(["property_address", "agent_name", "booking_link", "match_count"]);
+
+const SAMPLE: Record<string, string> = {
+  first_name: "Maya", last_name: "Thompson", email: "maya@example.com", phone: "555-0100", service: "Rental",
+  site_name: "GetSetSold", property_address: "142 Elm Street", agent_name: "Rohit Sharma", booking_link: "getsetsold.ca/book/rohit", match_count: "6",
+};
+const fill = (tpl: string) => tpl.replace(/\{\{\s*(\w+)\s*\}\}/g, (_, k: string) => SAMPLE[k] ?? "");
+
+/** An SMS bubble or a branded-email card previewing exactly what the lead will see, using sample
+ *  values for the {{tokens}} — so a flow can be checked for tone and layout before it ever sends. */
+function StepPreview({ s }: { s: Step }) {
+  if (s.channel === "sms") {
+    const text = fill(s.template) + (s.template.trim() ? "\nReply STOP to opt out." : "");
+    return (
+      <div className="w-full max-w-[240px] shrink-0 self-start rounded-2xl bg-[#0B0B0F] p-3">
+        <div className="rounded-xl bg-white p-3">
+          <div className="mb-2 text-[10px] font-medium text-muted">Today · Preview</div>
+          {text.trim() ? (
+            <div className="rounded-2xl rounded-bl-sm bg-[#E9E9EB] px-3 py-2 text-[13px] leading-snug text-ink">{text}</div>
+          ) : <p className="text-[13px] text-muted">Start typing to preview the message…</p>}
+        </div>
+      </div>
+    );
+  }
+  const subject = fill(s.subject ?? "");
+  const body = fill(s.template);
+  if ((s.layout ?? "plain") !== "branded") {
+    return (
+      <div className="w-full max-w-[280px] shrink-0 self-start rounded-xl border border-line bg-white p-4 text-[13px]">
+        <div className="mb-2 border-b border-line pb-2"><span className="text-xs text-muted">Subject: </span><strong>{subject || "(no subject yet)"}</strong></div>
+        <p className="whitespace-pre-line text-muted">{body || "Start typing to preview the message…"}</p>
+      </div>
+    );
+  }
+  return (
+    <div className="w-full max-w-[280px] shrink-0 self-start overflow-hidden rounded-xl border border-line bg-white text-[13px]">
+      <div className="bg-[#14142B] px-4 py-3 text-white">
+        <div className="text-sm font-bold">{SAMPLE.site_name}</div>
+      </div>
+      <div className="p-4">
+        <div className="mb-1.5 text-[10px] font-bold uppercase tracking-wide text-[#2563eb]">Personal real estate guidance</div>
+        <div className="mb-2 font-semibold text-ink">{subject || "(no subject yet)"}</div>
+        <p className="whitespace-pre-line text-muted">{body || "Start typing to preview the message…"}</p>
+        <span className="mt-3 inline-block rounded-full bg-[#2563eb] px-4 py-1.5 text-xs font-semibold text-white">View your next step</span>
+      </div>
+    </div>
+  );
+}
 
 export function SequenceEditor({ initial }: { initial: Seq | null }) {
   const router = useRouter();
@@ -80,8 +136,30 @@ export function SequenceEditor({ initial }: { initial: Seq | null }) {
             <button className="ml-auto text-sm text-red-700" onClick={() => setSeq({ ...seq, steps: seq.steps.filter((_, j) => j !== i) })}>Remove step</button>
           </div>
           {s.channel === "email" ? <input className="input" placeholder="Subject" value={s.subject ?? ""} onChange={(e) => setStep(i, { subject: e.target.value })} /> : null}
-          <textarea className="textarea" rows={s.channel === "email" ? 5 : 2} value={s.template} onChange={(e) => setStep(i, { template: e.target.value })} />
-          {s.channel === "sms" ? <span className="text-xs text-muted">{s.template.length + 23} characters incl. “Reply STOP to opt out.” (160 = 1 SMS segment)</span> : null}
+          {s.channel === "email" ? (
+            <div className="flex gap-2 text-sm">
+              <label className="flex items-center gap-1.5"><input type="radio" name={`layout-${i}`} checked={(s.layout ?? "plain") === "plain"} onChange={() => setStep(i, { layout: "plain" })} /> Plain text</label>
+              <label className="flex items-center gap-1.5"><input type="radio" name={`layout-${i}`} checked={s.layout === "branded"} onChange={() => setStep(i, { layout: "branded" })} /> Branded (your logo, colors and a button)</label>
+            </div>
+          ) : null}
+          <div className="flex flex-wrap gap-1.5">
+            {FIELD_TOKENS.map((t) => (
+              <button key={t} type="button" title={PENDING_TOKENS.has(t) ? "Renders blank until matching/booking automation is built — safe to use now" : undefined}
+                className={`rounded-full border px-2 py-0.5 text-xs hover:bg-soft ${PENDING_TOKENS.has(t) ? "border-dashed border-line text-muted" : "border-line text-primary"}`}
+                onClick={() => setStep(i, { template: s.template + `{{${t}}}` })}>{t.replace(/_/g, " ")}</button>
+            ))}
+          </div>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+            <div className="flex flex-1 flex-col gap-2">
+              <textarea className="textarea" rows={s.channel === "email" ? 5 : 2} value={s.template} onChange={(e) => setStep(i, { template: e.target.value })} />
+              {s.channel === "sms" ? (
+                <span className={`text-xs ${s.template.length + 23 > 160 ? "font-medium text-amber-700" : "text-muted"}`}>
+                  {s.template.length + 23} characters incl. “Reply STOP to opt out.” {s.template.length + 23 > 160 ? "— over one SMS segment (160), may send as 2 messages" : "(160 = 1 SMS segment)"}
+                </span>
+              ) : null}
+            </div>
+            <StepPreview s={s} />
+          </div>
         </div>
       ))}
       <div className="flex flex-wrap gap-2">
