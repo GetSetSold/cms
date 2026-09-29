@@ -20,6 +20,7 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
       site_name: s.site_name, logo_svg_id: s.logo_svg_id, theme: s.theme, seo_defaults: s.seo_defaults,
       navigation: s.navigation.filter((n) => n.label && n.href), header_cta: s.header_cta, header: s.header, footer: s.footer,
       contact: s.contact, scripts: s.scripts, lead_settings: s.lead_settings, mobile_cta: s.mobile_cta, blog_cta: s.blog_cta, social_links: s.social_links, precon_cashback: s.precon_cashback,
+      email_provider: s.email_provider ?? "zeptomail", sms_provider: s.sms_provider ?? "vonage",
     }).eq("id", 1);
     setMsg(error ? error.message : "Saved");
   }
@@ -309,7 +310,21 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
           <input className="input" value={(s.lead_settings?.notify_emails ?? []).join(", ")}
             onChange={(e) => set("lead_settings", { ...s.lead_settings, notify_emails: e.target.value.split(",").map((x) => x.trim()).filter(Boolean) })} />
         </label>
-        <p className="text-xs text-muted">SMS and email provider keys (Twilio, Resend) are Supabase secrets — they are never stored here.</p>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className="label">Email provider
+            <select className="input" value={s.email_provider ?? "zeptomail"} onChange={(e) => set("email_provider", e.target.value as "zeptomail" | "resend")}>
+              <option value="zeptomail">ZeptoMail</option>
+              <option value="resend">Resend</option>
+            </select>
+          </label>
+          <label className="label">SMS provider
+            <select className="input" value={s.sms_provider ?? "vonage"} onChange={(e) => set("sms_provider", e.target.value as "vonage" | "twilio")}>
+              <option value="vonage">Vonage</option>
+              <option value="twilio">Twilio</option>
+            </select>
+          </label>
+        </div>
+        <p className="text-xs text-muted">Switching here takes effect on the next message sent — no redeploy needed. Each provider's own API key is a Supabase secret and is never stored here; make sure the secret for whichever provider you pick is set, or sending will fail.</p>
       </section>
 
       <section className="card flex flex-col gap-4">

@@ -1,6 +1,13 @@
 // Sends due follow-ups from follow_up_queue. Called every minute by pg_cron
 // and right after a lead is submitted. Auth: x-cron-secret header.
-import { admin, render, sendEmail, sendSms } from "../_shared/utils.ts";
+import { admin, brandedEmailHtml, render, sendEmail, sendSms } from "../_shared/utils.ts";
+
+// A short line under the site name in a branded email, based on the flow's lead-type category —
+// no extra setting to configure, and it matches the mockup's per-category framing.
+const EYEBROW: Record<string, string> = {
+  tenant: "Rental guidance", buyer_preowned: "Personal real estate guidance", buyer_precon: "Pre-construction opportunity",
+  seller: "Selling your home", landlord: "Landlord support", investor: "Investment opportunity", general: "",
+};
 
 const MAX_ATTEMPTS = 3;
 const STOP_STATUSES = ["qualified", "proposal", "won", "lost"];
@@ -25,9 +32,9 @@ Deno.serve(async (req) => {
   const { data: jobs } = await db.from("follow_up_queue")
     .update({ status: "processing", run_at: new Date().toISOString() })
     .in("id", due.map((d) => d.id)).eq("status", "pending")
-    .select("*, lead:leads(*), sequence:follow_up_sequences(steps, is_active)");
+    .select("*, lead:leads(*), sequence:follow_up_sequences(steps, is_active, category)");
 
-  const { data: settings } = await db.from("site_settings").select("site_name").single();
+  const { data: settings } = await db.from("site_settings").select("site_name, email_provider, sms_provider").single();
   const results: unknown[] = [];
 
   for (const job of jobs ?? []) {
@@ -50,9 +57,15 @@ Deno.serve(async (req) => {
       let sent;
       if (job.channel === "sms") {
         text += "\nReply STOP to opt out.";
-        sent = await sendSms(lead.phone, text);
+        sent = await sendSms(lead.phone, text, settings?.sms_provider ?? "vonage");
       } else {
-        sent = await sendEmail(lead.email, render(step.subject ?? "Thanks for reaching out", vars), text);
+        const subject = render(step.subject ?? "Thanks for reaching out", vars);
+        // "branded" wraps the same plain text in the design-system HTML layout; anything else
+        // (including older steps saved before this existed) sends as plain text, unchanged.
+        const html = step.layout === "branded"
+          ? brandedEmailHtml({ subject, text, siteName: settings?.site_name ?? "", eyebrow: EYEBROW[job.sequence?.category ?? "general"] })
+          : undefined;
+        sent = await sendEmail(lead.email, subject, text, html, settings?.email_provider ?? "zeptomail");
       }
       await db.from("follow_up_queue").update({ status: "sent", attempts: job.attempts + 1 }).eq("id", job.id);
       await db.from("lead_activities").insert({

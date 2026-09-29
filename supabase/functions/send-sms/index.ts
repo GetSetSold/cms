@@ -22,8 +22,10 @@ Deno.serve(async (req) => {
   if (lead.sms_opted_out) return json(req, { error: "This lead replied STOP" }, 422);
   if (!lead.sms_opt_in) return json(req, { error: "This lead did not consent to SMS" }, 422);
 
+  const { data: settings } = await db.from("site_settings").select("sms_provider").single();
+
   try {
-    const sent = await sendSms(lead.phone, text);
+    const sent = await sendSms(lead.phone, text, settings?.sms_provider ?? "vonage");
     await db.from("lead_activities").insert({ lead_id, type: "sms_out", body: text, created_by: user.id, meta: sent });
     await db.from("follow_up_queue").update({ status: "skipped" }).eq("lead_id", lead_id).eq("status", "pending");
     return json(req, { ok: true });

@@ -87,11 +87,12 @@ Deno.serve(async (req) => {
   if (matched.length) await db.from("lead_flow_enrollments").insert(matched.map((s) => ({ lead_id: lead.id, flow_id: s.id })));
 
   // Notify staff (best effort)
-  const { data: settings } = await db.from("site_settings").select("lead_settings").single();
+  const { data: settings } = await db.from("site_settings").select("lead_settings, email_provider").single();
   const notify: string[] = settings?.lead_settings?.notify_emails ?? [];
   if (notify.length) {
     sendEmail(notify, `New lead: ${name || email || phone}`,
-      `Form: ${lead.form_key}\nName: ${name || "-"}\nEmail: ${email ?? "-"}\nPhone: ${phone ?? "-"}\nPage: ${lead.source_path ?? "-"}\n\n${lead.message ?? ""}`)
+      `Form: ${lead.form_key}\nName: ${name || "-"}\nEmail: ${email ?? "-"}\nPhone: ${phone ?? "-"}\nPage: ${lead.source_path ?? "-"}\n\n${lead.message ?? ""}`,
+      undefined, settings?.email_provider ?? "zeptomail")
       .catch((e) => console.error("notify failed", e));
   }
 
