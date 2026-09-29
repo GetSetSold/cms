@@ -105,7 +105,7 @@ export function SequenceEditor({ initial }: { initial: Seq | null }) {
         <span className={`h-2 w-2 shrink-0 rounded-full ${seq.is_active ? "bg-primary" : "bg-line"}`} />
         <div className="min-w-0 flex-1">
           <div className="truncate font-medium">{seq.name || "Untitled"}</div>
-          <div className="truncate text-xs text-muted">{seq.steps.length} step{seq.steps.length === 1 ? "" : "s"}{seq.form_key ? ` · auto-enrolls from “${seq.form_key}”` : " · added manually"}</div>
+          <div className="truncate text-xs text-muted">{seq.steps.length} step{seq.steps.length === 1 ? "" : "s"}{seq.form_key ? ` · auto-enrolls from "${seq.form_key}"` : " · added manually"}</div>
         </div>
       </button>
     ) : <button className="btn self-start border-dashed" onClick={() => setOpen(true)}>+ New flow</button>;
@@ -154,7 +154,7 @@ export function SequenceEditor({ initial }: { initial: Seq | null }) {
               <textarea className="textarea" rows={s.channel === "email" ? 5 : 2} value={s.template} onChange={(e) => setStep(i, { template: e.target.value })} />
               {s.channel === "sms" ? (
                 <span className={`text-xs ${s.template.length + 23 > 160 ? "font-medium text-amber-700" : "text-muted"}`}>
-                  {s.template.length + 23} characters incl. “Reply STOP to opt out.” {s.template.length + 23 > 160 ? "— over one SMS segment (160), may send as 2 messages" : "(160 = 1 SMS segment)"}
+                  {s.template.length + 23} characters incl. "Reply STOP to opt out." {s.template.length + 23 > 160 ? "— over one SMS segment (160), may send as 2 messages" : "(160 = 1 SMS segment)"}
                 </span>
               ) : null}
             </div>
