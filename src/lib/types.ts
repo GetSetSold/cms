@@ -188,8 +188,14 @@ export type FormField = {
   repeat_from?: string;
   entry_label?: string; // title of each entry, e.g. "Working adult {n}"
   /** subform only, and only when the form is paginated: each entry gets its own step instead of
-   *  piling them all onto one long page. Only meaningful when this is the only field in its section. */
+   *  piling them all onto one long page. */
   paginate_entries?: boolean;
+  /** subform only, free-add mode (no repeat_from): bounds on how many entries someone can add,
+   *  each optionally tied to an earlier NUMBER question's answer instead of a fixed number. */
+  min_entries?: number;
+  max_entries?: number;
+  min_entries_from?: string;
+  max_entries_from?: string;
 };
 
 export type FormChoiceStyle = "simple" | "boxed";

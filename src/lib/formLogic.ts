@@ -88,6 +88,12 @@ export function pipe(label: string, values: Values, r: Resolved, extra: Record<s
 
 /** Effective min/max for a number question: its own fixed limits, tightened by the answer to its
  *  "no higher than…" source. The source's limit is ignored until it has a numeric answer. */
+function answerNumber(key: string | undefined, values: Values, r: Resolved): number | undefined {
+  if (!key) return undefined;
+  const n = Number(answerOf(key, values, r.keyToUid, r.visible));
+  return Number.isFinite(n) ? n : undefined;
+}
+
 export function limitsFor(f: FormField, values: Values, r: Resolved): { min?: number; max?: number } {
   let max = f.max_value;
   if (f.max_from) {
@@ -98,6 +104,16 @@ export function limitsFor(f: FormField, values: Values, r: Resolved): { min?: nu
 }
 
 /** For a repeatable group whose size follows an answer: how many entries to show (0 until answered). */
+/** Free-add mode bounds: the fixed min/max, tightened by whatever an earlier answer currently
+ *  allows. Each side is independent — a form can set just a minimum, just a maximum, or both. */
+export function entryBounds(f: FormField, values: Values, r: Resolved): { min?: number; max?: number } {
+  const fromMin = answerNumber(f.min_entries_from, values, r);
+  const fromMax = answerNumber(f.max_entries_from, values, r);
+  const min = [f.min_entries, fromMin].filter((n) => n !== undefined) as number[];
+  const max = [f.max_entries, fromMax].filter((n) => n !== undefined) as number[];
+  return { min: min.length ? Math.max(...min) : undefined, max: max.length ? Math.min(...max) : undefined };
+}
+
 export function repeatCount(f: FormField, values: Values, r: Resolved): number | undefined {
   if (!f.repeat_from) return undefined;
   const raw = answerOf(f.repeat_from, values, r.keyToUid, r.visible);
@@ -119,6 +135,8 @@ export function brokenRefs(f: FormField, earlierKeys: Set<string>): string[] {
   check(f.show_if?.field, "“Show only when”");
   check(f.max_from, "“No higher than”");
   check(f.repeat_from, "“Number of entries”");
+  check(f.min_entries_from, "“Minimum required”");
+  check(f.max_entries_from, "“Maximum allowed”");
   const tokens = (str: string | undefined, allowed: string[], what: string) => {
     for (const m of (str ?? "").matchAll(TOKEN_RE)) if (!allowed.includes(m[1]) && !earlierKeys.has(m[1])) out.push(`${what} uses {${m[1]}}, which isn't a question above this one.`);
   };
@@ -128,35 +146,33 @@ export function brokenRefs(f: FormField, earlierKeys: Set<string>): string[] {
 }
 
 export type Step =
-  | { kind: "section"; sectionIndex: number }
+  /** `only`: on a section that also holds a paginating subform, the OTHER questions get their own
+   *  step first (listed here so that step doesn't re-render the subform too); undefined elsewhere. */
+  | { kind: "section"; sectionIndex: number; only?: string[] }
   /** One entry of a subform whose size follows an answer AND is set to paginate — its own step,
    *  showing just that entry, so a count of 6 doesn't become one very long page. */
   | { kind: "entry"; sectionIndex: number; fieldKey: string; entryIndex: number; total: number };
 
-/** The field this section shows on its own, one-per-step, if it has exactly one field and that
- *  field is a subform with both an answer-driven count and pagination turned on. A section mixing
- *  the paginated group with other questions falls back to showing everything as one normal step —
- *  simpler to reason about than interleaving unrelated questions between entry steps. */
+/** The subform in this section (if any) that's set to paginate its entries. A section can freely
+ *  mix this with other questions — those just get a normal step of their own, ahead of the entries. */
 export function paginatedEntryField(sec: FormSection): FormField | null {
-  const f = sec.fields[0];
-  return sec.fields.length === 1 && f?.type === "subform" && f.repeat_from && f.paginate_entries ? f : null;
+  return sec.fields.find((f) => f.type === "subform" && f.repeat_from && f.paginate_entries) ?? null;
 }
 
-/** The step list for a form: normally one step per section-with-visible-content, except a section
- *  built for per-entry pagination becomes as many steps as it currently has entries (0 if the count
- *  isn't answered yet, so the whole section is skipped until it is — same as any other empty section). */
+/** The step list for a form: normally one step per section-with-visible-content. A section holding
+ *  a paginated subform contributes an extra step for its other questions (if it has any) plus one
+ *  step per current entry (0 if the count isn't answered yet, so it's skipped like any empty section). */
 export function buildSteps(sections: FormSection[], values: Values, r: Resolved): Step[] {
   const steps: Step[] = [];
   sections.forEach((sec, si) => {
-    const shown = sec.fields.some((f) => r.visible.has(uid(sec.id, f.key)));
-    if (!shown) return;
+    const visibleFields = sec.fields.filter((f) => r.visible.has(uid(sec.id, f.key)));
+    if (!visibleFields.length) return;
     const pf = paginatedEntryField(sec);
-    if (pf) {
-      const n = repeatCount(pf, values, r) ?? 0;
-      for (let i = 0; i < n; i++) steps.push({ kind: "entry", sectionIndex: si, fieldKey: pf.key, entryIndex: i, total: n });
-    } else {
-      steps.push({ kind: "section", sectionIndex: si });
-    }
+    if (!pf) { steps.push({ kind: "section", sectionIndex: si }); return; }
+    const others = visibleFields.filter((f) => f.key !== pf.key);
+    if (others.length) steps.push({ kind: "section", sectionIndex: si, only: others.map((f) => f.key) });
+    const n = repeatCount(pf, values, r) ?? 0;
+    for (let i = 0; i < n; i++) steps.push({ kind: "entry", sectionIndex: si, fieldKey: pf.key, entryIndex: i, total: n });
   });
   return steps;
 }

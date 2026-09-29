@@ -218,10 +218,16 @@ function FieldRow({ field, showSpan, duplicate, earlier, problems, formPaginate,
             <div className="flex flex-col gap-1.5">
               <span className="text-xs font-medium text-muted">Number of entries</span>
               <div className="flex flex-wrap items-center gap-2">
-                <select className="input h-9 w-72" aria-label="Number of entries" value={field.repeat_from !== undefined ? "answer" : "free"}
-                  onChange={(e) => set({ repeat_from: e.target.value === "answer" ? (numericEarlier[0]?.key ?? "") : undefined })}>
+                <select className="input h-9 w-72" aria-label="Number of entries" value={field.repeat_from !== undefined ? "answer" : (field.min_entries_from || field.max_entries_from) ? "bounded" : "free"}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    if (v === "answer") set({ repeat_from: numericEarlier[0]?.key ?? "", min_entries_from: undefined, max_entries_from: undefined, min_entries: undefined, max_entries: undefined });
+                    else if (v === "bounded") set({ repeat_from: undefined, max_entries_from: numericEarlier[0]?.key ?? "" });
+                    else set({ repeat_from: undefined, min_entries_from: undefined, max_entries_from: undefined, min_entries: undefined, max_entries: undefined });
+                  }}>
                   <option value="free">People add as many as they need</option>
-                  <option value="answer">Exactly as many as an earlier answer</option>
+                  <option value="bounded">People add some, limited by an earlier answer</option>
+                  <option value="answer">Exactly as many as an earlier answer (no add/remove)</option>
                 </select>
                 {field.repeat_from !== undefined ? (
                   <select className="input h-9 w-60" aria-label="Entries follow the answer to" value={field.repeat_from} onChange={(e) => set({ repeat_from: e.target.value })}>
@@ -231,6 +237,24 @@ function FieldRow({ field, showSpan, duplicate, earlier, problems, formPaginate,
                   </select>
                 ) : null}
               </div>
+              {field.repeat_from === undefined && (field.min_entries_from !== undefined || field.max_entries_from !== undefined || field.min_entries !== undefined || field.max_entries !== undefined) ? (
+                <div className="flex flex-wrap items-center gap-2">
+                  <label className="flex items-center gap-1.5 text-sm">Minimum required
+                    <select className="input h-9 w-52" aria-label="Minimum entries follow" value={field.min_entries_from ?? ""} onChange={(e) => set({ min_entries_from: e.target.value || undefined })}>
+                      <option value="">— fixed number —</option>
+                      {numericEarlier.map((q) => <option key={q.key} value={q.key}>{askName(q)}</option>)}
+                    </select>
+                  </label>
+                  {!field.min_entries_from ? <input className="input h-9 w-20" type="number" min={0} placeholder="e.g. 1" value={field.min_entries ?? ""} onChange={(e) => set({ min_entries: e.target.value ? Number(e.target.value) : undefined })} /> : null}
+                  <label className="flex items-center gap-1.5 text-sm">Maximum allowed
+                    <select className="input h-9 w-52" aria-label="Maximum entries follow" value={field.max_entries_from ?? ""} onChange={(e) => set({ max_entries_from: e.target.value || undefined })}>
+                      <option value="">— fixed number —</option>
+                      {numericEarlier.map((q) => <option key={q.key} value={q.key}>{askName(q)}</option>)}
+                    </select>
+                  </label>
+                  {!field.max_entries_from ? <input className="input h-9 w-20" type="number" min={1} placeholder="e.g. 6" value={field.max_entries ?? ""} onChange={(e) => set({ max_entries: e.target.value ? Number(e.target.value) : undefined })} /> : null}
+                </div>
+              ) : null}
               {field.repeat_from !== undefined ? (
                 <>
                   {!numericEarlier.length ? <span className="text-xs text-amber-700">Add a number question above this one first — it will say how many entries are needed.</span> : null}
@@ -286,6 +310,12 @@ function cleanLogic(sections: FormSection[]): FormSection[] {
     if (!o.max_from) delete o.max_from;
     if (o.repeat_from === "" || o.type !== "subform") delete o.repeat_from;
     if (!o.repeat_from || o.type !== "subform") delete o.paginate_entries;
+    // Bounded free-add settings only apply to a subform NOT using the exact-count mode.
+    if (o.type !== "subform" || o.repeat_from) { delete o.min_entries; delete o.max_entries; delete o.min_entries_from; delete o.max_entries_from; }
+    if (o.min_entries === undefined || Number.isNaN(o.min_entries)) delete o.min_entries;
+    if (o.max_entries === undefined || Number.isNaN(o.max_entries)) delete o.max_entries;
+    if (!o.min_entries_from) delete o.min_entries_from;
+    if (!o.max_entries_from) delete o.max_entries_from;
     if (!o.entry_label?.trim() || o.type !== "subform") delete o.entry_label;
     if (!NUMERIC_TYPES.includes(o.type)) { delete o.min_value; delete o.max_value; delete o.max_from; }
     if (o.min_value === undefined || Number.isNaN(o.min_value)) delete o.min_value;

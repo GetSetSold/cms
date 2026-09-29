@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import type { CmsForm, FormField, FormSection } from "@/lib/types";
-import { buildSteps, limitsFor, NUMERIC_TYPES, paginatedEntryField, pipe, repeatCount, resolve, uid, type Resolved, type Row, type Step, type Value, type Values } from "@/lib/formLogic";
+import { buildSteps, entryBounds, limitsFor, NUMERIC_TYPES, paginatedEntryField, pipe, repeatCount, resolve, uid, type Resolved, type Row, type Step, type Value, type Values } from "@/lib/formLogic";
 
 type Errors = Record<string, string>;
 type Limits = { min?: number; max?: number };
@@ -57,7 +57,10 @@ function sectionErrors(sec: FormSection, values: Values, r: Resolved): Errors {
       const count = repeatCount(f, values, r);
       if (count === 0) continue;
       const rows = rowsFor(values[id] as Row[] | undefined, count);
-      if (count === undefined && f.required && rows.length === 0) out[id] = "Please add at least one entry.";
+      if (count === undefined) {
+        const min = entryBounds(f, values, r).min ?? (f.required ? 1 : 0);
+        if (rows.length < min) out[id] = min === 1 ? "Please add at least 1 entry." : `Please add at least ${min} entries.`;
+      }
       rows.forEach((row, i) => (f.subfields ?? []).forEach((sf) => {
         const e = fieldError(sf, row[sf.key], { min: sf.min_value, max: sf.max_value });
         if (e) out[`${id}.${i}.${sf.key}`] = e;
@@ -178,7 +181,9 @@ function Subform({ field, id, rows, errors, count, values, resolved, boxed, only
 }) {
   const subfields = field.subfields ?? [];
   const fixed = count !== undefined; // the number of entries follows an earlier answer
-  const canAddMore = !fixed && onlyIndex === undefined && (!field.max || rows.length < field.max);
+  const bounds = fixed ? {} : entryBounds(field, values, resolved);
+  const canAddMore = !fixed && onlyIndex === undefined && (bounds.max === undefined || rows.length < bounds.max);
+  const canRemove = bounds.min === undefined || rows.length > bounds.min;
   const addRow = () => onChange([...rows, {}]);
   const removeRow = (i: number) => onChange(rows.filter((_, j) => j !== i));
   const setCell = (i: number, key: string, v: string) => onChange(rows.map((r, j) => (j === i ? { ...r, [key]: v } : r)));
@@ -203,7 +208,7 @@ function Subform({ field, id, rows, errors, count, values, resolved, boxed, only
                 );
               })}
             </div>
-            {!fixed ? <button type="button" onClick={() => removeRow(i)} className="self-start text-sm text-red-700">Remove</button> : null}
+            {!fixed && canRemove ? <button type="button" onClick={() => removeRow(i)} className="self-start text-sm text-red-700">Remove</button> : null}
           </div>
         );
         return onlyIndex === undefined && boxed
@@ -217,17 +222,23 @@ function Subform({ field, id, rows, errors, count, values, resolved, boxed, only
       {canAddMore ? (
         <button type="button" onClick={addRow} aria-invalid={errors[id] ? true : undefined} className="btn self-start border-dashed">+ {field.repeat_label || "Add another"}</button>
       ) : null}
+      {!fixed && bounds.max !== undefined && rows.length >= bounds.max ? <p className="text-xs text-muted">Maximum of {bounds.max} reached.</p> : null}
     </div>
   );
 }
 
-function SectionBlock({ section, active, values, errors, resolved, boxed, onlyEntry, onFieldChange, onNumberBlur }: {
+function SectionBlock({ section, active, values, errors, resolved, boxed, onlyEntry, only, onFieldChange, onNumberBlur }: {
   section: FormSection; active: boolean; values: Values; errors: Errors; resolved: Resolved; boxed?: boolean;
-  /** This section is showing as one step per subform entry — render just this entry's fields. */
+  /** This section is showing as one step per subform entry — render just this entry's fields (and
+   *  nothing from the rest of the section — those got their own step already, see `only` below). */
   onlyEntry?: { fieldKey: string; entryIndex: number };
+  /** This step is the "other questions" step of a section that also holds a paginated subform —
+   *  render only these keys, so the subform (which gets its own entry steps) isn't repeated here. */
+  only?: string[];
   onFieldChange: (id: string, v: Value) => void; onNumberBlur: (id: string, f: FormField, v: string, lim: Limits) => void;
 }) {
-  const shown = section.fields.filter((f) => resolved.visible.has(uid(section.id, f.key)));
+  const shown = section.fields.filter((f) =>
+    resolved.visible.has(uid(section.id, f.key)) && (onlyEntry ? f.key === onlyEntry.fieldKey : !only || only.includes(f.key)));
   if (!shown.length) return null; // nothing in this section applies yet — don't show a lone heading
   // `hidden` (not unmounting) keeps entered values intact when navigating back in a paginated form.
   // Validation is our own (see fieldError), so hidden steps can never block Next or Submit.
@@ -343,7 +354,16 @@ export function CmsFormRenderer({ form, pageId }: { form: CmsForm; pageId?: stri
   // one entry's cells (so Next on entry 1 of 4 can't be blocked by entry 3 not existing yet).
   function stepErrors(st: Step): Errors {
     const sec = sections[st.sectionIndex];
-    if (st.kind === "section") return sectionErrors(sec, values, resolved);
+    if (st.kind === "section") {
+      // A section split by a paginated subform: this step only covers the OTHER questions (the
+      // subform's own entries are validated on their own steps) — checking the whole section here
+      // would wrongly demand answers for entries the person hasn't reached yet.
+      const all = sectionErrors(sec, values, resolved);
+      if (!st.only) return all;
+      const out: Errors = {};
+      for (const [k, v] of Object.entries(all)) if (st.only.some((key) => k === uid(sec.id, key))) out[k] = v;
+      return out;
+    }
     const f = sec.fields.find((x) => x.key === st.fieldKey)!;
     const id = uid(sec.id, f.key);
     const row = (values[id] as Row[] | undefined)?.[st.entryIndex] ?? {};
@@ -497,6 +517,7 @@ export function CmsFormRenderer({ form, pageId }: { form: CmsForm; pageId?: stri
           return stepsForSection.map(({ st, si }) => (
             <SectionBlock key={st.kind === "entry" ? `${section.id}:${st.entryIndex}` : section.id} section={section} active={si === curStep} values={values} errors={errors} resolved={resolved} boxed={boxed}
               onlyEntry={st.kind === "entry" ? { fieldKey: st.fieldKey, entryIndex: st.entryIndex } : undefined}
+              only={st.kind === "section" ? st.only : undefined}
               onFieldChange={set} onNumberBlur={onNumberBlur} />
           ));
         })}
