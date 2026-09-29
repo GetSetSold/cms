@@ -458,6 +458,8 @@ export function FormEditor({ initial }: { initial: CmsForm }) {
       submit_label: form.submit_label, success_message: form.success_message,
       form_key: form.form_key || "form", is_active: form.is_active,
       paginate: mode === "fields" ? form.paginate : false,
+      choice_style: mode === "fields" ? (form.choice_style ?? null) : null,
+      theme: mode === "fields" ? (form.theme ?? null) : null,
     };
     const { error } = await createClient().from("forms").update(row).eq("id", form.id);
     setSaving(false);
