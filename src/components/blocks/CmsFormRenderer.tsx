@@ -216,6 +216,9 @@ function Subform({ field, id, rows, errors, count, values, resolved, boxed, only
             <div className={`grid gap-3 sm:grid-cols-2 ${boxed ? "gap-4" : ""}`}>
               {subfields.map((sf) => {
                 const cellId = `${id}.${i}.${sf.key}`;
+                if (sf.type === "heading") {
+                  return <h4 key={sf.key} className="col-span-full border-b border-[var(--fq-line)] pb-1.5 pt-0.5 text-base font-semibold text-[var(--fq-ink)] first:pt-0">{pipe(sf.label, values, resolved, { n: String(i + 1), count: String(rows.length) })}</h4>;
+                }
                 return (
                   <Question key={sf.key} field={sf} id={cellId} label={pipe(sf.label, values, resolved, { n: String(i + 1), count: String(rows.length) })} error={errors[cellId]} className={sf.span === 2 ? "sm:col-span-2" : ""} boxed={boxed}>
                     <BasicField field={sf} id={cellId} value={row[sf.key] ?? ""} onChange={(v) => setCell(i, sf.key, v)} onBlur={() => onNumberBlur(cellId, sf, row[sf.key] ?? "", { min: sf.min_value, max: sf.max_value })} error={errors[cellId]} limits={{ min: sf.min_value, max: sf.max_value }} boxed={boxed} />

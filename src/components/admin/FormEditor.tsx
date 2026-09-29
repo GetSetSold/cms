@@ -323,14 +323,25 @@ function FieldRow({ field, showSpan, duplicate, earlier, problems, formPaginate,
             <input className="input w-28" type="number" min={1} placeholder="Max entries" value={field.max ?? ""} onChange={(e) => set({ max: e.target.value ? Number(e.target.value) : undefined })} />
           </div>
           <div className="text-xs text-muted">Fields repeated for each entry (labels can use {"{n}"}, e.g. “Income for adult {"{n}"}”):</div>
-          {(field.subfields ?? []).map((sf, i) => (
-            <FieldRow key={i} field={sf} showSpan
-              onChange={(nf) => set({ subfields: (field.subfields ?? []).map((x, j) => (j === i ? nf : x)) })}
-              onRemove={() => set({ subfields: (field.subfields ?? []).filter((_, j) => j !== i) })} />
-          ))}
-          <button type="button" className="btn self-start border-dashed" onClick={() => set({ subfields: [...(field.subfields ?? []), newField(nextFieldKey((field.subfields ?? []).map((x) => x.key)))] })}>
-            + Add field to subform
-          </button>
+          {(field.subfields ?? []).map((sf, i) => {
+            const subfields = field.subfields ?? [];
+            const moveSubfield = (a: number, b: number) => { const arr = subfields.slice(); [arr[a], arr[b]] = [arr[b], arr[a]]; set({ subfields: arr }); };
+            return (
+              <FieldRow key={i} field={sf} showSpan
+                onMoveUp={i > 0 ? () => moveSubfield(i, i - 1) : undefined}
+                onMoveDown={i < subfields.length - 1 ? () => moveSubfield(i, i + 1) : undefined}
+                onChange={(nf) => set({ subfields: subfields.map((x, j) => (j === i ? nf : x)) })}
+                onRemove={() => set({ subfields: subfields.filter((_, j) => j !== i) })} />
+            );
+          })}
+          <div className="flex flex-wrap gap-2">
+            <button type="button" className="btn self-start border-dashed" onClick={() => set({ subfields: [...(field.subfields ?? []), newField(nextFieldKey((field.subfields ?? []).map((x) => x.key)))] })}>
+              + Add field to subform
+            </button>
+            <button type="button" className="btn self-start border-dashed" onClick={() => set({ subfields: [...(field.subfields ?? []), { key: nextFieldKey((field.subfields ?? []).map((x) => x.key)), label: "Section heading", type: "heading" as const }] })}>
+              + Add heading to subform
+            </button>
+          </div>
         </div>
       ) : null}
     </div>
