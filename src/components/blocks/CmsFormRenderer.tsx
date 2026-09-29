@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import type { CmsForm, FormField, FormSection } from "@/lib/types";
-import { buildSteps, entryBounds, limitsFor, NUMERIC_TYPES, paginatedEntryField, pipe, repeatCount, resolve, uid, type Resolved, type Row, type Step, type Value, type Values } from "@/lib/formLogic";
+import { buildSteps, entryBounds, isEmptyRow, limitsFor, NUMERIC_TYPES, paginatedEntryField, pipe, repeatCount, resolve, uid, type Resolved, type Row, type Step, type Value, type Values } from "@/lib/formLogic";
 
 type Errors = Record<string, string>;
 type Limits = { min?: number; max?: number };
@@ -21,6 +21,7 @@ function inputType(t: FormField["type"]) {
  *  those is empty, which is what made "Next" do nothing on multi-step forms. It also can't enforce a
  *  required checkbox group or repeatable group at all. */
 function fieldError(f: FormField, v: Value | undefined, lim: Limits = {}): string | null {
+  if (f.type === "heading") return null; // not a question — nothing to validate, ever
   const s = typeof v === "string" ? v.trim() : "";
   if (f.type === "checkbox") return f.required && v !== "yes" ? "Please tick this box to continue." : null;
   if (!s) {
@@ -56,7 +57,12 @@ function sectionErrors(sec: FormSection, values: Values, r: Resolved): Errors {
     if (f.type === "subform") {
       const count = repeatCount(f, values, r);
       if (count === 0) continue;
-      const rows = rowsFor(values[id] as Row[] | undefined, count);
+      // Free/bounded mode WITH per-entry pagination: an untouched trailing "add another?" slot is not
+      // a real entry yet, so it's excluded here — leaving it blank just means "no more". A plain
+      // "+ Add another" row (not paginated) was an explicit action and is always validated normally.
+      const rows = count !== undefined ? rowsFor(values[id] as Row[] | undefined, count)
+        : f.paginate_entries ? ((values[id] as Row[] | undefined) ?? []).filter((row) => !isEmptyRow(f, row))
+        : ((values[id] as Row[] | undefined) ?? []);
       if (count === undefined) {
         const min = entryBounds(f, values, r).min ?? (f.required ? 1 : 0);
         if (rows.length < min) out[id] = min === 1 ? "Please add at least 1 entry." : `Please add at least ${min} entries.`;
@@ -186,7 +192,14 @@ function Subform({ field, id, rows, errors, count, values, resolved, boxed, only
   const canRemove = bounds.min === undefined || rows.length > bounds.min;
   const addRow = () => onChange([...rows, {}]);
   const removeRow = (i: number) => onChange(rows.filter((_, j) => j !== i));
-  const setCell = (i: number, key: string, v: string) => onChange(rows.map((r, j) => (j === i ? { ...r, [key]: v } : r)));
+  // Extends the array if needed — typing into the trailing "add another?" slot (one past the last
+  // real entry) has to be able to create that entry, not silently do nothing.
+  const setCell = (i: number, key: string, v: string) => {
+    const next = rows.slice();
+    while (next.length <= i) next.push({});
+    next[i] = { ...next[i], [key]: v };
+    onChange(next);
+  };
   const title = (i: number) => pipe(field.entry_label || `${field.label} {n}`, values, resolved, { n: String(i + 1), count: String(rows.length) });
 
   const indices = onlyIndex === undefined ? rows.map((_, i) => i) : [onlyIndex];
@@ -195,9 +208,11 @@ function Subform({ field, id, rows, errors, count, values, resolved, boxed, only
       {onlyIndex === undefined ? <div id={`${id}-label`} className="text-sm font-medium text-[var(--fq-ink)]">{pipe(field.label, values, resolved)}{field.required && !fixed ? <span className="text-[var(--fq-accent)]"> *</span> : null}</div> : null}
       {indices.map((i) => {
         const row = rows[i] ?? {};
+        const isTrailingSlot = onlyIndex !== undefined && !fixed && i >= rows.length;
         const entry = (
           <div key={i} className={boxed ? "flex flex-col gap-4" : "flex flex-col gap-3 rounded-xl border border-[var(--fq-line)] p-4"}>
             {fixed && !boxed ? <div className="text-base font-semibold text-[var(--fq-ink)]">{title(i)}</div> : null}
+            {isTrailingSlot ? <p className="text-sm text-muted">Fill this in to add another — or leave it blank and continue.</p> : null}
             <div className={`grid gap-3 sm:grid-cols-2 ${boxed ? "gap-4" : ""}`}>
               {subfields.map((sf) => {
                 const cellId = `${id}.${i}.${sf.key}`;
@@ -208,7 +223,7 @@ function Subform({ field, id, rows, errors, count, values, resolved, boxed, only
                 );
               })}
             </div>
-            {!fixed && canRemove ? <button type="button" onClick={() => removeRow(i)} className="self-start text-sm text-red-700">Remove</button> : null}
+            {!fixed && canRemove && (onlyIndex === undefined || onlyIndex < rows.length) ? <button type="button" onClick={() => removeRow(i)} className="self-start text-sm text-red-700">Remove</button> : null}
           </div>
         );
         return onlyIndex === undefined && boxed
@@ -248,6 +263,11 @@ function SectionBlock({ section, active, values, errors, resolved, boxed, onlyEn
       <div className={`grid gap-4 ${section.columns === 2 && !onlyEntry ? "sm:grid-cols-2" : ""}`}>
         {shown.map((f) => {
           const id = uid(section.id, f.key);
+          if (f.type === "heading") {
+            // Not a question — a plain text header with an underline, breaking a long section into
+            // labeled parts. Always full width, regardless of the section's column count.
+            return <h3 key={id} className="col-span-full border-b border-[var(--fq-line)] pb-2 pt-1 text-lg font-semibold text-[var(--fq-ink)] first:pt-0">{pipe(f.label, values, resolved)}</h3>;
+          }
           if (f.type === "subform") {
             const count = repeatCount(f, values, resolved);
             if (count === 0) return null; // size follows an answer that isn't a positive number yet
@@ -367,6 +387,9 @@ export function CmsFormRenderer({ form, pageId }: { form: CmsForm; pageId?: stri
     const f = sec.fields.find((x) => x.key === st.fieldKey)!;
     const id = uid(sec.id, f.key);
     const row = (values[id] as Row[] | undefined)?.[st.entryIndex] ?? {};
+    // Free/bounded mode: leaving the trailing "add another?" entry untouched isn't an error — it
+    // just means they're done adding, exactly like never clicking "Add another" in the first place.
+    if (!f.repeat_from && isEmptyRow(f, row)) return {};
     const out: Errors = {};
     for (const sf of f.subfields ?? []) {
       const e = fieldError(sf, row[sf.key], { min: sf.min_value, max: sf.max_value });
@@ -418,7 +441,11 @@ export function CmsFormRenderer({ form, pageId }: { form: CmsForm; pageId?: stri
       if (f.type === "subform") {
         const count = repeatCount(f, values, resolved);
         if (count === 0) continue;
-        v = rowsFor(v as Row[] | undefined, count); // exactly the entries that were shown
+        // Fixed count: exactly the entries that were shown. Free/bounded with pagination: exclude the
+        // untouched trailing "add another?" slot. Plain free/bounded: every explicitly-added row.
+        v = count !== undefined ? rowsFor(v as Row[] | undefined, count)
+          : f.paginate_entries ? ((v as Row[] | undefined) ?? []).filter((row) => !isEmptyRow(f, row))
+          : ((v as Row[] | undefined) ?? []);
       }
       if (v === undefined) continue;
       let key = f.key;

@@ -83,7 +83,7 @@ const OPS: { value: FormConditionOp; label: string }[] = [
 ];
 const askName = (q: QuestionRef) => (q.label || q.key).slice(0, 70);
 
-function FieldRow({ field, showSpan, duplicate, earlier, problems, formPaginate, onRenameKey, onChange, onRemove }: {
+function FieldRow({ field, showSpan, duplicate, earlier, problems, formPaginate, onRenameKey, onMoveUp, onMoveDown, onChange, onRemove }: {
   field: FormField; showSpan: boolean; duplicate?: boolean;
   /** Questions above this one, for logic. Absent for fields inside a repeatable group (they only get fixed limits). */
   earlier?: QuestionRef[]; problems?: string[];
@@ -91,6 +91,8 @@ function FieldRow({ field, showSpan, duplicate, earlier, problems, formPaginate,
   formPaginate?: boolean;
   /** Rename this question's key and everything that points at it. */
   onRenameKey?: (to: string) => void;
+  /** Reorder this question within its section (undefined at the top/bottom — no button shown there). */
+  onMoveUp?: () => void; onMoveDown?: () => void;
   onChange: (f: FormField) => void; onRemove: () => void;
 }) {
   const [showSubBuilder, setShowSubBuilder] = useState(field.type === "subform");
@@ -127,6 +129,31 @@ function FieldRow({ field, showSpan, duplicate, earlier, problems, formPaginate,
 
   const summary = [field.show_if ? "conditional" : "", field.max_from ? "limit follows an answer" : "", field.repeat_from !== undefined ? "entries follow an answer" : ""].filter(Boolean).join(" · ");
 
+  // Headings aren't a question — no key, required flag, span, or logic to configure, just the text
+  // and where it sits in the list (move/remove already work the same as any other row).
+  if (field.type === "heading") {
+    return (
+      <div className="flex flex-col gap-2 rounded-lg border border-line bg-ground p-3">
+        <div className="grid grid-cols-2 gap-2">
+          <input className="input" placeholder="Heading text" value={field.label} onChange={(e) => set({ label: e.target.value })} />
+          <select className="input" value={field.type} onChange={(e) => set({ type: e.target.value as FormFieldType })}>
+            {FIELD_TYPES.map((t) => <option key={t} value={t}>{t === "heading" ? "— Heading / divider —" : t.replace("_", " ")}</option>)}
+          </select>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-muted">Shows as a text header with an underline, wherever it sits in the list below.</span>
+          {onMoveUp || onMoveDown ? (
+            <span className="ml-auto flex shrink-0 gap-1">
+              <button type="button" aria-label="Move up" disabled={!onMoveUp} onClick={onMoveUp} className="flex h-7 w-7 items-center justify-center rounded border border-line text-sm disabled:opacity-30">↑</button>
+              <button type="button" aria-label="Move down" disabled={!onMoveDown} onClick={onMoveDown} className="flex h-7 w-7 items-center justify-center rounded border border-line text-sm disabled:opacity-30">↓</button>
+            </span>
+          ) : null}
+          <button type="button" className={`shrink-0 text-sm text-red-700 ${onMoveUp || onMoveDown ? "" : "ml-auto"}`} onClick={onRemove}>Remove</button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-2 rounded-lg border border-line p-3">
       <div className="grid grid-cols-2 gap-2">
@@ -137,7 +164,7 @@ function FieldRow({ field, showSpan, duplicate, earlier, problems, formPaginate,
           set({ type: t, ...(t === "number" && field.whole === undefined ? { whole: true } : {}) });
           setShowSubBuilder(t === "subform");
         }}>
-          {FIELD_TYPES.map((t) => <option key={t} value={t}>{t.replace("_", " ")}</option>)}
+          {FIELD_TYPES.map((t) => <option key={t} value={t}>{t === "heading" ? "— Heading / divider —" : t.replace("_", " ")}</option>)}
         </select>
       </div>
       {canLogic && earlier!.length ? (
@@ -157,7 +184,13 @@ function FieldRow({ field, showSpan, duplicate, earlier, problems, formPaginate,
             {canLogic ? "Logic & limits" : "Limits"}{hasLogic ? " •" : ""} {logicOpen ? "▾" : "▸"}
           </button>
         ) : null}
-        <button type="button" className="ml-auto shrink-0 text-sm text-red-700" onClick={onRemove}>Remove</button>
+        {onMoveUp || onMoveDown ? (
+          <span className="ml-auto flex shrink-0 gap-1">
+            <button type="button" aria-label="Move up" disabled={!onMoveUp} onClick={onMoveUp} className="flex h-7 w-7 items-center justify-center rounded border border-line text-sm disabled:opacity-30">↑</button>
+            <button type="button" aria-label="Move down" disabled={!onMoveDown} onClick={onMoveDown} className="flex h-7 w-7 items-center justify-center rounded border border-line text-sm disabled:opacity-30">↓</button>
+          </span>
+        ) : null}
+        <button type="button" className={`shrink-0 text-sm text-red-700 ${onMoveUp || onMoveDown ? "" : "ml-auto"}`} onClick={onRemove}>Remove</button>
       </div>
       {summary && !logicOpen ? <p className="text-xs text-muted">{summary}</p> : null}
       {duplicate ? <p className="text-xs text-red-700">Another question uses the key “{field.key}”, so their answers would clash. It will be renamed automatically when you save — or change it here.</p> : null}
@@ -258,16 +291,20 @@ function FieldRow({ field, showSpan, duplicate, earlier, problems, formPaginate,
               {field.repeat_from !== undefined ? (
                 <>
                   {!numericEarlier.length ? <span className="text-xs text-amber-700">Add a number question above this one first — it will say how many entries are needed.</span> : null}
-                  <input className="input h-9" aria-label="Entry title" placeholder="Title of each entry, e.g. Working adult {n} of {count}" value={field.entry_label ?? ""} onChange={(e) => set({ entry_label: e.target.value || undefined })} />
-                  <span className="text-xs text-muted">Entries appear automatically (no add/remove buttons). Use {"{n}"} for the entry number and {"{count}"} for how many. At most {field.max || 12} entries are ever shown — change “Max entries” below.</span>
-                  {formPaginate ? (
-                    <label className="flex items-center gap-2 text-sm">One entry per step (like the rest of a paginated form)
-                      <input type="checkbox" checked={!!field.paginate_entries} onChange={(e) => set({ paginate_entries: e.target.checked || undefined })} />
-                    </label>
-                  ) : (
-                    <span className="text-xs text-amber-700">Turn on “Paginate” for the whole form (in Details) to also step through these entries one at a time.</span>
-                  )}
+                  <span className="text-xs text-muted">Entries appear automatically (no add/remove buttons). At most {field.max || 12} entries are ever shown — change “Max entries” below.</span>
                 </>
+              ) : null}
+              <input className="input h-9" aria-label="Entry title" placeholder="Title of each entry, e.g. Working adult {n} of {count}" value={field.entry_label ?? ""} onChange={(e) => set({ entry_label: e.target.value || undefined })} />
+              <span className="text-xs text-muted">Use {"{n}"} for the entry number and {"{count}"} for how many so far.</span>
+              {formPaginate ? (
+                <label className="flex items-center gap-2 text-sm">One entry per step (like the rest of a paginated form)
+                  <input type="checkbox" checked={!!field.paginate_entries} onChange={(e) => set({ paginate_entries: e.target.checked || undefined })} />
+                </label>
+              ) : (
+                <span className="text-xs text-amber-700">Turn on “Paginate” for the whole form (in Details) to also step through these entries one at a time.</span>
+              )}
+              {field.repeat_from === undefined && field.paginate_entries ? (
+                <span className="text-xs text-muted">With no fixed count, each step after the last one just asks "add another?" — leaving it blank ends the list.</span>
               ) : null}
             </div>
           ) : null}
@@ -309,7 +346,7 @@ function cleanLogic(sections: FormSection[]): FormSection[] {
     if (!o.show_if?.field) delete o.show_if;
     if (!o.max_from) delete o.max_from;
     if (o.repeat_from === "" || o.type !== "subform") delete o.repeat_from;
-    if (!o.repeat_from || o.type !== "subform") delete o.paginate_entries;
+    if (o.type !== "subform") delete o.paginate_entries;
     // Bounded free-add settings only apply to a subform NOT using the exact-count mode.
     if (o.type !== "subform" || o.repeat_from) { delete o.min_entries; delete o.max_entries; delete o.min_entries_from; delete o.max_entries_from; }
     if (o.min_entries === undefined || Number.isNaN(o.min_entries)) delete o.min_entries;
@@ -367,7 +404,16 @@ function SectionEditor({ section, label, open, onToggle, takenKeys, keyCounts, p
   const [contactNote, setContactNote] = useState("");
   const setField = (i: number, f: FormField) => onChange({ ...section, fields: section.fields.map((x, j) => (j === i ? f : x)) });
   const addField = () => onChange({ ...section, fields: [...section.fields, newField(nextFieldKey(takenKeys))] });
+  const addHeading = () => onChange({ ...section, fields: [...section.fields, { key: nextFieldKey(takenKeys), label: "Section heading", type: "heading" as const }] });
   const removeField = (i: number) => onChange({ ...section, fields: section.fields.filter((_, j) => j !== i) });
+  // Swaps two questions' positions. Order matters for logic (a question can only reference ones
+  // above it) — if this move orphans a reference, the existing broken-reference warning below
+  // already catches it, so nothing extra is needed here.
+  const moveField = (i: number, j: number) => {
+    const fields = section.fields.slice();
+    [fields[i], fields[j]] = [fields[j], fields[i]];
+    onChange({ ...section, fields });
+  };
   const addContactBlock = () => {
     // Skip any contact question the form already has — adding the block twice used to create
     // duplicate first_name / email / phone keys.
@@ -424,11 +470,14 @@ function SectionEditor({ section, label, open, onToggle, takenKeys, keyCounts, p
             <FieldRow key={i} field={f} showSpan={section.columns === 2} duplicate={(keyCounts.get(f.key) ?? 0) > 1}
               earlier={earlier} problems={brokenRefs(f, new Set(earlier.map((q) => q.key)))} formPaginate={formPaginate}
               onRenameKey={(to) => onRenameKey(i, to)}
+              onMoveUp={i > 0 ? () => moveField(i, i - 1) : undefined}
+              onMoveDown={i < section.fields.length - 1 ? () => moveField(i, i + 1) : undefined}
               onChange={(nf) => setField(i, nf)} onRemove={() => removeField(i)} />
           );
         })}
         <div className="flex flex-wrap items-center gap-2">
           <button type="button" className="btn border-dashed" onClick={addField}>+ Add field</button>
+          <button type="button" className="btn border-dashed" onClick={addHeading}>+ Add heading</button>
           <button type="button" className="btn border-dashed" onClick={addContactBlock}>+ Add contact block (Name, Email, Phone)</button>
           {contactNote ? <span className="text-xs text-muted">{contactNote}</span> : null}
         </div>

@@ -156,12 +156,21 @@ export type Step =
 /** The subform in this section (if any) that's set to paginate its entries. A section can freely
  *  mix this with other questions — those just get a normal step of their own, ahead of the entries. */
 export function paginatedEntryField(sec: FormSection): FormField | null {
-  return sec.fields.find((f) => f.type === "subform" && f.repeat_from && f.paginate_entries) ?? null;
+  return sec.fields.find((f) => f.type === "subform" && f.paginate_entries) ?? null;
+}
+
+/** A row counts as "started" once anything is typed into it. An untouched trailing slot (see below)
+ *  is never validated and never submitted — leaving it blank just means "I don't need another one",
+ *  the same way clicking away from an empty "Add another" entry should work. */
+export function isEmptyRow(f: FormField, row: Row): boolean {
+  return (f.subfields ?? []).every((sf) => !String(row[sf.key] ?? "").trim());
 }
 
 /** The step list for a form: normally one step per section-with-visible-content. A section holding
- *  a paginated subform contributes an extra step for its other questions (if it has any) plus one
- *  step per current entry (0 if the count isn't answered yet, so it's skipped like any empty section). */
+ *  a paginated subform contributes an extra step for its other questions (if it has any), then:
+ *   - exact-count mode (repeat_from): one step per entry the answer calls for.
+ *   - free/bounded mode: one step per entry ALREADY started, plus exactly one blank trailing step
+ *     when more can still be added — filling it in creates the next one, leaving it blank ends there. */
 export function buildSteps(sections: FormSection[], values: Values, r: Resolved): Step[] {
   const steps: Step[] = [];
   sections.forEach((sec, si) => {
@@ -171,8 +180,16 @@ export function buildSteps(sections: FormSection[], values: Values, r: Resolved)
     if (!pf) { steps.push({ kind: "section", sectionIndex: si }); return; }
     const others = visibleFields.filter((f) => f.key !== pf.key);
     if (others.length) steps.push({ kind: "section", sectionIndex: si, only: others.map((f) => f.key) });
-    const n = repeatCount(pf, values, r) ?? 0;
-    for (let i = 0; i < n; i++) steps.push({ kind: "entry", sectionIndex: si, fieldKey: pf.key, entryIndex: i, total: n });
+    if (pf.repeat_from) {
+      const n = repeatCount(pf, values, r) ?? 0;
+      for (let i = 0; i < n; i++) steps.push({ kind: "entry", sectionIndex: si, fieldKey: pf.key, entryIndex: i, total: n });
+    } else {
+      const rows = ((values[uid(sec.id, pf.key)] as Row[] | undefined) ?? []).filter((row) => !isEmptyRow(pf, row));
+      const bounds = entryBounds(pf, values, r);
+      const canAddMore = bounds.max === undefined || rows.length < bounds.max;
+      const n = rows.length + (canAddMore ? 1 : 0);
+      for (let i = 0; i < n; i++) steps.push({ kind: "entry", sectionIndex: si, fieldKey: pf.key, entryIndex: i, total: n });
+    }
   });
   return steps;
 }

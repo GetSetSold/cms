@@ -164,7 +164,10 @@ export interface BlogPost {
 
 export type FormFieldType =
   | "text" | "email" | "tel" | "url" | "textarea" | "number" | "decimal" | "currency" | "date"
-  | "dropdown" | "radio" | "checkbox" | "multiple_choice" | "address" | "subform";
+  | "dropdown" | "radio" | "checkbox" | "multiple_choice" | "address" | "subform"
+  /** Not a question — a text header (with an underline) you can drop in before any question to
+   *  break a long section into labeled parts. Uses `label` as its heading text; nothing else applies. */
+  | "heading";
 
 export type FormField = {
   key: string; label: string; type: FormFieldType;
