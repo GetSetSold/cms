@@ -102,6 +102,17 @@ export interface SvgAsset {
   tags: string[];
 }
 
+export type LeadFlowCategory = "tenant" | "buyer_preowned" | "buyer_precon" | "seller" | "landlord" | "investor" | "general";
+export const LEAD_FLOW_CATEGORIES: { value: LeadFlowCategory; label: string }[] = [
+  { value: "tenant", label: "Tenant" },
+  { value: "buyer_preowned", label: "Buyer — Pre-owned" },
+  { value: "buyer_precon", label: "Buyer — Pre-construction" },
+  { value: "seller", label: "Seller" },
+  { value: "landlord", label: "Landlord" },
+  { value: "investor", label: "Investor" },
+  { value: "general", label: "General" },
+];
+
 export interface Lead {
   id: string;
   first_name: string | null;
@@ -114,10 +125,32 @@ export interface Lead {
   form_key: string | null;
   source_path: string | null;
   utm: Json;
+  custom_fields: Record<string, unknown>;
   status: LeadStatus;
   sms_opt_in: boolean;
   sms_opted_out: boolean;
   created_at: string;
+}
+
+export interface LeadFlow {
+  id: string;
+  name: string;
+  description: string | null;
+  category: LeadFlowCategory;
+  trigger: string;
+  form_key: string | null;
+  is_active: boolean;
+  steps: { delay_minutes: number; channel: "sms" | "email"; subject?: string; template: string }[];
+}
+
+export interface LeadFlowEnrollment {
+  id: string;
+  lead_id: string;
+  flow_id: string;
+  status: "active" | "completed" | "stopped";
+  enrolled_by: string | null;
+  created_at: string;
+  flow?: LeadFlow; // present when joined via select("*, flow:follow_up_sequences(*)")
 }
 
 export const LEAD_STATUSES: LeadStatus[] = ["new", "contacted", "qualified", "proposal", "won", "lost"];

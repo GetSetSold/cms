@@ -72,17 +72,19 @@ Deno.serve(async (req) => {
     meta: { path: lead.source_path, utm: lead.utm, sms_opt_in: lead.sms_opt_in },
   });
 
-  // Queue every step of the matching active sequences
+  // Queue every step of the matching active sequences, and record an explicit enrollment for each
+  // (so a lead's flow memberships are visible and manageable in the admin UI, not just implied by
+  // rows sitting in the queue).
   const { data: sequences } = await db.from("follow_up_sequences").select("*")
     .eq("is_active", true).eq("trigger", "lead_created");
+  const matched = (sequences ?? []).filter((s) => !s.form_key || s.form_key === lead.form_key);
   const now = Date.now();
-  const queue = (sequences ?? [])
-    .filter((s) => !s.form_key || s.form_key === lead.form_key)
-    .flatMap((s) => (s.steps as any[]).map((step, i) => ({
-      lead_id: lead.id, sequence_id: s.id, step_index: i, channel: step.channel,
-      run_at: new Date(now + (Number(step.delay_minutes) || 0) * 60_000).toISOString(),
-    })));
+  const queue = matched.flatMap((s) => (s.steps as any[]).map((step, i) => ({
+    lead_id: lead.id, sequence_id: s.id, step_index: i, channel: step.channel,
+    run_at: new Date(now + (Number(step.delay_minutes) || 0) * 60_000).toISOString(),
+  })));
   if (queue.length) await db.from("follow_up_queue").insert(queue);
+  if (matched.length) await db.from("lead_flow_enrollments").insert(matched.map((s) => ({ lead_id: lead.id, flow_id: s.id })));
 
   // Notify staff (best effort)
   const { data: settings } = await db.from("site_settings").select("lead_settings").single();
