@@ -620,14 +620,14 @@ export function CmsFormRenderer({ form, pageId }: { form: CmsForm; pageId?: stri
 
       {paginated ? (
         <div className="flex flex-wrap justify-center gap-3">
-          {curStep > 0 ? <button type="button" onClick={() => setStep(curStep - 1)} className="btn h-13 w-full sm:w-48">Back</button> : null}
-          <button type="submit" disabled={state === "sending"} className="h-13 w-full rounded-full py-3.5 text-base font-medium text-white disabled:opacity-60 sm:w-48" style={{ background: "#0066cc" }}>
+          {curStep > 0 ? <button type="button" onClick={() => setStep(curStep - 1)} className="h-13 w-full rounded-full py-3.5 text-base font-medium text-white disabled:opacity-60 sm:w-48" style={{ background: "#0066cc" }}>Back</button> : null}
+          <button type="submit" disabled={state === "sending"} className="h-13 w-full rounded-full py-3.5 text-base font-medium text-white disabled:opacity-60 sm:w-48" style={{ background: "#333333" }}>
             {lastStep ? (state === "sending" ? "Sending…" : form.submit_label) : "Next"}
           </button>
         </div>
       ) : (
         <div className="flex justify-center">
-          <button type="submit" disabled={state === "sending"} className="h-13 w-full rounded-full py-3.5 text-base font-medium text-white disabled:opacity-60 sm:w-48" style={{ background: "#0066cc" }}>
+          <button type="submit" disabled={state === "sending"} className="h-13 w-full rounded-full py-3.5 text-base font-medium text-white disabled:opacity-60 sm:w-48" style={{ background: "#333333" }}>
             {state === "sending" ? "Sending…" : form.submit_label}
           </button>
         </div>
