@@ -324,11 +324,15 @@ function SectionBlock({ section, active, values, errors, resolved, boxed, pills,
   );
 }
 
-export function CmsFormRenderer({ form, pageId, extraFields }: { form: CmsForm; pageId?: string;
+export function CmsFormRenderer({ form, pageId, extraFields, secondaryAction }: { form: CmsForm; pageId?: string;
   /** Fixed context to attach to the submission without asking the person a question for it — e.g.
    *  which listing an inquiry form was opened from. Merged into custom_fields, added after the
    *  form's own answers so a real question with the same key always wins. */
   extraFields?: Record<string, unknown>;
+  /** An extra action shown beside Submit on a non-paginated form's single button row (e.g. "Call
+   *  now" next to a listing inquiry's "Request info") — not shown on a paginated form's steps,
+   *  where the row already has Back/Next. */
+  secondaryAction?: { label: string; href: string };
 }) {
   const [values, setValues] = useState<Values>({});
   const [errors, setErrors] = useState<Errors>({});
@@ -637,7 +641,12 @@ export function CmsFormRenderer({ form, pageId, extraFields }: { form: CmsForm; 
           </button>
         </div>
       ) : (
-        <div className="flex justify-center">
+        <div className="flex flex-wrap justify-center gap-3">
+          {secondaryAction ? (
+            <a href={secondaryAction.href} className="flex h-13 w-full items-center justify-center rounded-full py-3.5 text-base font-medium text-white sm:w-48" style={{ background: "#0066cc" }}>
+              {secondaryAction.label}
+            </a>
+          ) : null}
           <button type="submit" disabled={state === "sending"} className="h-13 w-full rounded-full py-3.5 text-base font-medium text-white disabled:opacity-60 sm:w-48" style={{ background: "#333333" }}>
             {state === "sending" ? "Sending…" : form.submit_label}
           </button>

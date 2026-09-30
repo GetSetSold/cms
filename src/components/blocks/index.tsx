@@ -434,14 +434,21 @@ function Cta({ data, ctx }: BlockProps) {
   );
 }
 
-function LeadFormBlock({ data, ctx }: BlockProps) {
+// The "Lead Form" block now always renders the real, editable "General Contact" form (Admin →
+// Forms) instead of its own hardcoded fields — wherever this block is already placed, it
+// automatically picks up whatever that form currently looks like, no page content to update.
+// Per-block heading/text still work as the surrounding copy; the form's own submit label,
+// success message and fields now come from the form record, not this block's old config fields.
+async function LeadFormBlock({ data, ctx }: BlockProps) {
+  const supabase = await createClient();
+  const { data: form } = await supabase.from("forms").select("*").eq("slug", "general-contact").eq("is_active", true).maybeSingle();
   return (
     <div className={`${wrap} grid gap-8 py-16 md:grid-cols-2 md:gap-12 md:py-20`}>
       <div className="flex flex-col gap-4">
         <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2>
         {data.text ? <p className={`text-lg ${muted(ctx)}`}>{data.text}</p> : null}
       </div>
-      <LeadForm data={data} pageId={ctx.page?.id} siteName={ctx.settings.site_name} />
+      {form ? <CmsFormRenderer form={form as CmsForm} pageId={ctx.page?.id} /> : <LeadForm data={data} pageId={ctx.page?.id} siteName={ctx.settings.site_name} />}
     </div>
   );
 }

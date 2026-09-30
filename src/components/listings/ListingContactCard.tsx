@@ -11,11 +11,14 @@ export function ListingContactCard({ listing, form }: { listing: PropertyListing
       <div className="text-2xl font-semibold">{priceDisplay(listing)}</div>
       {listing.OfficeName ? <div className="text-sm text-muted">{listing.OfficeName}</div> : null}
       {form ? (
-        <CmsFormRenderer form={form} extraFields={{ listing_key: listing.ListingKey, address: listing.UnparsedAddress }} />
+        <CmsFormRenderer form={form} extraFields={{ listing_key: listing.ListingKey, address: listing.UnparsedAddress }}
+          secondaryAction={{ label: "Call now", href: "tel:+14166057488" }} />
       ) : (
-        <p className="text-sm text-muted">Contact us directly to ask about this listing.</p>
+        <>
+          <p className="text-sm text-muted">Contact us directly to ask about this listing.</p>
+          <a href="tel:+14166057488" className="btn h-11 justify-center">Call now</a>
+        </>
       )}
-      <a href="tel:+14166057488" className="btn h-11 justify-center">Call now</a>
     </div>
   );
 }
