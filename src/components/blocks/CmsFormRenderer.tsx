@@ -327,6 +327,7 @@ export function CmsFormRenderer({ form, pageId }: { form: CmsForm; pageId?: stri
   const [state, setState] = useState<"idle" | "sending" | "done" | "error">("idle");
   const [error, setError] = useState("");
   const [step, setStep] = useState(0);
+  const [navOpen, setNavOpen] = useState(false); // mobile-only: the sidebar nav list starts collapsed there
   const [focusTick, setFocusTick] = useState(0);
   const started = useRef(Date.now());
   const formRef = useRef<HTMLFormElement>(null);
@@ -547,7 +548,21 @@ export function CmsFormRenderer({ form, pageId }: { form: CmsForm; pageId?: stri
   }
 
   // Errors on the questions currently on screen (for the summary line).
-  const shownErrors = paginated ? Object.keys(stepErrors(activeStep)).length : Object.keys(errors).length;
+  // Which of the STATE errors (only ever set after a failed Next/Submit — see goNext/onSubmit) belong
+  // to the step currently on screen. This must read the state, not re-run validation live — doing the
+  // latter was the bug: an empty required field would show "please complete" on first paint, before
+  // the person had done anything at all.
+  function stepErrorKeys(st: Step): number {
+    const sec = sections[st.sectionIndex];
+    if (st.kind === "section") {
+      const prefix = `${sec.id}__`;
+      const allowed = st.only ? new Set(st.only.map((k) => uid(sec.id, k))) : null;
+      return Object.keys(errors).filter((k) => k.startsWith(prefix) && (!allowed || allowed.has(k.split(".")[0]))).length;
+    }
+    const entryPrefix = `${uid(sec.id, st.fieldKey)}.${st.entryIndex}.`;
+    return Object.keys(errors).filter((k) => k.startsWith(entryPrefix)).length;
+  }
+  const shownErrors = paginated ? stepErrorKeys(activeStep) : Object.keys(errors).length;
   const sidebar = form.layout === "sidebar";
   const stepLabel = activeStep?.kind === "entry"
     ? pipe(sections[activeStep.sectionIndex].fields.find((f) => f.key === activeStep.fieldKey)?.entry_label || "Entry {n} of {count}", values, resolved, { n: String(activeStep.entryIndex + 1), count: String(activeStep.total) })
@@ -622,31 +637,41 @@ export function CmsFormRenderer({ form, pageId }: { form: CmsForm; pageId?: stri
 
   return (
     <div className="flex flex-col overflow-hidden rounded-2xl border border-[var(--fq-line,var(--color-line))] sm:flex-row" style={themeVars}>
-      <aside className="flex shrink-0 flex-col gap-6 p-6 sm:w-64 sm:p-7" style={{ background: dark ? "#0E1015" : "var(--fq-ink)", color: dark ? "#F6F7FA" : "#fff" }}>
-        <div className="flex flex-col gap-3">
-          {form.name ? <h2 className="text-3xl font-bold leading-tight">{form.name}</h2> : null}
-          <span className="h-[3px] w-9 rounded-full" style={{ background: "var(--fq-accent)" }} />
-          {form.description ? <p className="text-sm text-white/70">{form.description}</p> : null}
-        </div>
+      <aside className="flex shrink-0 flex-col gap-6 p-6 sm:w-[30%] sm:p-7" style={{ background: dark ? "#0E1015" : "var(--fq-ink)", color: dark ? "#F6F7FA" : "#fff" }}>
+        {!form.hide_header ? (
+          <div className="flex flex-col gap-3">
+            {form.name ? <h2 className="text-3xl font-bold leading-tight">{form.name}</h2> : null}
+            <span className="h-[3px] w-9 rounded-full" style={{ background: "var(--fq-accent)" }} />
+            {form.description ? <p className="text-sm text-white/70">{form.description}</p> : null}
+          </div>
+        ) : null}
         {navItems.length > 1 ? (
-          <nav aria-label="Form sections" className="flex flex-col">
-            {navItems.map((n, idx) => {
-              const range = paginated ? stepRangeFor(n.i) : null;
-              // A single-page form has no "current step" to point at — the nav is a plain table of
-              // contents there, fully visible, rather than dimmed as if every section were still ahead.
-              const state2: "done" | "current" | "upcoming" = !paginated ? "done" : !range ? "upcoming" : curStep > range.last ? "done" : curStep >= range.first ? "current" : "upcoming";
-              return (
-                <div key={n.i} className={`flex items-center gap-3 border-t border-l-2 border-white/10 py-3 pl-3 first:border-t-0 ${state2 === "upcoming" ? "opacity-50" : ""}`}
-                  style={state2 === "current" ? { borderLeftColor: "var(--fq-accent)" } : { borderLeftColor: "transparent" }}>
-                  <span className="text-xs font-semibold" style={state2 === "current" ? { color: "var(--fq-accent)" } : { color: "rgba(255,255,255,.5)" }}>{String(idx + 1).padStart(2, "0")}</span>
-                  <span className="text-sm" style={state2 === "current" ? { color: "var(--fq-accent)", fontWeight: 600 } : { color: "rgba(255,255,255,.8)" }}>{n.label}</span>
-                </div>
-              );
-            })}
-          </nav>
+          <>
+            {/* Mobile only: the nav list can be long relative to a phone screen, so it's collapsed by
+               default there and expands on request — desktop always shows it, no toggle needed. */}
+            <button type="button" onClick={() => setNavOpen((o) => !o)} aria-expanded={navOpen}
+              className="flex items-center justify-between text-sm font-medium text-white sm:hidden">
+              Sections <span aria-hidden className={`transition-transform ${navOpen ? "rotate-180" : ""}`}>▾</span>
+            </button>
+            <nav aria-label="Form sections" className={`flex-col ${navOpen ? "flex" : "hidden"} sm:flex`}>
+              {navItems.map((n, idx) => {
+                const range = paginated ? stepRangeFor(n.i) : null;
+                // A single-page form has no "current step" to point at — the nav is a plain table of
+                // contents there, fully visible, rather than dimmed as if every section were still ahead.
+                const state2: "done" | "current" | "upcoming" = !paginated ? "done" : !range ? "upcoming" : curStep > range.last ? "done" : curStep >= range.first ? "current" : "upcoming";
+                return (
+                  <div key={n.i} className={`flex items-center gap-3 border-t border-l-2 border-white/10 py-3 pl-3 first:border-t-0 ${state2 === "upcoming" ? "opacity-50" : ""}`}
+                    style={state2 === "current" ? { borderLeftColor: "var(--fq-accent)" } : { borderLeftColor: "transparent" }}>
+                    <span className="text-xs font-semibold" style={state2 === "current" ? { color: "var(--fq-accent)" } : { color: "rgba(255,255,255,.5)" }}>{String(idx + 1).padStart(2, "0")}</span>
+                    <span className="text-sm" style={state2 === "current" ? { color: "var(--fq-accent)", fontWeight: 600 } : { color: "rgba(255,255,255,.8)" }}>{n.label}</span>
+                  </div>
+                );
+              })}
+            </nav>
+          </>
         ) : null}
       </aside>
-      <div className="flex-1 bg-[var(--fq-surface,white)] p-6 sm:p-8">{formBody}</div>
+      <div className="bg-[var(--fq-surface,white)] p-6 sm:w-[70%] sm:p-8">{formBody}</div>
     </div>
   );
 }

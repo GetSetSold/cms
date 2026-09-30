@@ -273,6 +273,7 @@ export interface CmsForm {
   choice_style?: FormChoiceStyle; // "boxed": bigger radio/checkbox buttons, every question in a bordered card
   theme?: FormTheme; // defaults to "light"
   layout?: "standard" | "sidebar"; // "sidebar": a persistent left panel (title + section nav), works whether the form paginates or not
+  hide_header?: boolean; // hide the form's own name/description — wherever it's used (standalone page, sidebar panel, or as a block)
 }
 
 /** A one-click starting block for every new form: First name, Last name, Email, Phone —

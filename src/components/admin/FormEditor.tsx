@@ -551,6 +551,7 @@ export function FormEditor({ initial }: { initial: CmsForm }) {
       choice_style: mode === "fields" ? (form.choice_style ?? null) : null,
       theme: mode === "fields" ? (form.theme ?? null) : null,
       layout: mode === "fields" ? (form.layout ?? null) : null,
+      hide_header: mode === "fields" ? (form.hide_header ?? null) : null,
     };
     const { error } = await createClient().from("forms").update(row).eq("id", form.id);
     setSaving(false);
@@ -617,6 +618,9 @@ export function FormEditor({ initial }: { initial: CmsForm }) {
                   <option value="standard">Standard (one column)</option>
                   <option value="sidebar">Side panel (title + section list on the left, questions on the right)</option>
                 </select>
+              </label>
+              <label className="flex items-center gap-2 text-sm">Hide this form's name/description (standalone page and side panel — a heading you add elsewhere, e.g. in the Page Builder, still shows)
+                <input type="checkbox" checked={!!form.hide_header} onChange={(e) => set("hide_header", e.target.checked || undefined)} />
               </label>
             </>
           ) : null}

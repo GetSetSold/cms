@@ -36,11 +36,13 @@ export default async function FormPage({ params }: { params: Promise<{ slug: str
       <link rel="stylesheet" href={themeFontHref(settings)} />
       {themeIconOverrideCSS(settings) ? <style dangerouslySetInnerHTML={{ __html: themeIconOverrideCSS(settings) }} /> : null}
       <SiteHeader settings={settings} logo={logo} />
-      <main className="mx-auto w-full max-w-2xl px-5 py-14 md:py-20">
-        <div className="mb-8 flex flex-col gap-2">
-          <h1 className="font-display text-4xl font-extrabold">{form.name}</h1>
-          {form.description ? <p className="text-muted">{form.description}</p> : null}
-        </div>
+      <main className={`mx-auto w-full px-5 py-14 md:py-20 ${form.layout === "sidebar" ? "max-w-6xl" : "max-w-2xl"}`}>
+        {!form.hide_header && form.layout !== "sidebar" ? (
+          <div className="mb-8 flex flex-col gap-2">
+            <h1 className="font-display text-4xl font-extrabold">{form.name}</h1>
+            {form.description ? <p className="text-muted">{form.description}</p> : null}
+          </div>
+        ) : null}
         <CmsFormRenderer form={form} />
       </main>
       <SiteFooter settings={settings} />

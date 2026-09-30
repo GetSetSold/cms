@@ -609,7 +609,7 @@ async function CustomForm({ data, ctx }: BlockProps) {
     <div className={`${wrap} flex flex-col gap-6 py-7 md:py-20`}>
       {data.heading ? <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2> : null}
       {data.text ? <p className={`max-w-xl text-lg ${muted(ctx)}`}>{data.text}</p> : null}
-      <div className="max-w-2xl">
+      <div className={form.layout === "sidebar" ? "w-full" : "max-w-2xl"}>
         <CmsFormRenderer form={form as CmsForm} pageId={ctx.page?.id} />
       </div>
     </div>
