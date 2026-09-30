@@ -610,6 +610,12 @@ export function FormEditor({ initial }: { initial: CmsForm }) {
                   <option value="dark">Dark</option>
                 </select>
               </label>
+              <label className="label">Layout
+                <select className="input" value={form.layout ?? "standard"} onChange={(e) => set("layout", e.target.value === "sidebar" ? "sidebar" : undefined)}>
+                  <option value="standard">Standard (one column)</option>
+                  <option value="sidebar">Side panel (title + section list on the left, questions on the right)</option>
+                </select>
+              </label>
             </>
           ) : null}
           {form.paginate && form.sections.length <= 1 ? (

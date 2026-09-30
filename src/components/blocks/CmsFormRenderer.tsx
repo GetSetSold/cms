@@ -245,8 +245,11 @@ function Subform({ field, id, rows, errors, count, values, resolved, boxed, only
   );
 }
 
-function SectionBlock({ section, active, values, errors, resolved, boxed, onlyEntry, only, onFieldChange, onNumberBlur }: {
+function SectionBlock({ section, active, values, errors, resolved, boxed, onlyEntry, only, hideHeading, onFieldChange, onNumberBlur }: {
   section: FormSection; active: boolean; values: Values; errors: Errors; resolved: Resolved; boxed?: boolean;
+  /** The sidebar layout already shows every section's heading in its nav — repeating it here too
+   *  (right above the same questions) is just clutter, so it's left out in that case only. */
+  hideHeading?: boolean;
   /** This section is showing as one step per subform entry — render just this entry's fields (and
    *  nothing from the rest of the section — those got their own step already, see `only` below). */
   onlyEntry?: { fieldKey: string; entryIndex: number };
@@ -262,7 +265,7 @@ function SectionBlock({ section, active, values, errors, resolved, boxed, onlyEn
   // Validation is our own (see fieldError), so hidden steps can never block Next or Submit.
   return (
     <div hidden={!active} role="group" aria-label={section.heading} className={`flex flex-col gap-4 ${section.background && !boxed ? "rounded-2xl p-6" : ""}`} style={section.background && !boxed ? { background: section.background } : undefined}>
-      {section.heading && !onlyEntry ? <div className="border-b border-[var(--fq-line)] pb-2.5 text-lg font-semibold text-[var(--fq-ink)]">{section.heading}</div> : null}
+      {section.heading && !onlyEntry && !hideHeading ? <div className="border-b border-[var(--fq-line)] pb-2.5 text-lg font-semibold text-[var(--fq-ink)]">{section.heading}</div> : null}
       <div className={`grid gap-4 ${section.columns === 2 && !onlyEntry ? "sm:grid-cols-2" : ""}`}>
         {shown.map((f) => {
           const id = uid(section.id, f.key);
@@ -515,11 +518,25 @@ export function CmsFormRenderer({ form, pageId }: { form: CmsForm; pageId?: stri
 
   // Errors on the questions currently on screen (for the summary line).
   const shownErrors = paginated ? Object.keys(stepErrors(activeStep)).length : Object.keys(errors).length;
+  const sidebar = form.layout === "sidebar";
   const stepLabel = activeStep?.kind === "entry"
     ? pipe(sections[activeStep.sectionIndex].fields.find((f) => f.key === activeStep.fieldKey)?.entry_label || "Entry {n} of {count}", values, resolved, { n: String(activeStep.entryIndex + 1), count: String(activeStep.total) })
-    : sections[activeStep?.sectionIndex ?? 0]?.heading;
+    : sidebar ? undefined : sections[activeStep?.sectionIndex ?? 0]?.heading;
 
-  return (
+  // The left-panel nav, when using the "sidebar" layout: one entry per section that currently has
+  // content, labeled from its own heading (falling back to "Step N") — literally the section headers
+  // used as navigation, per the layout's whole point. Works whether the form paginates or not; when
+  // it does, each entry also knows if it's done / current / upcoming so the sidebar can show progress.
+  const navItems = sections
+    .map((sec, i) => ({ i, label: sec.heading || "", shown: sec.fields.some((f) => resolved.visible.has(uid(sec.id, f.key))) }))
+    .filter((n) => n.shown)
+    .map((n, idx) => ({ ...n, label: n.label || `Step ${idx + 1}` }));
+  const stepRangeFor = (sectionIndex: number) => {
+    const idxs = steps.map((st, si) => (st.sectionIndex === sectionIndex ? si : -1)).filter((x) => x >= 0);
+    return idxs.length ? { first: idxs[0], last: idxs[idxs.length - 1] } : null;
+  };
+
+  const formBody = (
     <form ref={formRef} onSubmit={onSubmit} noValidate style={themeVars} className="flex scroll-mt-24 flex-col gap-6 text-[var(--fq-ink)]">
       {/* Spam trap: invisible to people, filled in by bots. Deliberately NOT named "website" — browsers and password managers autofill that, and a filled trap makes the server drop the lead. */}
       <input type="text" name="contact_extra" tabIndex={-1} autoComplete="off" className="hidden" aria-hidden="true" />
@@ -538,7 +555,7 @@ export function CmsFormRenderer({ form, pageId }: { form: CmsForm; pageId?: stri
 
       <div className="flex flex-col gap-8">
         {sections.map((section, i) => {
-          if (!paginated) return <SectionBlock key={section.id} section={section} active values={values} errors={errors} resolved={resolved} boxed={boxed} onFieldChange={set} onNumberBlur={onNumberBlur} />;
+          if (!paginated) return <SectionBlock key={section.id} section={section} active values={values} errors={errors} resolved={resolved} boxed={boxed} hideHeading={sidebar} onFieldChange={set} onNumberBlur={onNumberBlur} />;
           // In a paginated form, a section that exploded into per-entry steps renders once per
           // matching step (all `hidden` except the one that's active), so Back/Next can move
           // between entries without losing what's on the other entries.
@@ -547,7 +564,7 @@ export function CmsFormRenderer({ form, pageId }: { form: CmsForm; pageId?: stri
           return stepsForSection.map(({ st, si }) => (
             <SectionBlock key={st.kind === "entry" ? `${section.id}:${st.entryIndex}` : section.id} section={section} active={si === curStep} values={values} errors={errors} resolved={resolved} boxed={boxed}
               onlyEntry={st.kind === "entry" ? { fieldKey: st.fieldKey, entryIndex: st.entryIndex } : undefined}
-              only={st.kind === "section" ? st.only : undefined}
+              only={st.kind === "section" ? st.only : undefined} hideHeading={sidebar}
               onFieldChange={set} onNumberBlur={onNumberBlur} />
           ));
         })}
@@ -569,5 +586,35 @@ export function CmsFormRenderer({ form, pageId }: { form: CmsForm; pageId?: stri
         </button>
       )}
     </form>
+  );
+
+  if (!sidebar) return formBody;
+
+  return (
+    <div className="flex flex-col overflow-hidden rounded-2xl border border-[var(--fq-line,var(--color-line))] sm:flex-row" style={themeVars}>
+      <aside className="flex shrink-0 flex-col gap-6 p-6 sm:w-64 sm:p-7" style={{ background: dark ? "#0E1015" : "var(--fq-ink)", color: dark ? "#F6F7FA" : "#fff" }}>
+        <div className="flex flex-col gap-1.5">
+          {form.name ? <h2 className="text-xl font-bold leading-tight">{form.name}</h2> : null}
+          {form.description ? <p className="text-sm text-white/70">{form.description}</p> : null}
+        </div>
+        {navItems.length > 1 ? (
+          <nav aria-label="Form sections" className="flex flex-col">
+            {navItems.map((n, idx) => {
+              const range = paginated ? stepRangeFor(n.i) : null;
+              // A single-page form has no "current step" to point at — the nav is a plain table of
+              // contents there, fully visible, rather than dimmed as if every section were still ahead.
+              const state2: "done" | "current" | "upcoming" = !paginated ? "done" : !range ? "upcoming" : curStep > range.last ? "done" : curStep >= range.first ? "current" : "upcoming";
+              return (
+                <div key={n.i} className={`flex items-center gap-3 border-t border-white/10 py-3 first:border-t-0 ${state2 === "upcoming" ? "opacity-50" : ""}`}>
+                  <span className={`text-xs font-semibold ${state2 === "current" ? "text-white" : "text-white/50"}`}>{String(idx + 1).padStart(2, "0")}</span>
+                  <span className={`text-sm ${state2 === "current" ? "font-semibold text-white" : "text-white/80"}`}>{n.label}</span>
+                </div>
+              );
+            })}
+          </nav>
+        ) : null}
+      </aside>
+      <div className="flex-1 bg-[var(--fq-surface,white)] p-6 sm:p-8">{formBody}</div>
+    </div>
   );
 }

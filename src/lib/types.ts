@@ -272,6 +272,7 @@ export interface CmsForm {
   paginate: boolean; // one section per step, with Next/Back — for longer forms
   choice_style?: FormChoiceStyle; // "boxed": bigger radio/checkbox buttons, every question in a bordered card
   theme?: FormTheme; // defaults to "light"
+  layout?: "standard" | "sidebar"; // "sidebar": a persistent left panel (title + section nav), works whether the form paginates or not
 }
 
 /** A one-click starting block for every new form: First name, Last name, Email, Phone —
