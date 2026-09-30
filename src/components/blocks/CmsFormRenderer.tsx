@@ -98,7 +98,21 @@ function BoxChoice({ kind, label, checked, onClick, inputProps }: { kind: "radio
   );
 }
 
-function BasicField({ field, id, value, onChange, onBlur, error, limits, boxed }: { field: FormField; id: string; value: string; onChange: (v: string) => void; onBlur?: () => void; error?: string; limits?: Limits; boxed?: boolean }) {
+/** A compact pill button for a choice option — side by side, not stacked full-width rows — for short
+ *  options like Yes/No or Full-Time/Part-Time, matching the approved template mockup. */
+function PillChoice({ label, checked, onClick, inputProps }: { label: React.ReactNode; checked: boolean; onClick: () => void; inputProps: Record<string, unknown> }) {
+  return (
+    <label className={`flex h-10 cursor-pointer items-center gap-2 rounded-full border px-4 text-[14px] font-medium transition-colors ${checked ? "border-[var(--fq-accent)] bg-[var(--fq-accent-soft)] text-[var(--fq-ink)]" : "border-[var(--fq-choice-border)] bg-[var(--fq-surface)] text-[var(--fq-ink)] hover:border-[var(--fq-accent)]"}`}>
+      <input onChange={onClick} checked={checked} className="sr-only" {...inputProps} />
+      <span aria-hidden className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-[1.5px] ${checked ? "border-0 bg-[var(--fq-accent)]" : "border-[var(--fq-choice-border)]"}`}>
+        {checked ? <span className="h-1.5 w-1.5 rounded-full bg-white" /> : null}
+      </span>
+      {label}
+    </label>
+  );
+}
+
+function BasicField({ field, id, value, onChange, onBlur, error, limits, boxed, pills }: { field: FormField; id: string; value: string; onChange: (v: string) => void; onBlur?: () => void; error?: string; limits?: Limits; boxed?: boolean; pills?: boolean }) {
   const base = "input h-12 text-base";
   const a11y = { "aria-invalid": error ? true : undefined, "aria-required": field.required || undefined, "aria-describedby": error ? `${id}-err` : undefined } as const;
   switch (field.type) {
@@ -113,6 +127,11 @@ function BasicField({ field, id, value, onChange, onBlur, error, limits, boxed }
         </select>
       );
     case "radio":
+      if (pills) return (
+        <div role="radiogroup" aria-labelledby={`${id}-label`} className="flex flex-wrap gap-2 pt-1">
+          {(field.options ?? []).map((o) => <PillChoice key={o} label={o} checked={value === o} onClick={() => onChange(o)} inputProps={{ type: "radio", name: id, value: o, ...a11y }} />)}
+        </div>
+      );
       return boxed ? (
         <div role="radiogroup" aria-labelledby={`${id}-label`} className="grid gap-2.5">
           {(field.options ?? []).map((o) => <BoxChoice key={o} kind="radio" label={o} checked={value === o} onClick={() => onChange(o)} inputProps={{ name: id, value: o, ...a11y }} />)}
@@ -129,6 +148,11 @@ function BasicField({ field, id, value, onChange, onBlur, error, limits, boxed }
     case "multiple_choice": {
       const selected = value ? value.split(",") : [];
       const toggle = (o: string) => onChange(selected.includes(o) ? selected.filter((s) => s !== o).join(",") : [...selected, o].join(","));
+      if (pills) return (
+        <div role="group" aria-labelledby={`${id}-label`} className="flex flex-wrap gap-2 pt-1">
+          {(field.options ?? []).map((o) => <PillChoice key={o} label={o} checked={selected.includes(o)} onClick={() => toggle(o)} inputProps={{ type: "checkbox", ...a11y }} />)}
+        </div>
+      );
       return boxed ? (
         <div role="group" aria-labelledby={`${id}-label`} className="grid gap-2.5">
           {(field.options ?? []).map((o) => <BoxChoice key={o} kind="check" label={o} checked={selected.includes(o)} onClick={() => toggle(o)} inputProps={a11y} />)}
@@ -144,8 +168,9 @@ function BasicField({ field, id, value, onChange, onBlur, error, limits, boxed }
       );
     }
     case "checkbox":
-      // Boxed style: the whole statement is the clickable row (not a separate heading plus a
+      // Boxed/Pills style: the whole statement is the clickable row (not a separate heading plus a
       // generic "Yes" box) — Question skips its own heading for this type, see below.
+      if (pills) return <PillChoice label={<>{field.label}{field.required ? <span className="text-[var(--fq-accent)]"> *</span> : null}</>} checked={value === "yes"} onClick={() => onChange(value === "yes" ? "" : "yes")} inputProps={a11y} />;
       return boxed ? (
         <BoxChoice kind="check" label={<>{field.label}{field.required ? <span className="text-[var(--fq-accent)]"> *</span> : null}</>} checked={value === "yes"} onClick={() => onChange(value === "yes" ? "" : "yes")} inputProps={a11y} />
       ) : (
@@ -164,10 +189,10 @@ function BasicField({ field, id, value, onChange, onBlur, error, limits, boxed }
 /** Label + control + inline error. Groups (radio / checkbox sets) get a text label tied to the
  *  group, not a <label> — a <label> around several inputs makes clicking the question toggle the
  *  first option, and checkbox fields previously showed no question text at all. */
-function Question({ field, id, label, error, className = "", boxed, children }: { field: FormField; id: string; label?: string; error?: string; className?: string; boxed?: boolean; children: React.ReactNode }) {
+function Question({ field, id, label, error, className = "", boxed, pills, children }: { field: FormField; id: string; label?: string; error?: string; className?: string; boxed?: boolean; pills?: boolean; children: React.ReactNode }) {
   const star = field.required ? <span className="text-[var(--fq-accent)]"> *</span> : null;
   const grouped = GROUP_TYPES.includes(field.type);
-  const soloCheckbox = boxed && field.type === "checkbox"; // its own clickable row already states the question — see BasicField
+  const soloCheckbox = (boxed || pills) && field.type === "checkbox"; // its own clickable row already states the question — see BasicField
   return (
     <div className={`flex flex-col gap-2.5 text-[15px] ${boxed ? "rounded-2xl border border-[var(--fq-line)] bg-[var(--fq-surface)] p-5 shadow-[var(--fq-shadow)] md:p-6" : "gap-1.5"} ${className}`}>
       {soloCheckbox ? null : grouped
@@ -179,8 +204,8 @@ function Question({ field, id, label, error, className = "", boxed, children }: 
   );
 }
 
-function Subform({ field, id, rows, errors, count, values, resolved, boxed, onlyIndex, onChange, onNumberBlur }: {
-  field: FormField; id: string; rows: Row[]; errors: Errors; count?: number; values: Values; resolved: Resolved; boxed?: boolean;
+function Subform({ field, id, rows, errors, count, values, resolved, boxed, pills, onlyIndex, onChange, onNumberBlur }: {
+  field: FormField; id: string; rows: Row[]; errors: Errors; count?: number; values: Values; resolved: Resolved; boxed?: boolean; pills?: boolean;
   /** Per-entry pagination: render just this one entry (its own step) instead of the whole list. */
   onlyIndex?: number;
   onChange: (rows: Row[]) => void; onNumberBlur: (id: string, f: FormField, v: string, lim: Limits) => void;
@@ -210,18 +235,18 @@ function Subform({ field, id, rows, errors, count, values, resolved, boxed, only
         const row = rows[i] ?? {};
         const isTrailingSlot = onlyIndex !== undefined && !fixed && i >= rows.length;
         const entry = (
-          <div key={i} className={boxed ? "flex flex-col gap-4" : "flex flex-col gap-3 rounded-xl border border-[var(--fq-line)] p-4"}>
+          <div key={i} className={(boxed || pills) ? "flex flex-col gap-4" : "flex flex-col gap-3 rounded-xl border border-[var(--fq-line)] p-4"}>
             {fixed && !boxed ? <div className="text-base font-semibold text-[var(--fq-ink)]">{title(i)}</div> : null}
             {isTrailingSlot ? <p className="text-sm text-muted">Fill this in to add another — or leave it blank and continue.</p> : null}
-            <div className={`grid gap-3 sm:grid-cols-2 ${boxed ? "gap-4" : ""}`}>
+            <div className={`grid gap-3 sm:grid-cols-2 ${(boxed || pills) ? "gap-4" : ""}`}>
               {subfields.map((sf) => {
                 const cellId = `${id}.${i}.${sf.key}`;
                 if (sf.type === "heading") {
                   return <h4 key={sf.key} className="col-span-full border-b border-[var(--fq-line)] pb-1.5 pt-0.5 text-base font-semibold text-[var(--fq-ink)] first:pt-0">{pipe(sf.label, values, resolved, { n: String(i + 1), count: String(rows.length) })}</h4>;
                 }
                 return (
-                  <Question key={sf.key} field={sf} id={cellId} label={pipe(sf.label, values, resolved, { n: String(i + 1), count: String(rows.length) })} error={errors[cellId]} className={sf.span === 2 ? "sm:col-span-2" : ""} boxed={boxed}>
-                    <BasicField field={sf} id={cellId} value={row[sf.key] ?? ""} onChange={(v) => setCell(i, sf.key, v)} onBlur={() => onNumberBlur(cellId, sf, row[sf.key] ?? "", { min: sf.min_value, max: sf.max_value })} error={errors[cellId]} limits={{ min: sf.min_value, max: sf.max_value }} boxed={boxed} />
+                  <Question key={sf.key} field={sf} id={cellId} label={pipe(sf.label, values, resolved, { n: String(i + 1), count: String(rows.length) })} error={errors[cellId]} className={sf.span === 2 ? "sm:col-span-2" : ""} boxed={boxed} pills={pills}>
+                    <BasicField field={sf} id={cellId} value={row[sf.key] ?? ""} onChange={(v) => setCell(i, sf.key, v)} onBlur={() => onNumberBlur(cellId, sf, row[sf.key] ?? "", { min: sf.min_value, max: sf.max_value })} error={errors[cellId]} limits={{ min: sf.min_value, max: sf.max_value }} boxed={boxed} pills={pills} />
                   </Question>
                 );
               })}
@@ -229,8 +254,8 @@ function Subform({ field, id, rows, errors, count, values, resolved, boxed, only
             {!fixed && canRemove && (onlyIndex === undefined || onlyIndex < rows.length) ? <button type="button" onClick={() => removeRow(i)} className="self-start text-sm text-red-700">Remove</button> : null}
           </div>
         );
-        return onlyIndex === undefined && boxed
-          ? <div key={i} className="rounded-2xl border border-[var(--fq-line)] bg-[var(--fq-surface)] p-5 shadow-[var(--fq-shadow)] md:p-6">
+        return (boxed || pills)
+          ? <div key={i} className="rounded-2xl border border-l-4 border-[var(--fq-line)] bg-[var(--fq-surface)] p-5 shadow-[var(--fq-shadow)] md:p-6" style={{ borderLeftColor: "var(--fq-accent)" }}>
               {fixed ? <div className="mb-4 text-base font-bold text-[var(--fq-ink)]">{title(i)}</div> : null}
               {entry}
             </div>
@@ -245,11 +270,11 @@ function Subform({ field, id, rows, errors, count, values, resolved, boxed, only
   );
 }
 
-function SectionBlock({ section, active, values, errors, resolved, boxed, onlyEntry, only, hideHeading, onFieldChange, onNumberBlur }: {
-  section: FormSection; active: boolean; values: Values; errors: Errors; resolved: Resolved; boxed?: boolean;
-  /** The sidebar layout already shows every section's heading in its nav — repeating it here too
-   *  (right above the same questions) is just clutter, so it's left out in that case only. */
-  hideHeading?: boolean;
+function SectionBlock({ section, active, values, errors, resolved, boxed, pills, onlyEntry, only, headingSize, onFieldChange, onNumberBlur }: {
+  section: FormSection; active: boolean; values: Values; errors: Errors; resolved: Resolved; boxed?: boolean; pills?: boolean;
+  /** The sidebar layout wants a large, prominent in-content heading (matching the approved mock) —
+   *  everywhere else keeps the smaller inline heading. */
+  headingSize?: "default" | "large";
   /** This section is showing as one step per subform entry — render just this entry's fields (and
    *  nothing from the rest of the section — those got their own step already, see `only` below). */
   onlyEntry?: { fieldKey: string; entryIndex: number };
@@ -265,7 +290,11 @@ function SectionBlock({ section, active, values, errors, resolved, boxed, onlyEn
   // Validation is our own (see fieldError), so hidden steps can never block Next or Submit.
   return (
     <div hidden={!active} role="group" aria-label={section.heading} className={`flex flex-col gap-4 ${section.background && !boxed ? "rounded-2xl p-6" : ""}`} style={section.background && !boxed ? { background: section.background } : undefined}>
-      {section.heading && !onlyEntry && !hideHeading ? <div className="border-b border-[var(--fq-line)] pb-2.5 text-lg font-semibold text-[var(--fq-ink)]">{section.heading}</div> : null}
+      {section.heading && !onlyEntry ? (
+        headingSize === "large"
+          ? <h2 className="text-3xl font-bold leading-tight text-[var(--fq-ink)]">{section.heading}</h2>
+          : <div className="border-b border-[var(--fq-line)] pb-2.5 text-lg font-semibold text-[var(--fq-ink)]">{section.heading}</div>
+      ) : null}
       <div className={`grid gap-4 ${section.columns === 2 && !onlyEntry ? "sm:grid-cols-2" : ""}`}>
         {shown.map((f) => {
           const id = uid(section.id, f.key);
@@ -277,13 +306,13 @@ function SectionBlock({ section, active, values, errors, resolved, boxed, onlyEn
           if (f.type === "subform") {
             const count = repeatCount(f, values, resolved);
             if (count === 0) return null; // size follows an answer that isn't a positive number yet
-            return <Subform key={id} field={f} id={id} rows={rowsFor(values[id] as Row[] | undefined, count)} count={count} errors={errors} values={values} resolved={resolved} boxed={boxed}
+            return <Subform key={id} field={f} id={id} rows={rowsFor(values[id] as Row[] | undefined, count)} count={count} errors={errors} values={values} resolved={resolved} boxed={boxed} pills={pills}
               onlyIndex={onlyEntry?.fieldKey === f.key ? onlyEntry.entryIndex : undefined}
               onChange={(rows) => onFieldChange(id, rows)} onNumberBlur={onNumberBlur} />;
           }
           return (
-            <Question key={id} field={f} id={id} label={pipe(f.label, values, resolved)} error={errors[id]} className={f.span === 2 || section.columns === 1 ? "sm:col-span-2" : ""} boxed={boxed}>
-              <BasicField field={f} id={id} value={typeof values[id] === "string" ? (values[id] as string) : ""} onChange={(v) => onFieldChange(id, v)} onBlur={() => onNumberBlur(id, f, typeof values[id] === "string" ? (values[id] as string) : "", limitsFor(f, values, resolved))} error={errors[id]} limits={limitsFor(f, values, resolved)} boxed={boxed} />
+            <Question key={id} field={f} id={id} label={pipe(f.label, values, resolved)} error={errors[id]} className={f.span === 2 || section.columns === 1 ? "sm:col-span-2" : ""} boxed={boxed} pills={pills}>
+              <BasicField field={f} id={id} value={typeof values[id] === "string" ? (values[id] as string) : ""} onChange={(v) => onFieldChange(id, v)} onBlur={() => onNumberBlur(id, f, typeof values[id] === "string" ? (values[id] as string) : "", limitsFor(f, values, resolved))} error={errors[id]} limits={limitsFor(f, values, resolved)} boxed={boxed} pills={pills} />
             </Question>
           );
         })}
@@ -305,6 +334,7 @@ export function CmsFormRenderer({ form, pageId }: { form: CmsForm; pageId?: stri
 
   const sections = form.sections ?? [];
   const boxed = form.choice_style === "boxed";
+  const pills = form.choice_style === "pills";
   const dark = form.theme === "dark";
   // Scoped to this form (not the page's own light/dark), and colored from the site's own brand
   // color rather than a fixed blue, so "boxed" looks right on any client's theme.
@@ -555,16 +585,16 @@ export function CmsFormRenderer({ form, pageId }: { form: CmsForm; pageId?: stri
 
       <div className="flex flex-col gap-8">
         {sections.map((section, i) => {
-          if (!paginated) return <SectionBlock key={section.id} section={section} active values={values} errors={errors} resolved={resolved} boxed={boxed} hideHeading={sidebar} onFieldChange={set} onNumberBlur={onNumberBlur} />;
+          if (!paginated) return <SectionBlock key={section.id} section={section} active values={values} errors={errors} resolved={resolved} boxed={boxed} pills={pills} headingSize={sidebar ? "large" : undefined} onFieldChange={set} onNumberBlur={onNumberBlur} />;
           // In a paginated form, a section that exploded into per-entry steps renders once per
           // matching step (all `hidden` except the one that's active), so Back/Next can move
           // between entries without losing what's on the other entries.
           const stepsForSection = steps.map((st, si) => ({ st, si })).filter(({ st }) => st.sectionIndex === i);
           if (!stepsForSection.length) return null;
           return stepsForSection.map(({ st, si }) => (
-            <SectionBlock key={st.kind === "entry" ? `${section.id}:${st.entryIndex}` : section.id} section={section} active={si === curStep} values={values} errors={errors} resolved={resolved} boxed={boxed}
+            <SectionBlock key={st.kind === "entry" ? `${section.id}:${st.entryIndex}` : section.id} section={section} active={si === curStep} values={values} errors={errors} resolved={resolved} boxed={boxed} pills={pills}
               onlyEntry={st.kind === "entry" ? { fieldKey: st.fieldKey, entryIndex: st.entryIndex } : undefined}
-              only={st.kind === "section" ? st.only : undefined} hideHeading={sidebar}
+              only={st.kind === "section" ? st.only : undefined} headingSize={sidebar ? "large" : undefined}
               onFieldChange={set} onNumberBlur={onNumberBlur} />
           ));
         })}
@@ -576,12 +606,12 @@ export function CmsFormRenderer({ form, pageId }: { form: CmsForm; pageId?: stri
       {paginated ? (
         <div className="flex gap-3">
           {curStep > 0 ? <button type="button" onClick={() => setStep(curStep - 1)} className="btn h-13 flex-1">Back</button> : null}
-          <button type="submit" disabled={state === "sending"} className="h-13 flex-1 rounded-full bg-ink py-3.5 text-base font-medium text-white disabled:opacity-60">
+          <button type="submit" disabled={state === "sending"} className="h-13 flex-1 rounded-full py-3.5 text-base font-medium disabled:opacity-60" style={dark ? { background: "#fff", color: "#14142B" } : { background: "var(--color-ink)", color: "#fff" }}>
             {lastStep ? (state === "sending" ? "Sending…" : form.submit_label) : "Next"}
           </button>
         </div>
       ) : (
-        <button type="submit" disabled={state === "sending"} className="h-13 rounded-full bg-ink py-3.5 text-base font-medium text-white disabled:opacity-60">
+        <button type="submit" disabled={state === "sending"} className="h-13 rounded-full py-3.5 text-base font-medium disabled:opacity-60" style={dark ? { background: "#fff", color: "#14142B" } : { background: "var(--color-ink)", color: "#fff" }}>
           {state === "sending" ? "Sending…" : form.submit_label}
         </button>
       )}
@@ -593,8 +623,9 @@ export function CmsFormRenderer({ form, pageId }: { form: CmsForm; pageId?: stri
   return (
     <div className="flex flex-col overflow-hidden rounded-2xl border border-[var(--fq-line,var(--color-line))] sm:flex-row" style={themeVars}>
       <aside className="flex shrink-0 flex-col gap-6 p-6 sm:w-64 sm:p-7" style={{ background: dark ? "#0E1015" : "var(--fq-ink)", color: dark ? "#F6F7FA" : "#fff" }}>
-        <div className="flex flex-col gap-1.5">
-          {form.name ? <h2 className="text-xl font-bold leading-tight">{form.name}</h2> : null}
+        <div className="flex flex-col gap-3">
+          {form.name ? <h2 className="text-3xl font-bold leading-tight">{form.name}</h2> : null}
+          <span className="h-[3px] w-9 rounded-full" style={{ background: "var(--fq-accent)" }} />
           {form.description ? <p className="text-sm text-white/70">{form.description}</p> : null}
         </div>
         {navItems.length > 1 ? (
@@ -605,9 +636,10 @@ export function CmsFormRenderer({ form, pageId }: { form: CmsForm; pageId?: stri
               // contents there, fully visible, rather than dimmed as if every section were still ahead.
               const state2: "done" | "current" | "upcoming" = !paginated ? "done" : !range ? "upcoming" : curStep > range.last ? "done" : curStep >= range.first ? "current" : "upcoming";
               return (
-                <div key={n.i} className={`flex items-center gap-3 border-t border-white/10 py-3 first:border-t-0 ${state2 === "upcoming" ? "opacity-50" : ""}`}>
-                  <span className={`text-xs font-semibold ${state2 === "current" ? "text-white" : "text-white/50"}`}>{String(idx + 1).padStart(2, "0")}</span>
-                  <span className={`text-sm ${state2 === "current" ? "font-semibold text-white" : "text-white/80"}`}>{n.label}</span>
+                <div key={n.i} className={`flex items-center gap-3 border-t border-l-2 border-white/10 py-3 pl-3 first:border-t-0 ${state2 === "upcoming" ? "opacity-50" : ""}`}
+                  style={state2 === "current" ? { borderLeftColor: "var(--fq-accent)" } : { borderLeftColor: "transparent" }}>
+                  <span className="text-xs font-semibold" style={state2 === "current" ? { color: "var(--fq-accent)" } : { color: "rgba(255,255,255,.5)" }}>{String(idx + 1).padStart(2, "0")}</span>
+                  <span className="text-sm" style={state2 === "current" ? { color: "var(--fq-accent)", fontWeight: 600 } : { color: "rgba(255,255,255,.8)" }}>{n.label}</span>
                 </div>
               );
             })}

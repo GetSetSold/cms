@@ -236,7 +236,7 @@ export type FormField = {
   max_entries_from?: string;
 };
 
-export type FormChoiceStyle = "simple" | "boxed";
+export type FormChoiceStyle = "simple" | "boxed" | "pills";
 export type FormTheme = "light" | "dark";
 
 export type FormConditionOp = "answered" | "equals" | "not_equals" | "greater_than" | "less_than";

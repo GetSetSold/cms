@@ -599,9 +599,10 @@ export function FormEditor({ initial }: { initial: CmsForm }) {
           {mode === "fields" ? (
             <>
               <label className="label">Choice style
-                <select className="input" value={form.choice_style ?? "simple"} onChange={(e) => set("choice_style", e.target.value === "boxed" ? "boxed" : undefined)}>
+                <select className="input" value={form.choice_style ?? "simple"} onChange={(e) => set("choice_style", ["boxed", "pills"].includes(e.target.value) ? (e.target.value as "boxed" | "pills") : undefined)}>
                   <option value="simple">Simple (small radio/checkbox, plain text)</option>
                   <option value="boxed">Boxed (bigger buttons, every question in a bordered card)</option>
+                  <option value="pills">Pills (compact side-by-side buttons, no card)</option>
                 </select>
               </label>
               <label className="label">Appearance
