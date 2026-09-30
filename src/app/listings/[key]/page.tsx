@@ -8,8 +8,16 @@ import { SiteFooter, MobileCtaBar } from "@/components/site/SiteFooter";
 import { ListingCard } from "@/components/listings/ListingCard";
 import { ListingGallery } from "@/components/listings/ListingGallery";
 import { ListingContactCard } from "@/components/listings/ListingContactCard";
+import { createClient } from "@/lib/supabase/server";
+import type { CmsForm } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
+
+async function getInquiryForm(): Promise<CmsForm | null> {
+  const supabase = await createClient();
+  const { data } = await supabase.from("forms").select("*").eq("slug", "listing-inquiry").eq("is_active", true).maybeSingle();
+  return data as CmsForm | null;
+}
 
 async function getListing(key: string) {
   const mls = createMlsClient();
@@ -54,6 +62,7 @@ const stat = (value: unknown, label: string) => {
 export default async function ListingDetailPage({ params }: { params: Promise<{ key: string }> }) {
   const { key } = await params;
   const listing = await getListing(decodeURIComponent(key));
+  const inquiryForm = await getInquiryForm();
   if (!listing) {
     const city = await resolveCitySlug(decodeURIComponent(key));
     if (city) redirect(`/listings/city/${citySlug(city)}`);
@@ -132,7 +141,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
           </div>
 
           <div className="flex flex-col gap-6 lg:sticky lg:top-24 lg:self-start">
-            <ListingContactCard listing={listing} />
+            <ListingContactCard listing={listing} form={inquiryForm} />
           </div>
         </div>
 

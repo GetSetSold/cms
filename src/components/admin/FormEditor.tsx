@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { CONTACT_BLOCK_FIELDS } from "@/lib/types";
+import { CONTACT_BLOCK_FIELDS, CONSENT_TEXTS } from "@/lib/types";
 import type { CmsForm, FormConditionOp, FormField, FormFieldType, FormSection } from "@/lib/types";
 import { brokenRefs, NUMERIC_TYPES, OPS_WITHOUT_VALUE, TOKEN_RE } from "@/lib/formLogic";
 import { Spinner } from "./Spinner";
@@ -490,6 +490,8 @@ function SectionEditor({ section, label, open, onToggle, takenKeys, keyCounts, p
           <button type="button" className="btn border-dashed" onClick={addField}>+ Add field</button>
           <button type="button" className="btn border-dashed" onClick={addHeading}>+ Add heading</button>
           <button type="button" className="btn border-dashed" onClick={addContactBlock}>+ Add contact block (Name, Email, Phone)</button>
+          <button type="button" className="btn border-dashed" onClick={() => onChange({ ...section, fields: [...section.fields, { key: takenKeys.includes("sms_opt_in") ? nextFieldKey(takenKeys) : "sms_opt_in", label: CONSENT_TEXTS.sms, type: "checkbox", required: false }] })}>+ Add SMS consent</button>
+          <button type="button" className="btn border-dashed" onClick={() => onChange({ ...section, fields: [...section.fields, { key: takenKeys.includes("sms_opt_in") ? nextFieldKey(takenKeys) : "sms_opt_in", label: CONSENT_TEXTS.sms_email, type: "checkbox", required: false }] })}>+ Add email + SMS consent</button>
           {contactNote ? <span className="text-xs text-muted">{contactNote}</span> : null}
         </div>
       </div>

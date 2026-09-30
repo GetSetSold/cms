@@ -174,9 +174,12 @@ function BasicField({ field, id, value, onChange, onBlur, error, limits, boxed, 
       return boxed ? (
         <BoxChoice kind="check" label={<>{field.label}{field.required ? <span className="text-[var(--fq-accent)]"> *</span> : null}</>} checked={value === "yes"} onClick={() => onChange(value === "yes" ? "" : "yes")} inputProps={a11y} />
       ) : (
-        <label className="flex items-center gap-2 text-sm">
-          <input id={id} type="checkbox" checked={value === "yes"} onChange={(e) => onChange(e.target.checked ? "yes" : "")} aria-labelledby={`${id}-label`} {...a11y} />
-          Yes
+        // The whole statement is the clickable target — a <span> above (see soloCheckbox) has no
+        // native label behavior, so a long consent sentence needs to live INSIDE this <label> to be
+        // clickable anywhere, not just on a lone "Yes" underneath it.
+        <label className="flex items-start gap-2 text-sm">
+          <input id={id} type="checkbox" checked={value === "yes"} onChange={(e) => onChange(e.target.checked ? "yes" : "")} className="mt-0.5" {...a11y} />
+          <span>{field.label}{field.required ? <span className="text-[var(--fq-accent)]"> *</span> : null}</span>
         </label>
       );
     default:
@@ -192,7 +195,7 @@ function BasicField({ field, id, value, onChange, onBlur, error, limits, boxed, 
 function Question({ field, id, label, error, className = "", boxed, pills, children }: { field: FormField; id: string; label?: string; error?: string; className?: string; boxed?: boolean; pills?: boolean; children: React.ReactNode }) {
   const star = field.required ? <span className="text-[var(--fq-accent)]"> *</span> : null;
   const grouped = GROUP_TYPES.includes(field.type);
-  const soloCheckbox = (boxed || pills) && field.type === "checkbox"; // its own clickable row already states the question — see BasicField
+  const soloCheckbox = field.type === "checkbox"; // its own clickable row already states the question — see BasicField, every style
   return (
     <div className={`flex flex-col gap-2.5 text-[15px] ${boxed ? "rounded-2xl border border-[var(--fq-line)] bg-[var(--fq-surface)] p-5 shadow-[var(--fq-shadow)] md:p-6" : "gap-1.5"} ${className}`}>
       {soloCheckbox ? null : grouped
@@ -321,7 +324,12 @@ function SectionBlock({ section, active, values, errors, resolved, boxed, pills,
   );
 }
 
-export function CmsFormRenderer({ form, pageId }: { form: CmsForm; pageId?: string }) {
+export function CmsFormRenderer({ form, pageId, extraFields }: { form: CmsForm; pageId?: string;
+  /** Fixed context to attach to the submission without asking the person a question for it — e.g.
+   *  which listing an inquiry form was opened from. Merged into custom_fields, added after the
+   *  form's own answers so a real question with the same key always wins. */
+  extraFields?: Record<string, unknown>;
+}) {
   const [values, setValues] = useState<Values>({});
   const [errors, setErrors] = useState<Errors>({});
   const [state, setState] = useState<"idle" | "sending" | "done" | "error">("idle");
@@ -491,8 +499,11 @@ export function CmsFormRenderer({ form, pageId }: { form: CmsForm; pageId?: stri
     }
     const str = (k: string) => (typeof flat[k] === "string" ? (flat[k] as string) : "");
     const name = [str("first_name"), str("last_name")].filter(Boolean).join(" ") || str("name");
-    const contactKeys = new Set(["first_name", "last_name", "name", "email", "phone"]);
-    const customFields: Record<string, unknown> = {};
+    // "sms_opt_in" is reserved, like first_name/email/phone: a consent checkbox using this exact key
+    // sets the lead's real SMS-consent column (what compliance and the sender actually check), instead
+    // of silently landing in custom_fields where it would never take effect.
+    const contactKeys = new Set(["first_name", "last_name", "name", "email", "phone", "sms_opt_in"]);
+    const customFields: Record<string, unknown> = { ...extraFields };
     for (const [k, v] of Object.entries(flat)) if (!contactKeys.has(k)) customFields[k] = v;
     // The spam-trap field. The server drops the submission if a bot filled it in.
     const honeypot = (formRef.current?.elements.namedItem("contact_extra") as HTMLInputElement | null)?.value ?? "";
@@ -518,7 +529,7 @@ export function CmsFormRenderer({ form, pageId }: { form: CmsForm; pageId?: stri
           Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
         },
         body: JSON.stringify({
-          name, email: str("email"), phone: str("phone"),
+          name, email: str("email"), phone: str("phone"), sms_opt_in: flat.sms_opt_in === "yes",
           form_key: form.form_key,
           page_id: pageId,
           path: window.location.pathname,

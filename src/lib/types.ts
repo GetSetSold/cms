@@ -285,3 +285,10 @@ export const CONTACT_BLOCK_FIELDS: FormField[] = [
   { key: "email", label: "Email", type: "email", required: true, span: 1 },
   { key: "phone", label: "Phone", type: "tel", required: false, span: 1 },
 ];
+
+// The two standard consent statements — edit the name/title inline after inserting, same as any
+// other field label. Both keep the exact required disclosure language (data rates, STOP to opt out).
+export const CONSENT_TEXTS = {
+  sms: "I agree to receive text messages from Rohit Sharma about my request. Message & data rates may apply. Reply STOP to opt out.",
+  sms_email: "I agree to receive email and text messages from Realtor Rohit Sharma about my request. Message & data rates may apply. Reply STOP to opt out.",
+} as const;
