@@ -915,8 +915,52 @@ function SectionHeader({ data, ctx }: BlockProps) {
 }
 
 /* ------------------------------------------------------------------ */
+/** "20 Reasons / Phases" — a list of phases, each with a short label + title + description on the
+ *  left, and that phase's numbered reason cards filling a 3-column grid to the right. The number
+ *  keeps counting up across every phase (01, 02, 03…), not restarting each phase — matching the
+ *  approved mock. The left cell's height always matches its row of cards (flex stretch), regardless
+ *  of how many reasons a phase has or how long any one card's text runs. */
+function PhasedReasons({ data, ctx }: BlockProps) {
+  const phases: any[] = data.phases ?? [];
+  let n = 0;
+  return (
+    <div className={`${wrap} flex flex-col gap-8 py-10 md:gap-12 md:py-20`}>
+      <div className="flex max-w-2xl flex-col gap-3">
+        {data.eyebrow ? <div className="text-sm font-semibold uppercase tracking-wide text-primary">{data.eyebrow}</div> : null}
+        {data.heading ? <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2> : null}
+        {data.subline ? <p className={`text-lg ${muted(ctx)}`}>{data.subline}</p> : null}
+      </div>
+      <div className="flex flex-col overflow-hidden rounded-2xl border border-line">
+        {phases.map((phase, pi) => (
+          <div key={pi} className={`flex flex-col border-line sm:flex-row ${pi > 0 ? "border-t" : ""}`}>
+            <div className="flex shrink-0 flex-col gap-2 bg-soft p-6 sm:w-64 sm:border-r sm:border-line">
+              {phase.label ? <div className="text-xs font-bold uppercase tracking-wide text-primary">{phase.label}</div> : null}
+              {phase.title ? <div className="text-xl font-bold text-ink">{phase.title}</div> : null}
+              {phase.description ? <p className="text-sm text-muted">{phase.description}</p> : null}
+            </div>
+            <div className="grid flex-1 grid-cols-1 divide-y divide-line sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+              {(phase.reasons ?? []).map((r: any, ri: number) => {
+                n += 1;
+                return (
+                  <div key={ri} className="flex flex-col gap-1.5 p-6">
+                    <div className="text-sm font-bold text-primary">{String(n).padStart(2, "0")}</div>
+                    {r.title ? <div className="font-semibold text-ink">{r.title}</div> : null}
+                    {r.text ? <p className="text-sm text-muted">{r.text}</p> : null}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export const BLOCKS: Record<string, (p: BlockProps) => React.ReactNode> = {
   hero: Hero,
+  phased_reasons: PhasedReasons,
+
   logos: Logos,
   services: Services,
   features: Features,

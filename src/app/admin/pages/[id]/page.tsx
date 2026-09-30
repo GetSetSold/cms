@@ -9,7 +9,7 @@ export default async function EditPage({ params }: { params: Promise<{ id: strin
   const [{ data: page }, { data: sections }, { data: blockTypes }, { data: svgs }, { data: forms }, { data: presets }] = await Promise.all([
     supabase.from("pages").select("*").eq("id", id).maybeSingle(),
     supabase.from("page_sections").select("*").eq("page_id", id).order("position"),
-    supabase.from("block_types").select("key,name,category,default_data").eq("is_active", true).order("name"),
+    supabase.from("block_types").select("key,name,category,default_data").eq("is_active", true).order("category").order("name"),
     supabase.from("svg_assets").select("id,name,markup,tags").order("name"),
     supabase.from("forms").select("*").order("name"),
     supabase.from("section_presets").select("*").order("category").order("sort_order"),

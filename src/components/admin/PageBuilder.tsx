@@ -12,6 +12,14 @@ import { ColorField } from "./ColorField";
 type BlockType = { key: string; name: string; category: string; default_data: Record<string, any> };
 type Props = { page: Page; sections: Section[]; blockTypes: BlockType[]; svgs: SvgAsset[]; forms: CmsForm[]; presets: SectionPreset[] };
 
+// Friendly labels for the raw category slugs stored on each block type — same grouping the
+// Presets tab already used; "Blank blocks" gets it too so the long flat list becomes scannable.
+const CATEGORY_LABELS: Record<string, string> = {
+  hero: "Hero", content: "Content", "social-proof": "Social proof", faq: "FAQ & Q&A",
+  "process-steps": "Process & steps", listings: "Listings", "forms-conversion": "Forms & conversion",
+  "blog-links": "Blog & links",
+};
+
 const DEVICES = { Desktop: "100%", Tablet: "820px", Mobile: "390px" } as const;
 
 export function PageBuilder({ page: initialPage, sections: initialSections, blockTypes, svgs, forms, presets }: Props) {
@@ -221,11 +229,22 @@ export function PageBuilder({ page: initialPage, sections: initialSections, bloc
                   </div>
                 ) : <p className="text-xs text-muted">No presets yet.</p>
               ) : (
-                <div className="grid grid-cols-2 gap-1.5">
-                  {blockTypes.map((b) => (
-                    <button key={b.key} className="rounded-lg border border-line p-2 text-left text-xs hover:border-primary" onClick={() => addBlock(b)}>
-                      <div className="font-medium">{b.name}</div><div className="text-muted">{b.category}</div>
-                    </button>
+                <div className="flex max-h-[60vh] flex-col gap-3 overflow-y-auto">
+                  {Object.entries(
+                    blockTypes.reduce<Record<string, BlockType[]>>((acc, b) => {
+                      (acc[b.category] ??= []).push(b); return acc;
+                    }, {}),
+                  ).map(([category, items]) => (
+                    <div key={category} className="flex flex-col gap-1.5">
+                      <div className="px-1 text-[11px] font-semibold uppercase tracking-wide text-muted">{CATEGORY_LABELS[category] ?? category}</div>
+                      <div className="grid grid-cols-2 gap-1.5">
+                        {items.map((b) => (
+                          <button key={b.key} className="rounded-lg border border-line p-2 text-left text-xs hover:border-primary" onClick={() => addBlock(b)}>
+                            <div className="font-medium">{b.name}</div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   ))}
                 </div>
               )}

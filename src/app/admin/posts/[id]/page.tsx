@@ -9,7 +9,7 @@ export default async function EditPostPage({ params }: { params: Promise<{ id: s
   const [{ data: post }, { data: categories }, { data: blockTypes }, { data: svgs }, { data: forms }, { data: authors }] = await Promise.all([
     supabase.from("blog_posts").select("*").eq("id", id).maybeSingle(),
     supabase.from("blog_categories").select("*").order("sort_order"),
-    supabase.from("block_types").select("key,name,category,default_data").eq("is_active", true).order("name"),
+    supabase.from("block_types").select("key,name,category,default_data").eq("is_active", true).order("category").order("name"),
     supabase.from("svg_assets").select("id,name,markup,tags").order("name"),
     supabase.from("forms").select("*").order("name"),
     supabase.from("blog_authors").select("*").order("name"),
