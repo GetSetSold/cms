@@ -55,6 +55,7 @@ export const BLOCK_FIELDS: Record<string, Field[]> = {
   ],
   phased_reasons: [
     t("eyebrow", "Eyebrow (e.g. \"20 REASONS TO CHOOSE US\")"), t("heading", "Heading"), ta("subline", "Subline"),
+    { key: "mobile_columns", label: "Reason cards per row on mobile", type: "select", options: ["1", "2"] },
     { key: "phases", label: "Phases", type: "list", itemLabel: "Phase", fields: [
       t("label", "Phase label (e.g. \"PHASE 1 · 4 REASONS\")"), t("title", "Phase title"), ta("description", "Phase description"),
       { key: "reasons", label: "Reasons in this phase", type: "list", itemLabel: "Reason", fields: [t("title", "Title"), ta("text", "Text")] },

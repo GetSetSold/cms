@@ -920,8 +920,16 @@ function SectionHeader({ data, ctx }: BlockProps) {
  *  keeps counting up across every phase (01, 02, 03…), not restarting each phase — matching the
  *  approved mock. The left cell's height always matches its row of cards (flex stretch), regardless
  *  of how many reasons a phase has or how long any one card's text runs. */
+// Static class strings, not built from a template — Tailwind's build only picks up classes it can
+// see literally in the source, so `grid-cols-${n}` would silently produce no CSS.
+const REASONS_GRID_CLS: Record<string, string> = {
+  "1": "grid-cols-1 divide-y divide-line sm:grid-cols-3 sm:divide-x sm:divide-y-0",
+  "2": "grid-cols-2 divide-x divide-y divide-line sm:grid-cols-3 sm:divide-y-0",
+};
+
 function PhasedReasons({ data, ctx }: BlockProps) {
   const phases: any[] = data.phases ?? [];
+  const mobileCols = REASONS_GRID_CLS[data.mobile_columns] ?? REASONS_GRID_CLS["1"];
   let n = 0;
   return (
     <div className={`${wrap} flex flex-col gap-8 py-10 md:gap-12 md:py-20`}>
@@ -938,7 +946,7 @@ function PhasedReasons({ data, ctx }: BlockProps) {
               {phase.title ? <div className="text-xl font-bold text-ink">{phase.title}</div> : null}
               {phase.description ? <p className="text-sm text-muted">{phase.description}</p> : null}
             </div>
-            <div className="grid flex-1 grid-cols-1 divide-y divide-line sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+            <div className={`grid flex-1 ${mobileCols}`}>
               {(phase.reasons ?? []).map((r: any, ri: number) => {
                 n += 1;
                 return (
