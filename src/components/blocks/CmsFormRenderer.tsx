@@ -619,16 +619,18 @@ export function CmsFormRenderer({ form, pageId }: { form: CmsForm; pageId?: stri
       {state === "error" ? <p className="text-sm text-red-700" role="alert">{error}</p> : null}
 
       {paginated ? (
-        <div className="flex gap-3">
-          {curStep > 0 ? <button type="button" onClick={() => setStep(curStep - 1)} className="btn h-13 flex-1">Back</button> : null}
-          <button type="submit" disabled={state === "sending"} className="h-13 flex-1 rounded-full py-3.5 text-base font-medium disabled:opacity-60" style={dark ? { background: "#fff", color: "#14142B" } : { background: "var(--color-ink)", color: "#fff" }}>
+        <div className="flex flex-wrap justify-center gap-3">
+          {curStep > 0 ? <button type="button" onClick={() => setStep(curStep - 1)} className="btn h-13 w-full sm:w-48">Back</button> : null}
+          <button type="submit" disabled={state === "sending"} className="h-13 w-full rounded-full py-3.5 text-base font-medium text-white disabled:opacity-60 sm:w-48" style={{ background: "#0066cc" }}>
             {lastStep ? (state === "sending" ? "Sending…" : form.submit_label) : "Next"}
           </button>
         </div>
       ) : (
-        <button type="submit" disabled={state === "sending"} className="h-13 rounded-full py-3.5 text-base font-medium disabled:opacity-60" style={dark ? { background: "#fff", color: "#14142B" } : { background: "var(--color-ink)", color: "#fff" }}>
-          {state === "sending" ? "Sending…" : form.submit_label}
-        </button>
+        <div className="flex justify-center">
+          <button type="submit" disabled={state === "sending"} className="h-13 w-full rounded-full py-3.5 text-base font-medium text-white disabled:opacity-60 sm:w-48" style={{ background: "#0066cc" }}>
+            {state === "sending" ? "Sending…" : form.submit_label}
+          </button>
+        </div>
       )}
     </form>
   );
@@ -651,7 +653,7 @@ export function CmsFormRenderer({ form, pageId }: { form: CmsForm; pageId?: stri
                default there and expands on request — desktop always shows it, no toggle needed. */}
             <button type="button" onClick={() => setNavOpen((o) => !o)} aria-expanded={navOpen}
               className="flex items-center justify-between text-sm font-medium text-white sm:hidden">
-              Sections <span aria-hidden className={`transition-transform ${navOpen ? "rotate-180" : ""}`}>▾</span>
+              Sections <span aria-hidden className="text-lg leading-none">{navOpen ? "−" : "+"}</span>
             </button>
             <nav aria-label="Form sections" className={`flex-col ${navOpen ? "flex" : "hidden"} sm:flex`}>
               {navItems.map((n, idx) => {
