@@ -74,7 +74,16 @@ function Hero({ data, ctx }: BlockProps) {
   // Now every layout uses the same icon block — Centered is the reference size; Split can optionally
   // use its own size instead (split_icon_radius), since its narrower text column sometimes needs a
   // different one, but falls back to the shared size when that's left blank.
-  const iconRadius = (data.layout === "split" && data.split_icon_radius ? Number(data.split_icon_radius) : Number(data.centered_icon_radius)) || 64;
+  // `0 || 64` is `64` in JS — 0 is falsy, so a genuine "make it 0" input was silently discarded and
+  // replaced with the 64 default. Only an actually-empty field should fall back; an explicit 0 (the
+  // smallest possible size) has to be allowed through as-is.
+  const parsedRadius = (v: unknown): number | undefined => {
+    if (v === undefined || v === null || v === "") return undefined;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : undefined;
+  };
+  const sharedIconRadius = parsedRadius(data.centered_icon_radius) ?? 64;
+  const iconRadius = data.layout === "split" ? parsedRadius(data.split_icon_radius) ?? sharedIconRadius : sharedIconRadius;
   const copy = (
     <>
       {data.centered_icon_svg_id && ctx.svgs[data.centered_icon_svg_id] ? (
