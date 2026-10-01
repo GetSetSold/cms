@@ -69,8 +69,8 @@ function Hero({ data, ctx }: BlockProps) {
         <div
           className="flex shrink-0 items-center justify-center overflow-hidden rounded-full shadow-[var(--shadow-card)]"
           style={{
-            width: (Number(data.centered_icon_radius) || 64) * 2,
-            height: (Number(data.centered_icon_radius) || 64) * 2,
+            width: Number(data.centered_icon_size) || Number(data.centered_icon_radius) * 2 || 128,
+            height: Number(data.centered_icon_size) || Number(data.centered_icon_radius) * 2 || 128,
             padding: 5,
             background: data.centered_icon_bg || "var(--c-icon-bg, #FFFFFF)",
           }}
@@ -107,7 +107,7 @@ function Hero({ data, ctx }: BlockProps) {
 
   if (data.layout === "centered" || (!art && data.layout !== "form")) {
     return (
-      <div className={`${wrap} flex flex-col items-center gap-6 py-16 text-center md:py-24`}>
+      <div className={`${wrap} flex flex-col items-center gap-3 py-16 text-center md:gap-6 md:py-24`} style={{"--hero-icon-gap": "12px"} as React.CSSProperties}>
         {copy}
         <div className="flex flex-wrap justify-center gap-3"><Button link={data.primary_cta} dark={dark} /><Button link={data.secondary_cta} variant="outline" dark={dark} /></div>
       </div>
