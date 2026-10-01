@@ -22,10 +22,11 @@ export function SiteHeader({ settings, logo }: { settings: SiteSettings; logo?: 
   const showLogoDesktop = h.show_logo_desktop !== false;
   const showNameMobile = h.show_name_mobile !== false;
   const showNameDesktop = h.show_name_desktop !== false;
+  const compact = settings.theme.density === "compact";
 
   return (
     <header className="sticky top-0 z-40 border-b border-line backdrop-blur" style={{ background: h.bg || "var(--c-ground, #fff)", color: h.text || undefined }}>
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 md:h-20 md:px-10">
+      <div className={`mx-auto flex max-w-7xl items-center justify-between px-5 md:px-10 ${compact ? "h-14 md:h-16" : "h-16 md:h-20"}`}>
         <Link href="/" className="flex items-center" style={{ gap: h.logo_gap ?? 10 }} aria-label={`${settings.site_name} home`}>
           {logo ? <Svg asset={logo} className={`${showLogoMobile ? "" : "hidden"} ${showLogoDesktop ? "md:block" : "md:hidden"}`} style={{ width: h.logo_size ?? 32, height: h.logo_size ?? 32 }} /> : null}
           {(showNameMobile || showNameDesktop) ? (
@@ -54,7 +55,7 @@ export function SiteHeader({ settings, logo }: { settings: SiteSettings; logo?: 
           ) : null}
         </Link>
 
-        <nav className="hidden gap-9 text-[15px] md:flex" aria-label="Main">
+        <nav className={`hidden gap-9 md:flex ${compact ? "text-[13px]" : "text-[15px]"}`} aria-label="Main">
           {settings.navigation.map((n) =>
             n.columns?.length ? (
               <div key={n.href} className="relative" onMouseEnter={() => setOpenMega(n.href)} onMouseLeave={() => setOpenMega(null)}>
@@ -72,7 +73,7 @@ export function SiteHeader({ settings, logo }: { settings: SiteSettings; logo?: 
                         <div key={i} className="flex flex-col gap-2.5">
                           {col.heading ? <div className="text-xs font-semibold uppercase tracking-wide text-muted">{col.heading}</div> : null}
                           {col.links.map((l) => (
-                            <Link key={l.href} href={l.href} className="text-[15px] hover:text-primary" onClick={() => setOpenMega(null)}>{l.label}</Link>
+                            <Link key={l.href} href={l.href} className={`hover:text-primary ${compact ? "text-[13px]" : "text-[15px]"}`} onClick={() => setOpenMega(null)}>{l.label}</Link>
                           ))}
                         </div>
                       ))}
@@ -88,10 +89,10 @@ export function SiteHeader({ settings, logo }: { settings: SiteSettings; logo?: 
 
         <div className="hidden items-center gap-4 md:flex">
           {settings.contact?.phone ? (
-            <a href={`tel:${settings.contact.phone}`} className="text-[15px]">{settings.contact.phone}</a>
+            <a href={`tel:${settings.contact.phone}`} className={compact ? "text-[13px]" : "text-[15px]"}>{settings.contact.phone}</a>
           ) : null}
           {settings.header_cta?.label ? (
-            <Link href={settings.header_cta.href} className="flex h-11 items-center rounded-full bg-primary px-5 text-[15px] font-medium text-white">
+            <Link href={settings.header_cta.href} className={`flex items-center rounded-full bg-primary font-medium text-white ${compact ? "h-9 px-4 text-[13px]" : "h-11 px-5 text-[15px]"}`}>
               {settings.header_cta.label}
             </Link>
           ) : null}
