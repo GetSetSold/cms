@@ -158,8 +158,13 @@ function Hero({ data, ctx }: BlockProps) {
         {copy}
         <div className="flex flex-col gap-3 sm:flex-row"><Button link={data.primary_cta} dark={dark} /><Button link={data.secondary_cta} variant="outline" dark={dark} /></div>
       </div>
-      <div className={`relative ${imageOnLeft ? "order-1" : ""}`} style={{ width: `${imageSizePct}%`, marginLeft: imageSizePct < 100 ? "auto" : undefined, marginRight: imageSizePct < 100 ? "auto" : undefined }}>
-        <Svg asset={art} label={art?.name} className="aspect-[600/520] overflow-hidden rounded-3xl" />
+      {/* Outer div stays at the column's full width always — this is what the badge anchors to, so it
+         stays fixed to the actual page edge. The resizable image lives in its own inner div, so
+         shrinking or centering the photo (Illustration size) never drags the badge along with it. */}
+      <div className={`relative ${imageOnLeft ? "order-1" : ""}`}>
+        <div style={{ width: `${imageSizePct}%`, marginLeft: imageSizePct < 100 ? "auto" : undefined, marginRight: imageSizePct < 100 ? "auto" : undefined }}>
+          <Svg asset={art} label={art?.name} className="aspect-[600/520] overflow-hidden rounded-3xl" />
+        </div>
         {data.badge?.value ? (() => {
           const layout = data.badge_layout || "callout";
           const style = data.badge_style || "solid";
