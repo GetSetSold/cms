@@ -1009,15 +1009,15 @@ function PhasedReasons({ data, ctx }: BlockProps) {
       <div className="flex max-w-2xl flex-col gap-3">
         {data.eyebrow ? <div className="text-sm font-semibold uppercase tracking-wide text-primary">{data.eyebrow}</div> : null}
         {data.heading ? <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2> : null}
-        {data.subline ? <p className={`text-lg ${muted(ctx)}`}>{data.subline}</p> : null}
+        {data.subline ? <p className={`text-lg font-semibold ${heading(ctx)}`}>{data.subline}</p> : null}
       </div>
-      <div className="flex flex-col overflow-hidden rounded-2xl border border-line">
+      <div className={`flex flex-col overflow-hidden rounded-2xl border ${ctx.dark ? "border-white/15" : "border-line"}`}>
         {phases.map((phase, pi) => (
-          <div key={pi} className={`flex flex-col border-line sm:flex-row ${pi > 0 ? "border-t" : ""}`}>
-            <div className="flex shrink-0 flex-col gap-2 bg-soft p-6 sm:w-64 sm:border-r sm:border-line">
+          <div key={pi} className={`flex flex-col sm:flex-row ${pi > 0 ? `border-t ${ctx.dark ? "border-white/15" : "border-line"}` : ""}`}>
+            <div className={`flex shrink-0 flex-col gap-2 p-6 sm:w-64 sm:border-r ${ctx.dark ? "bg-white/5 border-white/15" : "bg-soft border-line"}`}>
               {phase.label ? <div className="text-xs font-bold uppercase tracking-wide text-primary">{phase.label}</div> : null}
-              {phase.title ? <div className="text-xl font-bold text-ink">{phase.title}</div> : null}
-              {phase.description ? <p className="text-sm text-muted">{phase.description}</p> : null}
+              {phase.title ? <div className={`text-xl font-bold ${heading(ctx)}`}>{phase.title}</div> : null}
+              {phase.description ? <p className={`text-sm ${muted(ctx)}`}>{phase.description}</p> : null}
             </div>
             <div className={`grid flex-1 ${mobileCols}`}>
               {(phase.reasons ?? []).map((r: any, ri: number) => {
@@ -1025,8 +1025,8 @@ function PhasedReasons({ data, ctx }: BlockProps) {
                 return (
                   <div key={ri} className="flex flex-col gap-1.5 p-6">
                     <div className="text-sm font-bold text-primary">{String(n).padStart(2, "0")}</div>
-                    {r.title ? <div className="font-semibold text-ink">{r.title}</div> : null}
-                    {r.text ? <p className="text-sm text-muted">{r.text}</p> : null}
+                    {r.title ? <div className={`text-[15px] font-semibold leading-snug ${heading(ctx)}`}>{r.title}</div> : null}
+                    {r.text ? <p className={`text-[13px] leading-relaxed ${muted(ctx)}`}>{r.text}</p> : null}
                   </div>
                 );
               })}
