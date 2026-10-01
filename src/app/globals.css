@@ -105,3 +105,6 @@ body { background: var(--c-ground); color: var(--c-ink); font-family: var(--font
 [class*="rounded-r-full"] {
   border-radius: 0 !important;
 }
+
+/* Minimalism: headings one weight lighter, sitewide */
+.font-display { font-weight: 500 !important; }
