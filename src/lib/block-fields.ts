@@ -53,6 +53,13 @@ export const BLOCK_FIELDS: Record<string, Field[]> = {
     t("heading", "Heading"),
     { key: "items", label: "Testimonials", type: "list", itemLabel: "Testimonial", fields: [ta("quote", "Quote"), t("name", "Name"), t("role", "Role, company")] },
   ],
+  whats_included: [
+    t("eyebrow", "Eyebrow (e.g. \"EVERYTHING YOU NEED TO SELL YOUR HOME\")"), t("heading", "Heading"), ta("subline", "Subline"),
+    { key: "mobile_columns", label: "Cards per row on mobile", type: "select", options: ["2", "1"] },
+    { key: "items", label: "What's included", type: "list", itemLabel: "Item", fields: [
+      { key: "svg_id", label: "Icon", type: "svg" }, t("title", "Title"), ta("text", "Text"),
+    ] },
+  ],
   phased_reasons: [
     t("eyebrow", "Eyebrow (e.g. \"20 REASONS TO CHOOSE US\")"), t("heading", "Heading"), ta("subline", "Subline"),
     { key: "mobile_columns", label: "Reason cards per row on mobile", type: "select", options: ["1", "2"] },
