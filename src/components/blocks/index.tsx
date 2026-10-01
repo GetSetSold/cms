@@ -70,17 +70,19 @@ function Hero({ data, ctx }: BlockProps) {
       {data.heading_accent ? <span className={data.heading_accent_color ? "" : "text-primary"} style={data.heading_accent_color ? { color: data.heading_accent_color } : undefined}>{data.heading_accent}</span> : null}
     </h1>
   );
+  // Was gated to layout === "centered" only, so Split never showed this icon even when one was set.
+  // Now every layout uses the same icon block — Centered is the reference size; Split can optionally
+  // use its own size instead (split_icon_radius), since its narrower text column sometimes needs a
+  // different one, but falls back to the shared size when that's left blank.
+  const iconRadius = (data.layout === "split" && data.split_icon_radius ? Number(data.split_icon_radius) : Number(data.centered_icon_radius)) || 64;
   const copy = (
     <>
-      {/* Was gated to layout === "centered" only, so Split never showed this icon even when one was
-         set, and had no way to match Centered's size/spacing. Now every layout uses the exact same
-         icon block — Centered is the reference; Split (and Form) follow it, not the other way round. */}
       {data.centered_icon_svg_id && ctx.svgs[data.centered_icon_svg_id] ? (
         <div
           className="flex shrink-0 items-center justify-center overflow-hidden rounded-full shadow-[var(--shadow-card)]"
           style={{
-            width: (Number(data.centered_icon_radius) || 64) * 2,
-            height: (Number(data.centered_icon_radius) || 64) * 2,
+            width: iconRadius * 2,
+            height: iconRadius * 2,
             padding: 5,
             background: data.centered_icon_bg || "var(--c-icon-bg, #FFFFFF)",
           }}
