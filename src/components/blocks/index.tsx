@@ -968,6 +968,12 @@ function WhatsIncluded({ data, ctx }: BlockProps) {
   const items: any[] = data.items ?? [];
   const mobileCols = INCLUDED_GRID_CLS[data.mobile_columns] ?? INCLUDED_GRID_CLS["2"];
   const lineCls = ctx.dark ? "border-white/15" : "border-line";
+  // colorOverride only accepts a literal hex (it rewrites fill/stroke attributes directly, which is
+  // what makes it work even for icons with hardcoded fills) — "var(--color-primary)" silently failed
+  // that check and never did anything. For icons that *do* use currentColor (like these do), setting
+  // the wrapping element's CSS color is enough and correctly adapts to dark sections on its own.
+  const customIconColor = /^#[0-9a-f]{6}$/i.test(data.icon_color ?? "") ? data.icon_color : undefined;
+  const iconColor = customIconColor ?? "var(--color-primary)";
   return (
     <div className={`${wrap} flex flex-col gap-8 py-10 md:gap-12 md:py-20`}>
       <div className="flex flex-col gap-3">
@@ -981,8 +987,8 @@ function WhatsIncluded({ data, ctx }: BlockProps) {
           return (
             <div key={i} className={`flex flex-col items-start gap-4 border-r border-b p-6 ${lineCls}`}>
               {icon ? (
-                <span className={`flex h-9 w-9 items-center justify-center border-b-2 ${ctx.dark ? "border-primary" : "border-primary"}`}>
-                  <Svg asset={icon} className="h-7 w-7" colorOverride="var(--color-primary)" />
+                <span className="flex h-9 w-9 items-center justify-center border-b-2" style={{ color: iconColor, borderColor: iconColor }}>
+                  <Svg asset={icon} className="h-7 w-7" colorOverride={customIconColor} />
                 </span>
               ) : null}
               <div className="flex flex-col gap-1.5">
