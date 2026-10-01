@@ -111,56 +111,58 @@ body { background: var(--c-ground); color: var(--c-ink); font-family: var(--font
 
 /* ------------------------------------------------------------------
    Minimalism type scale — one consistent ramp sitewide.
-   Hero display → H1 64/48, Section H2 → 40/32, Card H3 → 24/20,
-   Body large → 18, Body → 16, Small → 14, Eyebrow/labels → 12.
-   Targets the literal Tailwind arbitrary-size classes in rendered HTML,
-   so every block follows the same scale without editing components.
+   Hero display → 56px desktop, Section H2 → 36px, Card H3 → 22px,
+   Body large → 17px, Body → 15px, Small → 14px, Eyebrow/labels → 12px.
+
+   Uses exact class-TOKEN matching (~=), not substring matching (*=).
+   A responsively-sized element carries BOTH its mobile class (e.g.
+   "text-[30px]") and its desktop class ("md:text-[72px]") at the same
+   time in one class attribute. Substring matching can't tell these
+   apart — "md:text-[72px]" contains "text-[30px]" nowhere, but a
+   *different* element's "text-[30px]" substring-matches the SAME
+   "mobile-size" rule this element's own mobile class matches, and
+   since both the hero-size and card-size rules are !important, the
+   one later in the file silently won regardless of which was correct
+   for the screen size. This was the actual cause of Hero (and others)
+   intermittently rendering at the wrong size. Token matching (~=)
+   only matches a complete, literal class — "md:text-[72px]" and
+   "text-[30px]" are different tokens, so a desktop rule can never
+   fire from a mobile class or vice versa. Consolidated the several
+   scattered/duplicate rules below into one clean set per breakpoint.
 ------------------------------------------------------------------ */
+/* Desktop: ONLY md:-prefixed tokens. A rule here must never also match a plain, unprefixed class —
+   that was exactly how Hero's h1 (and the two cases below) intermittently lost their desktop size
+   to an unrelated mobile-targeting rule later in the file. */
 @media (min-width: 768px) {
-  [class*="text-[72px]"], [class*="text-[64px]"], [class*="text-[56px]"] { font-size: 3.5rem !important; line-height: 1.1 !important; } /* Hero/section display */
-  [class*="text-[32px]"], [class*="text-[30px]"], [class*="text-[28px]"] { font-size: 2.25rem !important; line-height: 1.2 !important; } /* H2 in cards/columns */
+  [class~="md:text-[72px]"], [class~="md:text-[64px]"], [class~="md:text-[56px]"], .md\:text-5xl { font-size: 3.5rem !important; line-height: 1.1 !important; } /* Hero/section display */
+  [class~="md:text-[32px]"], [class~="md:text-[30px]"], [class~="md:text-[28px]"], .md\:text-4xl { font-size: 2.25rem !important; line-height: 1.2 !important; } /* H2 in cards/columns */
+  [class~="md:text-[26px]"], [class~="md:text-[24px]"], [class~="md:text-[22px]"] { font-size: 1.375rem !important; line-height: 1.3 !important; } /* Card H3 */
+  [class~="md:text-[19px]"] { font-size: 1.0625rem !important; line-height: 1.65 !important; } /* Lead paragraphs */
+  [class~="md:text-[15px]"], [class~="md:text-[16px]"] { font-size: 0.9375rem !important; line-height: 1.65 !important; } /* Body */
+  [class~="md:text-[13px]"] { font-size: 0.875rem !important; line-height: 1.55 !important; } /* Small */
 }
+/* Mobile: ONLY plain, unprefixed tokens — never a md:-prefixed one, for the same reason in reverse. */
 @media (max-width: 767px) {
-  [class*="text-[72px]"], [class*="text-[64px]"], [class*="text-[56px]"], [class*="text-[32px]"],
-  [class*="text-[30px]"], [class*="text-[28px]"], [class*="text-[26px]"] { font-size: 1.75rem !important; line-height: 1.25 !important; }
+  [class~="text-[72px]"], [class~="text-[64px]"], [class~="text-[56px]"], [class~="text-[32px]"],
+  [class~="text-[30px]"], [class~="text-[28px]"], [class~="text-[26px]"],
+  [class~="text-[24px]"], [class~="text-[22px]"], .text-5xl, .text-4xl, .text-3xl { font-size: 1.75rem !important; line-height: 1.25 !important; }
+  [class~="text-[19px]"] { font-size: 1.0625rem !important; line-height: 1.65 !important; }
+  [class~="text-[15px]"], [class~="text-[16px]"] { font-size: 0.9375rem !important; line-height: 1.65 !important; }
+  [class~="text-[13px]"] { font-size: 0.875rem !important; line-height: 1.55 !important; }
 }
-
-/* Card titles / H3 level — all sizes collapse to one */
-[class*="text-[26px]"], [class*="text-[24px]"], [class*="text-[22px]"] { font-size: 1.375rem !important; line-height: 1.3 !important; }
-
-/* Lead paragraphs */
-[class*="text-[19px]"], [class*="text-lg"] { font-size: 1.0625rem !important; line-height: 1.65 !important; }
-
-/* Body text — blocks use a spread of odd sizes; unify to 15px */
-[class*="text-[15px]"], [class*="text-[16px]"], [class*="text-base"] { font-size: 0.9375rem !important; line-height: 1.65 !important; }
-
-/* Small text / eyebrows / list items */
-[class*="text-[13px]"], [class*="text-sm"] { font-size: 0.875rem !important; line-height: 1.55 !important; }
+/* No responsive counterpart to worry about, so these stay unscoped (apply at every width): generic
+   Tailwind utilities used as a flat, single size rather than a base/md: responsive pair. */
+[class~="text-lg"] { font-size: 1.0625rem !important; line-height: 1.65 !important; }
+[class~="text-base"] { font-size: 0.9375rem !important; line-height: 1.65 !important; }
+[class~="text-sm"] { font-size: 0.875rem !important; line-height: 1.55 !important; }
+.text-2xl, .md\:text-2xl { font-size: 1.375rem !important; line-height: 1.3 !important; }
+.text-xl, .md\:text-xl { font-size: 1.25rem !important; line-height: 1.35 !important; }
 
 /* Eyebrows: keep uppercase labels tiny and evenly tracked */
-[class*="tracking-[0.12em]"], [class*="tracking-[0.15em]"], [class*="tracking-[0.2em]"] { font-size: 0.75rem !important; letter-spacing: 0.14em !important; }
-
-/* Named-size headings — section_header uses Tailwind named sizes.
-   Map them onto the same minimal ramp. */
-.text-5xl, .md\:text-5xl { font-size: 3.5rem !important; line-height: 1.1 !important; }
-.md\:text-4xl { font-size: 2.25rem !important; line-height: 1.2 !important; }
-.text-3xl { font-size: 1.75rem !important; line-height: 1.25 !important; }
-.text-4xl { font-size: 2.25rem !important; line-height: 1.2 !important; }
+[class~="tracking-[0.12em]"], [class~="tracking-[0.15em]"], [class~="tracking-[0.2em]"] { font-size: 0.75rem !important; letter-spacing: 0.14em !important; }
 
 /* Section-header eyebrow: lowercase-weight label, not bold accent */
 .text-extrabold { font-weight: 500 !important; }
-
-@media (min-width: 768px) {
-  [class*="text-[56px]"], [class*="text-[64px]"] { font-size: 2.75rem !important; line-height: 1.15 !important; } /* 44px section headings */
-  [class*="text-[72px]"] { font-size: 3.5rem !important; line-height: 1.1 !important; } /* hero only */
-}
-
-/* Named-size text across blocks (services cards, features, testimonials, etc.) */
-.text-xl, .md\:text-xl { font-size: 1.25rem !important; line-height: 1.35 !important; }
-.text-2xl, .md\:text-2xl { font-size: 1.375rem !important; line-height: 1.3 !important; }
-.text-5xl { font-size: 1.75rem !important; line-height: 1.25 !important; }
-.md\:text-5xl, .text-4xl, .md\:text-4xl { font-size: 2.25rem !important; line-height: 1.2 !important; }
-.text-3xl { font-size: 1.75rem !important; line-height: 1.25 !important; }
 
 /* Match Realtor CMS base typography: Inter, medium-weight display, tight tracking */
 body {
