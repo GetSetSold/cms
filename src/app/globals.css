@@ -139,3 +139,13 @@ body { background: var(--c-ground); color: var(--c-ink); font-family: var(--font
 
 /* Eyebrows: keep uppercase labels tiny and evenly tracked */
 [class*="tracking-[0.12em]"], [class*="tracking-[0.15em]"], [class*="tracking-[0.2em]"] { font-size: 0.75rem !important; letter-spacing: 0.14em !important; }
+
+/* Named-size headings — section_header uses Tailwind named sizes.
+   Map them onto the same minimal ramp. */
+.text-5xl, .md\:text-5xl { font-size: 3.5rem !important; line-height: 1.1 !important; }
+.md\:text-4xl { font-size: 2.25rem !important; line-height: 1.2 !important; }
+.text-3xl { font-size: 1.75rem !important; line-height: 1.25 !important; }
+.text-4xl { font-size: 2.25rem !important; line-height: 1.2 !important; }
+
+/* Section-header eyebrow: lowercase-weight label, not bold accent */
+.text-extrabold { font-weight: 500 !important; }
