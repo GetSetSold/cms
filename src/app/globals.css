@@ -229,3 +229,37 @@ h1, h2, h3, .font-display, .prose-post h2, .prose-post h3 {
   text-wrap: balance;
 }
 /* =============== END MINIMALISM TYPE SCALE =============== */
+
+/* ============ UNIVERSAL SECTION RHYTHM + FINAL FIXES ============ */
+
+/* Uniform 50px before/after every section, regardless of block */
+section[data-block] > div {
+  padding-top: 50px !important;
+  padding-bottom: 50px !important;
+}
+/* Boxed sections: keep 50px outside the card; card keeps its own inner padding */
+section[data-block] > div > div {
+  padding-top: 50px !important;
+  padding-bottom: 50px !important;
+}
+/* Merged header+block cards: the card owns internal spacing — don't double-pad */
+section[data-block] > div > div[class*="rounded-[var"] {
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+/* FAQ: keep the +/× toggle icon compact (type scale was inflating it) */
+span[aria-hidden].text-3xl, span[aria-hidden].text-2xl { font-size: 1.375rem !important; }
+
+/* Eyebrows everywhere (merged headers, pre-built sections): small caps label */
+section[data-block] .font-semibold.uppercase,
+section[data-block] div[class*="font-semibold"][class*="uppercase"] {
+  font-size: 0.75rem !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.14em !important;
+}
+/* MergedCard eyebrow (text-base md:text-lg, no uppercase class) */
+.embed ~ * h2 ~ p, section[data-block] > div > div > div:first-child > div:first-child {
+  font-size: 0.75rem !important;
+}
+/* ============ END UNIVERSAL ============ */
