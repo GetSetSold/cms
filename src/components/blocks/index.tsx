@@ -81,7 +81,7 @@ function Hero({ data, ctx }: BlockProps) {
           <Svg asset={ctx.svgs[data.centered_icon_svg_id]} className="h-full w-full" />
         </div>
       ) : null}
-      {data.eyebrow ? <div className={`text-xs uppercase tracking-[0.12em] md:text-[13px] ${dark ? "text-primary/80" : "text-muted"}`} style={{ marginBottom: 24 }}>{data.eyebrow}</div> : null}
+      {data.eyebrow ? <div className={`text-xs uppercase tracking-[0.12em] md:text-[13px] ${dark ? "text-primary/80" : "text-muted"}`} style={{ marginBottom: 15 }}>{data.eyebrow}</div> : null}
       {title}
       {data.subheading ? <p className={`max-w-xl text-sm leading-relaxed md:text-[19px] ${dark ? "text-ground/75" : "text-muted"}`}>{data.subheading}</p> : null}
     </>
@@ -129,13 +129,17 @@ function Hero({ data, ctx }: BlockProps) {
   }
 
   const imageOnLeft = data.image_side === "left";
+  const splitIcon = data.centered_icon_svg_id ? ctx.svgs[data.centered_icon_svg_id] : null;
   return (
     <div className={`${wrap} grid items-center gap-10 py-10 md:grid-cols-2 md:gap-16 md:py-20`}>
       <div className={`flex flex-col gap-4 md:gap-7 ${imageOnLeft ? "order-2" : ""}`}>
+        {splitIcon ? (
+          <Svg asset={splitIcon} label={splitIcon?.name} className="h-16 w-16" style={{ marginBottom: Number(data.centered_icon_gap ?? 24) }} />
+        ) : null}
         {copy}
         <div className="flex flex-col gap-3 sm:flex-row"><Button link={data.primary_cta} dark={dark} /><Button link={data.secondary_cta} variant="outline" dark={dark} /></div>
       </div>
-      <div className={`relative ${imageOnLeft ? "order-1" : ""}`}>
+      <div className={`relative ${imageOnLeft ? "order-1" : ""}`} style={{ marginTop: Number(data.centered_icon_gap ?? 0) }}>
         <Svg asset={art} label={art?.name} className="aspect-[600/520] overflow-hidden rounded-3xl" />
         {data.badge?.value ? (() => {
           const layout = data.badge_layout || "callout";
