@@ -31,6 +31,10 @@ type BlockProps = { data: any; ctx: BlockCtx };
 
 const wrap = "mx-auto w-full max-w-7xl px-5 md:px-10";
 const h2 = "font-display font-bold tracking-tight text-[26px] leading-tight md:text-[56px] md:leading-none";
+// Shared compact heading size, used everywhere `h2` is — one definition instead of repeating a
+// smaller scale at every call site. Site-wide Density (Settings → Branding) drives this.
+const h2Compact = "font-display font-semibold tracking-tight text-[22px] leading-snug md:text-[32px] md:leading-tight";
+const headingCls = (compact?: boolean) => (compact ? h2Compact : h2);
 // Shared card/box shape — reads the site's radius+shadow tokens (Settings >
 // Branding > Shape) instead of a hardcoded value, so every card sitewide
 // changes together when that setting changes. `cardLg` for large panels
@@ -57,39 +61,42 @@ function Button({ link, variant = "primary", dark }: { link?: { label?: string; 
 function Hero({ data, ctx }: BlockProps) {
   const art = data.svg_id ? ctx.svgs[data.svg_id] : null;
   const dark = data.tone === "dark" || !!ctx.dark;
+  const compact = ctx.settings.theme.density === "compact";
   const title = (
-    <h1 className="font-display font-bold text-[30px] leading-[1.15] tracking-tight md:text-[72px] md:leading-[1.05]">
+    <h1 className={compact
+      ? "font-display font-bold text-[26px] leading-[1.2] tracking-tight md:text-[44px] md:leading-[1.1]"
+      : "font-display font-bold text-[30px] leading-[1.15] tracking-tight md:text-[72px] md:leading-[1.05]"}>
       {data.heading}{" "}
       {data.heading_accent ? <span className={data.heading_accent_color ? "" : "text-primary"} style={data.heading_accent_color ? { color: data.heading_accent_color } : undefined}>{data.heading_accent}</span> : null}
     </h1>
   );
   const copy = (
     <>
-      {data.layout === "centered" && data.centered_icon_svg_id && ctx.svgs[data.centered_icon_svg_id] ? (
+      {/* Was gated to layout === "centered" only, so Split never showed this icon even when one was
+         set, and had no way to match Centered's size/spacing. Now every layout uses the exact same
+         icon block — Centered is the reference; Split (and Form) follow it, not the other way round. */}
+      {data.centered_icon_svg_id && ctx.svgs[data.centered_icon_svg_id] ? (
         <div
           className="flex shrink-0 items-center justify-center overflow-hidden rounded-full shadow-[var(--shadow-card)]"
           style={{
-            width: Number(data.centered_icon_size) || Number(data.centered_icon_radius) * 2 || 128,
-            height: Number(data.centered_icon_size) || Number(data.centered_icon_radius) * 2 || 128,
+            width: (Number(data.centered_icon_radius) || 64) * 2,
+            height: (Number(data.centered_icon_radius) || 64) * 2,
             padding: 5,
             background: data.centered_icon_bg || "var(--c-icon-bg, #FFFFFF)",
-            marginBottom: data.centered_icon_gap !== undefined && data.centered_icon_gap !== ""
-              ? Number(data.centered_icon_gap)
-              : 24,
           }}
         >
           <Svg asset={ctx.svgs[data.centered_icon_svg_id]} className="h-full w-full" />
         </div>
       ) : null}
-      {data.eyebrow ? <div className={`text-xs uppercase tracking-[0.12em] md:text-[13px] ${dark ? "text-primary/80" : "text-muted"}`} style={{ marginBottom: 15 }}>{data.eyebrow}</div> : null}
+      {data.eyebrow ? <div className={`text-xs uppercase tracking-[0.12em] md:text-[13px] ${dark ? "text-primary/80" : "text-muted"}`}>{data.eyebrow}</div> : null}
       {title}
-      {data.subheading ? <p className={`max-w-xl text-sm leading-relaxed md:text-[19px] ${dark ? "text-ground/75" : "text-muted"}`}>{data.subheading}</p> : null}
+      {data.subheading ? <p className={`max-w-xl leading-relaxed ${compact ? "text-sm md:text-[15px]" : "text-sm md:text-[19px]"} ${dark ? "text-ground/75" : "text-muted"}`}>{data.subheading}</p> : null}
     </>
   );
 
   if (data.layout === "search") {
     return (
-      <div className={`${wrap} flex flex-col gap-6 py-6 md:py-16`}>
+      <div className={`${wrap} flex flex-col gap-4 md:gap-6 ${compact ? "py-6 md:py-10" : "py-6 md:py-16"}`}>
         {copy}
         <div className="inline-flex w-fit gap-6 border-b border-line text-[15px]">
           {(data.tabs?.length ? data.tabs : ["Rent", "Buy", "Sell"]).map((t: string, i: number) => (
@@ -110,7 +117,7 @@ function Hero({ data, ctx }: BlockProps) {
 
   if (data.layout === "centered" || (!art && data.layout !== "form")) {
     return (
-      <div className={`${wrap} flex flex-col items-center gap-3 py-16 text-center md:gap-6 md:py-24`} style={{"--hero-icon-gap": "12px"} as React.CSSProperties}>
+      <div className={`${wrap} flex flex-col items-center gap-4 text-center md:gap-6 ${compact ? "py-10 md:py-14" : "py-16 md:py-24"}`}>
         {copy}
         <div className="flex flex-wrap justify-center gap-3"><Button link={data.primary_cta} dark={dark} /><Button link={data.secondary_cta} variant="outline" dark={dark} /></div>
       </div>
@@ -119,8 +126,8 @@ function Hero({ data, ctx }: BlockProps) {
 
   if (data.layout === "form") {
     return (
-      <div className={`${wrap} grid items-center gap-10 py-12 md:grid-cols-2 md:gap-16 md:py-20`}>
-        <div className="flex flex-col gap-6">{copy}</div>
+      <div className={`${wrap} grid items-center gap-10 md:grid-cols-2 md:gap-16 ${compact ? "py-8 md:py-12" : "py-12 md:py-20"}`}>
+        <div className="flex flex-col gap-4 md:gap-6">{copy}</div>
         <div className={`bg-white p-6 md:p-8 ${cardLg}`}>
           <LeadForm data={{ form_key: "landing", submit_label: data.primary_cta?.label || "Get my quote", show_message: false }} pageId={ctx.page?.id} siteName={ctx.settings.site_name} />
         </div>
@@ -129,17 +136,13 @@ function Hero({ data, ctx }: BlockProps) {
   }
 
   const imageOnLeft = data.image_side === "left";
-  const splitIcon = data.centered_icon_svg_id ? ctx.svgs[data.centered_icon_svg_id] : null;
   return (
-    <div className={`${wrap} grid items-center gap-10 py-10 md:grid-cols-2 md:gap-16 md:py-20`}>
-      <div className={`flex flex-col gap-4 md:gap-7 ${imageOnLeft ? "order-2" : ""}`}>
-        {splitIcon ? (
-          <Svg asset={splitIcon} label={splitIcon?.name} className="h-16 w-16" style={{ marginBottom: Number(data.centered_icon_gap ?? 24) }} />
-        ) : null}
+    <div className={`${wrap} grid items-center gap-10 md:grid-cols-2 md:gap-16 ${compact ? "py-8 md:py-12" : "py-10 md:py-20"}`}>
+      <div className={`flex flex-col gap-4 md:gap-6 ${imageOnLeft ? "order-2" : ""}`}>
         {copy}
         <div className="flex flex-col gap-3 sm:flex-row"><Button link={data.primary_cta} dark={dark} /><Button link={data.secondary_cta} variant="outline" dark={dark} /></div>
       </div>
-      <div className={`relative ${imageOnLeft ? "order-1" : ""}`} style={{ marginTop: Number(data.centered_icon_gap ?? 0) }}>
+      <div className={`relative ${imageOnLeft ? "order-1" : ""}`}>
         <Svg asset={art} label={art?.name} className="aspect-[600/520] overflow-hidden rounded-3xl" />
         {data.badge?.value ? (() => {
           const layout = data.badge_layout || "callout";
@@ -221,7 +224,7 @@ function Logos({ data, ctx }: BlockProps) {
   return (
     <div className={`${wrap} flex flex-col gap-4 border-y border-line py-8 md:flex-row md:items-center md:justify-between`}>
       {data.heading ? <div className={`text-sm ${muted(ctx)}`}>{data.heading}</div> : null}
-      <div className={`flex flex-wrap gap-x-12 gap-y-3 text-[17px] font-medium md:text-xl ${ctx.dark ? "text-ground/60" : "text-[#6B7079]"}`}>
+      <div className={`flex flex-wrap gap-x-12 gap-y-3 text-lg font-semibold md:text-xl ${ctx.dark ? "text-ground/60" : "text-[#6B7079]"}`}>
         {(data.items ?? []).map((l: string, i: number) => <span key={i}>{l}</span>)}
       </div>
     </div>
@@ -390,7 +393,7 @@ function FaqBoxed({ data, ctx }: BlockProps) {
       <div className="flex flex-col gap-3">
         {items.map((f: any, i: number) => (
           <details key={i} className={`group overflow-hidden rounded-[var(--radius-lg)] p-6 ${ctx.dark ? "bg-white/10" : `bg-white ${cardShadow}`}`} open={i === 0}>
-            <summary className={`flex cursor-pointer list-none items-center justify-between gap-4 text-[17px] font-medium ${heading(ctx)}`}>
+            <summary className={`flex cursor-pointer list-none items-center justify-between gap-4 text-lg font-semibold ${heading(ctx)}`}>
               {f.q}
               <span className="relative h-5 w-5 shrink-0">
                 <span className={`absolute inset-0 flex items-center justify-center text-2xl leading-none transition-transform group-open:rotate-45 ${heading(ctx)}`}>+</span>
@@ -489,7 +492,7 @@ function Pricing({ data, ctx }: BlockProps) {
       <div className="grid gap-4 md:grid-cols-3 md:gap-6">
         {(data.plans ?? []).map((p: any, i: number) => (
           <div key={i} className={`flex flex-col gap-5 rounded-[20px] p-7 ${p.highlight ? "bg-ink text-white" : "bg-white"}`}>
-            <div className="text-[17px] font-medium">{p.name}</div>
+            <div className="text-lg font-semibold">{p.name}</div>
             <div className="font-display font-bold text-5xl">{p.price}<span className="font-sans text-base opacity-70"> {p.period}</span></div>
             <ul className="flex flex-col gap-2 text-[13px] md:text-[15px]">
               {String(p.features ?? "").split("\n").filter(Boolean).map((f: string, j: number) => <li key={j}>✓ {f}</li>)}
@@ -655,7 +658,7 @@ function IconCard({ data, ctx }: BlockProps) {
       style={boxed ? { background: resolvedBoxColor || "var(--c-soft)" } : undefined}
     >
       {art ? <Svg asset={art} label={art.name} className="h-10 w-10 md:h-14 md:w-14" style={iconStyle} colorOverride={data.icon_color} /> : null}
-      {data.heading ? <h3 className={`text-[17px] font-medium md:text-xl ${dark ? "text-ground" : ""}`}>{data.heading}</h3> : null}
+      {data.heading ? <h3 className={`text-lg font-semibold md:text-xl ${dark ? "text-ground" : ""}`}>{data.heading}</h3> : null}
       {data.text ? <p className={`text-[13px] leading-relaxed md:text-base ${dark ? "text-ground/75" : "text-muted"}`}>{data.text}</p> : null}
       {data.link?.label ? (
         <Link href={data.link.href} className={`mt-1 inline-flex h-10 items-center rounded-full px-5 text-sm font-medium transition ${btnCls}`}>
@@ -724,7 +727,7 @@ function ProcessSteps({ data, ctx }: BlockProps) {
         {data.subline ? (
           <>
             <div className={`h-px w-full border-t ${dividerCls}`} />
-            <p className={`text-[17px] font-medium ${heading(ctx)}`}>{data.subline}</p>
+            <p className={`text-lg font-semibold ${heading(ctx)}`}>{data.subline}</p>
           </>
         ) : null}
       </div>
@@ -733,8 +736,8 @@ function ProcessSteps({ data, ctx }: BlockProps) {
           <div key={i} className="relative flex flex-col gap-4 p-6 md:p-9">
             {/* The mock shows this dot at every breakpoint (just repositioned on mobile), not desktop-only. */}
             <span aria-hidden className="absolute -top-[5px] left-6 h-[9px] w-[9px] rounded-full md:left-9" style={{ background: accent, boxShadow: `0 0 0 5px ${dotRing}` }} />
-            <div className="font-display text-[32px] font-medium leading-none md:text-[40px]" style={{ color: accent }}>{String(i + 1).padStart(2, "0")}</div>
-            <h3 className={`text-[17px] font-medium leading-snug md:text-[19px] ${heading(ctx)}`}>{it.title}</h3>
+            <div className="font-display text-5xl font-bold leading-none md:text-6xl" style={{ color: accent }}>{String(i + 1).padStart(2, "0")}</div>
+            <h3 className={`text-lg font-semibold leading-snug md:text-xl ${heading(ctx)}`}>{it.title}</h3>
             {it.text ? <p className={`text-[15px] leading-relaxed md:text-base ${muted(ctx)}`}>{it.text}</p> : null}
           </div>
         ))}
@@ -971,7 +974,7 @@ function SectionHeader({ data, ctx }: BlockProps) {
       {data.eyebrow ? <div className="text-base font-extrabold text-accent md:text-lg">{data.eyebrow}</div> : null}
       {data.heading ? <h2 className={`font-display text-3xl font-extrabold md:text-5xl ${heading(ctx)}`}>{data.heading}</h2> : null}
       <div className={`h-px w-full ${ctx.dark ? "bg-white/20" : "bg-line"}`} />
-      {data.subline ? <p className={`text-sm font-medium md:text-base ${heading(ctx)}`}>{data.subline}</p> : null}
+      {data.subline ? <p className={`text-sm font-bold md:text-base ${heading(ctx)}`}>{data.subline}</p> : null}
     </div>
   );
 }
@@ -1015,7 +1018,7 @@ function WhatsIncluded({ data, ctx }: BlockProps) {
         {data.heading ? (compact
           ? <h2 className={`text-[22px] font-semibold leading-snug tracking-tight md:text-[28px] ${heading(ctx)}`}>{data.heading}</h2>
           : <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2>) : null}
-        {data.subline ? <p className={compact ? `text-sm leading-relaxed ${muted(ctx)}` : `text-[17px] font-medium ${heading(ctx)}`}>{data.subline}</p> : null}
+        {data.subline ? <p className={compact ? `text-sm leading-relaxed ${muted(ctx)}` : `text-lg font-semibold ${heading(ctx)}`}>{data.subline}</p> : null}
       </div>
       <div className={`grid border-t border-l ${lineCls} sm:grid-cols-3 ${mobileCols} sm:divide-x sm:divide-y-0 divide-[var(--fq-line,var(--color-line))]`}>
         {items.map((it, i) => {
@@ -1031,7 +1034,7 @@ function WhatsIncluded({ data, ctx }: BlockProps) {
                 {it.title ? <div className={`${compact ? "text-sm" : "text-[15px]"} font-semibold leading-snug ${heading(ctx)}`}>{it.title}</div> : null}
                 {it.text ? <p className={`text-[13px] leading-relaxed ${muted(ctx)}`}>{it.text}</p> : null}
               </div>
-              <span className={`mt-auto inline-flex items-center gap-1.5 rounded-full bg-primary px-3 text-[10px] font-medium uppercase tracking-[0.08em] text-white ${compact ? "h-[22px]" : "h-[26px]"}`} style={compact ? { background: "var(--color-accent)" } : undefined}>
+              <span className={`mt-auto inline-flex items-center gap-1.5 rounded-full bg-primary px-3 text-[10px] font-bold text-white ${compact ? "h-[22px]" : "h-[26px]"}`} style={compact ? { background: "var(--color-accent)" } : undefined}>
                 <span aria-hidden>✓</span> Included
               </span>
             </div>
@@ -1056,13 +1059,13 @@ function PhasedReasons({ data, ctx }: BlockProps) {
         {data.heading ? (compact
           ? <h2 className={`text-[22px] font-semibold leading-snug tracking-tight md:text-[28px] ${heading(ctx)}`}>{data.heading}</h2>
           : <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2>) : null}
-        {data.subline ? <p className={compact ? `text-sm leading-relaxed ${muted(ctx)}` : `text-[17px] font-medium ${heading(ctx)}`}>{data.subline}</p> : null}
+        {data.subline ? <p className={compact ? `text-sm leading-relaxed ${muted(ctx)}` : `text-lg font-semibold ${heading(ctx)}`}>{data.subline}</p> : null}
       </div>
       <div className={`flex flex-col overflow-hidden ${compact ? "" : "rounded-2xl"} border ${ctx.dark ? "border-white/15" : "border-line"}`}>
         {phases.map((phase, pi) => (
           <div key={pi} className={`flex flex-col sm:flex-row ${pi > 0 ? `border-t ${ctx.dark ? "border-white/15" : "border-line"}` : ""}`}>
             <div className={`flex shrink-0 flex-col gap-2 ${compact ? "p-5" : "p-6"} sm:w-64 sm:border-r ${ctx.dark ? "bg-white/5 border-white/15" : compact ? "border-line" : "bg-soft border-line"}`}>
-              {phase.label ? <div className={`text-xs font-medium uppercase tracking-[0.14em] ${accentCls}`} style={accentStyle}>{phase.label}</div> : null}
+              {phase.label ? <div className={`text-xs font-bold uppercase tracking-wide ${accentCls}`} style={accentStyle}>{phase.label}</div> : null}
               {phase.title ? <div className={`${compact ? "text-base" : "text-xl"} font-bold ${heading(ctx)}`}>{phase.title}</div> : null}
               {phase.description ? <p className={`text-sm ${muted(ctx)}`}>{phase.description}</p> : null}
             </div>
@@ -1071,7 +1074,7 @@ function PhasedReasons({ data, ctx }: BlockProps) {
                 n += 1;
                 return (
                   <div key={ri} className={`flex flex-col gap-1.5 ${compact ? "p-5" : "p-6"}`}>
-                    <div className={`text-sm font-medium ${accentCls}`} style={accentStyle}>{String(n).padStart(2, "0")}</div>
+                    <div className={`text-sm font-bold ${accentCls}`} style={accentStyle}>{String(n).padStart(2, "0")}</div>
                     {r.title ? <div className={`${compact ? "text-sm" : "text-[15px]"} font-semibold leading-snug ${heading(ctx)}`}>{r.title}</div> : null}
                     {r.text ? <p className={`text-[13px] leading-relaxed ${muted(ctx)}`}>{r.text}</p> : null}
                   </div>
