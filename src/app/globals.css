@@ -93,3 +93,15 @@ body { background: var(--c-ground); color: var(--c-ink); font-family: var(--font
    as many columns as the space allows instead of squeezing three across. Custom
    templates like md:grid-cols-[320px_1fr] are left alone. */
 .embed-side [class*="md:grid-cols-"]:not([class*="md:grid-cols-["]) { grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)) !important; }
+
+/* Minimalism: flatten every hardcoded pill/rounded surface across all blocks.
+   Targets the literal Tailwind class names in the rendered HTML. */
+[class*="rounded-full"],
+[class*="rounded-3xl"],
+[class*="rounded-2xl"],
+[class*="rounded-xl"],
+[class*="rounded-[28px]"],
+[class*="rounded-l-full"],
+[class*="rounded-r-full"] {
+  border-radius: 0 !important;
+}
