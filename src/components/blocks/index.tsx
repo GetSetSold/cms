@@ -214,7 +214,7 @@ function Logos({ data, ctx }: BlockProps) {
   return (
     <div className={`${wrap} flex flex-col gap-4 border-y border-line py-8 md:flex-row md:items-center md:justify-between`}>
       {data.heading ? <div className={`text-sm ${muted(ctx)}`}>{data.heading}</div> : null}
-      <div className={`flex flex-wrap gap-x-12 gap-y-3 text-lg font-semibold md:text-xl ${ctx.dark ? "text-ground/60" : "text-[#6B7079]"}`}>
+      <div className={`flex flex-wrap gap-x-12 gap-y-3 text-[17px] font-medium md:text-xl ${ctx.dark ? "text-ground/60" : "text-[#6B7079]"}`}>
         {(data.items ?? []).map((l: string, i: number) => <span key={i}>{l}</span>)}
       </div>
     </div>
@@ -383,7 +383,7 @@ function FaqBoxed({ data, ctx }: BlockProps) {
       <div className="flex flex-col gap-3">
         {items.map((f: any, i: number) => (
           <details key={i} className={`group overflow-hidden rounded-[var(--radius-lg)] p-6 ${ctx.dark ? "bg-white/10" : `bg-white ${cardShadow}`}`} open={i === 0}>
-            <summary className={`flex cursor-pointer list-none items-center justify-between gap-4 text-lg font-semibold ${heading(ctx)}`}>
+            <summary className={`flex cursor-pointer list-none items-center justify-between gap-4 text-[17px] font-medium ${heading(ctx)}`}>
               {f.q}
               <span className="relative h-5 w-5 shrink-0">
                 <span className={`absolute inset-0 flex items-center justify-center text-2xl leading-none transition-transform group-open:rotate-45 ${heading(ctx)}`}>+</span>
@@ -482,7 +482,7 @@ function Pricing({ data, ctx }: BlockProps) {
       <div className="grid gap-4 md:grid-cols-3 md:gap-6">
         {(data.plans ?? []).map((p: any, i: number) => (
           <div key={i} className={`flex flex-col gap-5 rounded-[20px] p-7 ${p.highlight ? "bg-ink text-white" : "bg-white"}`}>
-            <div className="text-lg font-semibold">{p.name}</div>
+            <div className="text-[17px] font-medium">{p.name}</div>
             <div className="font-display font-bold text-5xl">{p.price}<span className="font-sans text-base opacity-70"> {p.period}</span></div>
             <ul className="flex flex-col gap-2 text-[13px] md:text-[15px]">
               {String(p.features ?? "").split("\n").filter(Boolean).map((f: string, j: number) => <li key={j}>✓ {f}</li>)}
@@ -648,7 +648,7 @@ function IconCard({ data, ctx }: BlockProps) {
       style={boxed ? { background: resolvedBoxColor || "var(--c-soft)" } : undefined}
     >
       {art ? <Svg asset={art} label={art.name} className="h-10 w-10 md:h-14 md:w-14" style={iconStyle} colorOverride={data.icon_color} /> : null}
-      {data.heading ? <h3 className={`text-lg font-semibold md:text-xl ${dark ? "text-ground" : ""}`}>{data.heading}</h3> : null}
+      {data.heading ? <h3 className={`text-[17px] font-medium md:text-xl ${dark ? "text-ground" : ""}`}>{data.heading}</h3> : null}
       {data.text ? <p className={`text-[13px] leading-relaxed md:text-base ${dark ? "text-ground/75" : "text-muted"}`}>{data.text}</p> : null}
       {data.link?.label ? (
         <Link href={data.link.href} className={`mt-1 inline-flex h-10 items-center rounded-full px-5 text-sm font-medium transition ${btnCls}`}>
@@ -717,7 +717,7 @@ function ProcessSteps({ data, ctx }: BlockProps) {
         {data.subline ? (
           <>
             <div className={`h-px w-full border-t ${dividerCls}`} />
-            <p className={`text-lg font-semibold ${heading(ctx)}`}>{data.subline}</p>
+            <p className={`text-[17px] font-medium ${heading(ctx)}`}>{data.subline}</p>
           </>
         ) : null}
       </div>
@@ -726,8 +726,8 @@ function ProcessSteps({ data, ctx }: BlockProps) {
           <div key={i} className="relative flex flex-col gap-4 p-6 md:p-9">
             {/* The mock shows this dot at every breakpoint (just repositioned on mobile), not desktop-only. */}
             <span aria-hidden className="absolute -top-[5px] left-6 h-[9px] w-[9px] rounded-full md:left-9" style={{ background: accent, boxShadow: `0 0 0 5px ${dotRing}` }} />
-            <div className="font-display text-5xl font-bold leading-none md:text-6xl" style={{ color: accent }}>{String(i + 1).padStart(2, "0")}</div>
-            <h3 className={`text-lg font-semibold leading-snug md:text-xl ${heading(ctx)}`}>{it.title}</h3>
+            <div className="font-display text-[32px] font-medium leading-none md:text-[40px]" style={{ color: accent }}>{String(i + 1).padStart(2, "0")}</div>
+            <h3 className={`text-[17px] font-medium leading-snug md:text-[19px] ${heading(ctx)}`}>{it.title}</h3>
             {it.text ? <p className={`text-[15px] leading-relaxed md:text-base ${muted(ctx)}`}>{it.text}</p> : null}
           </div>
         ))}
@@ -964,7 +964,7 @@ function SectionHeader({ data, ctx }: BlockProps) {
       {data.eyebrow ? <div className="text-base font-extrabold text-accent md:text-lg">{data.eyebrow}</div> : null}
       {data.heading ? <h2 className={`font-display text-3xl font-extrabold md:text-5xl ${heading(ctx)}`}>{data.heading}</h2> : null}
       <div className={`h-px w-full ${ctx.dark ? "bg-white/20" : "bg-line"}`} />
-      {data.subline ? <p className={`text-sm font-bold md:text-base ${heading(ctx)}`}>{data.subline}</p> : null}
+      {data.subline ? <p className={`text-sm font-medium md:text-base ${heading(ctx)}`}>{data.subline}</p> : null}
     </div>
   );
 }
@@ -1008,7 +1008,7 @@ function WhatsIncluded({ data, ctx }: BlockProps) {
         {data.heading ? (compact
           ? <h2 className={`text-[22px] font-semibold leading-snug tracking-tight md:text-[28px] ${heading(ctx)}`}>{data.heading}</h2>
           : <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2>) : null}
-        {data.subline ? <p className={compact ? `text-sm leading-relaxed ${muted(ctx)}` : `text-lg font-semibold ${heading(ctx)}`}>{data.subline}</p> : null}
+        {data.subline ? <p className={compact ? `text-sm leading-relaxed ${muted(ctx)}` : `text-[17px] font-medium ${heading(ctx)}`}>{data.subline}</p> : null}
       </div>
       <div className={`grid border-t border-l ${lineCls} sm:grid-cols-3 ${mobileCols} sm:divide-x sm:divide-y-0 divide-[var(--fq-line,var(--color-line))]`}>
         {items.map((it, i) => {
@@ -1024,7 +1024,7 @@ function WhatsIncluded({ data, ctx }: BlockProps) {
                 {it.title ? <div className={`${compact ? "text-sm" : "text-[15px]"} font-semibold leading-snug ${heading(ctx)}`}>{it.title}</div> : null}
                 {it.text ? <p className={`text-[13px] leading-relaxed ${muted(ctx)}`}>{it.text}</p> : null}
               </div>
-              <span className={`mt-auto inline-flex items-center gap-1.5 rounded-full bg-primary px-3 text-[10px] font-bold text-white ${compact ? "h-[22px]" : "h-[26px]"}`} style={compact ? { background: "var(--color-accent)" } : undefined}>
+              <span className={`mt-auto inline-flex items-center gap-1.5 rounded-full bg-primary px-3 text-[10px] font-medium uppercase tracking-[0.08em] text-white ${compact ? "h-[22px]" : "h-[26px]"}`} style={compact ? { background: "var(--color-accent)" } : undefined}>
                 <span aria-hidden>✓</span> Included
               </span>
             </div>
@@ -1049,13 +1049,13 @@ function PhasedReasons({ data, ctx }: BlockProps) {
         {data.heading ? (compact
           ? <h2 className={`text-[22px] font-semibold leading-snug tracking-tight md:text-[28px] ${heading(ctx)}`}>{data.heading}</h2>
           : <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2>) : null}
-        {data.subline ? <p className={compact ? `text-sm leading-relaxed ${muted(ctx)}` : `text-lg font-semibold ${heading(ctx)}`}>{data.subline}</p> : null}
+        {data.subline ? <p className={compact ? `text-sm leading-relaxed ${muted(ctx)}` : `text-[17px] font-medium ${heading(ctx)}`}>{data.subline}</p> : null}
       </div>
       <div className={`flex flex-col overflow-hidden ${compact ? "" : "rounded-2xl"} border ${ctx.dark ? "border-white/15" : "border-line"}`}>
         {phases.map((phase, pi) => (
           <div key={pi} className={`flex flex-col sm:flex-row ${pi > 0 ? `border-t ${ctx.dark ? "border-white/15" : "border-line"}` : ""}`}>
             <div className={`flex shrink-0 flex-col gap-2 ${compact ? "p-5" : "p-6"} sm:w-64 sm:border-r ${ctx.dark ? "bg-white/5 border-white/15" : compact ? "border-line" : "bg-soft border-line"}`}>
-              {phase.label ? <div className={`text-xs font-bold uppercase tracking-wide ${accentCls}`} style={accentStyle}>{phase.label}</div> : null}
+              {phase.label ? <div className={`text-xs font-medium uppercase tracking-[0.14em] ${accentCls}`} style={accentStyle}>{phase.label}</div> : null}
               {phase.title ? <div className={`${compact ? "text-base" : "text-xl"} font-bold ${heading(ctx)}`}>{phase.title}</div> : null}
               {phase.description ? <p className={`text-sm ${muted(ctx)}`}>{phase.description}</p> : null}
             </div>
@@ -1064,7 +1064,7 @@ function PhasedReasons({ data, ctx }: BlockProps) {
                 n += 1;
                 return (
                   <div key={ri} className={`flex flex-col gap-1.5 ${compact ? "p-5" : "p-6"}`}>
-                    <div className={`text-sm font-bold ${accentCls}`} style={accentStyle}>{String(n).padStart(2, "0")}</div>
+                    <div className={`text-sm font-medium ${accentCls}`} style={accentStyle}>{String(n).padStart(2, "0")}</div>
                     {r.title ? <div className={`${compact ? "text-sm" : "text-[15px]"} font-semibold leading-snug ${heading(ctx)}`}>{r.title}</div> : null}
                     {r.text ? <p className={`text-[13px] leading-relaxed ${muted(ctx)}`}>{r.text}</p> : null}
                   </div>
