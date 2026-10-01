@@ -147,13 +147,18 @@ function Hero({ data, ctx }: BlockProps) {
   }
 
   const imageOnLeft = data.image_side === "left";
+  // The main Split-layout photo/illustration had no size control at all — it always filled 100% of
+  // its grid column. This is the field that actually makes it smaller or larger (the icon-radius
+  // fields control a separate, small decorative badge above the eyebrow, not this image).
+  const imageSizeRaw = Number(data.image_size);
+  const imageSizePct = Number.isFinite(imageSizeRaw) && imageSizeRaw > 0 ? Math.min(imageSizeRaw, 150) : 100;
   return (
     <div className={`${wrap} grid items-center gap-10 md:grid-cols-2 md:gap-16 ${compact ? "py-8 md:py-12" : "py-10 md:py-20"}`}>
       <div className={`flex flex-col gap-4 md:gap-6 ${imageOnLeft ? "order-2" : ""}`}>
         {copy}
         <div className="flex flex-col gap-3 sm:flex-row"><Button link={data.primary_cta} dark={dark} /><Button link={data.secondary_cta} variant="outline" dark={dark} /></div>
       </div>
-      <div className={`relative ${imageOnLeft ? "order-1" : ""}`}>
+      <div className={`relative ${imageOnLeft ? "order-1" : ""}`} style={{ width: `${imageSizePct}%`, marginLeft: imageSizePct < 100 ? "auto" : undefined, marginRight: imageSizePct < 100 ? "auto" : undefined }}>
         <Svg asset={art} label={art?.name} className="aspect-[600/520] overflow-hidden rounded-3xl" />
         {data.badge?.value ? (() => {
           const layout = data.badge_layout || "callout";
