@@ -149,3 +149,15 @@ body { background: var(--c-ground); color: var(--c-ink); font-family: var(--font
 
 /* Section-header eyebrow: lowercase-weight label, not bold accent */
 .text-extrabold { font-weight: 500 !important; }
+
+@media (min-width: 768px) {
+  [class*="text-[56px]"], [class*="text-[64px]"] { font-size: 2.75rem !important; line-height: 1.15 !important; } /* 44px section headings */
+  [class*="text-[72px]"] { font-size: 3.5rem !important; line-height: 1.1 !important; } /* hero only */
+}
+
+/* Named-size text across blocks (services cards, features, testimonials, etc.) */
+.text-xl, .md\:text-xl { font-size: 1.25rem !important; line-height: 1.35 !important; }
+.text-2xl, .md\:text-2xl { font-size: 1.375rem !important; line-height: 1.3 !important; }
+.text-5xl { font-size: 1.75rem !important; line-height: 1.25 !important; }
+.md\:text-5xl, .text-4xl, .md\:text-4xl { font-size: 2.25rem !important; line-height: 1.2 !important; }
+.text-3xl { font-size: 1.75rem !important; line-height: 1.25 !important; }
