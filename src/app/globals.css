@@ -2,15 +2,15 @@
 
 /* Runtime theme: the site layout sets these from Settings > Branding */
 :root {
-  --c-primary: #6C5DD3;
-  --c-accent: #1B1145;
-  --c-ink: #14142B;
-  --c-ground: #F4F2FC;
-  --c-soft: #F4F4F5;
-  --c-line: #E5E7EB;
-  --c-muted: #6B7280;
+  --c-primary: #111111;
+  --c-accent: #111111;
+  --c-ink: #111111;
+  --c-ground: #FFFFFF;
+  --c-soft: #F5F5F5;
+  --c-line: #E4E4E7;
+  --c-muted: #6F6F76;
   --c-paper: #FFFFFF;
-  --c-primary-soft: #E7E4FB;
+  --c-primary-soft: #EFEFEF;
 }
 
 @theme {
@@ -48,36 +48,36 @@ body { background: var(--c-ground); color: var(--c-ink); font-family: var(--font
 
 /* Small admin helpers */
 @layer components {
-  .input { @apply h-10 w-full rounded-xl border border-line bg-white px-3 text-sm outline-none focus:border-primary; }
-  .textarea { @apply w-full rounded-xl border border-line bg-white px-3 py-2 text-sm outline-none focus:border-primary; }
+  .input { @apply h-10 w-full rounded-none border border-line bg-white px-3 text-sm outline-none focus:border-primary; }
+  .textarea { @apply w-full rounded-none border border-line bg-white px-3 py-2 text-sm outline-none focus:border-primary; }
   .label { @apply flex flex-col gap-1.5 text-[13px] text-muted; }
-  .btn { @apply inline-flex h-10 items-center justify-center gap-2 rounded-full border border-line bg-white px-4 text-sm font-medium transition active:scale-[0.97] hover:bg-soft/60 active:bg-soft disabled:pointer-events-none disabled:opacity-50 disabled:active:scale-100; }
-  .btn-primary { @apply inline-flex h-10 items-center justify-center gap-2 rounded-full bg-primary px-4 text-sm font-medium text-white transition active:scale-[0.97] hover:brightness-110 active:brightness-90 disabled:pointer-events-none disabled:opacity-50 disabled:active:scale-100; }
-  .btn-dark { @apply inline-flex h-10 items-center justify-center gap-2 rounded-full bg-ink px-4 text-sm font-medium text-white transition active:scale-[0.97] hover:brightness-125 active:brightness-90 disabled:pointer-events-none disabled:opacity-50 disabled:active:scale-100; }
-  .btn-success { @apply inline-flex h-10 items-center justify-center gap-2 rounded-full bg-[#1B8A5A] px-4 text-sm font-medium text-white transition active:scale-[0.97] hover:brightness-110 active:brightness-90 disabled:pointer-events-none disabled:opacity-50 disabled:active:scale-100; }
-  .card { @apply rounded-2xl bg-white p-6; }
+  .btn { @apply inline-flex h-10 items-center justify-center gap-2 rounded-none border border-line bg-white px-4 text-sm font-medium transition active:scale-[0.97] hover:bg-soft/60 active:bg-soft disabled:pointer-events-none disabled:opacity-50 disabled:active:scale-100; }
+  .btn-primary { @apply inline-flex h-10 items-center justify-center gap-2 rounded-none bg-primary px-4 text-sm font-medium text-white transition active:scale-[0.97] hover:brightness-110 active:brightness-90 disabled:pointer-events-none disabled:opacity-50 disabled:active:scale-100; }
+  .btn-dark { @apply inline-flex h-10 items-center justify-center gap-2 rounded-none bg-ink px-4 text-sm font-medium text-white transition active:scale-[0.97] hover:brightness-125 active:brightness-90 disabled:pointer-events-none disabled:opacity-50 disabled:active:scale-100; }
+  .btn-success { @apply inline-flex h-10 items-center justify-center gap-2 rounded-none bg-[#1B8A5A] px-4 text-sm font-medium text-white transition active:scale-[0.97] hover:brightness-110 active:brightness-90 disabled:pointer-events-none disabled:opacity-50 disabled:active:scale-100; }
+  .card { @apply rounded-none bg-white p-6; }
 }
 
 .prose-post { font-size: 17px; line-height: 1.75; color: var(--c-ink); }
 .prose-post > * + * { margin-top: 1.25em; }
-.prose-post h2 { font-family: var(--font-display); font-size: 28px; font-weight: 800; margin-top: 1.6em; }
-.prose-post h3 { font-family: var(--font-display); font-size: 22px; font-weight: 700; margin-top: 1.4em; }
+.prose-post h2 { font-family: var(--font-display); font-size: 28px; font-weight: 600; margin-top: 1.6em; }
+.prose-post h3 { font-family: var(--font-display); font-size: 22px; font-weight: 600; margin-top: 1.4em; }
 .prose-post ul { padding-left: 1.4em; display: flex; flex-direction: column; gap: 0.5em; list-style: disc; }
 .prose-post ul.checklist { padding-left: 0; list-style: none; }
 .prose-post ul.checklist li { display: flex; align-items: flex-start; gap: 10px; }
-.prose-post .check-mark { flex-shrink: 0; width: 20px; height: 20px; border-radius: 999px; background: var(--c-primary); color: white; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; margin-top: 2px; }
+.prose-post .check-mark { flex-shrink: 0; width: 20px; height: 20px; border-radius: 0; background: var(--c-primary); color: white; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; margin-top: 2px; }
 
-.prose-post .content-box { padding: 20px 24px; border-radius: 14px; color: #14142B; }
+.prose-post .content-box { padding: 20px 24px; border-radius: 0; color: #14142B; }
 .prose-post .content-box p { margin: 0; }
 .prose-post .box-row { display: grid; grid-template-columns: 1fr; gap: 16px; align-items: stretch; }
 .prose-post .box-row .content-box { height: 100%; }
 @media (min-width: 768px) { .prose-post .box-row { grid-template-columns: 1fr 1fr; } }
-.prose-post blockquote { padding: 1.3em 1.5em; border-radius: 14px; background: var(--c-soft); border-left: 4px solid var(--c-primary); font-style: italic; }
+.prose-post blockquote { padding: 1.3em 1.5em; border-radius: 0; background: var(--c-soft); border-left: 4px solid var(--c-primary); font-style: italic; }
 .prose-post a { color: var(--c-primary); text-decoration: underline; }
-.prose-post strong { font-weight: 700; }
+.prose-post strong { font-weight: 600; }
 
-.prose-post .callout { display: flex; gap: 12px; padding: 18px 20px; border-radius: 14px; align-items: flex-start; }
-.prose-post .callout-icon { flex-shrink: 0; width: 22px; height: 22px; border-radius: 999px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: white; margin-top: 1px; }
+.prose-post .callout { display: flex; gap: 12px; padding: 18px 20px; border-radius: 0; align-items: flex-start; }
+.prose-post .callout-icon { flex-shrink: 0; width: 22px; height: 22px; border-radius: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: white; margin-top: 1px; }
 .prose-post .callout-tip { background: #E4F0EE; }
 .prose-post .callout-tip .callout-icon { background: #0A4540; }
 .prose-post .callout-warning { background: #FBEBDD; }
