@@ -73,12 +73,15 @@ function Hero({ data, ctx }: BlockProps) {
             height: Number(data.centered_icon_size) || Number(data.centered_icon_radius) * 2 || 128,
             padding: 5,
             background: data.centered_icon_bg || "var(--c-icon-bg, #FFFFFF)",
+            marginBottom: data.centered_icon_gap !== undefined && data.centered_icon_gap !== ""
+              ? Number(data.centered_icon_gap)
+              : 24,
           }}
         >
           <Svg asset={ctx.svgs[data.centered_icon_svg_id]} className="h-full w-full" />
         </div>
       ) : null}
-      {data.eyebrow ? <div className={`text-xs uppercase tracking-[0.12em] md:text-[13px] ${dark ? "text-primary/80" : "text-muted"}`}>{data.eyebrow}</div> : null}
+      {data.eyebrow ? <div className={`text-xs uppercase tracking-[0.12em] md:text-[13px] ${dark ? "text-primary/80" : "text-muted"}`} style={{ marginBottom: 24 }}>{data.eyebrow}</div> : null}
       {title}
       {data.subheading ? <p className={`max-w-xl text-sm leading-relaxed md:text-[19px] ${dark ? "text-ground/75" : "text-muted"}`}>{data.subheading}</p> : null}
     </>
