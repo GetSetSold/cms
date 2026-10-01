@@ -170,7 +170,10 @@ function BasicField({ field, id, value, onChange, onBlur, error, limits, boxed, 
     case "checkbox":
       // Boxed/Pills style: the whole statement is the clickable row (not a separate heading plus a
       // generic "Yes" box) — Question skips its own heading for this type, see below.
-      if (pills) return <PillChoice label={<>{field.label}{field.required ? <span className="text-[var(--fq-accent)]"> *</span> : null}</>} checked={value === "yes"} onClick={() => onChange(value === "yes" ? "" : "yes")} inputProps={a11y} />;
+      // A checkbox is always one full statement, often long (consent text) — never a short option
+      // like "Yes" or "Full-Time", so even in Pills style it uses the Boxed treatment: a full-width
+      // row that wraps normally, not the fixed-height pill shape meant for one-line choices.
+      if (pills) return <BoxChoice kind="check" label={<>{field.label}{field.required ? <span className="text-[var(--fq-accent)]"> *</span> : null}</>} checked={value === "yes"} onClick={() => onChange(value === "yes" ? "" : "yes")} inputProps={a11y} />;
       return boxed ? (
         <BoxChoice kind="check" label={<>{field.label}{field.required ? <span className="text-[var(--fq-accent)]"> *</span> : null}</>} checked={value === "yes"} onClick={() => onChange(value === "yes" ? "" : "yes")} inputProps={a11y} />
       ) : (
