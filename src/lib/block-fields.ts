@@ -135,7 +135,8 @@ export const BLOCK_FIELDS: Record<string, Field[]> = {
   process_steps: [
     t("heading", "Heading"),
     { key: "mobile_columns", label: "Columns on mobile", type: "select", options: ["1", "2"] },
-    { key: "items", label: "Steps", type: "list", itemLabel: "Step", fields: [t("title", "Title"), ta("text", "Description")] },
+    { key: "number_color", label: "Number color (default: your brand color)", type: "color" },
+    { key: "items", label: "Steps (desktop columns automatically match how many you add, up to 6)", type: "list", itemLabel: "Step", fields: [t("title", "Title"), ta("text", "Description")] },
   ],
   checklist: [
     t("heading", "Heading (optional)"),

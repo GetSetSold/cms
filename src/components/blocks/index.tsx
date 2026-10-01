@@ -661,19 +661,36 @@ function IconCard({ data, ctx }: BlockProps) {
 
 const STEP_COLS: Record<number, string> = { 1: "grid-cols-1", 2: "grid-cols-2" };
 
+// Desktop column count follows however many steps there actually are (used to be stuck at a fixed
+// 3, which broke a 4-step process into an awkward 3+1 wrap). Static class map, not a template string
+// — Tailwind only picks up class names it can see literally in the source. Caps at 6 — beyond that,
+// columns get too narrow to read and the admin should split into two rows of steps instead.
+const RAIL_DESKTOP_COLS: Record<number, string> = {
+  1: "md:grid-cols-1", 2: "md:grid-cols-2", 3: "md:grid-cols-3", 4: "md:grid-cols-4", 5: "md:grid-cols-5", 6: "md:grid-cols-6",
+};
+
+/** Matches the approved "guided rail" mock: equal-width bordered columns, a small dot marker above
+ *  each number, a large number, title, text. The number's color is editable (defaults to the site's
+ *  own primary) since it's the one strong accent color in an otherwise plain layout. */
 function ProcessSteps({ data, ctx }: BlockProps) {
   const items = data.items ?? [];
   if (!items.length) return null;
   const mobileCols = STEP_COLS[Number(data.mobile_columns) === 2 ? 2 : 1];
+  const desktopCols = RAIL_DESKTOP_COLS[Math.min(items.length, 6)];
+  const numberColor = /^#[0-9a-f]{6}$/i.test(data.number_color ?? "") ? data.number_color : "var(--color-primary)";
+  const lineVar = "divide-[var(--fq-line,var(--color-line))]";
+  const dotRing = ctx.dark ? "#0b1033" : "#fff";
+  const mobileDivide = Number(data.mobile_columns) === 2 ? `divide-x divide-y ${lineVar}` : `divide-y ${lineVar}`;
   return (
-    <div className={`${wrap} flex flex-col gap-8 py-12 md:gap-10 md:py-24`}>
+    <div className={`${wrap} flex flex-col gap-8 py-10 md:gap-12 md:py-20`}>
       {data.heading ? <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2> : null}
-      <div className={`grid gap-4 md:gap-8 ${mobileCols} md:grid-cols-3`}>
+      <div className={`grid border-t border-b ${mobileCols} ${desktopCols} ${mobileDivide} md:divide-y-0 md:divide-x ${ctx.dark ? "border-white/15" : "border-line"}`}>
         {items.map((it: any, i: number) => (
-          <div key={i} className="flex flex-col gap-2 md:gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-base font-bold text-white md:h-11 md:w-11 md:text-lg">{i + 1}</div>
-            <h3 className={`text-base font-semibold md:text-lg ${heading(ctx)}`}>{it.title}</h3>
-            {it.text ? <p className={`text-[13px] leading-relaxed md:text-base ${muted(ctx)}`}>{it.text}</p> : null}
+          <div key={i} className="relative flex flex-col gap-4 p-6 md:p-9">
+            <span aria-hidden className="absolute -top-[5px] left-9 hidden h-[9px] w-[9px] rounded-full md:block" style={{ background: numberColor, boxShadow: `0 0 0 5px ${dotRing}` }} />
+            <div className="font-display text-5xl font-bold leading-none md:text-6xl" style={{ color: numberColor }}>{String(i + 1).padStart(2, "0")}</div>
+            <h3 className={`text-lg font-semibold leading-snug md:text-xl ${heading(ctx)}`}>{it.title}</h3>
+            {it.text ? <p className={`text-[15px] leading-relaxed md:text-base ${muted(ctx)}`}>{it.text}</p> : null}
           </div>
         ))}
       </div>
