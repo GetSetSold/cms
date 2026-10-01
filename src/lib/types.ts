@@ -68,7 +68,7 @@ export interface SiteSettings {
   logo_svg_id: string | null;
   email_provider?: "zeptomail" | "resend";
   sms_provider?: "vonage" | "twilio";
-  theme: { primary: string; accent: string; ink: string; ground: string; font?: string; font_heading?: string; font_body?: string; icon_override?: string; icon_bg_override?: string; radius?: "sharp" | "soft" | "round"; shadow?: "none" | "soft" | "crisp" };
+  theme: { primary: string; accent: string; ink: string; ground: string; font?: string; font_heading?: string; font_body?: string; icon_override?: string; icon_bg_override?: string; radius?: "sharp" | "soft" | "round"; shadow?: "none" | "soft" | "crisp"; density?: "comfortable" | "compact" };
   seo_defaults: { title_suffix: string; description: string; site_url?: string };
   navigation: NavItem[];
   header_cta: { label: string; href: string };

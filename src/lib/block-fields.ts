@@ -56,7 +56,6 @@ export const BLOCK_FIELDS: Record<string, Field[]> = {
   whats_included: [
     t("eyebrow", "Eyebrow (e.g. \"EVERYTHING YOU NEED TO SELL YOUR HOME\")"), t("heading", "Heading"), ta("subline", "Subline"),
     { key: "mobile_columns", label: "Cards per row on mobile", type: "select", options: ["2", "1"] },
-    { key: "icon_color", label: "Icon color (default: your brand color — also adapts correctly on a dark section)", type: "color" },
     { key: "items", label: "What's included", type: "list", itemLabel: "Item", fields: [
       { key: "svg_id", label: "Icon", type: "svg" }, t("title", "Title"), ta("text", "Text"),
     ] },
@@ -136,7 +135,6 @@ export const BLOCK_FIELDS: Record<string, Field[]> = {
   process_steps: [
     t("eyebrow", "Eyebrow (e.g. \"OUR HOME SELLING PROCESS\")"), t("heading", "Heading"), ta("subline", "Subline (shown below a divider line, when filled in)"),
     { key: "mobile_columns", label: "Columns on mobile", type: "select", options: ["1", "2"] },
-    { key: "number_color", label: "Number color (default: your brand color)", type: "color" },
     { key: "items", label: "Steps (desktop columns automatically match how many you add, up to 6)", type: "list", itemLabel: "Step", fields: [t("title", "Title"), ta("text", "Description")] },
   ],
   checklist: [

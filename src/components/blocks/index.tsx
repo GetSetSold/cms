@@ -675,13 +675,40 @@ const RAIL_DESKTOP_COLS: Record<number, string> = {
 function ProcessSteps({ data, ctx }: BlockProps) {
   const items = data.items ?? [];
   if (!items.length) return null;
+  // Density and the one accent color are site-wide (Settings → Branding), not per-block — so every
+  // block that supports compact mode looks consistent automatically, with one lever to change it all.
+  const compact = ctx.settings.theme.density === "compact";
   const mobileCols = STEP_COLS[Number(data.mobile_columns) === 2 ? 2 : 1];
   const desktopCols = RAIL_DESKTOP_COLS[Math.min(items.length, 6)];
-  const numberColor = /^#[0-9a-f]{6}$/i.test(data.number_color ?? "") ? data.number_color : "var(--color-primary)";
+  // Comfortable mode's numbers use the main brand color, same as before. Compact is deliberately
+  // near-monochrome, so it uses the site's separate Accent color instead — the one spot of color.
+  const accent = compact ? "var(--color-accent)" : "var(--color-primary)";
   const lineVar = "divide-[var(--fq-line,var(--color-line))]";
   const dotRing = ctx.dark ? "#0b1033" : "#fff";
   const mobileDivide = Number(data.mobile_columns) === 2 ? `divide-x divide-y ${lineVar}` : `divide-y ${lineVar}`;
   const dividerCls = ctx.dark ? "border-white/15" : "border-line";
+
+  if (compact) {
+    return (
+      <div className={`${wrap} flex flex-col gap-6 py-10 md:py-16`}>
+        <div className="flex flex-col gap-2">
+          {data.eyebrow ? <div className={`text-[11px] font-semibold uppercase tracking-wide ${muted(ctx)}`}>{data.eyebrow}</div> : null}
+          {data.heading ? <h2 className={`text-[22px] font-semibold leading-snug tracking-tight md:text-[28px] ${heading(ctx)}`}>{data.heading}</h2> : null}
+          {data.subline ? <p className={`text-sm leading-relaxed ${muted(ctx)}`}>{data.subline}</p> : null}
+        </div>
+        <div className={`grid border-t ${mobileCols} ${desktopCols} ${mobileDivide} md:divide-y-0 md:divide-x ${dividerCls}`}>
+          {items.map((it: any, i: number) => (
+            <div key={i} className={`flex flex-col gap-1.5 border-b p-5 ${dividerCls}`}>
+              <div className={`text-xs font-semibold [font-variant-numeric:tabular-nums]`} style={{ color: accent }}>{String(i + 1).padStart(2, "0")}</div>
+              <h3 className={`text-sm font-semibold leading-snug ${heading(ctx)}`}>{it.title}</h3>
+              {it.text ? <p className={`text-[13px] leading-relaxed ${muted(ctx)}`}>{it.text}</p> : null}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={`${wrap} flex flex-col gap-8 py-10 md:gap-12 md:py-20`}>
       <div className="flex flex-col gap-3">
@@ -698,8 +725,8 @@ function ProcessSteps({ data, ctx }: BlockProps) {
         {items.map((it: any, i: number) => (
           <div key={i} className="relative flex flex-col gap-4 p-6 md:p-9">
             {/* The mock shows this dot at every breakpoint (just repositioned on mobile), not desktop-only. */}
-            <span aria-hidden className="absolute -top-[5px] left-6 h-[9px] w-[9px] rounded-full md:left-9" style={{ background: numberColor, boxShadow: `0 0 0 5px ${dotRing}` }} />
-            <div className="font-display text-5xl font-bold leading-none md:text-6xl" style={{ color: numberColor }}>{String(i + 1).padStart(2, "0")}</div>
+            <span aria-hidden className="absolute -top-[5px] left-6 h-[9px] w-[9px] rounded-full md:left-9" style={{ background: accent, boxShadow: `0 0 0 5px ${dotRing}` }} />
+            <div className="font-display text-5xl font-bold leading-none md:text-6xl" style={{ color: accent }}>{String(i + 1).padStart(2, "0")}</div>
             <h3 className={`text-lg font-semibold leading-snug md:text-xl ${heading(ctx)}`}>{it.title}</h3>
             {it.text ? <p className={`text-[15px] leading-relaxed md:text-base ${muted(ctx)}`}>{it.text}</p> : null}
           </div>
@@ -968,34 +995,36 @@ function WhatsIncluded({ data, ctx }: BlockProps) {
   const items: any[] = data.items ?? [];
   const mobileCols = INCLUDED_GRID_CLS[data.mobile_columns] ?? INCLUDED_GRID_CLS["2"];
   const lineCls = ctx.dark ? "border-white/15" : "border-line";
-  // colorOverride only accepts a literal hex (it rewrites fill/stroke attributes directly, which is
-  // what makes it work even for icons with hardcoded fills) — "var(--color-primary)" silently failed
-  // that check and never did anything. For icons that *do* use currentColor (like these do), setting
-  // the wrapping element's CSS color is enough and correctly adapts to dark sections on its own.
-  const customIconColor = /^#[0-9a-f]{6}$/i.test(data.icon_color ?? "") ? data.icon_color : undefined;
-  const iconColor = customIconColor ?? "var(--color-primary)";
+  const compact = ctx.settings.theme.density === "compact";
+  // Icon color is site-wide (Settings → Branding), not per-block: your brand Primary color normally,
+  // and the separate Accent color in compact mode — one consistent choice everywhere, not a setting
+  // to repeat on every block. colorOverride needs a literal hex to rewrite fill/stroke attributes
+  // directly (for icons with hardcoded colors); these icons use currentColor, so plain CSS is enough.
+  const iconColor = compact ? "var(--color-accent)" : "var(--color-primary)";
   return (
-    <div className={`${wrap} flex flex-col gap-8 py-10 md:gap-12 md:py-20`}>
-      <div className="flex flex-col gap-3">
-        {data.eyebrow ? <div className="text-sm font-semibold uppercase tracking-wide text-primary">{data.eyebrow}</div> : null}
-        {data.heading ? <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2> : null}
-        {data.subline ? <p className={`text-lg font-semibold ${heading(ctx)}`}>{data.subline}</p> : null}
+    <div className={`${wrap} flex flex-col ${compact ? "gap-6 py-10 md:py-16" : "gap-8 py-10 md:gap-12 md:py-20"}`}>
+      <div className="flex flex-col gap-2">
+        {data.eyebrow ? <div className={`${compact ? "text-[11px]" : "text-sm"} font-semibold uppercase tracking-wide ${compact ? muted(ctx) : "text-primary"}`}>{data.eyebrow}</div> : null}
+        {data.heading ? (compact
+          ? <h2 className={`text-[22px] font-semibold leading-snug tracking-tight md:text-[28px] ${heading(ctx)}`}>{data.heading}</h2>
+          : <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2>) : null}
+        {data.subline ? <p className={compact ? `text-sm leading-relaxed ${muted(ctx)}` : `text-lg font-semibold ${heading(ctx)}`}>{data.subline}</p> : null}
       </div>
       <div className={`grid border-t border-l ${lineCls} sm:grid-cols-3 ${mobileCols} sm:divide-x sm:divide-y-0 divide-[var(--fq-line,var(--color-line))]`}>
         {items.map((it, i) => {
           const icon = it.svg_id ? ctx.svgs[it.svg_id] : null;
           return (
-            <div key={i} className={`flex flex-col items-start gap-4 border-r border-b p-6 ${lineCls}`}>
+            <div key={i} className={`flex flex-col items-start gap-4 border-r border-b ${compact ? "p-5" : "p-6"} ${lineCls}`}>
               {icon ? (
-                <span className="flex h-9 w-9 items-center justify-center border-b-2" style={{ color: iconColor, borderColor: iconColor }}>
-                  <Svg asset={icon} className="h-7 w-7" colorOverride={customIconColor} />
+                <span className={compact ? "flex h-7 w-7 items-center justify-center" : "flex h-9 w-9 items-center justify-center border-b-2"} style={{ color: iconColor, borderColor: iconColor }}>
+                  <Svg asset={icon} className={compact ? "h-5 w-5" : "h-7 w-7"} />
                 </span>
               ) : null}
               <div className="flex flex-col gap-1.5">
-                {it.title ? <div className={`text-[15px] font-semibold leading-snug ${heading(ctx)}`}>{it.title}</div> : null}
+                {it.title ? <div className={`${compact ? "text-sm" : "text-[15px]"} font-semibold leading-snug ${heading(ctx)}`}>{it.title}</div> : null}
                 {it.text ? <p className={`text-[13px] leading-relaxed ${muted(ctx)}`}>{it.text}</p> : null}
               </div>
-              <span className="mt-auto inline-flex h-[26px] items-center gap-1.5 rounded-full bg-primary px-3 text-[10px] font-bold text-white">
+              <span className={`mt-auto inline-flex items-center gap-1.5 rounded-full bg-primary px-3 text-[10px] font-bold text-white ${compact ? "h-[22px]" : "h-[26px]"}`} style={compact ? { background: "var(--color-accent)" } : undefined}>
                 <span aria-hidden>✓</span> Included
               </span>
             </div>
@@ -1009,29 +1038,34 @@ function WhatsIncluded({ data, ctx }: BlockProps) {
 function PhasedReasons({ data, ctx }: BlockProps) {
   const phases: any[] = data.phases ?? [];
   const mobileCols = REASONS_GRID_CLS[data.mobile_columns] ?? REASONS_GRID_CLS["1"];
+  const compact = ctx.settings.theme.density === "compact";
+  const accentCls = compact ? "" : "text-primary"; // compact uses an inline accent color instead, see below
+  const accentStyle = compact ? { color: "var(--color-accent)" } : undefined;
   let n = 0;
   return (
-    <div className={`${wrap} flex flex-col gap-8 py-10 md:gap-12 md:py-20`}>
-      <div className="flex flex-col gap-3">
-        {data.eyebrow ? <div className="text-sm font-semibold uppercase tracking-wide text-primary">{data.eyebrow}</div> : null}
-        {data.heading ? <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2> : null}
-        {data.subline ? <p className={`text-lg font-semibold ${heading(ctx)}`}>{data.subline}</p> : null}
+    <div className={`${wrap} flex flex-col ${compact ? "gap-6 py-10 md:py-16" : "gap-8 py-10 md:gap-12 md:py-20"}`}>
+      <div className="flex flex-col gap-2">
+        {data.eyebrow ? <div className={`${compact ? "text-[11px]" : "text-sm"} font-semibold uppercase tracking-wide ${compact ? muted(ctx) : "text-primary"}`}>{data.eyebrow}</div> : null}
+        {data.heading ? (compact
+          ? <h2 className={`text-[22px] font-semibold leading-snug tracking-tight md:text-[28px] ${heading(ctx)}`}>{data.heading}</h2>
+          : <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2>) : null}
+        {data.subline ? <p className={compact ? `text-sm leading-relaxed ${muted(ctx)}` : `text-lg font-semibold ${heading(ctx)}`}>{data.subline}</p> : null}
       </div>
-      <div className={`flex flex-col overflow-hidden rounded-2xl border ${ctx.dark ? "border-white/15" : "border-line"}`}>
+      <div className={`flex flex-col overflow-hidden ${compact ? "" : "rounded-2xl"} border ${ctx.dark ? "border-white/15" : "border-line"}`}>
         {phases.map((phase, pi) => (
           <div key={pi} className={`flex flex-col sm:flex-row ${pi > 0 ? `border-t ${ctx.dark ? "border-white/15" : "border-line"}` : ""}`}>
-            <div className={`flex shrink-0 flex-col gap-2 p-6 sm:w-64 sm:border-r ${ctx.dark ? "bg-white/5 border-white/15" : "bg-soft border-line"}`}>
-              {phase.label ? <div className="text-xs font-bold uppercase tracking-wide text-primary">{phase.label}</div> : null}
-              {phase.title ? <div className={`text-xl font-bold ${heading(ctx)}`}>{phase.title}</div> : null}
+            <div className={`flex shrink-0 flex-col gap-2 ${compact ? "p-5" : "p-6"} sm:w-64 sm:border-r ${ctx.dark ? "bg-white/5 border-white/15" : compact ? "border-line" : "bg-soft border-line"}`}>
+              {phase.label ? <div className={`text-xs font-bold uppercase tracking-wide ${accentCls}`} style={accentStyle}>{phase.label}</div> : null}
+              {phase.title ? <div className={`${compact ? "text-base" : "text-xl"} font-bold ${heading(ctx)}`}>{phase.title}</div> : null}
               {phase.description ? <p className={`text-sm ${muted(ctx)}`}>{phase.description}</p> : null}
             </div>
             <div className={`grid flex-1 ${mobileCols}`}>
               {(phase.reasons ?? []).map((r: any, ri: number) => {
                 n += 1;
                 return (
-                  <div key={ri} className="flex flex-col gap-1.5 p-6">
-                    <div className="text-sm font-bold text-primary">{String(n).padStart(2, "0")}</div>
-                    {r.title ? <div className={`text-[15px] font-semibold leading-snug ${heading(ctx)}`}>{r.title}</div> : null}
+                  <div key={ri} className={`flex flex-col gap-1.5 ${compact ? "p-5" : "p-6"}`}>
+                    <div className={`text-sm font-bold ${accentCls}`} style={accentStyle}>{String(n).padStart(2, "0")}</div>
+                    {r.title ? <div className={`${compact ? "text-sm" : "text-[15px]"} font-semibold leading-snug ${heading(ctx)}`}>{r.title}</div> : null}
                     {r.text ? <p className={`text-[13px] leading-relaxed ${muted(ctx)}`}>{r.text}</p> : null}
                   </div>
                 );

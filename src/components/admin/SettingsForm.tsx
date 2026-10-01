@@ -111,6 +111,16 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
         </div>
 
         <div className="flex flex-col gap-3 rounded-lg border border-line p-3">
+          <strong className="text-sm">Density</strong>
+          <p className="text-xs text-muted">Compact uses smaller type and tighter spacing — a near black-and-white, Vercel-style look with your Accent color
+            used sparingly (step numbers, small badges). Applies site-wide to every block that supports it, not per-block.</p>
+          <select className="input w-48" value={s.theme.density ?? "comfortable"} onChange={(e) => set("theme", { ...s.theme, density: e.target.value as "comfortable" | "compact" })}>
+            <option value="comfortable">Comfortable (default)</option>
+            <option value="compact">Compact</option>
+          </select>
+        </div>
+
+        <div className="flex flex-col gap-3 rounded-lg border border-line p-3">
           <strong className="text-sm">Pre-Construction Cashback</strong>
           <p className="text-xs text-muted">Controls the cashback badge shown on Pre-Construction pages. Off by default — nothing shows until you turn this on.</p>
           <label className="flex items-center justify-between text-sm">Show cashback badges
