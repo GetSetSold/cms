@@ -684,7 +684,7 @@ function ProcessSteps({ data, ctx }: BlockProps) {
   const dividerCls = ctx.dark ? "border-white/15" : "border-line";
   return (
     <div className={`${wrap} flex flex-col gap-8 py-10 md:gap-12 md:py-20`}>
-      <div className="flex max-w-2xl flex-col gap-3">
+      <div className="flex flex-col gap-3">
         {data.eyebrow ? <div className="text-sm font-semibold uppercase tracking-wide text-primary">{data.eyebrow}</div> : null}
         {data.heading ? <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2> : null}
         {data.subline ? (
@@ -970,7 +970,7 @@ function WhatsIncluded({ data, ctx }: BlockProps) {
   const lineCls = ctx.dark ? "border-white/15" : "border-line";
   return (
     <div className={`${wrap} flex flex-col gap-8 py-10 md:gap-12 md:py-20`}>
-      <div className="flex max-w-2xl flex-col gap-3">
+      <div className="flex flex-col gap-3">
         {data.eyebrow ? <div className="text-sm font-semibold uppercase tracking-wide text-primary">{data.eyebrow}</div> : null}
         {data.heading ? <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2> : null}
         {data.subline ? <p className={`text-lg font-semibold ${heading(ctx)}`}>{data.subline}</p> : null}
@@ -1006,7 +1006,7 @@ function PhasedReasons({ data, ctx }: BlockProps) {
   let n = 0;
   return (
     <div className={`${wrap} flex flex-col gap-8 py-10 md:gap-12 md:py-20`}>
-      <div className="flex max-w-2xl flex-col gap-3">
+      <div className="flex flex-col gap-3">
         {data.eyebrow ? <div className="text-sm font-semibold uppercase tracking-wide text-primary">{data.eyebrow}</div> : null}
         {data.heading ? <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2> : null}
         {data.subline ? <p className={`text-lg font-semibold ${heading(ctx)}`}>{data.subline}</p> : null}
