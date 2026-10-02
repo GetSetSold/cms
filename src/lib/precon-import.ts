@@ -225,7 +225,7 @@ export function modelLinks(html: string, pageUrl: URL): string[] {
   const seen = new Set<string>();
   const out: string[] = [];
   for (const h of hrefs) {
-    if (!/model|floor-?plan|home-?design|elevation|house-?type|residence/i.test(h)) continue;
+    if (!/model|floor-?plans?|home-?plans?|home-?designs?|elevation|house-?types?|residence/i.test(h)) continue;
     let u: URL;
     try { u = new URL(h, pageUrl); } catch { continue; }
     if (u.hostname !== pageUrl.hostname) continue;

@@ -42,11 +42,52 @@ function Form({ initial, projects, onSave, onCancel }: { initial: Partial<HomeMo
   );
 }
 
+function ScanModal({ onClose, onScanned }: { onClose: () => void; onScanned: (d: Partial<HomeModel>) => void }) {
+  const [url, setUrl] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  async function run() {
+    setBusy(true); setError("");
+    try {
+      const res = await fetch("/api/admin/precon/import-models", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url, single: true }),
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error || "Scan failed.");
+      const m = (body.models ?? [])[0];
+      if (!m?.model_name) throw new Error("No model details detected on that page — paste a model detail page URL.");
+      const { source_url, ...rest } = m;
+      onScanned({ ...rest, slug: slugify(m.model_name) });
+    } catch (e: any) { setError(e.message || "Scan failed."); }
+    setBusy(false);
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
+      <div className="flex w-full max-w-lg flex-col gap-3 rounded-2xl bg-white p-5" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center gap-2">
+          <strong className="text-base">Scan model from URL</strong>
+          <button type="button" className="ml-auto text-muted hover:text-ink" onClick={onClose} aria-label="Close">✕</button>
+        </div>
+        <p className="text-xs text-muted">Paste a model detail page (e.g. a builder&apos;s home-plans page). We&apos;ll extract the specs into a draft — you pick the project and review before saving.</p>
+        <div className="flex gap-2">
+          <input className="input" placeholder="https://builder.com/…/home-plans/model-name" value={url} onChange={(e) => setUrl(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") run(); }} />
+          <button type="button" className="btn-primary shrink-0" onClick={run} disabled={busy || !url.trim()}>{busy ? "Scanning…" : "Scan"}</button>
+        </div>
+        {error ? <p className="text-sm text-red-700">{error}</p> : null}
+      </div>
+    </div>
+  );
+}
+
 export function ModelsManager({ initial, projects }: { initial: HomeModel[]; projects: Project[] }) {
   const [rows, setRows] = useState(initial);
   const [editing, setEditing] = useState<Partial<HomeModel> | null>(null);
   const [error, setError] = useState("");
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [scanOpen, setScanOpen] = useState(false);
   const projectName = (id: string | null) => projects.find((p) => p.id === id)?.project_name ?? "—";
 
   async function save(d: Partial<HomeModel>) {
@@ -69,7 +110,11 @@ export function ModelsManager({ initial, projects }: { initial: HomeModel[]; pro
 
   return (
     <div className="flex flex-col gap-5">
-      <button className="btn-primary self-start" onClick={() => setEditing({})}>+ Add model</button>
+      <div className="flex flex-wrap gap-2">
+        <button className="btn-primary" onClick={() => setEditing({})}>+ Add model</button>
+        <button className="btn" onClick={() => setScanOpen(true)}>Scan from URL</button>
+      </div>
+      {scanOpen ? <ScanModal onClose={() => setScanOpen(false)} onScanned={(d) => { setScanOpen(false); setEditing(d); }} /> : null}
       {error ? <p className="text-sm text-red-700">{error}</p> : null}
       {editing ? <Form initial={editing} projects={projects} onCancel={() => setEditing(null)} onSave={save} /> : null}
       <div className="overflow-hidden rounded-2xl bg-white">

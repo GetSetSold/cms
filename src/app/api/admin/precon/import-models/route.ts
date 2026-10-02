@@ -17,6 +17,16 @@ export async function POST(req: Request) {
   if (!html) return NextResponse.json({ error: "Could not fetch a readable HTML page from that URL." }, { status: 502 });
 
   const notes: string[] = [];
+
+  // Single-model mode: the URL itself is a model detail page — extract it directly.
+  if (body?.single === true) {
+    const one = extractModel(html, url);
+    return NextResponse.json({
+      models: one ? [one] : [],
+      meta: { source_url: url.toString(), notes: one ? ["single model page"] : ["no model details detected on this page"] },
+    });
+  }
+
   let models: ModelDraft[] = tableModels(html, url);
   notes.push(`spec-table scan: ${models.length} model(s)`);
 

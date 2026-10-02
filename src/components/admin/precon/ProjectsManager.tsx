@@ -65,8 +65,8 @@ const MODEL_COLS: { key: keyof ModelCandidate; label: string }[] = [
   { key: "building_type", label: "Type" },
 ];
 
-function ImportModal({ builders, onClose, onDone }: {
-  builders: Builder[]; onClose: () => void; onDone: (project: Project) => void;
+function ImportModal({ builders, projects, onClose, onDone }: {
+  builders: Builder[]; projects: Project[]; onClose: () => void; onDone: (project: Project) => void;
 }) {
   const [url, setUrl] = useState("");
   const [busy, setBusy] = useState(false);
@@ -80,6 +80,16 @@ function ImportModal({ builders, onClose, onDone }: {
   const [models, setModels] = useState<ModelCandidate[]>([]);
   const [selected, setSelected] = useState<string[]>([]);
   const [scanNotes, setScanNotes] = useState<string[]>([]);
+  const [useExisting, setUseExisting] = useState(false);
+
+  // Duplicate guard: same slug, or same builder + same name (case-insensitive)
+  const draftSlug = slugify(draft.project_name || "");
+  const dupes = fetched && draftSlug
+    ? projects.filter((p) =>
+        p.slug === draftSlug ||
+        (builderId && String(p.builder_id) === builderId && p.project_name.toLowerCase() === draft.project_name.trim().toLowerCase()))
+    : [];
+  const dupe = dupes[0] ?? null;
 
   const setD = (k: string, v: string) => setDraft((d) => ({ ...d, [k]: v }));
   const toggle = (name: string) =>
@@ -122,18 +132,24 @@ function ImportModal({ builders, onClose, onDone }: {
   }
 
   async function doImport() {
-    if (!builderId || !draft.project_name.trim()) return;
+    if (!draft.project_name.trim()) return;
+    if (!useExisting && !builderId) return;
     setImporting(true); setError("");
     try {
-      const clean: Record<string, any> = { builder_id: Number(builderId), slug: slugify(draft.project_name) };
-      (["project_name", "city", "p_start_price", "project_status", "project_description", "main_image_url"] as const)
-        .forEach((k) => { if (draft[k].trim()) clean[k] = draft[k].trim(); });
-      const res = await fetch("/api/admin/precon/projects", {
-        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(clean),
-      });
-      const body = await res.json();
-      if (!res.ok) throw new Error(body.error || "Could not create project.");
-      const project = body.project as Project;
+      let project: Project;
+      if (useExisting && dupe) {
+        project = dupe; // add models under the existing project — no duplicate
+      } else {
+        const clean: Record<string, any> = { builder_id: Number(builderId), slug: slugify(draft.project_name) };
+        (["project_name", "city", "p_start_price", "project_status", "project_description", "main_image_url"] as const)
+          .forEach((k) => { if (draft[k].trim()) clean[k] = draft[k].trim(); });
+        const res = await fetch("/api/admin/precon/projects", {
+          method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(clean),
+        });
+        const body = await res.json();
+        if (!res.ok) throw new Error(body.error || "Could not create project.");
+        project = body.project as Project;
+      }
 
       const chosen = models.filter((m) => selected.includes(m.model_name));
       for (const m of chosen) {
@@ -178,6 +194,17 @@ function ImportModal({ builders, onClose, onDone }: {
               <label className="label">Main image URL<input className="input" value={draft.main_image_url} onChange={(e) => setD("main_image_url", e.target.value)} /></label>
             </div>
             {notes.length ? <p className="text-xs text-muted">Found: {notes.join(" · ")}</p> : null}
+            {dupe ? (
+              <div className="rounded-lg border border-amber-300 bg-amber-50 p-2.5 text-sm">
+                <label className="flex cursor-pointer items-start gap-2">
+                  <input type="checkbox" className="mt-0.5" checked={useExisting} onChange={(e) => setUseExisting(e.target.checked)} />
+                  <span>
+                    <strong>Already in your database:</strong> {dupe.project_name}{dupe.city ? ` (${dupe.city})` : ""}
+                    <span className="block text-xs text-muted">Check to add the scanned models under this existing project instead of creating a duplicate.</span>
+                  </span>
+                </label>
+              </div>
+            ) : null}
 
             <div className="flex items-center gap-2 border-t border-line pt-3">
               <strong className="text-sm">Models</strong>
@@ -211,10 +238,10 @@ function ImportModal({ builders, onClose, onDone }: {
             ) : null}
 
             <div className="flex items-center gap-2 border-t border-line pt-3">
-              <button type="button" className="btn-primary" onClick={doImport} disabled={importing || !builderId || !draft.project_name.trim()}>
-                {importing ? "Importing…" : `Import project${selected.length ? ` + ${selected.length} model${selected.length === 1 ? "" : "s"}` : ""}`}
+              <button type="button" className="btn-primary" onClick={doImport} disabled={importing || (!useExisting && !builderId) || !draft.project_name.trim()}>
+                {importing ? "Importing…" : useExisting && dupe ? `Add ${selected.length} model${selected.length === 1 ? "" : "s"} to ${dupe.project_name}` : `Import project${selected.length ? ` + ${selected.length} model${selected.length === 1 ? "" : "s"}` : ""}`}
               </button>
-              {!builderId ? <span className="text-xs text-muted">Pick a builder to enable import.</span> : null}
+              {!useExisting && !builderId ? <span className="text-xs text-muted">Pick a builder to enable import.</span> : null}
             </div>
           </>
         ) : null}
@@ -255,7 +282,7 @@ export function ProjectsManager({ initial, builders }: { initial: Project[]; bui
         <button className="btn-primary" onClick={() => setEditing({})}>+ Add project</button>
         <button className="btn" onClick={() => setImportOpen(true)}>Import from URL</button>
       </div>
-      {importOpen ? <ImportModal builders={builders} onClose={() => setImportOpen(false)} onDone={(p) => { setImportOpen(false); setRows((r) => [p, ...r]); }} /> : null}
+      {importOpen ? <ImportModal builders={builders} projects={rows} onClose={() => setImportOpen(false)} onDone={(p) => { setImportOpen(false); setRows((r) => (r.some((x) => x.id === p.id) ? r : [p, ...r])); }} /> : null}
       {error ? <p className="text-sm text-red-700">{error}</p> : null}
       {editing ? <Form initial={editing} builders={builders} onCancel={() => setEditing(null)} onSave={save} /> : null}
       <div className="overflow-hidden rounded-2xl bg-white">
