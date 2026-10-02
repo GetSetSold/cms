@@ -1,13 +1,12 @@
 import Link from "next/link";
-import type { MobileCtaButton, SiteSettings, SvgAsset } from "@/lib/types";
+import { Fragment } from "react";
+import type { MobileCtaButton, NavColumn, SiteSettings, SvgAsset } from "@/lib/types";
 import { isDarkColor } from "@/lib/color";
 import { MobileCtaBarInner } from "./MobileCtaBarInner";
 import { Svg } from "./Svg";
 import { getSvgs } from "@/lib/cms";
 
 const DESKTOP_COLS: Record<number, string> = { 1: "md:grid-cols-1", 2: "md:grid-cols-2", 3: "md:grid-cols-3", 4: "md:grid-cols-4" };
-const MOBILE_COLS: Record<number, string> = { 1: "grid-cols-1", 2: "grid-cols-2" };
-
 const BRAND_ROW_TEMPLATE: Record<number, string> = {
   1: "md:[grid-template-columns:1.4fr_repeat(1,1fr)]",
   2: "md:[grid-template-columns:1.4fr_repeat(2,1fr)]",
@@ -15,16 +14,64 @@ const BRAND_ROW_TEMPLATE: Record<number, string> = {
   4: "md:[grid-template-columns:1.4fr_repeat(4,1fr)]",
 };
 
-/** Aligned-rules divider: a light vertical rule at half the column height, vertically
- *  centered so it never touches either end. Rendered per breakpoint because the
- *  "first column in a visual row" differs between the mobile and desktop grids. */
-function VRule({ color, className }: { color: string; className?: string }) {
+/** Aligned-rules divider (desktop): a light vertical rule at half the column height,
+ *  vertically centered so it never touches either end, sitting in the middle of
+ *  the grid track gap. */
+function VRule({ color }: { color: string }) {
   return (
     <span
       aria-hidden
-      className={`pointer-events-none absolute -left-4 bottom-1/4 top-1/4 w-px ${className ?? ""}`}
+      className="pointer-events-none absolute -left-4 bottom-1/4 top-1/4 w-px"
       style={{ background: color }}
     />
+  );
+}
+
+/** Divider slot (mobile pairs): a flow item instead of an absolutely positioned
+ *  rule, so the hairline lands exactly midway between the two columns' content
+ *  no matter how wide each column's text is. */
+function VSlot({ color }: { color: string }) {
+  return (
+    <div aria-hidden className="relative w-8 shrink-0 self-stretch">
+      <span
+        className="absolute bottom-1/4 left-1/2 top-1/4 w-px -translate-x-1/2"
+        style={{ background: color }}
+      />
+    </div>
+  );
+}
+
+function FooterCol({ col }: { col: NavColumn }) {
+  return (
+    <div className="flex min-w-0 flex-col gap-2.5">
+      {col.heading ? <strong>{col.heading}</strong> : null}
+      {col.links.map((l) => <Link key={l.href} href={l.href} className="opacity-75 hover:opacity-100">{l.label}</Link>)}
+    </div>
+  );
+}
+
+function pairs<T>(arr: T[]): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < arr.length; i += 2) out.push(arr.slice(i, i + 2));
+  return out;
+}
+
+/** Mobile: columns flow in pairs, each pair justified edge-to-edge with the
+ *  divider slot between — the hairline is exactly centered on the content. */
+function MobilePairs({ cols, divider }: { cols: NavColumn[]; divider: string }) {
+  return (
+    <>
+      {pairs(cols).map((pair, pi) => (
+        <div key={pi} className="flex items-stretch justify-between gap-6">
+          {pair.map((col, i) => (
+            <Fragment key={i}>
+              {i > 0 ? <VSlot color={divider} /> : null}
+              <FooterCol col={col} />
+            </Fragment>
+          ))}
+        </div>
+      ))}
+    </>
   );
 }
 
@@ -62,54 +109,78 @@ export async function SiteFooter({ settings, logo }: { settings: SiteSettings; l
   const footerDark = !f.bg || isDarkColor(f.bg);
   const footerLogo = logo && footerDark ? { ...logo, markup: liftLogoForDark(logo.markup) } : logo;
 
+  // Brand block shared by the desktop grid and the mobile stack.
+  const brandBlock = (
+    <div className="flex flex-col gap-3">
+      <Link href="/" className="flex items-center gap-3" aria-label={`${settings.site_name} home`}>
+        {footerLogo ? (
+          <Svg asset={footerLogo} label={`${settings.site_name} logo`} style={{ width: compact ? 40 : 48, height: compact ? 40 : 48 }} />
+        ) : null}
+        <span className="flex flex-col leading-tight">
+          <span className={`font-display ${compact ? "text-xl" : "text-3xl"}`}>{settings.site_name}</span>
+          {settings.header?.subline ? (
+            <span className="text-xs opacity-70 md:text-[13px]">{settings.header.subline}</span>
+          ) : null}
+        </span>
+      </Link>
+      {f.tagline ? <p className="opacity-75">{f.tagline}</p> : null}
+      {c.address ? <p className="opacity-75">{c.address}</p> : null}
+      <div className="mt-1 flex flex-col gap-1.5">
+        {c.phone ? <a href={`tel:${c.phone}`} className="opacity-75 hover:opacity-100">{c.phone}</a> : null}
+        {c.email ? <a href={`mailto:${c.email}`} className="opacity-75 hover:opacity-100">{c.email}</a> : null}
+        {c.hours ? <span className="opacity-75">{c.hours}</span> : null}
+      </div>
+    </div>
+  );
+
   return (
     <footer style={{ background: f.bg || undefined, color: f.text || undefined }}>
       <div className={`mx-auto flex max-w-7xl flex-col px-5 md:px-10 ${compact ? "gap-6 pb-20 pt-10 text-[13px] md:pb-8" : "gap-10 pb-28 pt-16 text-[15px] md:pb-12"}`}>
         {/* Row 1: brand block (wider) + this row's columns */}
-        <div className={`grid gap-8 ${MOBILE_COLS[mcols]} ${BRAND_ROW_TEMPLATE[dcols]}`}>
-          <div className="col-span-2 flex flex-col gap-3 md:col-span-1">
-            <Link href="/" className="flex items-center gap-3" aria-label={`${settings.site_name} home`}>
-              {footerLogo ? (
-                <Svg asset={footerLogo} label={`${settings.site_name} logo`} style={{ width: compact ? 40 : 48, height: compact ? 40 : 48 }} />
-              ) : null}
-              <span className="flex flex-col leading-tight">
-                <span className={`font-display ${compact ? "text-xl" : "text-3xl"}`}>{settings.site_name}</span>
-                {settings.header?.subline ? (
-                  <span className="text-xs opacity-70 md:text-[13px]">{settings.header.subline}</span>
-                ) : null}
-              </span>
-            </Link>
-            {f.tagline ? <p className="opacity-75">{f.tagline}</p> : null}
-            {c.address ? <p className="opacity-75">{c.address}</p> : null}
-            <div className="mt-1 flex flex-col gap-1.5">
-              {c.phone ? <a href={`tel:${c.phone}`} className="opacity-75 hover:opacity-100">{c.phone}</a> : null}
-              {c.email ? <a href={`mailto:${c.email}`} className="opacity-75 hover:opacity-100">{c.email}</a> : null}
-              {c.hours ? <span className="opacity-75">{c.hours}</span> : null}
-            </div>
+        <div>
+          {/* Desktop: aligned grid, divider centered in the track gap */}
+          <div className={`hidden gap-8 md:grid ${BRAND_ROW_TEMPLATE[dcols]}`}>
+            {brandBlock}
+            {(firstRow ?? []).map((col, i) => (
+              <div key={i} className="relative">
+                <VRule color={divider} />
+                <FooterCol col={col} />
+              </div>
+            ))}
           </div>
-          {(firstRow ?? []).map((col, i) => (
-            <div key={i} className="relative flex flex-col gap-2.5">
-              <VRule color={divider} className="hidden md:block" />
-              {mcols === 2 && i % 2 !== 0 ? <VRule color={divider} className="md:hidden" /> : null}
-              {col.heading ? <strong>{col.heading}</strong> : null}
-              {col.links.map((l) => <Link key={l.href} href={l.href} className="opacity-75 hover:opacity-100">{l.label}</Link>)}
-            </div>
-          ))}
+          {/* Mobile: brand full-width, then pairs with truly centered dividers */}
+          <div className="flex flex-col gap-8 md:hidden">
+            {brandBlock}
+            {mcols === 2 ? (
+              <MobilePairs cols={firstRow ?? []} divider={divider} />
+            ) : (
+              (firstRow ?? []).map((col, i) => <FooterCol key={i} col={col} />)
+            )}
+          </div>
         </div>
 
         {/* Additional rows: full-width, clean grid of their own — never shares
             a track with the brand block, so column count changes never
             distort neighbouring content the way one shared grid did. */}
         {restRows.map((row, ri) => (
-          <div key={ri} className={`grid gap-8 border-t ${rowPad} ${MOBILE_COLS[mcols]} ${DESKTOP_COLS[dcols]}`} style={{ borderColor: divider }}>
-            {row.map((col, i) => (
-              <div key={i} className="relative flex flex-col gap-2.5">
-                {i % dcols !== 0 ? <VRule color={divider} className="hidden md:block" /> : null}
-                {mcols === 2 && i % 2 !== 0 ? <VRule color={divider} className="md:hidden" /> : null}
-                {col.heading ? <strong>{col.heading}</strong> : null}
-                {col.links.map((l) => <Link key={l.href} href={l.href} className="opacity-75 hover:opacity-100">{l.label}</Link>)}
-              </div>
-            ))}
+          <div key={ri} className={`border-t ${rowPad}`} style={{ borderColor: divider }}>
+            {/* Desktop: aligned grid */}
+            <div className={`hidden gap-8 md:grid ${DESKTOP_COLS[dcols]}`}>
+              {row.map((col, i) => (
+                <div key={i} className="relative">
+                  {i % dcols !== 0 ? <VRule color={divider} /> : null}
+                  <FooterCol col={col} />
+                </div>
+              ))}
+            </div>
+            {/* Mobile: pairs with truly centered dividers */}
+            <div className="flex flex-col gap-8 md:hidden">
+              {mcols === 2 ? (
+                <MobilePairs cols={row} divider={divider} />
+              ) : (
+                row.map((col, i) => <FooterCol key={i} col={col} />)
+              )}
+            </div>
           </div>
         ))}
 
