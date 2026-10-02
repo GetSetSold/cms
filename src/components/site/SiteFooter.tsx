@@ -72,7 +72,12 @@ export async function SiteFooter({ settings, logo }: { settings: SiteSettings; l
               {footerLogo ? (
                 <Svg asset={footerLogo} label={`${settings.site_name} logo`} style={{ width: compact ? 40 : 48, height: compact ? 40 : 48 }} />
               ) : null}
-              <span className={`font-display ${compact ? "text-xl" : "text-3xl"}`}>{settings.site_name}</span>
+              <span className="flex flex-col leading-tight">
+                <span className={`font-display ${compact ? "text-xl" : "text-3xl"}`}>{settings.site_name}</span>
+                {settings.header?.subline ? (
+                  <span className="text-xs opacity-70 md:text-[13px]">{settings.header.subline}</span>
+                ) : null}
+              </span>
             </Link>
             {f.tagline ? <p className="opacity-75">{f.tagline}</p> : null}
             {c.address ? <p className="opacity-75">{c.address}</p> : null}
