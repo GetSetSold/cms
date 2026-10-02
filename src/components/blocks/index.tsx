@@ -994,12 +994,16 @@ function SectionHeader({ data, ctx }: BlockProps) {
   // edge padding — adding this block's own on top of that (via `wrap`)
   // is what made a grouped instance look narrower than a full-width one.
   const outer = ctx.inRow ? "w-full h-full" : wrap;
+  // Was its own one-off treatment (extrabold, non-uppercase, untracked eyebrow; text-3xl/5xl
+  // heading) that didn't match the eyebrow+heading pattern every other block uses — genuinely
+  // different, not just a different size. Now uses the exact same classes as Process Steps /
+  // What's Included / Phases & Reasons, so a standalone header looks identical to a combo one.
   return (
-    <div className={`${outer} flex flex-col gap-4 py-6 md:py-14 ${centered ? "items-center text-center" : "items-start text-left"}`}>
-      {data.eyebrow ? <div className="text-base font-extrabold text-accent md:text-lg">{data.eyebrow}</div> : null}
-      {data.heading ? <h2 className={`font-display text-3xl font-extrabold md:text-5xl ${heading(ctx)}`}>{data.heading}</h2> : null}
-      <div className={`h-px w-full ${ctx.dark ? "bg-white/20" : "bg-line"}`} />
-      {data.subline ? <p className={`text-sm font-bold md:text-base ${heading(ctx)}`}>{data.subline}</p> : null}
+    <div className={`${outer} flex flex-col gap-3 py-6 md:py-14 ${centered ? "items-center text-center" : "items-start text-left"}`}>
+      {data.eyebrow ? <div className="text-sm font-semibold uppercase tracking-wide text-primary">{data.eyebrow}</div> : null}
+      {data.heading ? <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2> : null}
+      <div className={`h-px w-full border-t ${ctx.dark ? "border-white/15" : "border-line"}`} />
+      {data.subline ? <p className={`text-lg font-semibold ${heading(ctx)}`}>{data.subline}</p> : null}
     </div>
   );
 }

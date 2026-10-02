@@ -15,7 +15,7 @@ function MergedHeader({ data, layout, dark, color, ctx }: { data: any; layout: M
   const eyebrow = readable ? (dark ? "text-accent" : "text-primary") : dark ? "text-white/85" : "text-ink";
   return (
     <div className="flex flex-col gap-5">
-      {data.eyebrow ? <div className={`text-base font-semibold md:text-lg ${eyebrow}`}>{data.eyebrow}</div> : null}
+      {data.eyebrow ? <div className={`text-sm font-semibold uppercase tracking-wide ${eyebrow}`}>{data.eyebrow}</div> : null}
       {data.heading ? (
         <h2 className={`font-display text-[32px] font-bold leading-[1.02] tracking-tight md:text-[56px] ${dark ? "text-white" : "text-ink"}`}>{data.heading}</h2>
       ) : null}
