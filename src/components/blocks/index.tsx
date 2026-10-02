@@ -102,13 +102,17 @@ function Hero({ data, ctx }: BlockProps) {
       {/* Was its own smaller, muted/faded treatment (12-13px, text-primary/80 or text-muted) — now
          matches the eyebrow used everywhere else (14px, solid, semibold), just swapping which solid
          color reads against a dark vs light background. */}
-      {data.eyebrow ? <div className="text-sm font-semibold uppercase tracking-wide text-primary">{data.eyebrow}</div> : null}
+      {data.eyebrow ? <div className={compact ? `text-[11px] font-semibold uppercase tracking-wide ${dark ? "text-ground/75" : "text-muted"}` : "text-sm font-semibold uppercase tracking-wide text-primary"}>{data.eyebrow}</div> : null}
       {title}
       {data.subheading ? (
-        <>
-          <div className={`h-px w-full border-t ${dark ? "border-white/15" : "border-line"}`} />
-          <p className={`max-w-xl text-lg font-semibold leading-relaxed ${dark ? "text-ground" : "text-ink"}`}>{data.subheading}</p>
-        </>
+        compact ? (
+          <p className={`max-w-xl text-sm leading-relaxed ${dark ? "text-ground/75" : "text-muted"}`}>{data.subheading}</p>
+        ) : (
+          <>
+            <div className={`h-px w-full border-t ${dark ? "border-white/15" : "border-line"}`} />
+            <p className={`max-w-xl text-lg font-semibold leading-relaxed ${dark ? "text-ground" : "text-ink"}`}>{data.subheading}</p>
+          </>
+        )
       ) : null}
     </>
   );
@@ -1002,6 +1006,17 @@ function SectionHeader({ data, ctx }: BlockProps) {
   // edge padding — adding this block's own on top of that (via `wrap`)
   // is what made a grouped instance look narrower than a full-width one.
   const outer = ctx.inRow ? "w-full h-full" : wrap;
+  const compact = ctx.settings.theme.density === "compact";
+  // Compact mode: same tight header as Process Steps / What's Included / Phases & Reasons.
+  if (compact) {
+    return (
+      <div className={`${outer} flex flex-col gap-2 py-6 md:py-10 ${centered ? "items-center text-center" : "items-start text-left"}`}>
+        {data.eyebrow ? <div className={`text-[11px] font-semibold uppercase tracking-wide ${muted(ctx)}`}>{data.eyebrow}</div> : null}
+        {data.heading ? <h2 className={`text-[22px] font-semibold leading-snug tracking-tight md:text-[28px] ${heading(ctx)}`}>{data.heading}</h2> : null}
+        {data.subline ? <p className={`text-sm leading-relaxed ${muted(ctx)}`}>{data.subline}</p> : null}
+      </div>
+    );
+  }
   // Was its own one-off treatment (extrabold, non-uppercase, untracked eyebrow; text-3xl/5xl
   // heading) that didn't match the eyebrow+heading pattern every other block uses — genuinely
   // different, not just a different size. Now uses the exact same classes as Process Steps /

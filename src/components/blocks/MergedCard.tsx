@@ -13,6 +13,17 @@ function MergedHeader({ data, dark, color, ctx }: { data: any; dark: boolean; co
   const brand = dark ? ctx.settings.theme?.accent : ctx.settings.theme?.primary;
   const readable = brand && /^#[0-9a-f]{6}$/i.test(brand) && contrastRatio(brand, color) >= 3;
   const eyebrow = readable ? (dark ? "text-accent" : "text-primary") : dark ? "text-white/85" : "text-ink";
+  const compact = ctx.settings.theme.density === "compact";
+  // Compact mode: same tight header as Process Steps / What's Included / Phases & Reasons.
+  if (compact) {
+    return (
+      <div className="flex flex-col gap-2">
+        {data.eyebrow ? <div className={`text-[11px] font-semibold uppercase tracking-wide ${dark ? "text-white/70" : "text-muted"}`}>{data.eyebrow}</div> : null}
+        {data.heading ? <h2 className={`text-[22px] font-semibold leading-snug tracking-tight md:text-[28px] ${dark ? "text-white" : "text-ink"}`}>{data.heading}</h2> : null}
+        {data.subline ? <p className={`text-sm leading-relaxed ${dark ? "text-white/70" : "text-muted"}`}>{data.subline}</p> : null}
+      </div>
+    );
+  }
   return (
     <div className="flex flex-col gap-3">
       {data.eyebrow ? <div className={`text-sm font-semibold uppercase tracking-wide ${eyebrow}`}>{data.eyebrow}</div> : null}
