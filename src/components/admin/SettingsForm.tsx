@@ -49,19 +49,15 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Sticky tab bar — sits under the admin header (h-16), save always in reach */}
-      <div className="sticky top-16 z-10 -mx-4 border-b border-line bg-ground/95 px-4 py-2 backdrop-blur md:-mx-6 md:px-6">
-        <div className="mx-auto flex w-full max-w-3xl items-center gap-1 overflow-x-auto">
+      {/* Slim tab bar — scrolls away with the page */}
+      <div className="-mx-4 border-b border-line bg-white px-4 md:-mx-6 md:px-6">
+        <div className="mx-auto flex w-full max-w-3xl items-center gap-1 overflow-x-auto py-1.5">
           {TABS.map((t) => (
             <button key={t.id} type="button" onClick={() => goTab(t.id)}
-              className={`shrink-0 whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium transition ${tab === t.id ? "bg-ink text-white" : "text-muted hover:bg-soft hover:text-ink"}`}>
+              className={`shrink-0 whitespace-nowrap rounded-full px-2.5 py-1 text-[13px] font-medium transition ${tab === t.id ? "bg-ink text-white" : "text-muted hover:bg-soft hover:text-ink"}`}>
               {t.label}
             </button>
           ))}
-          <div className="ml-auto flex shrink-0 items-center gap-2 pl-3">
-            {msg ? <span className="hidden whitespace-nowrap text-sm text-muted sm:inline" role="status">{msg}</span> : null}
-            <button type="button" className="btn-primary h-9 shrink-0" onClick={save}>Save changes</button>
-          </div>
         </div>
       </div>
 
@@ -308,7 +304,7 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
                       </label>
                     </div>
                     {(s.mobile_cta?.buttons ?? []).map((btn, i) => (
-                      <div key={i} className="flex flex-col gap-2 rounded-lg border border-line p-2 sm:grid sm:grid-cols-[110px_1fr_180px_1fr_auto] sm:items-start">
+                      <div key={i} className="flex flex-col gap-2 rounded-lg border border-line p-2 sm:grid sm:grid-cols-[110px_minmax(0,1fr)_260px_minmax(0,1fr)_auto] sm:items-start">
                         <select className="input" value={btn.type} onChange={(e) => {
                           const buttons = [...(s.mobile_cta?.buttons ?? [])]; buttons[i] = { ...btn, type: e.target.value as typeof btn.type }; set("mobile_cta", { ...s.mobile_cta, buttons });
                         }}>
@@ -391,7 +387,7 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
                       </select>
                     </label>
                     {(s.social_links?.items ?? []).map((it, i) => (
-                      <div key={i} className="flex flex-col gap-2 rounded-lg border border-line p-2 sm:grid sm:grid-cols-[110px_1fr_auto] sm:items-start">
+                      <div key={i} className="flex flex-col gap-2 rounded-lg border border-line p-2 sm:grid sm:grid-cols-[260px_minmax(0,1fr)_auto] sm:items-start">
                         <SvgPicker value={it.svg_id} svgs={svgs} onChange={(id) => {
                           const items = [...(s.social_links?.items ?? [])]; items[i] = { ...it, svg_id: id ?? "" }; set("social_links", { ...s.social_links, items });
                         }} />
@@ -420,6 +416,11 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
                     <p className="text-xs text-muted">Sitemap: /sitemap.xml · robots: /robots.txt · LocalBusiness schema is added to the home page from your contact details.</p>
           </section>
         )}
+      </div>
+
+      <div className="mx-auto flex w-full max-w-3xl items-center gap-3 border-t border-line pt-4">
+        <button type="button" className="btn-primary" onClick={save}>Save changes</button>
+        {msg ? <span className="text-sm text-muted" role="status">{msg}</span> : null}
       </div>
     </div>
   );
