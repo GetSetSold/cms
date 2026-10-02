@@ -104,7 +104,12 @@ function Hero({ data, ctx }: BlockProps) {
          color reads against a dark vs light background. */}
       {data.eyebrow ? <div className="text-sm font-semibold uppercase tracking-wide text-primary">{data.eyebrow}</div> : null}
       {title}
-      {data.subheading ? <p className={`max-w-xl leading-relaxed ${compact ? "text-sm md:text-[15px]" : "text-sm md:text-[19px]"} ${dark ? "text-ground/75" : "text-muted"}`}>{data.subheading}</p> : null}
+      {data.subheading ? (
+        <>
+          <div className={`h-px w-full border-t ${dark ? "border-white/15" : "border-line"}`} />
+          <p className={`max-w-xl text-lg font-semibold leading-relaxed ${dark ? "text-ground" : "text-ink"}`}>{data.subheading}</p>
+        </>
+      ) : null}
     </>
   );
 

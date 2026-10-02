@@ -6,7 +6,7 @@ export type MergeLayout = "side" | "stacked";
 const shell = "overflow-hidden rounded-[var(--radius-lg)] border-[length:var(--border-card-width)] border-line shadow-[var(--shadow-card)]";
 
 /** The header half. Same fields as the Section Header block (eyebrow, heading, subline). */
-function MergedHeader({ data, layout, dark, color, ctx }: { data: any; layout: MergeLayout; dark: boolean; color: string; ctx: BlockCtx }) {
+function MergedHeader({ data, dark, color, ctx }: { data: any; dark: boolean; color: string; ctx: BlockCtx }) {
   // Eyebrow: use the brand color (primary on light, accent on dark) only when it
   // actually reads against the card's color — measured, not assumed. Otherwise
   // fall back to plain white/ink, so a blue eyebrow never disappears on a blue card.
@@ -14,14 +14,14 @@ function MergedHeader({ data, layout, dark, color, ctx }: { data: any; layout: M
   const readable = brand && /^#[0-9a-f]{6}$/i.test(brand) && contrastRatio(brand, color) >= 3;
   const eyebrow = readable ? (dark ? "text-accent" : "text-primary") : dark ? "text-white/85" : "text-ink";
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-3">
       {data.eyebrow ? <div className={`text-sm font-semibold uppercase tracking-wide ${eyebrow}`}>{data.eyebrow}</div> : null}
       {data.heading ? (
-        <h2 className={`font-display text-[32px] font-bold leading-[1.02] tracking-tight md:text-[56px] ${dark ? "text-white" : "text-ink"}`}>{data.heading}</h2>
+        <h2 className={`font-display font-bold tracking-tight text-[26px] leading-tight md:text-[56px] md:leading-none ${dark ? "text-white" : "text-ink"}`}>{data.heading}</h2>
       ) : null}
-      {/* Side-by-side keeps the heavy rule under the headline; stacked uses the full-width divider instead. */}
-      {layout === "side" && data.heading && data.subline ? <div className={`border-t-2 ${dark ? "border-white" : "border-ink"}`} /> : null}
-      {data.subline ? <p className={`text-[15px] leading-relaxed md:text-lg ${dark ? "text-white/70" : "text-muted"}`}>{data.subline}</p> : null}
+      {/* Full-width hairline between heading and subline, matching the shared section-header pattern. */}
+      {data.heading && data.subline ? <div className={`h-px w-full border-t ${dark ? "border-white/15" : "border-line"}`} /> : null}
+      {data.subline ? <p className={`text-lg font-semibold ${dark ? "text-white" : "text-ink"}`}>{data.subline}</p> : null}
     </div>
   );
 }
@@ -34,7 +34,7 @@ export function MergedCard({ header, layout, color, ctx, partner, partnerId, par
   const dark = isDarkColor(color);
   const rule = dark ? "border-white/25" : "border-line";
   const embed = layout === "side" ? "embed embed-side" : "embed";
-  const head = <MergedHeader data={header} layout={layout} dark={dark} color={color} ctx={ctx} />;
+  const head = <MergedHeader data={header} dark={dark} color={color} ctx={ctx} />;
 
   return (
     <div className={`${shell} ${dark ? "text-white" : "text-ink"}`} style={{ background: color }}>
