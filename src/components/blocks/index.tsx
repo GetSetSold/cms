@@ -99,7 +99,10 @@ function Hero({ data, ctx }: BlockProps) {
           <Svg asset={ctx.svgs[data.centered_icon_svg_id]} className="h-full w-full" />
         </div>
       ) : null}
-      {data.eyebrow ? <div className={`text-xs uppercase tracking-[0.12em] md:text-[13px] ${dark ? "text-primary/80" : "text-muted"}`}>{data.eyebrow}</div> : null}
+      {/* Was its own smaller, muted/faded treatment (12-13px, text-primary/80 or text-muted) — now
+         matches the eyebrow used everywhere else (14px, solid, semibold), just swapping which solid
+         color reads against a dark vs light background. */}
+      {data.eyebrow ? <div className="text-sm font-semibold uppercase tracking-wide text-primary">{data.eyebrow}</div> : null}
       {title}
       {data.subheading ? <p className={`max-w-xl leading-relaxed ${compact ? "text-sm md:text-[15px]" : "text-sm md:text-[19px]"} ${dark ? "text-ground/75" : "text-muted"}`}>{data.subheading}</p> : null}
     </>
