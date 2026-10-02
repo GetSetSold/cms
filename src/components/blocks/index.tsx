@@ -1078,8 +1078,8 @@ function WhatsIncluded({ data, ctx }: BlockProps) {
           return (
             <div key={i} className={`flex flex-col items-start gap-4 border-r border-b ${compact ? "p-5" : "p-6"} ${lineCls}`}>
               {icon ? (
-                <span className={compact ? "flex h-7 w-7 items-center justify-center" : "flex h-9 w-9 items-center justify-center border-b-2"} style={{ color: iconColor, borderColor: iconColor }}>
-                  <Svg asset={icon} className={compact ? "h-5 w-5" : "h-7 w-7"} />
+                <span className={compact ? "flex h-14 w-14 items-center justify-center" : "flex h-18 w-18 items-center justify-center border-b-2"} style={{ color: iconColor, borderColor: iconColor }}>
+                  <Svg asset={icon} className={compact ? "h-10 w-10" : "h-14 w-14"} />
                 </span>
               ) : null}
               <div className="flex flex-col gap-1.5">
