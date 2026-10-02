@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Svg } from "@/components/site/Svg";
-import { isDarkColor } from "@/lib/color";
+import { isDarkColor, contrastRatio } from "@/lib/color";
 import type { BlockCtx } from "./index";
 
 type Item = { svg_id?: string; icon_color?: string; title?: string; text?: string; href?: string; link_label?: string };
@@ -51,14 +51,19 @@ function Cta({ href, label, t, style, textSize = "", className = "" }: { href: s
 
 /** The header half: eyebrow, headline, bold subline under a hairline divider
  *  (matching the shared section-header pattern), small note, main link. */
-function Intro({ data, t, topRule, bs, compact }: { data: any; t: Tone; topRule?: boolean; bs?: "solid" | "bordered"; compact?: boolean }) {
+function Intro({ data, t, topRule, bs, compact, bg, accent }: { data: any; t: Tone; topRule?: boolean; bs?: "solid" | "bordered"; compact?: boolean; bg?: string; accent?: string }) {
   const link = data.link?.label && data.link?.href ? data.link : null;
-  // Compact mode: same tight header as Process Steps / What's Included / Phases & Reasons.
+  // Compact mode: same tight header as Process Steps / What's Included / Phases & Reasons,
+  // with the eyebrow in the settings Accent color — unless the accent can't be read on this
+  // section's own background color (e.g. accent-on-accent), then plain white/ink.
+  const bgHex = bg ?? "";
+  const accentHex = accent ?? "";
+  const accentReadable = !/^#[0-9a-f]{6}$/i.test(bgHex) || !/^#[0-9a-f]{6}$/i.test(accentHex) || contrastRatio(accentHex, bgHex) >= 3;
   if (compact) {
     return (
       <div className="flex flex-col gap-2">
         {topRule ? <div className={`border-t ${t.rule}`} /> : null}
-        {data.eyebrow ? <div className="text-[11px] font-semibold uppercase tracking-wide text-accent">{data.eyebrow}</div> : null}
+        {data.eyebrow ? <div className={`text-[11px] font-semibold uppercase tracking-wide ${accentReadable ? "text-accent" : t.dark ? "text-white" : "text-ink"}`}>{data.eyebrow}</div> : null}
         {data.heading ? <h2 className={`text-[22px] font-semibold leading-snug tracking-tight md:text-[28px] ${t.head}`}>{data.heading}</h2> : null}
         {data.text ? <p className={`text-sm leading-relaxed ${t.dark ? "text-white/70" : "text-muted"}`}>{data.text}</p> : null}
         {data.footnote ? (
@@ -152,7 +157,7 @@ export function FeatureSection({ data, ctx }: { data: any; ctx: BlockCtx }) {
   if (layout === "simple") {
     body = (
       <div className="grid gap-10 p-6 md:grid-cols-[1.1fr_1fr] md:items-center md:gap-16 md:p-16">
-        <Intro data={data} t={tl} bs={bs} compact={compact} />
+        <Intro data={data} t={tl} bs={bs} compact={compact} bg={custom} accent={ctx.settings.theme?.accent} />
         <div className={`flex flex-col divide-y border-y ${tr.rule} ${tr.divide}`}>
           {items.map((it, i) => (
             <div key={i} className="flex items-start gap-5 py-6 md:py-8">
@@ -170,7 +175,7 @@ export function FeatureSection({ data, ctx }: { data: any; ctx: BlockCtx }) {
   } else if (layout === "lines") {
     body = (
       <div className="grid md:grid-cols-[40%_60%]">
-        <div className="flex flex-col justify-center p-6 md:p-14"><Intro data={data} t={tl} bs={bs} compact={compact} /></div>
+        <div className="flex flex-col justify-center p-6 md:p-14"><Intro data={data} t={tl} bs={bs} compact={compact} bg={custom} accent={ctx.settings.theme?.accent} /></div>
         <div className={`flex flex-col divide-y border-t md:border-l md:border-t-0 ${tr.rule} ${tr.divide}`}>
           {items.map((it, i) => <Row key={i} it={it} ctx={ctx} t={tr} bs={bs} />)}
         </div>
@@ -179,7 +184,7 @@ export function FeatureSection({ data, ctx }: { data: any; ctx: BlockCtx }) {
   } else if (layout === "cross") {
     body = (
       <div className="grid md:grid-cols-[34%_66%]">
-        <div className={`flex flex-col justify-center p-6 md:p-12 ${leftDark ? "bg-white/5" : "bg-black/[0.03]"}`}><Intro data={data} t={tl} bs={bs} compact={compact} /></div>
+        <div className={`flex flex-col justify-center p-6 md:p-12 ${leftDark ? "bg-white/5" : "bg-black/[0.03]"}`}><Intro data={data} t={tl} bs={bs} compact={compact} bg={custom} accent={ctx.settings.theme?.accent} /></div>
         <div className={`grid grid-cols-1 border-t md:grid-cols-2 md:border-l md:border-t-0 ${tr.rule}`}>
           {items.map((it, i) => <Cell key={i} it={it} ctx={ctx} t={tr} i={i} n={items.length} bs={bs} />)}
         </div>
@@ -189,7 +194,7 @@ export function FeatureSection({ data, ctx }: { data: any; ctx: BlockCtx }) {
     // bands: dark left / light right by default; a custom color makes it one color with a divider
     body = (
       <div className="grid md:grid-cols-[38%_62%]">
-        <div className={`flex flex-col p-6 md:p-12 ${custom ? "" : "bg-ink"}`}><Intro data={data} t={tl} topRule bs={bs} compact={compact} /></div>
+        <div className={`flex flex-col p-6 md:p-12 ${custom ? "" : "bg-ink"}`}><Intro data={data} t={tl} topRule bs={bs} compact={compact} bg={custom} accent={ctx.settings.theme?.accent} /></div>
         <div className={`flex flex-col divide-y ${tr.divide} ${custom ? `border-t md:border-l md:border-t-0 ${tr.rule}` : "bg-soft"}`}>
           {items.map((it, i) => <Row key={i} it={it} ctx={ctx} t={tr} bs={bs} />)}
         </div>

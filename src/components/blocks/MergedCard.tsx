@@ -22,7 +22,7 @@ function MergedHeader({ data, dark, color, ctx }: { data: any; dark: boolean; co
   if (compact) {
     return (
       <div className="flex flex-col gap-2">
-        {data.eyebrow ? <div className={`text-[11px] font-semibold uppercase tracking-wide ${accentReadable ? "text-accent" : dark ? "text-white/85" : "text-ink"}`}>{data.eyebrow}</div> : null}
+        {data.eyebrow ? <div className={`text-[11px] font-semibold uppercase tracking-wide ${accentReadable ? "text-accent" : dark ? "text-white" : "text-ink"}`}>{data.eyebrow}</div> : null}
         {data.heading ? <h2 className={`text-[22px] font-semibold leading-snug tracking-tight md:text-[28px] ${dark ? "text-white" : "text-ink"}`}>{data.heading}</h2> : null}
         {data.subline ? <p className={`text-sm leading-relaxed ${dark ? "text-white/70" : "text-muted"}`}>{data.subline}</p> : null}
       </div>

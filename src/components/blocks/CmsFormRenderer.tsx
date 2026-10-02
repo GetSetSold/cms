@@ -352,14 +352,14 @@ export function CmsFormRenderer({ form, pageId, extraFields, secondaryAction }: 
   const boxed = form.choice_style === "boxed";
   const pills = form.choice_style === "pills";
   const dark = form.theme === "dark";
-  // Scoped to this form (not the page's own light/dark), and colored from the site's own brand
-  // color rather than a fixed blue, so "boxed" looks right on any client's theme.
+  // Scoped to this form (not the page's own light/dark), and colored from the site's Accent
+  // (Settings > Branding) rather than a fixed blue, so "boxed" looks right on any client's theme.
   const themeVars: React.CSSProperties = dark
     ? { "--fq-ink": "#F6F7FA", "--fq-surface": "#171A21", "--fq-line": "#323744", "--fq-choice-border": "#4B5563",
-        "--fq-accent": "var(--color-primary)", "--fq-accent-soft": "color-mix(in srgb, var(--color-primary) 24%, #171A21)",
+        "--fq-accent": "var(--color-accent)", "--fq-accent-soft": "color-mix(in srgb, var(--color-accent) 24%, #171A21)",
         "--fq-shadow": "0 10px 28px rgba(0,0,0,.35)", background: "#0E1015", color: "#F6F7FA" } as React.CSSProperties
     : { "--fq-ink": "var(--color-ink, #14142B)", "--fq-surface": "#FFFFFF", "--fq-line": "var(--color-line, #E5E7EB)", "--fq-choice-border": "#AAB1BC",
-        "--fq-accent": "var(--color-primary)", "--fq-accent-soft": "color-mix(in srgb, var(--color-primary) 10%, white)",
+        "--fq-accent": "var(--color-accent)", "--fq-accent-soft": "color-mix(in srgb, var(--color-accent) 10%, white)",
         "--fq-shadow": "0 8px 24px rgba(16,24,40,.06)" } as React.CSSProperties;
 
   // Which questions currently apply (conditional questions, and everything that depended on a
