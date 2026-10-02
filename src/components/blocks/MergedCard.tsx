@@ -41,7 +41,7 @@ export function MergedCard({ header, layout, color, ctx, partner, partnerId, par
       {layout === "side" ? (
         <div className="grid md:grid-cols-[42%_58%]">
           <div className="flex flex-col justify-center p-6 md:p-14">{head}</div>
-          <div className={`border-t p-6 md:border-l md:border-t-0 md:p-12 ${rule} ${partnerClass}`}>
+          <div className={`flex flex-col justify-center border-t p-6 md:border-l md:border-t-0 md:p-12 ${rule} ${partnerClass}`}>
             <div id={partnerId} className={embed}>{partner}</div>
           </div>
         </div>
