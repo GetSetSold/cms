@@ -49,15 +49,21 @@ function Cta({ href, label, t, style, textSize = "", className = "" }: { href: s
   );
 }
 
-/** The header half: eyebrow, headline, text, small note under a divider, main link. */
+/** The header half: eyebrow, headline, bold subline under a hairline divider
+ *  (matching the shared section-header pattern), small note, main link. */
 function Intro({ data, t, topRule, bs }: { data: any; t: Tone; topRule?: boolean; bs?: "solid" | "bordered" }) {
   const link = data.link?.label && data.link?.href ? data.link : null;
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-3">
       {topRule ? <div className={`border-t ${t.rule}`} /> : null}
-      {data.eyebrow ? <div className={`text-base font-semibold md:text-lg ${t.accent}`}>{data.eyebrow}</div> : null}
-      {data.heading ? <h2 className={`font-display text-[32px] font-bold leading-[1.02] tracking-tight md:text-[56px] ${t.head}`}>{data.heading}</h2> : null}
-      {data.text ? <p className={`text-[15px] leading-relaxed md:text-lg ${t.body}`}>{data.text}</p> : null}
+      {data.eyebrow ? <div className={`text-sm font-semibold uppercase tracking-wide ${t.accent}`}>{data.eyebrow}</div> : null}
+      {data.heading ? <h2 className={`font-display font-bold tracking-tight text-[26px] leading-tight md:text-[56px] md:leading-none ${t.head}`}>{data.heading}</h2> : null}
+      {data.text ? (
+        <>
+          <div className={`h-px w-full border-t ${t.dark ? "border-white/15" : "border-line"}`} />
+          <p className={`text-lg font-semibold leading-relaxed ${t.head}`}>{data.text}</p>
+        </>
+      ) : null}
       {data.footnote ? (
         <>
           <div className={`border-t ${t.rule}`} />
