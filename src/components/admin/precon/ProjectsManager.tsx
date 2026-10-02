@@ -1,6 +1,8 @@
 "use client";
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import type { Project, Builder } from "@/lib/precon";
+import { PaymentPlansManager } from "./PaymentPlansManager";
+import { GalleryManager } from "./GalleryManager";
 
 const slugify = (s: string) => s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 
@@ -51,6 +53,7 @@ export function ProjectsManager({ initial, builders }: { initial: Project[]; bui
   const [rows, setRows] = useState(initial);
   const [editing, setEditing] = useState<Partial<Project> | null>(null);
   const [error, setError] = useState("");
+  const [expanded, setExpanded] = useState<string | null>(null);
   const builderName = (id: number) => builders.find((b) => b.id === id)?.builder_name ?? "—";
 
   async function save(d: Partial<Project>) {
@@ -78,18 +81,35 @@ export function ProjectsManager({ initial, builders }: { initial: Project[]; bui
       {editing ? <Form initial={editing} builders={builders} onCancel={() => setEditing(null)} onSave={save} /> : null}
       <div className="overflow-hidden rounded-2xl bg-white">
         <table className="w-full text-left">
-          <thead className="border-b border-line text-xs uppercase tracking-wide text-muted"><tr><th className="p-4">Project</th><th className="p-4">Builder</th><th className="p-4">City</th><th className="p-4">Status</th><th className="p-4"></th></tr></thead>
+          <thead className="border-b border-line text-xs uppercase tracking-wide text-muted"><tr><th className="w-10 p-4"></th><th className="p-4">Project</th><th className="p-4">Builder</th><th className="p-4">City</th><th className="p-4">Status</th><th className="p-4"></th></tr></thead>
           <tbody>
             {rows.map((r) => (
-              <tr key={r.id} className="border-b border-line/60 last:border-0">
-                <td className="p-4 font-medium">{r.project_name}</td>
-                <td className="p-4 text-muted">{builderName(r.builder_id)}</td>
-                <td className="p-4 text-muted">{r.city}</td>
-                <td className="p-4 text-muted">{r.project_status}</td>
-                <td className="p-4"><div className="flex gap-3 text-xs"><button className="font-medium text-primary" onClick={() => setEditing(r)}>Edit</button><button className="font-medium text-red-700" onClick={() => remove(r.id)}>Delete</button></div></td>
-              </tr>
+              <Fragment key={r.id}>
+                <tr className="border-b border-line/60">
+                  <td className="p-4">
+                    <button type="button" aria-label="Toggle details" onClick={() => setExpanded(expanded === r.id ? null : r.id)} className="flex h-6 w-6 items-center justify-center text-muted hover:text-ink">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" className={`transition-transform ${expanded === r.id ? "rotate-90" : ""}`}><path d="m9 6 6 6-6 6" /></svg>
+                    </button>
+                  </td>
+                  <td className="p-4 font-medium">{r.project_name}</td>
+                  <td className="p-4 text-muted">{builderName(r.builder_id)}</td>
+                  <td className="p-4 text-muted">{r.city}</td>
+                  <td className="p-4 text-muted">{r.project_status}</td>
+                  <td className="p-4"><div className="flex gap-3 text-xs"><button className="font-medium text-primary" onClick={() => setEditing(r)}>Edit</button><button className="font-medium text-red-700" onClick={() => remove(r.id)}>Delete</button></div></td>
+                </tr>
+                {expanded === r.id ? (
+                  <tr className="border-b border-line/60 bg-ground/50">
+                    <td colSpan={6} className="p-4">
+                      <div className="flex flex-col gap-5">
+                        <PaymentPlansManager projectId={r.id} />
+                        <GalleryManager relatedType="project" relatedId={r.id} />
+                      </div>
+                    </td>
+                  </tr>
+                ) : null}
+              </Fragment>
             ))}
-            {!rows.length ? <tr><td colSpan={5} className="p-8 text-center text-muted">No projects yet.</td></tr> : null}
+            {!rows.length ? <tr><td colSpan={6} className="p-8 text-center text-muted">No projects yet.</td></tr> : null}
           </tbody>
         </table>
       </div>

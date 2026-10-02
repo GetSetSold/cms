@@ -1,6 +1,7 @@
 "use client";
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import type { HomeModel, Project } from "@/lib/precon";
+import { FloorplansManager } from "./FloorplansManager";
 
 const slugify = (s: string) => s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 
@@ -36,7 +37,6 @@ function Form({ initial, projects, onSave, onCancel }: { initial: Partial<HomeMo
       <label className="label">Model image URL<input className="input" value={d.model_image_url ?? ""} onChange={(e) => set("model_image_url", e.target.value)} /></label>
       <label className="label">Title (marketing title, may differ from name)<input className="input" value={d.title ?? ""} onChange={(e) => set("title", e.target.value)} /></label>
       <label className="label">Description<textarea className="textarea" rows={3} value={d.description ?? ""} onChange={(e) => set("description", e.target.value)} /></label>
-      <p className="text-xs text-muted">Floor plans, payment plans, and gallery photos beyond the main image are managed directly in the pre-con database for now — ask if you'd like admin screens for those too.</p>
       <div className="flex gap-2"><button className="btn" onClick={onCancel}>Cancel</button><button className="btn-primary" onClick={() => onSave(d)} disabled={!d.model_name?.trim() || !d.slug?.trim() || !d.project_id}>Save</button></div>
     </div>
   );
@@ -46,6 +46,7 @@ export function ModelsManager({ initial, projects }: { initial: HomeModel[]; pro
   const [rows, setRows] = useState(initial);
   const [editing, setEditing] = useState<Partial<HomeModel> | null>(null);
   const [error, setError] = useState("");
+  const [expanded, setExpanded] = useState<string | null>(null);
   const projectName = (id: string | null) => projects.find((p) => p.id === id)?.project_name ?? "—";
 
   async function save(d: Partial<HomeModel>) {
@@ -73,16 +74,28 @@ export function ModelsManager({ initial, projects }: { initial: HomeModel[]; pro
       {editing ? <Form initial={editing} projects={projects} onCancel={() => setEditing(null)} onSave={save} /> : null}
       <div className="overflow-hidden rounded-2xl bg-white">
         <table className="w-full text-left">
-          <thead className="border-b border-line text-xs uppercase tracking-wide text-muted"><tr><th className="p-4">Model</th><th className="p-4">Project</th><th className="p-4"></th></tr></thead>
+          <thead className="border-b border-line text-xs uppercase tracking-wide text-muted"><tr><th className="w-10 p-4"></th><th className="p-4">Model</th><th className="p-4">Project</th><th className="p-4"></th></tr></thead>
           <tbody>
             {rows.map((r) => (
-              <tr key={r.id} className="border-b border-line/60 last:border-0">
-                <td className="p-4 font-medium">{r.model_name}</td>
-                <td className="p-4 text-muted">{projectName(r.project_id)}</td>
-                <td className="p-4"><div className="flex gap-3 text-xs"><button className="font-medium text-primary" onClick={() => setEditing(r)}>Edit</button><button className="font-medium text-red-700" onClick={() => remove(r.id)}>Delete</button></div></td>
-              </tr>
+              <Fragment key={r.id}>
+                <tr className="border-b border-line/60">
+                  <td className="p-4">
+                    <button type="button" aria-label="Toggle floor plans" onClick={() => setExpanded(expanded === r.id ? null : r.id)} className="flex h-6 w-6 items-center justify-center text-muted hover:text-ink">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" className={`transition-transform ${expanded === r.id ? "rotate-90" : ""}`}><path d="m9 6 6 6-6 6" /></svg>
+                    </button>
+                  </td>
+                  <td className="p-4 font-medium">{r.model_name}</td>
+                  <td className="p-4 text-muted">{projectName(r.project_id)}</td>
+                  <td className="p-4"><div className="flex gap-3 text-xs"><button className="font-medium text-primary" onClick={() => setEditing(r)}>Edit</button><button className="font-medium text-red-700" onClick={() => remove(r.id)}>Delete</button></div></td>
+                </tr>
+                {expanded === r.id ? (
+                  <tr className="border-b border-line/60 bg-ground/50">
+                    <td colSpan={4} className="p-4"><FloorplansManager modelId={r.id} /></td>
+                  </tr>
+                ) : null}
+              </Fragment>
             ))}
-            {!rows.length ? <tr><td colSpan={3} className="p-8 text-center text-muted">No models yet.</td></tr> : null}
+            {!rows.length ? <tr><td colSpan={4} className="p-8 text-center text-muted">No models yet.</td></tr> : null}
           </tbody>
         </table>
       </div>
