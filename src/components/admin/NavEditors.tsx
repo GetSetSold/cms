@@ -9,11 +9,11 @@ function ColumnEditor({ column, onChange, onRemove }: { column: NavColumn; onCha
   return (
     <div className="flex flex-col gap-2 rounded-lg border border-line p-3">
       <div className="flex items-center gap-2">
-        <input className="input" placeholder="Column heading (optional)" value={column.heading ?? ""} onChange={(e) => onChange({ ...column, heading: e.target.value })} />
+        <input className="input min-w-0 flex-1" placeholder="Column heading (optional)" value={column.heading ?? ""} onChange={(e) => onChange({ ...column, heading: e.target.value })} />
         <button type="button" className="shrink-0 text-sm text-red-700" onClick={onRemove}>Remove column</button>
       </div>
       {column.links.map((l, i) => (
-        <div key={i} className="grid grid-cols-[1fr_1fr_auto] gap-2">
+        <div key={i} className="flex flex-col gap-2 sm:grid sm:grid-cols-[1fr_1fr_auto]">
           <input className="input" placeholder="Label" value={l.label} onChange={(e) => setLink(i, { label: e.target.value })} />
           <input className="input" placeholder="/services/roofing" value={l.href} onChange={(e) => setLink(i, { href: e.target.value })} />
           <button type="button" aria-label="Remove link" onClick={() => onChange({ ...column, links: column.links.filter((_, j) => j !== i) })}>✕</button>
@@ -84,6 +84,9 @@ export function NavItemEditor({ item, onChange, onRemove, onMoveUp, onMoveDown, 
 }
 
 export function FooterRowsEditor({ rows, maxPerRow, onChange }: { rows: NavColumn[][]; maxPerRow: number; onChange: (r: NavColumn[][]) => void }) {
+  // First row open by default; newly added rows open automatically.
+  const [open, setOpen] = useState<number[]>([0]);
+  const toggle = (ri: number) => setOpen(open.includes(ri) ? open.filter((i) => i !== ri) : [...open, ri]);
   const setRow = (ri: number, row: NavColumn[]) => onChange(rows.map((r, i) => (i === ri ? row : r)));
   const setColumn = (ri: number, ci: number, c: NavColumn) => setRow(ri, rows[ri].map((x, j) => (j === ci ? c : x)));
   const moveRow = (ri: number, dir: -1 | 1) => {
@@ -91,29 +94,55 @@ export function FooterRowsEditor({ rows, maxPerRow, onChange }: { rows: NavColum
     [next[ri], next[ri + dir]] = [next[ri + dir], next[ri]];
     onChange(next);
   };
+  const removeRow = (ri: number) => {
+    onChange(rows.filter((_, i) => i !== ri));
+    setOpen(open.filter((i) => i !== ri).map((i) => (i > ri ? i - 1 : i)));
+  };
+  const addRow = () => {
+    onChange([...rows, [{ heading: "", links: [{ label: "", href: "" }] }]]);
+    setOpen([...open, rows.length]);
+  };
+  const summary = (row: NavColumn[]) => {
+    const heads = row.map((c) => c.heading).filter(Boolean) as string[];
+    const links = row.reduce((n, c) => n + c.links.length, 0);
+    return `${heads.length ? heads.join(" · ") : "Untitled"} — ${links} link${links === 1 ? "" : "s"}`;
+  };
 
   return (
-    <div className="flex flex-col gap-4">
-      {rows.map((row, ri) => (
-        <div key={ri} className="flex flex-col gap-2 rounded-xl bg-ground p-3">
-          <div className="flex items-center gap-2 px-1">
-            <ReorderButtons onUp={() => moveRow(ri, -1)} onDown={() => moveRow(ri, 1)} canUp={ri > 0} canDown={ri < rows.length - 1} />
-            <strong className="text-xs uppercase tracking-wide text-muted">Row {ri + 1} · {row.length}/{maxPerRow} columns</strong>
-            <button type="button" className="ml-auto text-sm text-red-700" onClick={() => onChange(rows.filter((_, i) => i !== ri))}>Remove row</button>
+    <div className="flex flex-col gap-3">
+      {rows.map((row, ri) => {
+        const isOpen = open.includes(ri);
+        return (
+          <div key={ri} className="flex flex-col gap-2 rounded-xl bg-ground p-3">
+            <div className="flex items-center gap-2 px-1">
+              <ReorderButtons onUp={() => moveRow(ri, -1)} onDown={() => moveRow(ri, 1)} canUp={ri > 0} canDown={ri < rows.length - 1} />
+              <button type="button" onClick={() => toggle(ri)} className="flex min-w-0 flex-1 items-center gap-2 text-left">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" className={`shrink-0 transition-transform ${isOpen ? "rotate-90" : ""}`}><path d="m9 6 6 6-6 6" /></svg>
+                <span className="min-w-0">
+                  <strong className="text-xs uppercase tracking-wide">Row {ri + 1}</strong>
+                  <span className="block truncate text-xs text-muted">{summary(row)} · {row.length}/{maxPerRow} columns</span>
+                </span>
+              </button>
+              <button type="button" className="shrink-0 text-sm text-red-700" onClick={() => removeRow(ri)}>Remove</button>
+            </div>
+            {isOpen ? (
+              <>
+                {row.map((col, ci) => (
+                  <ColumnEditor key={ci} column={col} onChange={(c) => setColumn(ri, ci, c)} onRemove={() => setRow(ri, row.filter((_, j) => j !== ci))} />
+                ))}
+                {row.length < maxPerRow ? (
+                  <button type="button" className="btn self-start border-dashed" onClick={() => setRow(ri, [...row, { heading: "", links: [{ label: "", href: "" }] }])}>
+                    + Add column to this row
+                  </button>
+                ) : (
+                  <p className="px-1 text-xs text-muted">This row is full ({maxPerRow} columns) — add another row for more.</p>
+                )}
+              </>
+            ) : null}
           </div>
-          {row.map((col, ci) => (
-            <ColumnEditor key={ci} column={col} onChange={(c) => setColumn(ri, ci, c)} onRemove={() => setRow(ri, row.filter((_, j) => j !== ci))} />
-          ))}
-          {row.length < maxPerRow ? (
-            <button type="button" className="btn self-start border-dashed" onClick={() => setRow(ri, [...row, { heading: "", links: [{ label: "", href: "" }] }])}>
-              + Add column to this row
-            </button>
-          ) : (
-            <p className="px-1 text-xs text-muted">This row is full ({maxPerRow} columns) — add another row for more.</p>
-          )}
-        </div>
-      ))}
-      <button type="button" className="btn self-start border-dashed" onClick={() => onChange([...rows, [{ heading: "", links: [{ label: "", href: "" }] }]])}>
+        );
+      })}
+      <button type="button" className="btn self-start border-dashed" onClick={addRow}>
         + Add row
       </button>
     </div>

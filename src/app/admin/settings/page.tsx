@@ -12,7 +12,7 @@ export default async function SettingsPage() {
   return (
     <>
       <AdminPageHeader title="Settings" />
-      <div className="flex flex-col gap-6 p-8">
+      <div className="flex flex-col gap-4 p-4 md:p-6">
         <SettingsForm initial={settings as SiteSettings} svgs={(svgs ?? []) as SvgAsset[]} />
       </div>
     </>
