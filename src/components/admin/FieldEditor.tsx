@@ -55,8 +55,12 @@ export function FieldEditor({ fields, value, onChange, svgs, forms = [] }: Props
               </div>
             );
           case "link":
+            // Used to be a 2-column grid — fine on a wide screen, but this panel is a fixed 340px,
+            // so each input landed in a ~160px column: cramped for anything longer than a few
+            // characters (a real button label, a real URL) and part of what made the panel feel like
+            // it needed to scroll sideways to work with. Stacked, each field gets the full width.
             return (
-              <div key={f.key} className="grid grid-cols-2 gap-2">
+              <div key={f.key} className="flex flex-col gap-2">
                 <label className="label">{f.label}<input className="input" value={v?.label ?? ""} onChange={(e) => set(f.key, { ...v, label: e.target.value })} /></label>
                 <label className="label">Links to<input className="input" value={v?.href ?? ""} placeholder="/contact or #quote" onChange={(e) => set(f.key, { ...v, href: e.target.value })} /></label>
               </div>
