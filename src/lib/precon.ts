@@ -29,7 +29,7 @@ export type Builder = {
 
 export type Project = {
   id: string; project_name: string; slug: string; city: string | null; project_status: string | null;
-  p_start_price: string | null; builder_id: number; main_image_url: string | null;
+  p_start_price: number | string | null; builder_id: number; main_image_url: string | null;
   beds: string | null; baths: string | null; sqft: string | null; // sqft is often a range like "1396 - 1687" — display as-is, don't parse
   vip_release: string | null; // "Yes"/"No" flag, not a date
   project_message: string | null; project_description: string | null; lat: number | null; lng: number | null;
@@ -56,7 +56,7 @@ export type Promo = {
 export type Amenity = { id: string; title: string | null; description: string | null; icon_url: string | null };
 export type Floorplan = { id: string; model_id: string | null; floorplan_image_url: string | null; floorplan_name: string | null };
 export type PaymentPlan = { id: string; project_id: string | null; home_type_id: string | null; title: string | null; total_amount: number | null; total_days: number | null; show: boolean | null };
-export type PaymentInstallment = { id: string; payment_plan_id: string | null; amount: number; due_days: number | null; sort_order: number | null; Description: string | null };
+export type PaymentInstallment = { id: string; payment_plan_id: string | null; amount: number; due_days: number | null; sort_order: number | null; description: string | null };
 
 /** Images are polymorphic — one shared library, attached to anything via
  *  image_assignments.related_type/related_id. This resolves all images for

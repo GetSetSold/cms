@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 type Row = Record<string, any>;
 
 const SKIP = new Set(["id", "created_at", "updated_at"]);
-const FALLBACK_COLS = ["id", "url", "title", "sort_order"];
+const FALLBACK_COLS = ["id", "image_url", "alt_text", "sort_order"]; // matches real schema
 
 // Renders a raw-data form for whatever columns the images table actually has.
 export function GalleryManager({ relatedType, relatedId }: { relatedType: string; relatedId: string }) {
@@ -132,7 +132,7 @@ export function GalleryManager({ relatedType, relatedId }: { relatedType: string
             ? <img src={im[urlCol]} alt="" className="h-12 w-16 shrink-0 rounded object-cover" />
             : <div className="h-12 w-16 shrink-0 rounded bg-soft" />}
           <div className="min-w-0 flex-1">
-            <div className="truncate text-sm font-medium">{im.title ?? im.name ?? `Image ${String(im.id).slice(0, 8)}`}</div>
+            <div className="truncate text-sm font-medium">{im.alt_text ?? im.title ?? im.name ?? `Image ${String(im.id).slice(0, 8)}`}</div>
             <div className="truncate text-xs text-muted">{urlCol ? im[urlCol] : null}</div>
           </div>
           {canSort ? (

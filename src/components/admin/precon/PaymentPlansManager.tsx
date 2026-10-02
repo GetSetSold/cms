@@ -12,7 +12,7 @@ function InstallmentForm({ initial, onSave, onCancel }: { initial: Partial<Payme
         <label className="label">Amount ($)<input className="input" type="number" min={0} value={d.amount ?? ""} onChange={(e) => set("amount", num(e.target.value))} /></label>
         <label className="label">Due (days)<input className="input" type="number" min={0} value={d.due_days ?? ""} onChange={(e) => set("due_days", num(e.target.value))} /></label>
         <label className="label">Order<input className="input" type="number" min={0} value={d.sort_order ?? ""} onChange={(e) => set("sort_order", num(e.target.value))} /></label>
-        <label className="label">Description<input className="input" value={(d as any).Description ?? ""} onChange={(e) => set("Description", e.target.value)} /></label>
+        <label className="label">Description<input className="input" value={d.description ?? ""} onChange={(e) => set("description", e.target.value)} /></label>
       </div>
       <div className="flex gap-2">
         <button type="button" className="btn h-8 px-3 text-xs" onClick={onCancel}>Cancel</button>
@@ -71,7 +71,7 @@ function InstallmentsManager({ planId }: { planId: string }) {
           <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-soft text-xs font-bold text-muted">{r.sort_order ?? "–"}</span>
           <span className="font-semibold">${Number(r.amount).toLocaleString()}</span>
           <span className="text-muted">{r.due_days != null ? `day ${r.due_days}` : "no due date"}</span>
-          <span className="min-w-0 flex-1 truncate text-muted">{(r as any).Description}</span>
+          <span className="min-w-0 flex-1 truncate text-muted">{r.description}</span>
           <div className="flex shrink-0 gap-3 text-xs">
             <button type="button" className="font-medium text-primary" onClick={() => setEditing(r)}>Edit</button>
             <button type="button" className="font-medium text-red-700" onClick={() => remove(r.id)}>Delete</button>

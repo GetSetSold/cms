@@ -129,6 +129,11 @@ function ImportModal({ builders, onClose, onDone }: {
       const clean: Record<string, any> = { builder_id: Number(builderId), slug: slugify(draft.project_name) };
       (["project_name", "city", "p_start_price", "project_status", "project_description", "main_image_url"] as const)
         .forEach((k) => { if (draft[k].trim()) clean[k] = draft[k].trim(); });
+      // p_start_price is numeric in the DB
+      if (typeof clean.p_start_price === "string") {
+        const n = clean.p_start_price.replace(/[^0-9.]/g, "");
+        if (n) clean.p_start_price = Number(n); else delete clean.p_start_price;
+      }
       const res = await fetch("/api/admin/precon/projects", {
         method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(clean),
       });
@@ -232,10 +237,20 @@ export function ProjectsManager({ initial, builders }: { initial: Project[]; bui
   const [importOpen, setImportOpen] = useState(false);
   const builderName = (id: number) => builders.find((b) => b.id === id)?.builder_name ?? "—";
 
+  const toPayload = (d: Partial<Project>) => {
+    const p: Record<string, any> = { ...d };
+    // p_start_price is numeric in the DB — strip $, commas etc.
+    if (typeof p.p_start_price === "string") {
+      const n = p.p_start_price.replace(/[^0-9.]/g, "");
+      p.p_start_price = n ? Number(n) : null;
+    }
+    return p;
+  };
+
   async function save(d: Partial<Project>) {
     setError("");
     const res = await fetch(d.id ? `/api/admin/precon/projects/${d.id}` : "/api/admin/precon/projects", {
-      method: d.id ? "PATCH" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(d),
+      method: d.id ? "PATCH" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(toPayload(d)),
     });
     const body = await res.json();
     if (!res.ok) return setError(body.error || "Something went wrong.");
