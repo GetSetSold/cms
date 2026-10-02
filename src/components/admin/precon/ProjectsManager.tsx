@@ -49,11 +49,57 @@ function Form({ initial, builders, onSave, onCancel }: { initial: Partial<Projec
   );
 }
 
+function ImportModal({ onClose, onImported }: { onClose: () => void; onImported: (d: Partial<Project>) => void }) {
+  const [url, setUrl] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [notes, setNotes] = useState<string[]>([]);
+
+  async function run() {
+    setBusy(true); setError(""); setNotes([]);
+    try {
+      const res = await fetch("/api/admin/precon/import", {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ url }),
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error || "Import failed.");
+      setNotes(body.meta?.notes ?? []);
+      const draft = body.draft as Partial<Project>;
+      onImported({ ...draft, slug: slugify(draft.project_name ?? "") });
+    } catch (e: any) { setError(e.message || "Import failed."); }
+    setBusy(false);
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
+      <div className="flex w-full max-w-lg flex-col gap-3 rounded-2xl bg-white p-5" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center gap-2">
+          <strong className="text-base">Import project from URL</strong>
+          <button type="button" className="ml-auto text-muted hover:text-ink" onClick={onClose} aria-label="Close">✕</button>
+        </div>
+        <p className="text-xs text-muted">Paste a builder project page. We&apos;ll pull the name, price, status, description and main image into a draft — you review and pick the builder before saving.</p>
+        <div className="flex gap-2">
+          <input className="input" placeholder="https://builder.com/communities/project-name" value={url} onChange={(e) => setUrl(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") run(); }} />
+          <button type="button" className="btn-primary shrink-0" onClick={run} disabled={busy || !url.trim()}>{busy ? "Fetching…" : "Fetch"}</button>
+        </div>
+        {error ? <p className="text-sm text-red-700">{error}</p> : null}
+        {notes.length ? (
+          <div className="rounded-lg bg-ground p-2.5 text-xs text-muted">
+            <div className="mb-1 font-semibold text-ink">Found:</div>
+            <ul className="list-disc pl-4">{notes.map((n, i) => <li key={i}>{n}</li>)}</ul>
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
 export function ProjectsManager({ initial, builders }: { initial: Project[]; builders: Builder[] }) {
   const [rows, setRows] = useState(initial);
   const [editing, setEditing] = useState<Partial<Project> | null>(null);
   const [error, setError] = useState("");
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
   const builderName = (id: number) => builders.find((b) => b.id === id)?.builder_name ?? "—";
 
   async function save(d: Partial<Project>) {
@@ -76,7 +122,11 @@ export function ProjectsManager({ initial, builders }: { initial: Project[]; bui
 
   return (
     <div className="flex flex-col gap-5">
-      <button className="btn-primary self-start" onClick={() => setEditing({})}>+ Add project</button>
+      <div className="flex flex-wrap gap-2">
+        <button className="btn-primary" onClick={() => setEditing({})}>+ Add project</button>
+        <button className="btn" onClick={() => setImportOpen(true)}>Import from URL</button>
+      </div>
+      {importOpen ? <ImportModal onClose={() => setImportOpen(false)} onImported={(d) => { setImportOpen(false); setEditing(d); }} /> : null}
       {error ? <p className="text-sm text-red-700">{error}</p> : null}
       {editing ? <Form initial={editing} builders={builders} onCancel={() => setEditing(null)} onSave={save} /> : null}
       <div className="overflow-hidden rounded-2xl bg-white">
