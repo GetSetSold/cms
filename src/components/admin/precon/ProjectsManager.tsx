@@ -49,45 +49,174 @@ function Form({ initial, builders, onSave, onCancel }: { initial: Partial<Projec
   );
 }
 
-function ImportModal({ onClose, onImported }: { onClose: () => void; onImported: (d: Partial<Project>) => void }) {
+type ModelCandidate = {
+  model_name: string; bedrooms: string | null; bathrooms: string | null; sqft: string | null;
+  starting_price: string | null; storeys: string | null; building_type: string | null;
+  description: string | null; model_image_url: string | null; source_url: string;
+};
+
+const MODEL_COLS: { key: keyof ModelCandidate; label: string }[] = [
+  { key: "model_name", label: "Model" },
+  { key: "starting_price", label: "Price" },
+  { key: "bedrooms", label: "Beds" },
+  { key: "bathrooms", label: "Baths" },
+  { key: "sqft", label: "Sqft" },
+  { key: "storeys", label: "Storeys" },
+  { key: "building_type", label: "Type" },
+];
+
+function ImportModal({ builders, onClose, onDone }: {
+  builders: Builder[]; onClose: () => void; onDone: (project: Project) => void;
+}) {
   const [url, setUrl] = useState("");
   const [busy, setBusy] = useState(false);
+  const [scanning, setScanning] = useState(false);
+  const [importing, setImporting] = useState(false);
   const [error, setError] = useState("");
+  const [fetched, setFetched] = useState(false);
+  const [draft, setDraft] = useState({ project_name: "", city: "", p_start_price: "", project_status: "", project_description: "", main_image_url: "" });
+  const [builderId, setBuilderId] = useState("");
   const [notes, setNotes] = useState<string[]>([]);
+  const [models, setModels] = useState<ModelCandidate[]>([]);
+  const [selected, setSelected] = useState<string[]>([]);
+  const [scanNotes, setScanNotes] = useState<string[]>([]);
 
-  async function run() {
-    setBusy(true); setError(""); setNotes([]);
+  const setD = (k: string, v: string) => setDraft((d) => ({ ...d, [k]: v }));
+  const toggle = (name: string) =>
+    setSelected((s) => (s.includes(name) ? s.filter((x) => x !== name) : [...s, name]));
+
+  async function fetchProject() {
+    setBusy(true); setError(""); setNotes([]); setModels([]); setSelected([]); setScanNotes([]);
     try {
       const res = await fetch("/api/admin/precon/import", {
         method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ url }),
       });
       const body = await res.json();
       if (!res.ok) throw new Error(body.error || "Import failed.");
+      const d = body.draft;
+      setDraft({
+        project_name: d.project_name ?? "", city: d.city ?? "", p_start_price: d.p_start_price ?? "",
+        project_status: d.project_status ?? "", project_description: d.project_description ?? "",
+        main_image_url: d.main_image_url ?? "",
+      });
       setNotes(body.meta?.notes ?? []);
-      const draft = body.draft as Partial<Project>;
-      onImported({ ...draft, slug: slugify(draft.project_name ?? "") });
+      setFetched(true);
     } catch (e: any) { setError(e.message || "Import failed."); }
     setBusy(false);
   }
 
+  async function scanModels() {
+    setScanning(true); setError("");
+    try {
+      const res = await fetch("/api/admin/precon/import-models", {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ url }),
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error || "Scan failed.");
+      const found: ModelCandidate[] = body.models ?? [];
+      setModels(found);
+      setSelected(found.map((m) => m.model_name));
+      setScanNotes(body.meta?.notes ?? []);
+    } catch (e: any) { setError(e.message || "Scan failed."); }
+    setScanning(false);
+  }
+
+  async function doImport() {
+    if (!builderId || !draft.project_name.trim()) return;
+    setImporting(true); setError("");
+    try {
+      const clean: Record<string, any> = { builder_id: Number(builderId), slug: slugify(draft.project_name) };
+      (["project_name", "city", "p_start_price", "project_status", "project_description", "main_image_url"] as const)
+        .forEach((k) => { if (draft[k].trim()) clean[k] = draft[k].trim(); });
+      const res = await fetch("/api/admin/precon/projects", {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(clean),
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error || "Could not create project.");
+      const project = body.project as Project;
+
+      const chosen = models.filter((m) => selected.includes(m.model_name));
+      for (const m of chosen) {
+        const { source_url, ...rest } = m;
+        const payload: Record<string, any> = { ...rest, project_id: project.id, slug: slugify(m.model_name) };
+        Object.keys(payload).forEach((k) => { if (payload[k] == null || payload[k] === "") delete payload[k]; });
+        await fetch("/api/admin/precon/models", {
+          method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload),
+        });
+      }
+      onDone(project);
+    } catch (e: any) { setError(e.message || "Import failed."); }
+    setImporting(false);
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
-      <div className="flex w-full max-w-lg flex-col gap-3 rounded-2xl bg-white p-5" onClick={(e) => e.stopPropagation()}>
+      <div className="flex max-h-[90vh] w-full max-w-3xl flex-col gap-3 overflow-y-auto rounded-2xl bg-white p-5" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center gap-2">
           <strong className="text-base">Import project from URL</strong>
           <button type="button" className="ml-auto text-muted hover:text-ink" onClick={onClose} aria-label="Close">✕</button>
         </div>
-        <p className="text-xs text-muted">Paste a builder project page. We&apos;ll pull the name, price, status, description and main image into a draft — you review and pick the builder before saving.</p>
         <div className="flex gap-2">
-          <input className="input" placeholder="https://builder.com/communities/project-name" value={url} onChange={(e) => setUrl(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") run(); }} />
-          <button type="button" className="btn-primary shrink-0" onClick={run} disabled={busy || !url.trim()}>{busy ? "Fetching…" : "Fetch"}</button>
+          <input className="input" placeholder="https://builder.com/communities/project-name" value={url} onChange={(e) => setUrl(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") fetchProject(); }} />
+          <button type="button" className="btn-primary shrink-0" onClick={fetchProject} disabled={busy || !url.trim()}>{busy ? "Fetching…" : "Fetch"}</button>
         </div>
         {error ? <p className="text-sm text-red-700">{error}</p> : null}
-        {notes.length ? (
-          <div className="rounded-lg bg-ground p-2.5 text-xs text-muted">
-            <div className="mb-1 font-semibold text-ink">Found:</div>
-            <ul className="list-disc pl-4">{notes.map((n, i) => <li key={i}>{n}</li>)}</ul>
-          </div>
+
+        {fetched ? (
+          <>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <label className="label">Project name<input className="input" value={draft.project_name} onChange={(e) => setD("project_name", e.target.value)} /></label>
+              <label className="label">Builder
+                <select className="input" value={builderId} onChange={(e) => setBuilderId(e.target.value)}>
+                  <option value="">Select…</option>
+                  {builders.map((b) => <option key={b.id} value={b.id}>{b.builder_name}</option>)}
+                </select>
+              </label>
+              <label className="label">City<input className="input" value={draft.city} onChange={(e) => setD("city", e.target.value)} /></label>
+              <label className="label">Starting price<input className="input" value={draft.p_start_price} onChange={(e) => setD("p_start_price", e.target.value)} /></label>
+              <label className="label">Status<input className="input" value={draft.project_status} onChange={(e) => setD("project_status", e.target.value)} /></label>
+              <label className="label">Main image URL<input className="input" value={draft.main_image_url} onChange={(e) => setD("main_image_url", e.target.value)} /></label>
+            </div>
+            {notes.length ? <p className="text-xs text-muted">Found: {notes.join(" · ")}</p> : null}
+
+            <div className="flex items-center gap-2 border-t border-line pt-3">
+              <strong className="text-sm">Models</strong>
+              {scanNotes.length ? <span className="text-xs text-muted">{scanNotes.join(" · ")}</span> : null}
+              <button type="button" className="btn ml-auto h-8 px-3 text-xs" onClick={scanModels} disabled={scanning}>
+                {scanning ? "Scanning…" : models.length ? "Re-scan" : "Scan for models"}
+              </button>
+            </div>
+
+            {models.length ? (
+              <div className="overflow-x-auto rounded-lg border border-line">
+                <table className="w-full min-w-[640px] text-left text-sm">
+                  <thead className="border-b border-line bg-ground text-xs uppercase tracking-wide text-muted">
+                    <tr>
+                      <th className="w-10 p-2.5"><input type="checkbox" checked={selected.length === models.length && models.length > 0} onChange={(e) => setSelected(e.target.checked ? models.map((m) => m.model_name) : [])} aria-label="Select all" /></th>
+                      {MODEL_COLS.map((c) => <th key={c.key} className="p-2.5">{c.label}</th>)}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {models.map((m) => (
+                      <tr key={m.model_name} className="border-b border-line/60 last:border-0">
+                        <td className="p-2.5"><input type="checkbox" checked={selected.includes(m.model_name)} onChange={() => toggle(m.model_name)} aria-label={m.model_name} /></td>
+                        {MODEL_COLS.map((c) => (
+                          <td key={c.key} className={`p-2.5 ${c.key === "model_name" ? "font-medium" : "text-muted"}`}>{m[c.key] ?? <span className="text-line">—</span>}</td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : null}
+
+            <div className="flex items-center gap-2 border-t border-line pt-3">
+              <button type="button" className="btn-primary" onClick={doImport} disabled={importing || !builderId || !draft.project_name.trim()}>
+                {importing ? "Importing…" : `Import project${selected.length ? ` + ${selected.length} model${selected.length === 1 ? "" : "s"}` : ""}`}
+              </button>
+              {!builderId ? <span className="text-xs text-muted">Pick a builder to enable import.</span> : null}
+            </div>
+          </>
         ) : null}
       </div>
     </div>
@@ -126,7 +255,7 @@ export function ProjectsManager({ initial, builders }: { initial: Project[]; bui
         <button className="btn-primary" onClick={() => setEditing({})}>+ Add project</button>
         <button className="btn" onClick={() => setImportOpen(true)}>Import from URL</button>
       </div>
-      {importOpen ? <ImportModal onClose={() => setImportOpen(false)} onImported={(d) => { setImportOpen(false); setEditing(d); }} /> : null}
+      {importOpen ? <ImportModal builders={builders} onClose={() => setImportOpen(false)} onDone={(p) => { setImportOpen(false); setRows((r) => [p, ...r]); }} /> : null}
       {error ? <p className="text-sm text-red-700">{error}</p> : null}
       {editing ? <Form initial={editing} builders={builders} onCancel={() => setEditing(null)} onSave={save} /> : null}
       <div className="overflow-hidden rounded-2xl bg-white">
