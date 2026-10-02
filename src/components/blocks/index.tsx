@@ -954,8 +954,12 @@ async function BlogGrid({ data, ctx }: BlockProps) {
 function CustomCode({ data, ctx }: BlockProps) {
   if (!data.html) return null;
   return (
-    <div className={`${wrap} flex flex-col gap-5 py-5 md:py-12`}>
+    <div className={`${wrap} flex flex-col items-center gap-5 py-5 text-center md:py-12`}>
       {data.heading ? <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2> : null}
+      {/* items-center handles anything with its own intrinsic width (an embedded widget, an image,
+         a button); text-center handles plain inline content (text, inline elements) the embed might
+         produce directly with no wrapping element of its own. Between the two, arbitrary pasted-in
+         code centers regardless of what shape it happens to take. */}
       <EmbedHtml html={data.html} />
     </div>
   );
