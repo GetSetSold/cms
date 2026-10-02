@@ -224,7 +224,7 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
             </select>
           </label>
           <label className="label">Columns per row (mobile)
-            <select className="input" value={s.footer?.mobile_columns_per_row ?? 1} onChange={(e) => set("footer", { ...s.footer, mobile_columns_per_row: Number(e.target.value) as 1 | 2 })}>
+            <select className="input" value={s.footer?.mobile_columns_per_row ?? 2} onChange={(e) => set("footer", { ...s.footer, mobile_columns_per_row: Number(e.target.value) as 1 | 2 })}>
               <option value={1}>1</option>
               <option value={2}>2</option>
             </select>
