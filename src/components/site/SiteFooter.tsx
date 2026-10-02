@@ -1,5 +1,6 @@
 import Link from "next/link";
-import type { MobileCtaButton, SiteSettings } from "@/lib/types";
+import type { MobileCtaButton, SiteSettings, SvgAsset } from "@/lib/types";
+import { isDarkColor } from "@/lib/color";
 import { MobileCtaBarInner } from "./MobileCtaBarInner";
 import { Svg } from "./Svg";
 import { getSvgs } from "@/lib/cms";
@@ -27,7 +28,25 @@ function VRule({ color, className }: { color: string; className?: string }) {
   );
 }
 
-export async function SiteFooter({ settings }: { settings: SiteSettings }) {
+/** The footer is dark, so force the logo to white + light grey to stand on it:
+ *  near-black shapes become white, mid-greys become light grey; light and
+ *  brand colors are left alone. Only applied while the footer background
+ *  itself is dark. */
+function liftLogoForDark(markup: string): string {
+  const lift = (hex: string): string => {
+    const h = hex.length === 4 ? `#${hex[1]}${hex[1]}${hex[2]}${hex[2]}${hex[3]}${hex[3]}` : hex;
+    const n = parseInt(h.slice(1), 16);
+    const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+    const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    if (lum < 0.3) return "#FFFFFF";
+    if (lum < 0.62) return "#D4D4D4";
+    return hex;
+  };
+  return markup.replace(/(fill|stroke)="(#(?:[0-9a-f]{6}|[0-9a-f]{3}))"/gi,
+    (_m: string, attr: string, hex: string) => `${attr}="${lift(hex)}"`);
+}
+
+export async function SiteFooter({ settings, logo }: { settings: SiteSettings; logo?: SvgAsset | null }) {
   const socialItems = (settings.social_links?.items ?? []).filter((it) => it.svg_id && it.href);
   const socialSvgs = await getSvgs(socialItems.map((it) => it.svg_id));
   const socialSize = { xs: "h-7 w-7", sm: "h-9 w-9", md: "h-11 w-11", lg: "h-14 w-14" }[settings.social_links?.size ?? "md"];
@@ -40,6 +59,8 @@ export async function SiteFooter({ settings }: { settings: SiteSettings }) {
   const mcols = f.mobile_columns_per_row ?? 2;
   const divider = f.text ? `${f.text}33` : "rgba(255,255,255,0.18)";
   const rowPad = compact ? "pt-6" : "pt-8";
+  const footerDark = !f.bg || isDarkColor(f.bg);
+  const footerLogo = logo && footerDark ? { ...logo, markup: liftLogoForDark(logo.markup) } : logo;
 
   return (
     <footer style={{ background: f.bg || undefined, color: f.text || undefined }}>
@@ -47,7 +68,12 @@ export async function SiteFooter({ settings }: { settings: SiteSettings }) {
         {/* Row 1: brand block (wider) + this row's columns */}
         <div className={`grid gap-8 ${MOBILE_COLS[mcols]} ${BRAND_ROW_TEMPLATE[dcols]}`}>
           <div className="col-span-2 flex flex-col gap-3 md:col-span-1">
-            <div className={`font-display ${compact ? "text-xl" : "text-3xl"}`}>{settings.site_name}</div>
+            <Link href="/" className="flex items-center gap-3" aria-label={`${settings.site_name} home`}>
+              {footerLogo ? (
+                <Svg asset={footerLogo} label={`${settings.site_name} logo`} style={{ width: compact ? 40 : 48, height: compact ? 40 : 48 }} />
+              ) : null}
+              <span className={`font-display ${compact ? "text-xl" : "text-3xl"}`}>{settings.site_name}</span>
+            </Link>
             {f.tagline ? <p className="opacity-75">{f.tagline}</p> : null}
             {c.address ? <p className="opacity-75">{c.address}</p> : null}
             <div className="mt-1 flex flex-col gap-1.5">

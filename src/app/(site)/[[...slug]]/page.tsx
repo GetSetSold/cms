@@ -77,7 +77,7 @@ export default async function SitePage(props: Props) {
       <main>
         <RenderSections sections={sections} ctx={{ svgs, settings, page }} />
       </main>
-      {!page.hide_footer ? <SiteFooter settings={settings} /> : null}
+      {!page.hide_footer ? <SiteFooter settings={settings} logo={settings.logo_svg_id ? svgs[settings.logo_svg_id] : null} /> : null}
       {!page.hide_nav ? <MobileCtaBar settings={settings} /> : null}
       {page.slug === "home" ? (
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(orgLd).replace(/</g, "\\u003c") }} />
