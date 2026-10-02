@@ -73,7 +73,7 @@ export function FieldEditor({ fields, value, onChange, svgs, forms = [] }: Props
             );
           case "group":
             return (
-              <fieldset key={f.key} className="flex flex-col gap-3 rounded-lg border border-line p-3">
+              <fieldset key={f.key} className="flex min-w-0 flex-col gap-3 rounded-lg border border-line p-3">
                 <legend className="px-1 text-[13px] text-muted">{f.label}</legend>
                 <FieldEditor fields={f.fields} value={v ?? {}} onChange={(nv) => set(f.key, nv)} svgs={svgs} forms={forms} />
               </fieldset>
@@ -82,12 +82,16 @@ export function FieldEditor({ fields, value, onChange, svgs, forms = [] }: Props
             const items: any[] = Array.isArray(v) ? v : [];
             const update = (next: any[]) => set(f.key, next);
             return (
-              <fieldset key={f.key} className="flex flex-col gap-3">
+              <fieldset key={f.key} className="flex min-w-0 flex-col gap-3">
                 <legend className="mb-2 text-[13px] text-muted">{f.label}</legend>
                 {items.map((item, i) => (
                   <details key={i} className="rounded-lg border border-line" open={items.length <= 2}>
                     <summary className="flex cursor-pointer items-center gap-2 px-3 py-2">
-                      <span className="truncate font-medium">{item.title || item.name || item.q || item.value || `${f.itemLabel} ${i + 1}`}</span>
+                      {/* min-w-0 is required for truncate to actually work on a flex child — without
+                         it the span just grows to fit a long title (e.g. a full reason/phase title)
+                         and spills past the panel's edge instead of ellipsizing, which is exactly
+                         what was happening with longer, more realistic content. */}
+                      <span className="min-w-0 truncate font-medium">{item.title || item.name || item.q || item.value || `${f.itemLabel} ${i + 1}`}</span>
                       <span className="ml-auto flex gap-1 text-muted">
                         <button type="button" aria-label="Move up" disabled={i === 0} onClick={(e) => { e.preventDefault(); const n = [...items]; [n[i - 1], n[i]] = [n[i], n[i - 1]]; update(n); }}>↑</button>
                         <button type="button" aria-label="Move down" disabled={i === items.length - 1} onClick={(e) => { e.preventDefault(); const n = [...items]; [n[i + 1], n[i]] = [n[i], n[i + 1]]; update(n); }}>↓</button>
