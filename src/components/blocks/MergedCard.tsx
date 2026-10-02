@@ -14,11 +14,15 @@ function MergedHeader({ data, dark, color, ctx }: { data: any; dark: boolean; co
   const readable = brand && /^#[0-9a-f]{6}$/i.test(brand) && contrastRatio(brand, color) >= 3;
   const eyebrow = readable ? (dark ? "text-accent" : "text-primary") : dark ? "text-white/85" : "text-ink";
   const compact = ctx.settings.theme.density === "compact";
-  // Compact mode: same tight header as Process Steps / What's Included / Phases & Reasons.
+  // Compact mode: same tight header as Process Steps / What's Included / Phases & Reasons,
+  // with the eyebrow in the settings Accent color — unless the accent doesn't read on the
+  // card color, in which case it falls back to plain white/ink (same guard as above).
+  const accentHex = ctx.settings.theme?.accent ?? "";
+  const accentReadable = /^#[0-9a-f]{6}$/i.test(accentHex) && contrastRatio(accentHex, color) >= 3;
   if (compact) {
     return (
       <div className="flex flex-col gap-2">
-        {data.eyebrow ? <div className={`text-[11px] font-semibold uppercase tracking-wide ${dark ? "text-white/70" : "text-muted"}`}>{data.eyebrow}</div> : null}
+        {data.eyebrow ? <div className={`text-[11px] font-semibold uppercase tracking-wide ${accentReadable ? "text-accent" : dark ? "text-white/85" : "text-ink"}`}>{data.eyebrow}</div> : null}
         {data.heading ? <h2 className={`text-[22px] font-semibold leading-snug tracking-tight md:text-[28px] ${dark ? "text-white" : "text-ink"}`}>{data.heading}</h2> : null}
         {data.subline ? <p className={`text-sm leading-relaxed ${dark ? "text-white/70" : "text-muted"}`}>{data.subline}</p> : null}
       </div>

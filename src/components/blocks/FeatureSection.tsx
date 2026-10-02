@@ -58,7 +58,7 @@ function Intro({ data, t, topRule, bs, compact }: { data: any; t: Tone; topRule?
     return (
       <div className="flex flex-col gap-2">
         {topRule ? <div className={`border-t ${t.rule}`} /> : null}
-        {data.eyebrow ? <div className={`text-[11px] font-semibold uppercase tracking-wide ${t.dark ? "text-white/70" : "text-muted"}`}>{data.eyebrow}</div> : null}
+        {data.eyebrow ? <div className="text-[11px] font-semibold uppercase tracking-wide text-accent">{data.eyebrow}</div> : null}
         {data.heading ? <h2 className={`text-[22px] font-semibold leading-snug tracking-tight md:text-[28px] ${t.head}`}>{data.heading}</h2> : null}
         {data.text ? <p className={`text-sm leading-relaxed ${t.dark ? "text-white/70" : "text-muted"}`}>{data.text}</p> : null}
         {data.footnote ? (

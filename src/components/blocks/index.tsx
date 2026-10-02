@@ -102,7 +102,7 @@ function Hero({ data, ctx }: BlockProps) {
       {/* Was its own smaller, muted/faded treatment (12-13px, text-primary/80 or text-muted) — now
          matches the eyebrow used everywhere else (14px, solid, semibold), just swapping which solid
          color reads against a dark vs light background. */}
-      {data.eyebrow ? <div className={compact ? `text-[11px] font-semibold uppercase tracking-wide ${dark ? "text-ground/75" : "text-muted"}` : "text-sm font-semibold uppercase tracking-wide text-primary"}>{data.eyebrow}</div> : null}
+      {data.eyebrow ? <div className={compact ? "text-[11px] font-semibold uppercase tracking-wide text-accent" : "text-sm font-semibold uppercase tracking-wide text-primary"}>{data.eyebrow}</div> : null}
       {title}
       {data.subheading ? (
         compact ? (
@@ -735,7 +735,7 @@ function ProcessSteps({ data, ctx }: BlockProps) {
     return (
       <div className={`${wrap} flex flex-col gap-6 py-10 md:py-16`}>
         <div className="flex flex-col gap-2">
-          {data.eyebrow ? <div className={`text-[11px] font-semibold uppercase tracking-wide ${muted(ctx)}`}>{data.eyebrow}</div> : null}
+          {data.eyebrow ? <div className="text-[11px] font-semibold uppercase tracking-wide text-accent">{data.eyebrow}</div> : null}
           {data.heading ? <h2 className={`text-[22px] font-semibold leading-snug tracking-tight md:text-[28px] ${heading(ctx)}`}>{data.heading}</h2> : null}
           {data.subline ? <p className={`text-sm leading-relaxed ${muted(ctx)}`}>{data.subline}</p> : null}
         </div>
@@ -1011,7 +1011,7 @@ function SectionHeader({ data, ctx }: BlockProps) {
   if (compact) {
     return (
       <div className={`${outer} flex flex-col gap-2 py-6 md:py-10 ${centered ? "items-center text-center" : "items-start text-left"}`}>
-        {data.eyebrow ? <div className={`text-[11px] font-semibold uppercase tracking-wide ${muted(ctx)}`}>{data.eyebrow}</div> : null}
+        {data.eyebrow ? <div className="text-[11px] font-semibold uppercase tracking-wide text-accent">{data.eyebrow}</div> : null}
         {data.heading ? <h2 className={`text-[22px] font-semibold leading-snug tracking-tight md:text-[28px] ${heading(ctx)}`}>{data.heading}</h2> : null}
         {data.subline ? <p className={`text-sm leading-relaxed ${muted(ctx)}`}>{data.subline}</p> : null}
       </div>
@@ -1066,7 +1066,7 @@ function WhatsIncluded({ data, ctx }: BlockProps) {
   return (
     <div className={`${wrap} flex flex-col ${compact ? "gap-6 py-10 md:py-16" : "gap-8 py-10 md:gap-12 md:py-20"}`}>
       <div className="flex flex-col gap-2">
-        {data.eyebrow ? <div className={`${compact ? "text-[11px]" : "text-sm"} font-semibold uppercase tracking-wide ${compact ? muted(ctx) : "text-primary"}`}>{data.eyebrow}</div> : null}
+        {data.eyebrow ? <div className={`${compact ? "text-[11px]" : "text-sm"} font-semibold uppercase tracking-wide ${compact ? "text-accent" : "text-primary"}`}>{data.eyebrow}</div> : null}
         {data.heading ? (compact
           ? <h2 className={`text-[22px] font-semibold leading-snug tracking-tight md:text-[28px] ${heading(ctx)}`}>{data.heading}</h2>
           : <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2>) : null}
@@ -1107,7 +1107,7 @@ function PhasedReasons({ data, ctx }: BlockProps) {
   return (
     <div className={`${wrap} flex flex-col ${compact ? "gap-6 py-10 md:py-16" : "gap-8 py-10 md:gap-12 md:py-20"}`}>
       <div className="flex flex-col gap-2">
-        {data.eyebrow ? <div className={`${compact ? "text-[11px]" : "text-sm"} font-semibold uppercase tracking-wide ${compact ? muted(ctx) : "text-primary"}`}>{data.eyebrow}</div> : null}
+        {data.eyebrow ? <div className={`${compact ? "text-[11px]" : "text-sm"} font-semibold uppercase tracking-wide ${compact ? "text-accent" : "text-primary"}`}>{data.eyebrow}</div> : null}
         {data.heading ? (compact
           ? <h2 className={`text-[22px] font-semibold leading-snug tracking-tight md:text-[28px] ${heading(ctx)}`}>{data.heading}</h2>
           : <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2>) : null}
