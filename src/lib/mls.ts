@@ -83,14 +83,75 @@ export const listCities = cache(async (): Promise<string[]> => {
   return (data ?? []).map((r) => r.City as string);
 });
 
+/** The DDF feed concatenates district info into City ("Toronto (Waterfront
+ *  Communities)"). Strip the trailing parenthetical to get the real city.
+ *  "Toronto (Waterfront Communities)" -> "Toronto". */
+export function normalizeCity(city: string): string {
+  const cleaned = city.replace(/\s*\([^)]*\)\s*$/, "").trim();
+  return cleaned || city.trim();
+}
+
+/** Normalized city -> raw City variants stored in the DB. Cached per request.
+ *  This is what merges "Toronto", "Toronto (Mimico)", ... into one hub. */
+export const getCityMapping = cache(async (): Promise<Map<string, string[]>> => {
+  const raw = await listCities();
+  const map = new Map<string, string[]>();
+  for (const c of raw) {
+    const n = normalizeCity(c);
+    if (!n) continue;
+    const arr = map.get(n);
+    if (arr) arr.push(c);
+    else map.set(n, [c]);
+  }
+  return map;
+});
+
+/** Sorted list of NORMALIZED city names (for dropdowns, sitemap). */
+export async function listNormalizedCities(): Promise<string[]> {
+  const map = await getCityMapping();
+  return [...map.keys()].sort((a, b) => a.localeCompare(b));
+}
+
 /** DDF City values are free text, not a fixed list — resolve a URL slug back
- *  to the exact-cased city string the database actually stores. Reads from
- *  the `distinct_cities` view (create it once in the MLS project — see
- *  README) rather than sampling raw `grid` rows, which could miss cities
- *  entirely depending on row order. */
+ *  to the NORMALIZED city name. Reads from the `distinct_cities` view (create
+ *  it once in the MLS project — see README) rather than sampling raw `grid`
+ *  rows, which could miss cities entirely depending on row order. */
 export async function resolveCitySlug(slug: string): Promise<string | null> {
-  const cities = await listCities();
-  return cities.find((c) => citySlug(c) === slug.toLowerCase()) ?? null;
+  const map = await getCityMapping();
+  const lower = slug.toLowerCase();
+  for (const normalized of map.keys()) {
+    if (citySlug(normalized) === lower) return normalized;
+  }
+  return null;
+}
+
+/** Resolve a city NAME (user input, any casing, raw or normalized) to the
+ *  normalized city name. */
+export async function resolveCityName(name: string): Promise<string | null> {
+  const map = await getCityMapping();
+  const lower = name.toLowerCase().trim();
+  for (const [normalized, variants] of map) {
+    if (normalized.toLowerCase() === lower) return normalized;
+    if (variants.some((v) => v.toLowerCase() === lower)) return normalized;
+  }
+  return null;
+}
+
+/** Raw City values for a normalized city, for `.in("City", ...)` queries. */
+export async function rawCitiesFor(normalized: string): Promise<string[]> {
+  const map = await getCityMapping();
+  return map.get(normalized) ?? [normalized];
+}
+
+/** Find a RAW city whose slug matches — used to 301 old parenthetical URLs
+ *  (e.g. /toronto-(mimico)-real-estate) to the normalized hub. */
+export async function findRawCityBySlug(slug: string): Promise<string | null> {
+  const raw = await listCities();
+  const lower = slug.toLowerCase();
+  for (const c of raw) {
+    if (citySlug(c) === lower) return c;
+  }
+  return null;
 }
 
 export function priceDisplay(l: Pick<GridListing, "ListPrice" | "TotalActualRent">) {
