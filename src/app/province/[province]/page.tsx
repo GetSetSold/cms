@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { unstable_cache } from "next/cache";
 import { getSettings, getLogo } from "@/lib/cms";
 import { themeFontHref, themeVars, themeIconOverrideCSS } from "@/lib/theme";
 import { SiteHeader } from "@/components/site/SiteHeader";
@@ -30,34 +29,41 @@ interface CityCount {
   count: number;
 }
 
-/** Normalized cities with live listing counts. Single scan of the grid City
- *  column (no N+1 count queries), cached for 1h — the page was taking 8s+
- *  from 1,679 per-city HEAD requests. */
-const getProvinceCities = unstable_cache(
-  async (): Promise<CityCount[]> => {
-    const mls = createMlsClient();
-    const counts = new Map<string, number>();
-    const PAGE = 1000;
-    let from = 0;
-    while (true) {
-      const { data, error } = await mls.from("grid").select("City").range(from, from + PAGE - 1);
+/** Normalized cities with live listing counts. Single parallel scan of the
+ *  grid City column (no N+1 count queries). Module-level cache (1h) because
+ *  unstable_cache does not persist on Workers — each isolate keeps its own. */
+let provinceCache: { data: CityCount[]; expires: number } | null = null;
+
+async function getProvinceCities(): Promise<CityCount[]> {
+  if (provinceCache && Date.now() < provinceCache.expires) return provinceCache.data;
+  const mls = createMlsClient();
+  const counts = new Map<string, number>();
+  const PAGE = 2000;
+  const CONCURRENCY = 10;
+  const { count: total } = await mls.from("grid").select("City", { count: "exact", head: true });
+  const pages = Math.ceil((total ?? 0) / PAGE);
+  for (let b = 0; b < pages; b += CONCURRENCY) {
+    const batch = await Promise.all(
+      Array.from({ length: Math.min(CONCURRENCY, pages - b) }, (_, i) => {
+        const from = (b + i) * PAGE;
+        return mls.from("grid").select("City").range(from, from + PAGE - 1);
+      })
+    );
+    for (const { data, error } of batch) {
       if (error) throw new Error(`provinceCities: ${error.message}`);
-      if (!data || !data.length) break;
-      for (const r of data as { City: string | null }[]) {
+      for (const r of (data ?? []) as { City: string | null }[]) {
         const n = normalizeCity(r.City || "");
         if (!n || n.toLowerCase() === "unknown") continue;
         counts.set(n, (counts.get(n) ?? 0) + 1);
       }
-      if (data.length < PAGE) break;
-      from += PAGE;
     }
-    return [...counts.entries()]
-      .map(([city, count]) => ({ city, slug: citySlug(city), count }))
-      .sort((a, b) => b.count - a.count);
-  },
-  ["province-cities-v2"],
-  { revalidate: 3600 }
-);
+  }
+  const result = [...counts.entries()]
+    .map(([city, count]) => ({ city, slug: citySlug(city), count }))
+    .sort((a, b) => b.count - a.count);
+  provinceCache = { data: result, expires: Date.now() + 3600_000 };
+  return result;
+}
 
 export default async function ProvincePage({ params }: { params: Promise<{ province: string }> }) {
   const { province } = await params;
