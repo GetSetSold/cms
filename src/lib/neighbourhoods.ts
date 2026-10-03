@@ -32,6 +32,21 @@ export function hoodSlug(hood: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
+
+/** property.StructureType is string[] | string | null; normalize to display text. */
+function structureTypeText(v: string[] | string | null | undefined): string | null {
+  if (!v) return null;
+  if (Array.isArray(v)) return v.filter(Boolean).join(", ") || null;
+  const t = v.trim();
+  if (t.startsWith("[")) {
+    try {
+      const arr = JSON.parse(t);
+      if (Array.isArray(arr)) return arr.filter(Boolean).join(", ") || null;
+    } catch { /* not JSON, use raw */ }
+  }
+  return t || null;
+}
+
 /** Minimum active listings for a neighbourhood to get its own page. */
 export const HOOD_MIN_LISTINGS = 5;
 
@@ -157,7 +172,7 @@ export const getHoodStats = cache(async (city: string, hood: string): Promise<Ci
   while (true) {
     const { data, error } = await mls
       .from("property")
-      .select("ListPrice,TotalActualRent,StructureTypeText")
+      .select("ListPrice,TotalActualRent,StructureType")
       .in("City", cities)
       .or(`CityRegion.eq.${hood},SubdivisionName.eq.${hood}`)
       .range(from, from + PAGE - 1);
@@ -166,12 +181,12 @@ export const getHoodStats = cache(async (city: string, hood: string): Promise<Ci
     for (const r of data as {
       ListPrice: number | null;
       TotalActualRent: number | null;
-      StructureTypeText: string | null;
+      StructureType: string[] | string | null;
     }[]) {
       total++;
       if (r.ListPrice != null) prices.push(Number(r.ListPrice));
       if (r.TotalActualRent != null) rents.push(Number(r.TotalActualRent));
-      const t = (r.StructureTypeText || "Other").trim() || "Other";
+      const t = structureTypeText(r.StructureType) || "Other";
       typeCounts.set(t, (typeCounts.get(t) ?? 0) + 1);
     }
     if (data.length < PAGE) break;
@@ -216,7 +231,7 @@ export async function getHoodListings(
   const { data, error, count } = await mls
     .from("property")
     .select(
-      "ListingKey,OfficeName,ListPrice,TotalActualRent,PhotosCount,Media,UnparsedAddress,City,Province,PostalCode,Latitude,Longitude,ParkingTotal,BathroomsTotalInteger,BedroomsTotal,AboveGradeFinishedArea,StructureTypeText",
+      "ListingKey,OfficeName,ListPrice,TotalActualRent,PhotosCount,Media,UnparsedAddress,City,Province,PostalCode,Latitude,Longitude,ParkingTotal,BathroomsTotalInteger,BedroomsTotal,AboveGradeFinishedArea,StructureType",
       { count: "exact" }
     )
     .in("City", cities)
@@ -228,6 +243,7 @@ export async function getHoodListings(
     (p) =>
       ({
         ...p,
+        StructureTypeText: structureTypeText(p.StructureType as string[] | string | null),
         Media: Array.isArray(p.Media) ? p.Media[0]?.MediaURL ?? null : (p.Media as string | null),
       } as GridListing)
   );
