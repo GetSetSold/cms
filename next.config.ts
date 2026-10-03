@@ -17,13 +17,16 @@ const nextConfig: NextConfig = {
     ];
   },
   async rewrites() {
-    return [
-      // /haldimand-real-estate serves the /city/[slug] page internally.
-      // :slug captures "haldimand" (also works for hyphenated cities).
-      // NOTE: when the /ontario-real-estate province hub is built as a
-      // static route, it takes precedence over this rewrite.
-      { source: "/:slug-real-estate", destination: "/city/:slug" },
-    ];
+    return {
+      beforeFiles: [
+        // Province hubs: explicit rules must come before the generic city
+        // rewrite (first match wins; array-form rewrites run before static routes).
+        { source: "/ontario-real-estate", destination: "/province/ontario" },
+        // /haldimand-real-estate serves the /city/[slug] page internally.
+        // :slug captures "haldimand" (also works for hyphenated cities).
+        { source: "/:slug-real-estate", destination: "/city/:slug" },
+      ],
+    };
   },
 };
 
