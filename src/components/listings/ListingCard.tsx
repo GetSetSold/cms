@@ -1,5 +1,5 @@
 import type { GridListing } from "@/lib/mls";
-import { isSale, priceDisplay } from "@/lib/mls";
+import { isSale, priceDisplay, listingSlug } from "@/lib/mls";
 import { ListingCardShell } from "./ListingCardShell";
 
 // Placeholder "popular" heuristic — no real signal exists in the DDF feed for
@@ -10,7 +10,7 @@ export function ListingCard({ listing }: { listing: GridListing }) {
   const sale = isSale(listing);
   return (
     <ListingCardShell
-      href={`/listings/${encodeURIComponent(listing.ListingKey)}`}
+      href={`/real-estate/${encodeURIComponent(listing.ListingKey)}/${listingSlug(listing)}`}
       image={listing.Media}
       popular={isPopular(listing)}
       showFavorite
