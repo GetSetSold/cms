@@ -49,9 +49,8 @@ export function ListingCardShell(d: ListingCardData) {
         <span className={`absolute bottom-3 left-3 rounded px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-white ${TONE[d.statusTone]}`}>
           {d.statusLabel}
         </span>
-        {d.href ? <CardArrowButton /> : null}
       </div>
-      <div className="flex flex-col gap-1 p-4">
+      <div className="flex flex-col gap-1 p-4 pr-14">
         <div className="text-lg font-semibold text-primary">{d.price}</div>
         <div className="truncate text-[15px] font-medium text-ink">{d.address}</div>
         {d.city ? <div className="text-sm text-muted">{d.city}</div> : null}
@@ -67,8 +66,8 @@ export function ListingCardShell(d: ListingCardData) {
   );
 
   return d.href ? (
-    <Link href={d.href} prefetch={false} className="group flex flex-col overflow-hidden rounded-[var(--radius-lg)] border-[length:var(--border-card-width)] border-line bg-white shadow-[var(--shadow-card)]">{body}</Link>
+    <Link href={d.href} prefetch={false} className="group relative flex flex-col overflow-hidden rounded-[var(--radius-lg)] border-[length:var(--border-card-width)] border-line bg-white shadow-[var(--shadow-card)]">{body}{d.href ? <CardArrowButton /> : null}</Link>
   ) : (
-    <div className="group flex flex-col overflow-hidden rounded-[var(--radius-lg)] border-[length:var(--border-card-width)] border-line bg-white shadow-[var(--shadow-card)]">{body}</div>
+    <div className="group relative flex flex-col overflow-hidden rounded-[var(--radius-lg)] border-[length:var(--border-card-width)] border-line bg-white shadow-[var(--shadow-card)]">{body}</div>
   );
 }
