@@ -22,6 +22,11 @@ const nextConfig: NextConfig = {
         // Province hubs: explicit rules must come before the generic city
         // rewrite (first match wins; array-form rewrites run before static routes).
         { source: "/ontario-real-estate", destination: "/province/ontario" },
+        // Neighbourhood pages: /toronto-real-estate/mimico serves
+        // /neighbourhood/[city]/[hood] internally. Must come before the
+        // single-segment city rewrite (two segments won't match it anyway,
+        // but explicit ordering is safer).
+        { source: "/:city-real-estate/:hood", destination: "/neighbourhood/:city/:hood" },
         // /haldimand-real-estate serves the /city/[slug] page internally.
         // :slug captures "haldimand" (also works for hyphenated cities).
         { source: "/:slug-real-estate", destination: "/city/:slug" },
