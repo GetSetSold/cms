@@ -9,6 +9,22 @@ const nextConfig: NextConfig = {
     NEXT_PUBLIC_SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZ2dnZnFuZG9hb2RkY3JlY2hyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAxODIyOTQsImV4cCI6MjEwNTc1ODI5NH0.aaL23C2TC_bXSF9_k2B8QuiULFa7GfWI3Rg15JogpYA",
     NEXT_PUBLIC_SITE_URL: "https://cms.rohit-910.workers.dev",
   },
+  async redirects() {
+    return [
+      // Legacy city hub URLs -> keyword-rich canonical URLs (301)
+      { source: "/city/:slug", destination: "/:slug-real-estate", permanent: true },
+      { source: "/listings/city/:slug", destination: "/:slug-real-estate", permanent: true },
+    ];
+  },
+  async rewrites() {
+    return [
+      // /haldimand-real-estate serves the /city/[slug] page internally.
+      // :slug captures "haldimand" (also works for hyphenated cities).
+      // NOTE: when the /ontario-real-estate province hub is built as a
+      // static route, it takes precedence over this rewrite.
+      { source: "/:slug-real-estate", destination: "/city/:slug" },
+    ];
+  },
 };
 
 export default nextConfig;
