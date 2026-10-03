@@ -1,5 +1,4 @@
 import { cache } from "react";
-import { unstable_cache } from "next/cache";
 import {
   createMlsClient,
   normalizeCity,
@@ -80,32 +79,37 @@ async function scanNeighbourhoods(): Promise<Neighbourhood[]> {
   const unknownCounts = new Map<string, number>();
   const displayNames = new Map<string, string>();
 
-  const PAGE = 1000;
-  let from = 0;
-  while (true) {
-    const { data, error } = await mls
-      .from("property")
-      .select("City,CityRegion,SubdivisionName")
-      .range(from, from + PAGE - 1);
-    if (error) throw new Error(`scanNeighbourhoods: ${error.message}`);
-    if (!data || !data.length) break;
-    for (const r of data as HoodRow[]) {
-      const hood = coalesceHood(r);
-      if (!hood) continue;
-      const city = normalizeCity(r.City || "");
-      if (!city || city.toLowerCase() === "unknown") {
-        unknownCounts.set(hood, (unknownCounts.get(hood) ?? 0) + 1);
-        continue;
+  const PAGE = 2000;
+  const CONCURRENCY = 10;
+  const { count: total } = await mls
+    .from("property")
+    .select("City", { count: "exact", head: true });
+  const pages = Math.ceil((total ?? 0) / PAGE);
+  for (let b = 0; b < pages; b += CONCURRENCY) {
+    const batch = await Promise.all(
+      Array.from({ length: Math.min(CONCURRENCY, pages - b) }, (_, i) => {
+        const from = (b + i) * PAGE;
+        return mls.from("property").select("City,CityRegion,SubdivisionName").range(from, from + PAGE - 1);
+      })
+    );
+    for (const { data, error } of batch) {
+      if (error) throw new Error(`scanNeighbourhoods: ${error.message}`);
+      for (const r of (data ?? []) as HoodRow[]) {
+        const hood = coalesceHood(r);
+        if (!hood) continue;
+        const city = normalizeCity(r.City || "");
+        if (!city || city.toLowerCase() === "unknown") {
+          unknownCounts.set(hood, (unknownCounts.get(hood) ?? 0) + 1);
+          continue;
+        }
+        const key = city + SEP + hood;
+        pairCounts.set(key, (pairCounts.get(key) ?? 0) + 1);
+        if (!displayNames.has(key)) displayNames.set(key, hood);
+        let cm = hoodCityCounts.get(hood);
+        if (!cm) hoodCityCounts.set(hood, (cm = new Map()));
+        cm.set(city, (cm.get(city) ?? 0) + 1);
       }
-      const key = city + SEP + hood;
-      pairCounts.set(key, (pairCounts.get(key) ?? 0) + 1);
-      if (!displayNames.has(key)) displayNames.set(key, hood);
-      let cm = hoodCityCounts.get(hood);
-      if (!cm) hoodCityCounts.set(hood, (cm = new Map()));
-      cm.set(city, (cm.get(city) ?? 0) + 1);
     }
-    if (data.length < PAGE) break;
-    from += PAGE;
   }
 
   // Fold "Unknown"-city listings into each hood's primary city.
@@ -130,11 +134,18 @@ async function scanNeighbourhoods(): Promise<Neighbourhood[]> {
   return out;
 }
 
-/** All neighbourhoods with >= HOOD_MIN_LISTINGS, cached for 1h (the scan
- *  touches ~57k rows — never run it per request). */
-export const listNeighbourhoods = unstable_cache(scanNeighbourhoods, ["neighbourhoods-v1"], {
-  revalidate: 3600,
-});
+/** Module-level cache (1h). unstable_cache does not persist on Workers. */
+let hoodsCache: { data: Neighbourhood[]; expires: number } | null = null;
+
+/** All neighbourhoods with >= HOOD_MIN_LISTINGS. */
+export async function listNeighbourhoods(): Promise<Neighbourhood[]> {
+  if (hoodsCache && Date.now() < hoodsCache.expires) return hoodsCache.data;
+  const data = await scanNeighbourhoods();
+  hoodsCache = { data, expires: Date.now() + 3600_000 };
+  return data;
+}
+
+
 
 /** Neighbourhoods for one normalized city, sorted by listing count. */
 export async function getHoodsForCity(city: string): Promise<Neighbourhood[]> {
