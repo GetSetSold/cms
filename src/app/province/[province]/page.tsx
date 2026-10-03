@@ -4,7 +4,6 @@ import { getSettings, getLogo } from "@/lib/cms";
 import { themeFontHref, themeVars, themeIconOverrideCSS } from "@/lib/theme";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter, MobileCtaBar } from "@/components/site/SiteFooter";
-import { CardArrowButton } from "@/components/site/CardArrowButton";
 import { citySlug, createMlsClient, normalizeCity } from "@/lib/mls";
 
 export const dynamic = "force-dynamic";
@@ -39,25 +38,20 @@ async function getProvinceCities(): Promise<CityCount[]> {
   if (provinceCache && Date.now() < provinceCache.expires) return provinceCache.data;
   const mls = createMlsClient();
   const counts = new Map<string, number>();
-  const PAGE = 2000;
-  const CONCURRENCY = 10;
-  const { count: total } = await mls.from("grid").select("City", { count: "exact", head: true });
-  const pages = Math.ceil((total ?? 0) / PAGE);
-  for (let b = 0; b < pages; b += CONCURRENCY) {
-    const batch = await Promise.all(
-      Array.from({ length: Math.min(CONCURRENCY, pages - b) }, (_, i) => {
-        const from = (b + i) * PAGE;
-        return mls.from("grid").select("City").range(from, from + PAGE - 1);
-      })
-    );
-    for (const { data, error } of batch) {
-      if (error) throw new Error(`provinceCities: ${error.message}`);
-      for (const r of (data ?? []) as { City: string | null }[]) {
-        const n = normalizeCity(r.City || "");
-        if (!n || n.toLowerCase() === "unknown") continue;
-        counts.set(n, (counts.get(n) ?? 0) + 1);
-      }
+  // Sequential pages: reliable on Workers.
+  const PAGE = 1000;
+  let from = 0;
+  while (true) {
+    const { data, error } = await mls.from("grid").select("City").range(from, from + PAGE - 1);
+    if (error) throw new Error(`provinceCities: ${error.message}`);
+    if (!data || !data.length) break;
+    for (const r of data as { City: string | null }[]) {
+      const n = normalizeCity(r.City || "");
+      if (!n || n.toLowerCase() === "unknown") continue;
+      counts.set(n, (counts.get(n) ?? 0) + 1);
     }
+    if (data.length < PAGE) break;
+    from += PAGE;
   }
   const result = [...counts.entries()]
     .map(([city, count]) => ({ city, slug: citySlug(city), count }))
@@ -105,11 +99,10 @@ export default async function ProvincePage({ params }: { params: Promise<{ provi
             <a
               key={c.slug}
               href={`/${c.slug}-real-estate`}
-              className="group relative rounded-2xl bg-white p-6 pr-16 transition hover:shadow-lg"
+              className="rounded-2xl bg-white p-6 transition hover:shadow-lg"
             >
               <div className="font-display text-xl">{c.city} Real Estate</div>
               <div className="mt-1 text-sm text-muted">{c.count.toLocaleString()} active listings</div>
-              <CardArrowButton />
             </a>
           ))}
         </div>
