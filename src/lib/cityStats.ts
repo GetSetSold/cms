@@ -1,5 +1,5 @@
 import { cache } from "react";
-import { createMlsClient } from "./mls";
+import { createMlsClient, rawCitiesFor } from "./mls";
 
 export interface CityStats {
   city: string;
@@ -31,6 +31,7 @@ function median(values: number[]): number | null {
  *  ported to the CMS. */
 export const getCityStats = cache(async (city: string): Promise<CityStats> => {
   const mls = createMlsClient();
+  const variants = await rawCitiesFor(city);
   const rows: GridRow[] = [];
   const PAGE = 1000;
   let from = 0;
@@ -38,7 +39,7 @@ export const getCityStats = cache(async (city: string): Promise<CityStats> => {
     const { data, error } = await mls
       .from("grid")
       .select("ListPrice, TotalActualRent, StructureTypeText")
-      .eq("City", city)
+      .in("City", variants)
       .range(from, from + PAGE - 1);
     if (error) throw new Error(`cityStats: ${error.message}`);
     if (!data || !data.length) break;
