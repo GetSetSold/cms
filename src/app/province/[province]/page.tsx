@@ -4,6 +4,7 @@ import { getSettings, getLogo } from "@/lib/cms";
 import { themeFontHref, themeVars, themeIconOverrideCSS } from "@/lib/theme";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter, MobileCtaBar } from "@/components/site/SiteFooter";
+import { CardArrowButton } from "@/components/site/CardArrowButton";
 import { citySlug, createMlsClient, normalizeCity } from "@/lib/mls";
 
 export const dynamic = "force-dynamic";
@@ -104,10 +105,11 @@ export default async function ProvincePage({ params }: { params: Promise<{ provi
             <a
               key={c.slug}
               href={`/${c.slug}-real-estate`}
-              className="rounded-2xl bg-white p-6 transition hover:shadow-lg"
+              className="group relative rounded-2xl bg-white p-6 pr-16 transition hover:shadow-lg"
             >
               <div className="font-display text-xl">{c.city} Real Estate</div>
               <div className="mt-1 text-sm text-muted">{c.count.toLocaleString()} active listings</div>
+              <CardArrowButton />
             </a>
           ))}
         </div>
