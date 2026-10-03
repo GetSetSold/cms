@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { unstable_cache } from "next/cache";
 import { getSettings, getLogo } from "@/lib/cms";
 import { themeFontHref, themeVars, themeIconOverrideCSS } from "@/lib/theme";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter, MobileCtaBar } from "@/components/site/SiteFooter";
-import { listCities, citySlug, createMlsClient } from "@/lib/mls";
+import { citySlug, createMlsClient, normalizeCity } from "@/lib/mls";
 
 export const dynamic = "force-dynamic";
 
@@ -29,28 +30,34 @@ interface CityCount {
   count: number;
 }
 
-/** All cities with active listings, sorted by inventory. Count queries are
- *  tiny HEAD requests; chunked to avoid hammering the API. */
-async function getProvinceCities(): Promise<CityCount[]> {
-  const mls = createMlsClient();
-  const cities = await listCities();
-  const results: CityCount[] = [];
-  const CHUNK = 20;
-  for (let i = 0; i < cities.length; i += CHUNK) {
-    const chunk = cities.slice(i, i + CHUNK);
-    const counts = await Promise.all(
-      chunk.map(async (city) => {
-        const { count } = await mls
-          .from("grid")
-          .select("ListingKey", { count: "exact", head: true })
-          .eq("City", city);
-        return { city, slug: citySlug(city), count: count ?? 0 };
-      })
-    );
-    results.push(...counts);
-  }
-  return results.filter((r) => r.count > 0).sort((a, b) => b.count - a.count);
-}
+/** Normalized cities with live listing counts. Single scan of the grid City
+ *  column (no N+1 count queries), cached for 1h — the page was taking 8s+
+ *  from 1,679 per-city HEAD requests. */
+const getProvinceCities = unstable_cache(
+  async (): Promise<CityCount[]> => {
+    const mls = createMlsClient();
+    const counts = new Map<string, number>();
+    const PAGE = 1000;
+    let from = 0;
+    while (true) {
+      const { data, error } = await mls.from("grid").select("City").range(from, from + PAGE - 1);
+      if (error) throw new Error(`provinceCities: ${error.message}`);
+      if (!data || !data.length) break;
+      for (const r of data as { City: string | null }[]) {
+        const n = normalizeCity(r.City || "");
+        if (!n || n.toLowerCase() === "unknown") continue;
+        counts.set(n, (counts.get(n) ?? 0) + 1);
+      }
+      if (data.length < PAGE) break;
+      from += PAGE;
+    }
+    return [...counts.entries()]
+      .map(([city, count]) => ({ city, slug: citySlug(city), count }))
+      .sort((a, b) => b.count - a.count);
+  },
+  ["province-cities-v2"],
+  { revalidate: 3600 }
+);
 
 export default async function ProvincePage({ params }: { params: Promise<{ province: string }> }) {
   const { province } = await params;
