@@ -7,6 +7,7 @@ import { getSettings, getLogo } from "@/lib/cms";
 import { themeFontHref, themeVars, themeIconOverrideCSS } from "@/lib/theme";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter, MobileCtaBar } from "@/components/site/SiteFooter";
+import { CardArrowButton } from "@/components/site/CardArrowButton";
 import { ListingsBrowser, type ListingsSearchParams } from "@/components/listings/ListingsBrowser";
 import { CityStatsSection } from "@/components/listings/CityStatsSection";
 import { CityEditorial } from "@/components/listings/CityEditorial";
@@ -65,10 +66,11 @@ export async function CityPageContent({
                 <a
                   key={h.hoodSlug}
                   href={`${cityUrl}/${h.hoodSlug}`}
-                  className="rounded-2xl bg-white p-6 transition hover:shadow-lg"
+                  className="group relative rounded-2xl bg-white p-6 pr-16 transition hover:shadow-lg"
                 >
                   <div className="font-display text-xl">{h.hood}</div>
                   <div className="mt-1 text-sm text-muted">{h.count.toLocaleString()} active listings</div>
+                  <CardArrowButton />
                 </a>
               ))}
             </div>
