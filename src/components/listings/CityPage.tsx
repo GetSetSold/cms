@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
-import { resolveCitySlug } from "@/lib/mls";
+import { notFound, permanentRedirect } from "next/navigation";
+import { resolveCitySlug, findRawCityBySlug, normalizeCity, citySlug } from "@/lib/mls";
 import { getCityStats } from "@/lib/cityStats";
+import { getHoodsForCity } from "@/lib/neighbourhoods";
 import { getSettings, getLogo } from "@/lib/cms";
 import { themeFontHref, themeVars, themeIconOverrideCSS } from "@/lib/theme";
 import { SiteHeader } from "@/components/site/SiteHeader";
@@ -17,7 +18,7 @@ export async function cityPageMetadata(slug: string): Promise<Metadata> {
   return {
     title: `Homes for sale in ${city}`,
     description: `Browse current listings for sale and rent in ${city}.`,
-    alternates: { canonical: `/${slug}-real-estate` },
+    alternates: { canonical: `/${citySlug(city)}-real-estate` },
   };
 }
 
@@ -27,9 +28,23 @@ export async function CityPageContent({
   slug: string;
   sp: ListingsSearchParams;
 }) {
-  const city = await resolveCitySlug(slug);
-  if (!city) notFound();
-  const [settings, stats] = await Promise.all([getSettings(), getCityStats(city)]);
+  let city = await resolveCitySlug(slug);
+  if (!city) {
+    // Old parenthetical URL (e.g. /toronto-(mimico)-real-estate)? 301 to the
+    // normalized hub.
+    const raw = await findRawCityBySlug(slug);
+    if (raw) permanentRedirect(`/${citySlug(normalizeCity(raw))}-real-estate`);
+    notFound();
+  }
+  const cityUrl = `/${citySlug(city)}-real-estate`;
+  // Normalize the URL: /Toronto-real-estate -> /toronto-real-estate etc.
+  if (slug !== citySlug(city)) permanentRedirect(cityUrl);
+
+  const [settings, stats, hoods] = await Promise.all([
+    getSettings(),
+    getCityStats(city),
+    getHoodsForCity(city),
+  ]);
   const logo = await getLogo(settings);
 
   const themeVars_ = themeVars(settings);
@@ -40,8 +55,25 @@ export async function CityPageContent({
       {themeIconOverrideCSS(settings) ? <style dangerouslySetInnerHTML={{ __html: themeIconOverrideCSS(settings) }} /> : null}
       <SiteHeader settings={settings} logo={logo} />
       <main className="mx-auto w-full max-w-7xl px-5 py-10 md:px-10 md:py-14">
-        <ListingsBrowser sp={sp} basePath={`/${slug}-real-estate`} fixedCity={city} heading={`Homes for sale in ${city}`} />
+        <ListingsBrowser sp={sp} basePath={cityUrl} fixedCity={city} heading={`Homes for sale in ${city}`} />
         <CityStatsSection stats={stats} />
+        {hoods.length > 0 ? (
+          <section className="mt-12">
+            <h2 className="mb-5 font-display text-2xl">Neighbourhoods in {city}</h2>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {hoods.map((h) => (
+                <a
+                  key={h.hoodSlug}
+                  href={`${cityUrl}/${h.hoodSlug}`}
+                  className="rounded-2xl bg-white p-6 transition hover:shadow-lg"
+                >
+                  <div className="font-display text-xl">{h.hood}</div>
+                  <div className="mt-1 text-sm text-muted">{h.count.toLocaleString()} active listings</div>
+                </a>
+              ))}
+            </div>
+          </section>
+        ) : null}
         <CityEditorial stats={stats} />
         <CityFaq stats={stats} />
       </main>
