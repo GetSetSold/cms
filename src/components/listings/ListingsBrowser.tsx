@@ -1,4 +1,4 @@
-import { createMlsClient, listCities, type GridListing } from "@/lib/mls";
+import { createMlsClient, listNormalizedCities, rawCitiesFor, resolveCityName, type GridListing } from "@/lib/mls";
 import { ListingCard } from "@/components/listings/ListingCard";
 import { ListingsMap } from "@/components/listings/ListingsMap";
 import { Pagination } from "@/components/listings/Pagination";
@@ -39,11 +39,22 @@ export async function ListingsBrowser({
   const effectiveCity = fixedCity ?? (sp.city === ALL_CITIES_SENTINEL ? null : sp.city || DEFAULT_CITY);
   const cityWasDefaulted = !fixedCity && !sp.city;
 
+  // Normalized cities expand to all raw variants ("Toronto" -> "Toronto",
+  // "Toronto (Mimico)", ...). Search-box input is resolved the same way.
+  let cityVariants: string[] | null = null;
+  if (fixedCity) {
+    cityVariants = await rawCitiesFor(fixedCity);
+  } else if (sp.city && sp.city !== ALL_CITIES_SENTINEL) {
+    const normalized = await resolveCityName(sp.city);
+    if (normalized) cityVariants = await rawCitiesFor(normalized);
+  }
+
   const mapLimit = view === "map" ? Math.max(perPage, 100) : perPage; // map shows a wider set than one grid page, still bounded
   let query = mls.from("grid").select("*", { count: "exact" });
   if (view !== "map") query = query.range(from, from + perPage - 1);
   else query = query.limit(mapLimit);
-  if (effectiveCity) query = query.eq("City", effectiveCity);
+  if (cityVariants) query = query.in("City", cityVariants);
+  else if (effectiveCity) query = query.eq("City", effectiveCity);
   if (sp.type === "sale") query = query.not("ListPrice", "is", null);
   if (sp.type === "rent") query = query.is("ListPrice", null).not("TotalActualRent", "is", null);
   if (sp.beds) query = query.gte("BedroomsTotal", Number(sp.beds));
@@ -51,10 +62,10 @@ export async function ListingsBrowser({
 
   const [{ data: listings, count }, cityList] = await Promise.all([
     query,
-    fixedCity ? Promise.resolve([]) : listCities(),
+    fixedCity ? Promise.resolve([]) : listNormalizedCities(),
   ]);
 
-  const cities = fixedCity ? [] : [...cityList].sort();
+  const cities = fixedCity ? [] : cityList;
   const total = count ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / perPage));
   const rows = (listings ?? []) as GridListing[];
