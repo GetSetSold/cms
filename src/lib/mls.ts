@@ -55,6 +55,24 @@ export function citySlug(city: string) {
   return city.toLowerCase().trim().replace(/\s+/g, "-");
 }
 
+/** Slugify free-text (addresses, cities) for URLs: NFD-normalize to strip
+ *  diacritics, lowercase, collapse runs of non-alphanumerics to hyphens. */
+export function slugifyAddress(...parts: (string | null | undefined)[]): string {
+  const raw = parts.filter(Boolean).join(" ");
+  return raw
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+/** Canonical address slug for a listing URL, e.g. "100 Lillian Way" +
+ *  "Haldimand" -> "100-lillian-way-haldimand". */
+export function listingSlug(l: Pick<GridListing, "UnparsedAddress" | "City">): string {
+  return slugifyAddress(l.UnparsedAddress, l.City);
+}
+
 /** The full distinct-city list, fetched once per request no matter how many
  *  times it's called (React's cache() memoizes by arguments for the
  *  lifetime of a single render pass) — resolveCitySlug and the city search
