@@ -130,7 +130,7 @@ export default async function ModelPage({ params }: { params: Promise<{ slug: st
             <div className={`flex flex-col divide-y divide-line ${card}`}>
               {installments.map((step) => (
                 <div key={step.id} className="flex items-center justify-between px-5 py-3.5">
-                  <span className="text-sm font-medium">{step.Description ?? (step.due_days != null ? `${step.due_days} days` : "—")}</span>
+                  <span className="text-sm font-medium">{step.description ?? (step.due_days != null ? `${step.due_days} days` : "—")}</span>
                   <span className="text-sm font-bold text-primary">${Number(step.amount).toLocaleString()}</span>
                 </div>
               ))}
