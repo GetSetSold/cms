@@ -79,43 +79,39 @@ async function scanNeighbourhoods(): Promise<Neighbourhood[]> {
   const unknownCounts = new Map<string, number>();
   const displayNames = new Map<string, string>();
 
-  const PAGE = 2000;
-  const CONCURRENCY = 10;
-  const { count: total } = await mls
-    .from("property")
-    .select("City", { count: "exact", head: true });
-  const pages = Math.ceil((total ?? 0) / PAGE);
-  for (let b = 0; b < pages; b += CONCURRENCY) {
-    const batch = await Promise.all(
-      Array.from({ length: Math.min(CONCURRENCY, pages - b) }, (_, i) => {
-        const from = (b + i) * PAGE;
-        return mls.from("property").select("City,CityRegion,SubdivisionName").range(from, from + PAGE - 1);
-      })
-    );
-    for (const { data, error } of batch) {
-      if (error) throw new Error(`scanNeighbourhoods: ${error.message}`);
-      for (const r of (data ?? []) as HoodRow[]) {
-        const hood = coalesceHood(r);
-        if (!hood) continue;
-        const city = normalizeCity(r.City || "");
-        if (!city || city.toLowerCase() === "unknown") {
-          unknownCounts.set(hood, (unknownCounts.get(hood) ?? 0) + 1);
-          continue;
-        }
-        const key = city + SEP + hood;
-        pairCounts.set(key, (pairCounts.get(key) ?? 0) + 1);
-        if (!displayNames.has(key)) displayNames.set(key, hood);
-        let cm = hoodCityCounts.get(hood);
-        if (!cm) hoodCityCounts.set(hood, (cm = new Map()));
-        cm.set(city, (cm.get(city) ?? 0) + 1);
+  // Sequential pages: reliable on Workers (parallel bursts trip subrequest limits).
+  const PAGE = 1000;
+  let from = 0;
+  while (true) {
+    const { data, error } = await mls
+      .from("property")
+      .select("City,CityRegion,SubdivisionName")
+      .range(from, from + PAGE - 1);
+    if (error) throw new Error(`scanNeighbourhoods: ${error.message}`);
+    if (!data || !data.length) break;
+    for (const r of data as HoodRow[]) {
+      const hood = coalesceHood(r);
+      if (!hood) continue;
+      const city = normalizeCity(r.City || "");
+      if (!city || city.toLowerCase() === "unknown") {
+        unknownCounts.set(hood, (unknownCounts.get(hood) ?? 0) + 1);
+        continue;
       }
+      const key = city + SEP + hood;
+      pairCounts.set(key, (pairCounts.get(key) ?? 0) + 1);
+      if (!displayNames.has(key)) displayNames.set(key, hood);
+      let cm = hoodCityCounts.get(hood);
+      if (!cm) hoodCityCounts.set(hood, (cm = new Map()));
+      cm.set(city, (cm.get(city) ?? 0) + 1);
     }
+    if (data.length < PAGE) break;
+    from += PAGE;
   }
 
   // Fold "Unknown"-city listings into each hood's primary city.
   for (const [hood, count] of unknownCounts) {
     const cm = hoodCityCounts.get(hood);
-    if (!cm || cm.size === 0) continue; // hood only in Unknown -> no page
+    if (!cm || cm.size === 0) continue;
     const topCity = [...cm.entries()].sort((a, b) => b[1] - a[1])[0][0];
     const key = topCity + SEP + hood;
     pairCounts.set(key, (pairCounts.get(key) ?? 0) + count);
