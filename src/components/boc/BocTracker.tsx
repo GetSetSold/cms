@@ -535,7 +535,7 @@ export function BocTracker() {
             <div className="boc-thin-scroll max-h-[460px] overflow-y-auto pr-6">
               {decisions.length === 0 && <div className="py-10 text-center text-[13px] text-muted">Loading…</div>}
               {decisions.slice(0, 60).map((d, i, arr) => (
-                <div key={d.date + d.type} className="flex gap-3 border-b border-line pb-4">
+                <div key={d.date + d.type} className="flex gap-3 border-b border-line pb-2 mb-2">
                   <div className="flex flex-col items-center">
                     <div className={`h-3 w-3 rounded-full border-2 ${
                       d.type === "hold" ? "border-neutral-300 bg-neutral-100"
