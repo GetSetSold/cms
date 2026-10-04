@@ -6,6 +6,7 @@ import { getCalculator, LEGACY_TAB_SLUGS } from "@/lib/calculators/registry";
 import { getCalculatorSettings } from "@/lib/calculators/settings";
 import { CalculatorPageShell } from "@/components/calculators/CalculatorPageShell";
 import { CalculatorLoader } from "@/components/calculators/CalculatorLoader";
+import { ContentAdSlot } from "@/components/ads/ContentAdSlot";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -65,10 +66,15 @@ export default async function CalculatorDetailPage({ params }: Props) {
 
   const settings = await getSettings();
   const calcSettings = getCalculatorSettings(settings.calculators);
+  const ads = (settings.ads ?? {}) as Record<string, unknown>;
+  const calcAdCode = typeof ads.grid_ad_code === "string" ? ads.grid_ad_code : "";
+  const showCalcAd =
+    ads.calculators_ad_enabled === true && calcAdCode.includes("data-ad-client");
 
   return (
     <CalculatorPageShell slug={slug} intro={INTROS[slug] ?? calcMeta.description}>
       <CalculatorLoader slug={slug} settings={calcSettings} />
+      {showCalcAd && <ContentAdSlot adCode={calcAdCode} className="mt-8" />}
       <p className="mt-6 text-[12px] text-muted">
         Assumptions effective {calcSettings.effectiveDate}. Regulatory figures (stress-test rules,
         down-payment brackets, CMHC tiers, rebates) are managed in Admin → Calculators.
