@@ -20,6 +20,27 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: p.slug === "home" ? 1 : 0.7,
   }));
 
+  // Calculators hub + detail pages
+  entries.push({ url: `${base}/calculators`, changeFrequency: "weekly", priority: 0.9 });
+  for (const slug of [
+    "affordability-calculator",
+    "mortgage-payment-calculator",
+    "purchase-cost-calculator",
+    "maximum-mortgage-calculator",
+    "required-income-calculator",
+    "mortgage-renewal-calculator",
+    "compare-mortgage-rates",
+    "land-transfer-tax-calculator-ontario",
+    "closing-costs-calculator-canada",
+    "ontario-hst-rebate-calculator",
+    "down-payment-comparison-calculator",
+    "buy-vs-rent-calculator",
+    "net-proceeds-calculator",
+    "rental-investment-forecast-calculator",
+  ]) {
+    entries.push({ url: `${base}/calculators/${slug}`, changeFrequency: "weekly", priority: 0.8 });
+  }
+
   // Province hub
   entries.push({
     url: `${base}/ontario-real-estate`,
