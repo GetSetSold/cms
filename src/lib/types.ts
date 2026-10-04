@@ -100,6 +100,7 @@ export interface SiteSettings {
     grid_ad_position?: number;
     grid_ad_frequency?: number;
     trends_ad_enabled?: boolean;
+    boc_ad_enabled?: boolean;
   };
   lead_settings: { notify_emails: string[] };
 }
