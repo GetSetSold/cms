@@ -16,6 +16,7 @@ const TABS = [
   { id: "contact", label: "Contact & leads" },
   { id: "content", label: "Blog & social" },
   { id: "seo", label: "SEO" },
+  { id: "ads", label: "Ads" },
 ] as const;
 type TabId = (typeof TABS)[number]["id"];
 
@@ -414,6 +415,27 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
                     <label className="label">Default meta description<textarea className="textarea" rows={3} value={s.seo_defaults.description} onChange={(e) => set("seo_defaults", { ...s.seo_defaults, description: e.target.value })} /></label>
                     <label className="label">Google Analytics 4 ID<input className="input" placeholder="G-XXXXXXXXXX" value={s.scripts?.ga4_id ?? ""} onChange={(e) => set("scripts", { ...s.scripts, ga4_id: e.target.value.trim() })} /></label>
                     <p className="text-xs text-muted">Sitemap: /sitemap.xml · robots: /robots.txt · LocalBusiness schema is added to the home page from your contact details.</p>
+          </section>
+        )}
+        {tab === "ads" && (
+          <section className="flex flex-col gap-3 border border-line bg-white p-4 md:p-5">
+            <h2 className="text-base font-semibold">Ads</h2>
+            <label className="label flex items-center gap-2">
+              <input type="checkbox" checked={s.ads?.grid_ad_enabled ?? false} onChange={(e) => set("ads", { ...s.ads, grid_ad_enabled: e.target.checked })} className="h-4 w-4" />
+              Show AdSense ad card in listing grids
+            </label>
+            <label className="label">AdSense code (paste your full ad unit code)
+              <textarea className="input font-mono text-xs" rows={6} placeholder='<ins class="adsbygoogle" data-ad-client="ca-pub-..." data-ad-slot="..."></ins>' value={s.ads?.grid_ad_code ?? ""} onChange={(e) => set("ads", { ...s.ads, grid_ad_code: e.target.value })} />
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              <label className="label">Show after card #
+                <input type="number" min={1} max={24} className="input" value={s.ads?.grid_ad_position ?? 3} onChange={(e) => set("ads", { ...s.ads, grid_ad_position: Math.max(1, Number(e.target.value) || 3) })} />
+              </label>
+              <label className="label">Repeat every N cards (0 = once)
+                <input type="number" min={0} max={24} className="input" value={s.ads?.grid_ad_frequency ?? 0} onChange={(e) => set("ads", { ...s.ads, grid_ad_frequency: Math.max(0, Number(e.target.value) || 0) })} />
+              </label>
+            </div>
+            <p className="text-xs text-muted">The ad appears as a card in the listing grid on /listings, city hubs, and neighbourhood pages — like Zolo and realtor.ca.</p>
           </section>
         )}
       </div>
