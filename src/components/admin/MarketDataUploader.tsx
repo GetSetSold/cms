@@ -24,6 +24,9 @@ export function MarketDataUploader() {
     setBusy(true);
     setStatus("Reading file…");
     try {
+      // Pre-flight: is the hpi_markets table there?
+      const { error: tableError } = await supabase.from("hpi_markets").select("slug", { head: true, count: "exact" });
+      if (tableError) throw new Error(`Table check failed: ${tableError.message}. Run the migration SQL in Supabase first.`);
       const text = await file.text();
       const json = JSON.parse(text);
       const cities = json.cities as Record<string, {
@@ -54,8 +57,9 @@ export function MarketDataUploader() {
       if (error) throw error;
       setStatus(`Done — ${rows.length} markets updated.`);
       setFile(null);
-    } catch (e) {
-      setStatus(`Error: ${e instanceof Error ? e.message : "upload failed"}`);
+    } catch (e: unknown) {
+      const detail = e instanceof Error ? e.message : JSON.stringify(e);
+      setStatus(`Error: ${detail}`);
     } finally {
       setBusy(false);
     }
