@@ -10,7 +10,7 @@ import { getSettings, getLogo } from "@/lib/cms";
 import { themeFontHref, themeVars, themeIconOverrideCSS } from "@/lib/theme";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter, MobileCtaBar } from "@/components/site/SiteFooter";
-import { getHoodOgImage, ogImageMeta } from "@/lib/ogImage";
+import { getCityOgImage, ogImageMeta } from "@/lib/ogImage";
 import { HpiChart, HpiSpark } from "@/components/hpi/HpiChart";
 import { HpiRangeChart } from "@/components/hpi/HpiRangeChart";
 import { TrendsAdSlot } from "@/components/hpi/TrendsAdSlot";
@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
   if (!market) return { title: "Not found" };
   const title = await seoTitle(`${market.name} Housing Market Trends & HPI`);
   const description = `${market.name} benchmark price ${fmtMoney(market.latest.compositeBenchmark)}, ${fmtPct(market.latest.yoyChange)} year over year. Full MLS® Home Price Index trends, charts and market insights.`;
-  const ogImage = await getHoodOgImage(market.name, null).catch(() => null);
+  const ogImage = await getCityOgImage(market.name).catch(() => null);
   return {
     title,
     description,
