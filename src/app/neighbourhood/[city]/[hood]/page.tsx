@@ -80,7 +80,6 @@ export default async function NeighbourhoodPage({
   const themeVars_ = themeVars(settings);
   const totalPages = Math.max(1, Math.ceil(total / PER_PAGE));
 
-  const hrefFor = (p: number) => (p <= 1 ? hoodUrl : `${hoodUrl}?page=${p}`);
 
   const jsonLd = {
     "@context": "https://schema.org",
