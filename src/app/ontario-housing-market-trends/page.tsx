@@ -26,6 +26,10 @@ export async function generateMetadata(): Promise<Metadata> {
 function conditionLabel(c: string) {
   return c === "buyer" ? "Buyer's Market" : c === "seller" ? "Seller's Market" : "Balanced Market";
 }
+function toneCls(v: number) {
+  const t = pctTone(v);
+  return t === "neg" ? "text-red-700" : t === "pos" ? "text-green-700" : "text-ink";
+}
 
 export default async function TrendsOverviewPage() {
   const settings = await getSettings();
@@ -55,44 +59,38 @@ export default async function TrendsOverviewPage() {
             Market data hasn&apos;t been uploaded yet. Add it from Admin → Market Data.
           </p>
         ) : (
-          <div className="mt-8 overflow-x-auto rounded-2xl border border-line">
-            <table className="w-full min-w-[760px] border-collapse text-sm">
-              <thead>
-                <tr className="border-b-2 border-black text-left">
-                  <th className="px-4 py-3 text-[11px] uppercase tracking-wider text-muted">Board Region</th>
-                  <th className="px-4 py-3 text-right text-[11px] uppercase tracking-wider text-muted">Benchmark Price</th>
-                  <th className="px-4 py-3 text-right text-[11px] uppercase tracking-wider text-muted">Monthly</th>
-                  <th className="px-4 py-3 text-right text-[11px] uppercase tracking-wider text-muted">Yearly</th>
-                  <th className="px-4 py-3 text-[11px] uppercase tracking-wider text-muted">Condition</th>
-                </tr>
-              </thead>
-              <tbody>
-                {sorted.map((m) => (
-                  <tr key={m.slug} className="border-b border-line last:border-0 hover:bg-soft">
-                    <td className="px-4 py-3">
-                      <Link href={`/ontario-housing-market-trends/${m.slug}`} className="font-medium hover:underline">
-                        {m.name}
-                      </Link>
-                    </td>
-                    <td className="px-4 py-3 text-right font-semibold">{fmtMoney(m.latest.compositeBenchmark)}</td>
-                    <td className={`px-4 py-3 text-right font-medium ${pctTone(m.latest.momChange) === "neg" ? "text-red-700" : pctTone(m.latest.momChange) === "pos" ? "text-green-700" : ""}`}>
-                      {fmtPct(m.latest.momChange)}
-                    </td>
-                    <td className={`px-4 py-3 text-right font-medium ${pctTone(m.latest.yoyChange) === "neg" ? "text-red-700" : pctTone(m.latest.yoyChange) === "pos" ? "text-green-700" : ""}`}>
-                      {fmtPct(m.latest.yoyChange)}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="inline-block rounded-full border border-black px-2.5 py-0.5 text-xs font-medium">
-                        {conditionLabel(m.latest.marketCondition)}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {sorted.map((m) => (
+              <Link
+                key={m.slug}
+                href={`/ontario-housing-market-trends/${m.slug}`}
+                className="relative flex flex-col rounded-[var(--radius-lg)] border-[length:var(--border-card-width)] border-line bg-white p-5 shadow-[var(--shadow-card)] transition-shadow hover:shadow-md"
+              >
+                <span className="text-[11px] uppercase tracking-wider text-muted">{conditionLabel(m.latest.marketCondition)}</span>
+                <span className="mt-1 text-lg font-bold tracking-tight">{m.name}</span>
+                <span className="mt-2 text-2xl font-bold tracking-tight">{fmtMoney(m.latest.compositeBenchmark)}</span>
+                <span className="text-[13px] text-muted">benchmark price</span>
+                <div className="mt-3 flex gap-4 border-t border-line pt-3 text-[13px]">
+                  <span>
+                    <span className="text-muted">Monthly </span>
+                    <b className={toneCls(m.latest.momChange)}>{fmtPct(m.latest.momChange)}</b>
+                  </span>
+                  <span>
+                    <span className="text-muted">Yearly </span>
+                    <b className={toneCls(m.latest.yoyChange)}>{fmtPct(m.latest.yoyChange)}</b>
+                  </span>
+                </div>
+                <span
+                  aria-hidden
+                  className="absolute bottom-3 right-3 flex h-8 w-8 items-center justify-center rounded-full bg-black text-white"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M7 17L17 7M7 7h10v10" />
+                  </svg>
+                </span>
+              </Link>
+            ))}
           </div>
-        )}
-
         <p className="mt-6 text-xs text-muted">
           Data source: Canadian Real Estate Association (CREA) — MLS® Home Price Index.
         </p>
