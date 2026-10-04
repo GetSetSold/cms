@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
 import { resolveCitySlug, findRawCityBySlug, normalizeCity, citySlug } from "@/lib/mls";
 import { getCityOgImage, ogImageMeta } from "@/lib/ogImage";
+import { seoTitle } from "@/lib/seo";
 import { getCityStats } from "@/lib/cityStats";
 import { getHoodsForCity } from "@/lib/neighbourhoods";
 import { getSettings, getLogo } from "@/lib/cms";
@@ -17,7 +18,7 @@ import { CityFaq } from "@/components/listings/CityFaq";
 export async function cityPageMetadata(slug: string): Promise<Metadata> {
   const city = await resolveCitySlug(slug);
   if (!city) return { title: "City not found" };
-  const title = `Homes for sale in ${city}`;
+  const title = await seoTitle(`Homes for sale in ${city}`);
   const description = `Browse current listings for sale and rent in ${city}.`;
   const ogImage = await getCityOgImage(city);
   return {
