@@ -39,11 +39,13 @@ function shortPrice(l: GridListing): string {
   return `$${n.toLocaleString()}`;
 }
 
+const ARROW_SVG = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17L17 7M7 7h10v10"/></svg>`;
+
 function cardHtml(l: GridListing): string {
   const href = `/real-estate/${encodeURIComponent(l.ListingKey)}/${listingSlug(l)}`;
   const img = l.Media
-    ? `<img src="${l.Media}" alt="" style="width:100%;height:120px;object-fit:cover;display:block;" loading="lazy" />`
-    : `<div style="width:100%;height:120px;background:#f1f1f4;display:flex;align-items:center;justify-content:center;color:#888;font-size:12px;">No photo</div>`;
+    ? `<img src="${l.Media}" alt="" style="width:100%;height:130px;object-fit:cover;display:block;border-radius:0;" loading="lazy" />`
+    : `<div style="width:100%;height:130px;background:#f1f1f4;display:flex;align-items:center;justify-content:center;color:#888;font-size:12px;">No photo</div>`;
   const specs = [
     l.BedroomsTotal != null ? `${l.BedroomsTotal} bed` : null,
     l.BathroomsTotalInteger != null ? `${l.BathroomsTotalInteger} bath` : null,
@@ -54,14 +56,23 @@ function cardHtml(l: GridListing): string {
     ? (l.ListPrice != null ? `$${l.ListPrice.toLocaleString()}` : "—")
     : (l.TotalActualRent != null ? `$${l.TotalActualRent.toLocaleString()}/mo` : "—");
   return `
-    <a href="${href}" target="_blank" rel="noopener" style="display:block;width:220px;text-decoration:none;color:inherit;font-family:Inter,sans-serif;">
+    <a href="${href}" target="_blank" rel="noopener" style="display:block;width:230px;position:relative;background:#fff;text-decoration:none;color:inherit;font-family:Inter,sans-serif;border:0;border-radius:0;box-shadow:none;">
       ${img}
-      <div style="padding:10px 12px;">
-        <div style="font-weight:700;font-size:15px;">${price}</div>
-        ${specs ? `<div style="font-size:12px;color:#555;margin-top:2px;">${specs}</div>` : ""}
-        <div style="font-size:12px;color:#333;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${l.UnparsedAddress ?? ""}</div>
+      <div style="padding:10px 12px 12px;">
+        <div style="font-weight:700;font-size:16px;color:#111;">${price}</div>
+        ${specs ? `<div style="font-size:12px;color:#555;margin-top:3px;">${specs}</div>` : ""}
+        <div style="font-size:12px;color:#333;margin-top:3px;padding-right:36px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${l.UnparsedAddress ?? ""}</div>
       </div>
+      <span style="position:absolute;bottom:10px;right:10px;width:32px;height:32px;border-radius:999px;background:#f1f1f4;color:#111;display:flex;align-items:center;justify-content:center;">${ARROW_SVG}</span>
     </a>`;
+}
+
+/** Strip the default maplibre popup chrome for a borderless card. */
+function popupCss(): string {
+  return `<style>
+    .gss-popup .maplibregl-popup-content{background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;padding:0!important;}
+    .gss-popup .maplibregl-popup-tip{display:none!important;}
+  </style>`;
 }
 
 export function ListingsMap({ listings }: { listings: GridListing[] }) {
@@ -95,9 +106,9 @@ export function ListingsMap({ listings }: { listings: GridListing[] }) {
         el.style.cssText = `display:inline-flex;align-items:center;height:28px;padding:0 10px;border:0;border-radius:999px;background:${sale ? "#111" : "#0066CC"};color:#fff;font:700 12px Inter,sans-serif;box-shadow:0 2px 8px rgba(20,20,43,.25);white-space:nowrap;cursor:pointer;`;
         el.addEventListener("click", (e) => {
           e.stopPropagation();
-          new maplibregl.Popup({ offset: 12, closeButton: false, maxWidth: "240px" })
+          new maplibregl.Popup({ offset: 12, closeButton: false, maxWidth: "250px", className: "gss-popup" })
             .setLngLat([l.Longitude, l.Latitude])
-            .setHTML(cardHtml(l))
+            .setHTML(popupCss() + cardHtml(l))
             .addTo(map);
         });
         const marker = new maplibregl.Marker({ element: el, anchor: "bottom" })
