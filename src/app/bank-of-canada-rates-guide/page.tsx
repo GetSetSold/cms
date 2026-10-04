@@ -104,7 +104,7 @@ export default async function BocRatesGuidePage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
       <SiteHeader settings={settings} logo={logo} />
-      <main className="mx-auto max-w-6xl px-5 pb-16">
+      <main className="mx-auto max-w-7xl px-5 pb-16">
         <nav className="pt-6 text-[13px] text-muted" aria-label="Breadcrumb">
           <a href="/" className="hover:underline">Home</a> / <span>Bank of Canada Rate Tracker</span>
         </nav>
@@ -134,7 +134,7 @@ export default async function BocRatesGuidePage() {
         </article>
 
         {/* Info blocks */}
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+        <div className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-2">
           {INFO_BLOCKS.map(([title, body]) => (
             <article
               key={title}
