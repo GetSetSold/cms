@@ -437,6 +437,10 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
               </label>
             </div>
             <p className="text-xs text-muted">The ad appears as a card in the listing grid on /listings, city hubs, and neighbourhood pages — like Zolo and realtor.ca.</p>
+            <label className="label flex items-center gap-2 border-t border-line pt-3">
+              <input type="checkbox" checked={s.ads?.trends_ad_enabled ?? false} onChange={(e) => set("ads", { ...s.ads, trends_ad_enabled: e.target.checked })} className="h-4 w-4" />
+              Show ad on market trends detail pages
+            </label>
           </section>
         )}
       </div>
