@@ -1,1 +1,257 @@
-InVzZSBjbGllbnQiOwovKioKICogTGVhZC1jYXB0dXJlICsgUERGIGRvd25sb2FkIGJ1dHRvbnMgZm9yIGEgZ3VpZGUgZGV0YWlsIHBhZ2UuCiAqIE1pcnJvcnMgdGhlIGNhbGN1bGF0b3JzJyBSZXBvcnRCdXR0b25zIHBhdHRlcm46CiAqIC0gIkRvd25sb2FkIFBERiIg4oaSIGJ1aWxkcyB0aGUgZ3VpZGUgUERGIGNsaWVudC1zaWRlIGFuZCBzYXZlcyBpdCBkaXJlY3RseS4KICogLSAiRW1haWwgVGhpcyBHdWlkZSIg4oaSIGxlYWQgbW9kYWwgKGZpcnN0IG5hbWUsIGxhc3QgbmFtZSwgZW1haWwpLgogKiAgIE9uIHN1Ym1pdDogYnVpbGRzIHRoZSBQREYsIFBPU1RzIGl0IHRvIHRoZSBzZW5kLWd1aWRlLXJlcG9ydCBlZGdlCiAqICAgZnVuY3Rpb24gKHdoaWNoIHN0b3JlcyB0aGUgbGVhZCBpbiBDTVMgKyBlbWFpbHMgdGhlIFBERiB2aWEgWmVwdG9NYWlsKS4KICogLSBSZW1lbWJlcnMgdGhlIHZpc2l0b3IgcGVyIGd1aWRlIGZvciB+OTAgZGF5cyB0byBhdm9pZCByZXBlYXQgcHJvbXB0cy4KICovCmltcG9ydCB7IHVzZUNhbGxiYWNrLCB1c2VFZmZlY3QsIHVzZVJlZiwgdXNlU3RhdGUgfSBmcm9tICJyZWFjdCI7CmltcG9ydCB7IGJ1aWxkR3VpZGVQZGZCYXNlNjQsIGRvd25sb2FkR3VpZGVQZGYgfSBmcm9tICJAL2xpYi9ndWlkZXMvcGRmIjsKaW1wb3J0IHR5cGUgeyBHdWlkZU1ldGEsIEd1aWRlU2VjdGlvbiB9IGZyb20gIkAvbGliL2d1aWRlcy90eXBlcyI7Cgpjb25zdCBSRVBPUlRfRk4gPSBgJHtwcm9jZXNzLmVudi5ORVhUX1BVQkxJQ19TVVBBQkFTRV9VUkx9L2Z1bmN0aW9ucy92MS9zZW5kLWd1aWRlLXJlcG9ydGA7CmNvbnN0IE5JTkVUWV9EQVlTX01TID0gOTAgKiAyNCAqIDYwICogNjAgKiAxMDAwOwpjb25zdCBTVE9SRV9LRVkgPSAiX2dzc19ndWlkZV9sZWFkMiI7CgppbnRlcmZhY2UgU3RvcmVkTGVhZCB7CiAgZmlyc3Q/OiBzdHJpbmc7CiAgbGFzdD86IHN0cmluZzsKICBlbWFpbGVkPzogUmVjb3JkPHN0cmluZywgbnVtYmVyPjsKfQoKZnVuY3Rpb24gcmVhZFN0b3JlKCk6IFN0b3JlZExlYWQgewogIHRyeSB7CiAgICBjb25zdCByYXcgPSBsb2NhbFN0b3JhZ2UuZ2V0SXRlbShTVE9SRV9LRVkpOwogICAgcmV0dXJuIHJhdyA/IChKU09OLnBhcnNlKHJhdykgYXMgU3RvcmVkTGVhZCkgOiB7fTsKICB9IGNhdGNoIHsKICAgIHJldHVybiB7fTsKICB9Cn0KZnVuY3Rpb24gd3JpdGVTdG9yZShzOiBTdG9yZWRMZWFkKTogdm9pZCB7CiAgdHJ5IHsKICAgIGxvY2FsU3RvcmFnZS5zZXRJdGVtKFNUT1JFX0tFWSwgSlNPTi5zdHJpbmdpZnkocykpOwogIH0gY2F0Y2ggewogICAgLyogaWdub3JlICovCiAgfQp9CmZ1bmN0aW9uIHdhc0VtYWlsZWQoZ3VpZGVJZDogc3RyaW5nKTogYm9vbGVhbiB7CiAgY29uc3QgdHMgPSByZWFkU3RvcmUoKS5lbWFpbGVkPy5bZ3VpZGVJZF07CiAgcmV0dXJuIHR5cGVvZiB0cyA9PT0gIm51bWJlciIgJiYgRGF0ZS5ub3coKSAtIHRzIDwgTklORVRZX0RBWVNfTVM7Cn0KZnVuY3Rpb24gbWFya0VtYWlsZWQoZ3VpZGVJZDogc3RyaW5nLCBmaXJzdDogc3RyaW5nLCBsYXN0OiBzdHJpbmcpOiB2b2lkIHsKICBjb25zdCBzID0gcmVhZFN0b3JlKCk7CiAgcy5maXJzdCA9IGZpcnN0OwogIHMubGFzdCA9IGxhc3Q7CiAgcy5lbWFpbGVkID0geyAuLi4ocy5lbWFpbGVkID8/IHt9KSwgW2d1aWRlSWRdOiBEYXRlLm5vdygpIH07CiAgd3JpdGVTdG9yZShzKTsKfQoKZXhwb3J0IGZ1bmN0aW9uIEd1aWRlUmVwb3J0QnV0dG9ucyh7CiAgZ3VpZGUsCiAgc2VjdGlvbnMsCn06IHsKICBndWlkZTogR3VpZGVNZXRhOwogIHNlY3Rpb25zOiBHdWlkZVNlY3Rpb25bXTsKfSkgewogIGNvbnN0IFttb2RhbE9wZW4sIHNldE1vZGFsT3Blbl0gPSB1c2VTdGF0ZShmYWxzZSk7CiAgY29uc3QgW3NraXBQcm9tcHQsIHNldFNraXBQcm9tcHRdID0gdXNlU3RhdGUoZmFsc2UpOwogIGNvbnN0IFtmaXJzdCwgc2V0Rmlyc3RdID0gdXNlU3RhdGUoIiIpOwogIGNvbnN0IFtsYXN0LCBzZXRMYXN0XSA9IHVzZVN0YXRlKCIiKTsKICBjb25zdCBbZW1haWwsIHNldEVtYWlsXSA9IHVzZVN0YXRlKCIiKTsKICBjb25zdCBbZXJyb3JzLCBzZXRFcnJvcnNdID0gdXNlU3RhdGU8eyBmaXJzdD86IHN0cmluZzsgbGFzdD86IHN0cmluZzsgZW1haWw/OiBzdHJpbmcgfT4oe30pOwogIGNvbnN0IFtzZW5kaW5nLCBzZXRTZW5kaW5nXSA9IHVzZVN0YXRlKGZhbHNlKTsKICBjb25zdCBbc2VudCwgc2V0U2VudF0gPSB1c2VTdGF0ZShmYWxzZSk7CiAgY29uc3QgW3NlbmRFcnJvciwgc2V0U2VuZEVycm9yXSA9IHVzZVN0YXRlPHN0cmluZyB8IG51bGw+KG51bGwpOwogIGNvbnN0IGZpcnN0UmVmID0gdXNlUmVmPEhUTUxJbnB1dEVsZW1lbnQ+KG51bGwpOwoKICB1c2VFZmZlY3QoKCkgPT4gewogICAgaWYgKG1vZGFsT3BlbikgewogICAgICBjb25zdCBzID0gcmVhZFN0b3JlKCk7CiAgICAgIHNldEZpcnN0KHMuZmlyc3QgPz8gIiIpOwogICAgICBzZXRMYXN0KHMubGFzdCA/PyAiIik7CiAgICAgIHNldEVycm9ycyh7fSk7CiAgICAgIHNldFNlbmRFcnJvcihudWxsKTsKICAgICAgc2V0U2VudChmYWxzZSk7CiAgICAgIHNldFRpbWVvdXQoKCkgPT4gZmlyc3RSZWYuY3VycmVudD8uZm9jdXMoKSwgMTAwKTsKICAgIH0KICB9LCBbbW9kYWxPcGVuXSk7CgogIGNvbnN0IG9uRG93bmxvYWQgPSB1c2VDYWxsYmFjayhhc3luYyAoKSA9PiB7CiAgICBhd2FpdCBkb3dubG9hZEd1aWRlUGRmKGd1aWRlLCBzZWN0aW9ucyk7CiAgfSwgW2d1aWRlLCBzZWN0aW9uc10pOwoKICBjb25zdCBvbkVtYWlsQ2xpY2sgPSB1c2VDYWxsYmFjaygoKSA9PiB7CiAgICBpZiAod2FzRW1haWxlZChndWlkZS5pZCkpIHsKICAgICAgLy8gQWxyZWFkeSBjYXB0dXJlZCBmb3IgdGhpcyBndWlkZSDigJQganVzdCBkb3dubG9hZC4KICAgICAgc2V0U2tpcFByb21wdCh0cnVlKTsKICAgICAgb25Eb3dubG9hZCgpOwogICAgICBzZXRUaW1lb3V0KCgpID0+IHNldFNraXBQcm9tcHQoZmFsc2UpLCA0MDAwKTsKICAgIH0gZWxzZSB7CiAgICAgIHNldE1vZGFsT3Blbih0cnVlKTsKICAgIH0KICB9LCBbZ3VpZGUuaWQsIG9uRG93bmxvYWRdKTsKCiAgY29uc3Qgc3VibWl0ID0gdXNlQ2FsbGJhY2soYXN5bmMgKCkgPT4gewogICAgY29uc3QgZXJyczogdHlwZW9mIGVycm9ycyA9IHt9OwogICAgaWYgKCFmaXJzdC50cmltKCkpIGVycnMuZmlyc3QgPSAiRmlyc3QgbmFtZSBpcyByZXF1aXJlZC4iOwogICAgaWYgKCFsYXN0LnRyaW0oKSkgZXJycy5sYXN0ID0gIkxhc3QgbmFtZSBpcyByZXF1aXJlZC4iOwogICAgaWYgKCFlbWFpbC50cmltKCkgfHwgIS9eW15cc0BdK0BbXlxzQF0rXC5bXlxzQF0rJC8udGVzdChlbWFpbC50cmltKCkpKQogICAgICBlcnJzLmVtYWlsID0gIkVudGVyIGEgdmFsaWQgZW1haWwgYWRkcmVzcy4iOwogICAgc2V0RXJyb3JzKGVycnMpOwogICAgaWYgKE9iamVjdC5rZXlzKGVycnMpLmxlbmd0aCA+IDApIHJldHVybjsKCiAgICBzZXRTZW5kaW5nKHRydWUpOwogICAgc2V0U2VuZEVycm9yKG51bGwpOwogICAgdHJ5IHsKICAgICAgY29uc3QgeyBiYXNlNjQsIGZpbGVOYW1lIH0gPSBhd2FpdCBidWlsZEd1aWRlUGRmQmFzZTY0KGd1aWRlLCBzZWN0aW9ucyk7CiAgICAgIGNvbnN0IHJlcyA9IGF3YWl0IGZldGNoKFJFUE9SVF9GTiwgewogICAgICAgIG1ldGhvZDogIlBPU1QiLAogICAgICAgIGhlYWRlcnM6IHsgIkNvbnRlbnQtVHlwZSI6ICJhcHBsaWNhdGlvbi9qc29uIiB9LAogICAgICAgIGJvZHk6IEpTT04uc3RyaW5naWZ5KHsKICAgICAgICAgIGd1aWRlX2lkOiBndWlkZS5pZCwKICAgICAgICAgIGd1aWRlX3RpdGxlOiBndWlkZS50aXRsZSwKICAgICAgICAgIGZpcnN0X25hbWU6IGZpcnN0LnRyaW0oKSwKICAgICAgICAgIGxhc3RfbmFtZTogbGFzdC50cmltKCksCiAgICAgICAgICBlbWFpbDogZW1haWwudHJpbSgpLnRvTG93ZXJDYXNlKCksCiAgICAgICAgICBwZGZfYmFzZTY0OiBiYXNlNjQsCiAgICAgICAgICBmaWxlX25hbWU6IGZpbGVOYW1lLAogICAgICAgICAgcGF0aDogd2luZG93LmxvY2F0aW9uLnBhdGhuYW1lLAogICAgICAgIH0pLAogICAgICB9KTsKICAgICAgY29uc3QgZGF0YSA9IGF3YWl0IHJlcy5qc29uKCkuY2F0Y2goKCkgPT4gKHt9KSk7CiAgICAgIGlmICghcmVzLm9rIHx8ICFkYXRhLm9rKQogICAgICAgIHRocm93IG5ldyBFcnJvcihkYXRhLmVycm9yIHx8ICJDb3VsZCBub3Qgc2VuZCB0aGUgZ3VpZGUuIFBsZWFzZSB0cnkgYWdhaW4uIik7CiAgICAgIG1hcmtFbWFpbGVkKGd1aWRlLmlkLCBmaXJzdC50cmltKCksIGxhc3QudHJpbSgpKTsKICAgICAgc2V0U2VudCh0cnVlKTsKICAgICAgc2V0VGltZW91dCgoKSA9PiBzZXRNb2RhbE9wZW4oZmFsc2UpLCAxNTAwKTsKICAgIH0gY2F0Y2ggKGUpIHsKICAgICAgc2V0U2VuZEVycm9yKGUgaW5zdGFuY2VvZiBFcnJvciA/IGUubWVzc2FnZSA6ICJDb3VsZCBub3Qgc2VuZCB0aGUgZ3VpZGUuIFBsZWFzZSB0cnkgYWdhaW4uIik7CiAgICB9IGZpbmFsbHkgewogICAgICBzZXRTZW5kaW5nKGZhbHNlKTsKICAgIH0KICB9LCBbZmlyc3QsIGxhc3QsIGVtYWlsLCBndWlkZSwgc2VjdGlvbnNdKTsKCiAgcmV0dXJuICgKICAgIDw+CiAgICAgIDxkaXYgY2xhc3NOYW1lPSJmbGV4IHctZnVsbCBmbGV4LWNvbCBnYXAtMi41Ij4KICAgICAgICA8YnV0dG9uCiAgICAgICAgICB0eXBlPSJidXR0b24iCiAgICAgICAgICBvbkNsaWNrPXtvbkRvd25sb2FkfQogICAgICAgICAgY2xhc3NOYW1lPSJpbmxpbmUtZmxleCB3LWZ1bGwgaXRlbXMtY2VudGVyIGp1c3RpZnktY2VudGVyIGdhcC0yIHJvdW5kZWQtW3ZhcigtLXJhZGl1cy1zbSldIGJnLXByaW1hcnkgcHgtNSBweS0yLjUgdGV4dC1bMTRweF0gZm9udC1zZW1pYm9sZCB0ZXh0LXdoaXRlIHRyYW5zaXRpb24gaG92ZXI6b3BhY2l0eS05MCIKICAgICAgICA+CiAgICAgICAgICA8c3ZnIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlV2lkdGg9IjIiIGFyaWEtaGlkZGVuPjxwYXRoIGQ9Ik0xMiAzdjEybTAgMGwtNC00bTQgNGw0LTRNNCAyMWgxNiIgLz48L3N2Zz4KICAgICAgICAgIERvd25sb2FkIFBERgogICAgICAgIDwvYnV0dG9uPgogICAgICAgIDxidXR0b24KICAgICAgICAgIHR5cGU9ImJ1dHRvbiIKICAgICAgICAgIG9uQ2xpY2s9e29uRW1haWxDbGlja30KICAgICAgICAgIGNsYXNzTmFtZT0iaW5saW5lLWZsZXggdy1mdWxsIGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWNlbnRlciBnYXAtMiByb3VuZGVkLVt2YXIoLS1yYWRpdXMtc20pXSBib3JkZXIgYm9yZGVyLWxpbmUgYmctd2hpdGUgcHgtNSBweS0yLjUgdGV4dC1bMTRweF0gZm9udC1zZW1pYm9sZCB0ZXh0LWluayB0cmFuc2l0aW9uIGhvdmVyOmJvcmRlci1hY2NlbnQgaG92ZXI6dGV4dC1hY2NlbnQiCiAgICAgICAgPgogICAgICAgICAgPHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZVdpZHRoPSIyIiBhcmlhLWhpZGRlbj48cmVjdCB4PSIzIiB5PSI1IiB3aWR0aD0iMTgiIGhlaWdodD0iMTQiIHJ4PSIyIiAvPjxwYXRoIGQ9Ik0zIDdsOSA2IDktNiIgLz48L3N2Zz4KICAgICAgICAgIEVtYWlsIFRoaXMgR3VpZGUKICAgICAgICA8L2J1dHRvbj4KICAgICAgICB7c2tpcFByb21wdCAmJiAoCiAgICAgICAgICA8c3BhbiBjbGFzc05hbWU9InRleHQtWzEzcHhdIHRleHQtbXV0ZWQiPldlIGFscmVhZHkgaGF2ZSB5b3VyIGRldGFpbHMgZm9yIHRoaXMgZ3VpZGUg4oCUIGRvd25sb2FkaW5nIGRpcmVjdGx5Ljwvc3Bhbj4KICAgICAgICApfQogICAgICA8L2Rpdj4KCiAgICAgIHttb2RhbE9wZW4gJiYgKAogICAgICAgIDxkaXYKICAgICAgICAgIGNsYXNzTmFtZT0iZml4ZWQgaW5zZXQtMCB6LTUwIGZsZXggaXRlbXMtY2VudGVyIGp1c3RpZnktY2VudGVyIGJnLWJsYWNrLzUwIHAtNCIKICAgICAgICAgIG9uQ2xpY2s9eygpID0+ICFzZW5kaW5nICYmIHNldE1vZGFsT3BlbihmYWxzZSl9CiAgICAgICAgICByb2xlPSJkaWFsb2ciCiAgICAgICAgICBhcmlhLW1vZGFsPSJ0cnVlIgogICAgICAgICAgYXJpYS1sYWJlbD0iRW1haWwgZ3VpZGUiCiAgICAgICAgPgogICAgICAgICAgPGRpdgogICAgICAgICAgICBjbGFzc05hbWU9InctZnVsbCBtYXgtdy1tZCByb3VuZGVkLVt2YXIoLS1yYWRpdXMtbWQpXSBiZy13aGl0ZSBwLTYgc2hhZG93LXhsIgogICAgICAgICAgICBvbkNsaWNrPXsoZSkgPT4gZS5zdG9wUHJvcGFnYXRpb24oKX0KICAgICAgICAgID4KICAgICAgICAgICAge3NlbnQgPyAoCiAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9InB5LTYgdGV4dC1jZW50ZXIiPgogICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9Im14LWF1dG8gbWItMyBmbGV4IGgtMTIgdy0xMiBpdGVtcy1jZW50ZXIganVzdGlmeS1jZW50ZXIgcm91bmRlZC1mdWxsIGJnLWVtZXJhbGQtNTAgdGV4dC1lbWVyYWxkLTYwMCI+CiAgICAgICAgICAgICAgICAgIDxzdmcgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iY3VycmVudENvbG9yIiBzdHJva2VXaWR0aD0iMi41Ij48cGF0aCBkPSJNNSAxM2w0IDRMMTkgNyIgLz48L3N2Zz4KICAgICAgICAgICAgICAgIDwvZGl2PgogICAgICAgICAgICAgICAgPGgzIGNsYXNzTmFtZT0idGV4dC1bMTdweF0gZm9udC1ib2xkIHRleHQtaW5rIj5HdWlkZSBvbiBpdHMgd2F5ITwvaDM+CiAgICAgICAgICAgICAgICA8cCBjbGFzc05hbWU9Im10LTEgdGV4dC1bMTRweF0gdGV4dC1tdXRlZCI+Q2hlY2sgeW91ciBpbmJveCDigJQgeW91ciBQREYgZ3VpZGUgaXMgb24gaXRzIHdheS48L3A+CiAgICAgICAgICAgICAgPC9kaXY+CiAgICAgICAgICAgICkgOiAoCiAgICAgICAgICAgICAgPD4KICAgICAgICAgICAgICAgIDxoMyBjbGFzc05hbWU9InRleHQtWzE3cHhdIGZvbnQtYm9sZCB0ZXh0LWluayI+R2V0IHlvdXIgZnJlZSBndWlkZTwvaDM+CiAgICAgICAgICAgICAgICA8cCBjbGFzc05hbWU9Im10LTEgdGV4dC1bMTMuNXB4XSB0ZXh0LW11dGVkIj4KICAgICAgICAgICAgICAgICAgRW50ZXIgeW91ciBkZXRhaWxzIGFuZCB3ZSZhcG9zO2xsIGVtYWlsIHlvdSB0aGUgPHN0cm9uZz57Z3VpZGUudGl0bGV9PC9zdHJvbmc+IFBERiBpbnN0YW50bHkuCiAgICAgICAgICAgICAgICA8L3A+CiAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT0ibXQtNCBncmlkIGdyaWQtY29scy0yIGdhcC0zIj4KICAgICAgICAgICAgICAgICAgPGxhYmVsIGNsYXNzTmFtZT0iYmxvY2siPgogICAgICAgICAgICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT0ibWItMSBibG9jayB0ZXh0LVsxM3B4XSBmb250LXNlbWlib2xkIHRleHQtaW5rIj5GaXJzdCBuYW1lPC9zcGFuPgogICAgICAgICAgICAgICAgICAgIDxpbnB1dAogICAgICAgICAgICAgICAgICAgICAgcmVmPXtmaXJzdFJlZn0KICAgICAgICAgICAgICAgICAgICAgIHR5cGU9InRleHQiCiAgICAgICAgICAgICAgICAgICAgICB2YWx1ZT17Zmlyc3R9CiAgICAgICAgICAgICAgICAgICAgICBvbkNoYW5nZT17KGUpID0+IHNldEZpcnN0KGUudGFyZ2V0LnZhbHVlKX0KICAgICAgICAgICAgICAgICAgICAgIGNsYXNzTmFtZT17YHctZnVsbCByb3VuZGVkLVt2YXIoLS1yYWRpdXMtc20pXSBib3JkZXIgcHgtMyBweS0yLjUgdGV4dC1bMTVweF0gb3V0bGluZS1ub25lIGZvY3VzOmJvcmRlci1hY2NlbnQgJHtlcnJvcnMuZmlyc3QgPyAiYm9yZGVyLXJlZC01MDAiIDogImJvcmRlci1saW5lIn1gfQogICAgICAgICAgICAgICAgICAgICAgYXV0b0NvbXBsZXRlPSJnaXZlbi1uYW1lIgogICAgICAgICAgICAgICAgICAgIC8+CiAgICAgICAgICAgICAgICAgICAge2Vycm9ycy5maXJzdCAmJiA8c3BhbiBjbGFzc05hbWU9Im10LTEgYmxvY2sgdGV4dC1bMTJweF0gdGV4dC1yZWQtNjAwIj57ZXJyb3JzLmZpcnN0fTwvc3Bhbj59CiAgICAgICAgICAgICAgICAgIDwvbGFiZWw+CiAgICAgICAgICAgICAgICAgIDxsYWJlbCBjbGFzc05hbWU9ImJsb2NrIj4KICAgICAgICAgICAgICAgICAgICA8c3BhbiBjbGFzc05hbWU9Im1iLTEgYmxvY2sgdGV4dC1bMTNweF0gZm9udC1zZW1pYm9sZCB0ZXh0LWluayI+TGFzdCBuYW1lPC9zcGFuPgogICAgICAgICAgICAgICAgICAgIDxpbnB1dAogICAgICAgICAgICAgICAgICAgICAgdHlwZT0idGV4dCIKICAgICAgICAgICAgICAgICAgICAgIHZhbHVlPXtsYXN0fQogICAgICAgICAgICAgICAgICAgICAgb25DaGFuZ2U9eyhlKSA9PiBzZXRMYXN0KGUudGFyZ2V0LnZhbHVlKX0KICAgICAgICAgICAgICAgICAgICAgIGNsYXNzTmFtZT17YHctZnVsbCByb3VuZGVkLVt2YXIoLS1yYWRpdXMtc20pXSBib3JkZXIgcHgtMyBweS0yLjUgdGV4dC1bMTVweF0gb3V0bGluZS1ub25lIGZvY3VzOmJvcmRlci1hY2NlbnQgJHtlcnJvcnMubGFzdCA/ICJib3JkZXItcmVkLTUwMCIgOiAiYm9yZGVyLWxpbmUifWB9CiAgICAgICAgICAgICAgICAgICAgICBhdXRvQ29tcGxldGU9ImZhbWlseS1uYW1lIgogICAgICAgICAgICAgICAgICAgIC8+CiAgICAgICAgICAgICAgICAgICAge2Vycm9ycy5sYXN0ICYmIDxzcGFuIGNsYXNzTmFtZT0ibXQtMSBibG9jayB0ZXh0LVsxMnB4XSB0ZXh0LXJlZC02MDAiPntlcnJvcnMubGFzdH08L3NwYW4+fQogICAgICAgICAgICAgICAgICA8L2xhYmVsPgogICAgICAgICAgICAgICAgPC9kaXY+CiAgICAgICAgICAgICAgICA8bGFiZWwgY2xhc3NOYW1lPSJtdC0zIGJsb2NrIj4KICAgICAgICAgICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPSJtYi0xIGJsb2NrIHRleHQtWzEzcHhdIGZvbnQtc2VtaWJvbGQgdGV4dC1pbmsiPkVtYWlsPC9zcGFuPgogICAgICAgICAgICAgICAgICA8aW5wdXQKICAgICAgICAgICAgICAgICAgICB0eXBlPSJlbWFpbCIKICAgICAgICAgICAgICAgICAgICB2YWx1ZT17ZW1haWx9CiAgICAgICAgICAgICAgICAgICAgb25DaGFuZ2U9eyhlKSA9PiBzZXRFbWFpbChlLnRhcmdldC52YWx1ZSl9CiAgICAgICAgICAgICAgICAgICAgb25LZXlEb3duPXsoZSkgPT4gewogICAgICAgICAgICAgICAgICAgICAgaWYgKGUua2V5ID09PSAiRW50ZXIiKSBzdWJtaXQoKTsKICAgICAgICAgICAgICAgICAgICB9fQogICAgICAgICAgICAgICAgICAgIGNsYXNzTmFtZT17YHctZnVsbCByb3VuZGVkLVt2YXIoLS1yYWRpdXMtc20pXSBib3JkZXIgcHgtMyBweS0yLjUgdGV4dC1bMTVweF0gb3V0bGluZS1ub25lIGZvY3VzOmJvcmRlci1hY2NlbnQgJHtlcnJvcnMuZW1haWwgPyAiYm9yZGVyLXJlZC01MDAiIDogImJvcmRlci1saW5lIn1gfQogICAgICAgICAgICAgICAgICAgIGF1dG9Db21wbGV0ZT0iZW1haWwiCiAgICAgICAgICAgICAgICAgICAgcGxhY2Vob2xkZXI9InlvdUBleGFtcGxlLmNvbSIKICAgICAgICAgICAgICAgICAgLz4KICAgICAgICAgICAgICAgICAge2Vycm9ycy5lbWFpbCAmJiA8c3BhbiBjbGFzc05hbWU9Im10LTEgYmxvY2sgdGV4dC1bMTJweF0gdGV4dC1yZWQtNjAwIj57ZXJyb3JzLmVtYWlsfTwvc3Bhbj59CiAgICAgICAgICAgICAgICA8L2xhYmVsPgogICAgICAgICAgICAgICAge3NlbmRFcnJvciAmJiA8cCBjbGFzc05hbWU9Im10LTMgdGV4dC1bMTNweF0gZm9udC1tZWRpdW0gdGV4dC1yZWQtNjAwIj57c2VuZEVycm9yfTwvcD59CiAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT0ibXQtNSBmbGV4IGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWJldHdlZW4gZ2FwLTMiPgogICAgICAgICAgICAgICAgICA8YnV0dG9uCiAgICAgICAgICAgICAgICAgICAgdHlwZT0iYnV0dG9uIgogICAgICAgICAgICAgICAgICAgIG9uQ2xpY2s9e29uRG93bmxvYWR9CiAgICAgICAgICAgICAgICAgICAgZGlzYWJsZWQ9e3NlbmRpbmd9CiAgICAgICAgICAgICAgICAgICAgY2xhc3NOYW1lPSJ0ZXh0LVsxMy41cHhdIGZvbnQtbWVkaXVtIHRleHQtbXV0ZWQgdW5kZXJsaW5lIHVuZGVybGluZS1vZmZzZXQtMiBob3Zlcjp0ZXh0LWluayIKICAgICAgICAgICAgICAgICAgPgogICAgICAgICAgICAgICAgICAgIFNraXAg4oCUIERvd25sb2FkIERpcmVjdGx5CiAgICAgICAgICAgICAgICAgIDwvYnV0dG9uPgogICAgICAgICAgICAgICAgICA8YnV0dG9uCiAgICAgICAgICAgICAgICAgICAgdHlwZT0iYnV0dG9uIgogICAgICAgICAgICAgICAgICAgIG9uQ2xpY2s9e3N1Ym1pdH0KICAgICAgICAgICAgICAgICAgICBkaXNhYmxlZD17c2VuZGluZ30KICAgICAgICAgICAgICAgICAgICBjbGFzc05hbWU9InJvdW5kZWQtW3ZhcigtLXJhZGl1cy1zbSldIGJnLXByaW1hcnkgcHgtNiBweS0yLjUgdGV4dC1bMTRweF0gZm9udC1zZW1pYm9sZCB0ZXh0LXdoaXRlIHRyYW5zaXRpb24gaG92ZXI6b3BhY2l0eS05MCBkaXNhYmxlZDpvcGFjaXR5LTYwIgogICAgICAgICAgICAgICAgICA+CiAgICAgICAgICAgICAgICAgICAge3NlbmRpbmcgPyAiU2VuZGluZ+KApiIgOiAiRW1haWwgUERGIEd1aWRlIn0KICAgICAgICAgICAgICAgICAgPC9idXR0b24+CiAgICAgICAgICAgICAgICA8L2Rpdj4KICAgICAgICAgICAgICAgIDxwIGNsYXNzTmFtZT0ibXQtNCB0ZXh0LWNlbnRlciB0ZXh0LVsxMXB4XSBsZWFkaW5nLXJlbGF4ZWQgdGV4dC1tdXRlZCI+CiAgICAgICAgICAgICAgICAgIFlvdXIgaW5mb3JtYXRpb24gaXMga2VwdCBjb25maWRlbnRpYWwuIEJ5IGNvbnRpbnVpbmcsIHlvdSBhZ3JlZSB0byBiZSBjb250YWN0ZWQgYnkKICAgICAgICAgICAgICAgICAgUm9oaXQgU2hhcm1hLCBSZWFsIEVzdGF0ZSBBZ2VudC4KICAgICAgICAgICAgICAgIDwvcD4KICAgICAgICAgICAgICA8Lz4KICAgICAgICAgICAgKX0KICAgICAgICAgIDwvZGl2PgogICAgICAgIDwvZGl2PgogICAgICApfQogICAgPC8+CiAgKTsKfQo=
+"use client";
+/**
+ * Lead-capture + PDF download buttons for a guide detail page.
+ * Mirrors the calculators' ReportButtons pattern:
+ * - "Download PDF" → builds the guide PDF client-side and saves it directly.
+ * - "Email This Guide" → lead modal (first name, last name, email).
+ *   On submit: builds the PDF, POSTs it to the send-guide-report edge
+ *   function (which stores the lead in CMS + emails the PDF via ZeptoMail).
+ * - Remembers the visitor per guide for ~90 days to avoid repeat prompts.
+ */
+import { useCallback, useEffect, useRef, useState } from "react";
+import { buildGuidePdfBase64, downloadGuidePdf } from "@/lib/guides/pdf";
+import type { GuideMeta, GuideSection } from "@/lib/guides/types";
+
+const REPORT_FN = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/send-guide-report`;
+const NINETY_DAYS_MS = 90 * 24 * 60 * 60 * 1000;
+const STORE_KEY = "_gss_guide_lead2";
+
+interface StoredLead {
+  first?: string;
+  last?: string;
+  emailed?: Record<string, number>;
+}
+
+function readStore(): StoredLead {
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    return raw ? (JSON.parse(raw) as StoredLead) : {};
+  } catch {
+    return {};
+  }
+}
+function writeStore(s: StoredLead): void {
+  try {
+    localStorage.setItem(STORE_KEY, JSON.stringify(s));
+  } catch {
+    /* ignore */
+  }
+}
+function wasEmailed(guideId: string): boolean {
+  const ts = readStore().emailed?.[guideId];
+  return typeof ts === "number" && Date.now() - ts < NINETY_DAYS_MS;
+}
+function markEmailed(guideId: string, first: string, last: string): void {
+  const s = readStore();
+  s.first = first;
+  s.last = last;
+  s.emailed = { ...(s.emailed ?? {}), [guideId]: Date.now() };
+  writeStore(s);
+}
+
+export function GuideReportButtons({
+  guide,
+  sections,
+}: {
+  guide: GuideMeta;
+  sections: GuideSection[];
+}) {
+  const [modalOpen, setModalOpen] = useState(false);
+  const [skipPrompt, setSkipPrompt] = useState(false);
+  const [first, setFirst] = useState("");
+  const [last, setLast] = useState("");
+  const [email, setEmail] = useState("");
+  const [errors, setErrors] = useState<{ first?: string; last?: string; email?: string }>({});
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
+  const firstRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (modalOpen) {
+      const s = readStore();
+      setFirst(s.first ?? "");
+      setLast(s.last ?? "");
+      setErrors({});
+      setSendError(null);
+      setSent(false);
+      setTimeout(() => firstRef.current?.focus(), 100);
+    }
+  }, [modalOpen]);
+
+  const onDownload = useCallback(async () => {
+    await downloadGuidePdf(guide, sections);
+  }, [guide, sections]);
+
+  const onEmailClick = useCallback(() => {
+    if (wasEmailed(guide.id)) {
+      // Already captured for this guide — just download.
+      setSkipPrompt(true);
+      onDownload();
+      setTimeout(() => setSkipPrompt(false), 4000);
+    } else {
+      setModalOpen(true);
+    }
+  }, [guide.id, onDownload]);
+
+  const submit = useCallback(async () => {
+    const errs: typeof errors = {};
+    if (!first.trim()) errs.first = "First name is required.";
+    if (!last.trim()) errs.last = "Last name is required.";
+    if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()))
+      errs.email = "Enter a valid email address.";
+    setErrors(errs);
+    if (Object.keys(errs).length > 0) return;
+
+    setSending(true);
+    setSendError(null);
+    try {
+      const { base64, fileName } = await buildGuidePdfBase64(guide, sections);
+      const res = await fetch(REPORT_FN, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          guide_id: guide.id,
+          guide_title: guide.title,
+          first_name: first.trim(),
+          last_name: last.trim(),
+          email: email.trim().toLowerCase(),
+          pdf_base64: base64,
+          file_name: fileName,
+          path: window.location.pathname,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok)
+        throw new Error(data.error || "Could not send the guide. Please try again.");
+      markEmailed(guide.id, first.trim(), last.trim());
+      setSent(true);
+      setTimeout(() => setModalOpen(false), 1500);
+    } catch (e) {
+      setSendError(e instanceof Error ? e.message : "Could not send the guide. Please try again.");
+    } finally {
+      setSending(false);
+    }
+  }, [first, last, email, guide, sections]);
+
+  return (
+    <>
+      <div className="flex w-full flex-col gap-2.5">
+        <button
+          type="button"
+          onClick={onDownload}
+          className="inline-flex w-full items-center justify-center gap-2 rounded-[var(--radius-sm)] bg-primary px-5 py-2.5 text-[14px] font-semibold text-white transition hover:opacity-90"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16" /></svg>
+          Download PDF
+        </button>
+        <button
+          type="button"
+          onClick={onEmailClick}
+          className="inline-flex w-full items-center justify-center gap-2 rounded-[var(--radius-sm)] border border-line bg-white px-5 py-2.5 text-[14px] font-semibold text-ink transition hover:border-accent hover:text-accent"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M3 7l9 6 9-6" /></svg>
+          Email This Guide
+        </button>
+        {skipPrompt && (
+          <span className="text-[13px] text-muted">We already have your details for this guide — downloading directly.</span>
+        )}
+      </div>
+
+      {modalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          onClick={() => !sending && setModalOpen(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Email guide"
+        >
+          <div
+            className="w-full max-w-md rounded-[var(--radius-md)] bg-white p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {sent ? (
+              <div className="py-6 text-center">
+                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 13l4 4L19 7" /></svg>
+                </div>
+                <h3 className="text-[17px] font-bold text-ink">Guide on its way!</h3>
+                <p className="mt-1 text-[14px] text-muted">Check your inbox — your PDF guide is on its way.</p>
+              </div>
+            ) : (
+              <>
+                <h3 className="text-[17px] font-bold text-ink">Get your free guide</h3>
+                <p className="mt-1 text-[13.5px] text-muted">
+                  Enter your details and we&apos;ll email you the <strong>{guide.title}</strong> PDF instantly.
+                </p>
+                <div className="mt-4 grid grid-cols-2 gap-3">
+                  <label className="block">
+                    <span className="mb-1 block text-[13px] font-semibold text-ink">First name</span>
+                    <input
+                      ref={firstRef}
+                      type="text"
+                      value={first}
+                      onChange={(e) => setFirst(e.target.value)}
+                      className={`w-full rounded-[var(--radius-sm)] border px-3 py-2.5 text-[15px] outline-none focus:border-accent ${errors.first ? "border-red-500" : "border-line"}`}
+                      autoComplete="given-name"
+                    />
+                    {errors.first && <span className="mt-1 block text-[12px] text-red-600">{errors.first}</span>}
+                  </label>
+                  <label className="block">
+                    <span className="mb-1 block text-[13px] font-semibold text-ink">Last name</span>
+                    <input
+                      type="text"
+                      value={last}
+                      onChange={(e) => setLast(e.target.value)}
+                      className={`w-full rounded-[var(--radius-sm)] border px-3 py-2.5 text-[15px] outline-none focus:border-accent ${errors.last ? "border-red-500" : "border-line"}`}
+                      autoComplete="family-name"
+                    />
+                    {errors.last && <span className="mt-1 block text-[12px] text-red-600">{errors.last}</span>}
+                  </label>
+                </div>
+                <label className="mt-3 block">
+                  <span className="mb-1 block text-[13px] font-semibold text-ink">Email</span>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") submit();
+                    }}
+                    className={`w-full rounded-[var(--radius-sm)] border px-3 py-2.5 text-[15px] outline-none focus:border-accent ${errors.email ? "border-red-500" : "border-line"}`}
+                    autoComplete="email"
+                    placeholder="you@example.com"
+                  />
+                  {errors.email && <span className="mt-1 block text-[12px] text-red-600">{errors.email}</span>}
+                </label>
+                {sendError && <p className="mt-3 text-[13px] font-medium text-red-600">{sendError}</p>}
+                <div className="mt-5 flex items-center justify-between gap-3">
+                  <button
+                    type="button"
+                    onClick={onDownload}
+                    disabled={sending}
+                    className="text-[13.5px] font-medium text-muted underline underline-offset-2 hover:text-ink"
+                  >
+                    Skip — Download Directly
+                  </button>
+                  <button
+                    type="button"
+                    onClick={submit}
+                    disabled={sending}
+                    className="rounded-[var(--radius-sm)] bg-primary px-6 py-2.5 text-[14px] font-semibold text-white transition hover:opacity-90 disabled:opacity-60"
+                  >
+                    {sending ? "Sending…" : "Email PDF Guide"}
+                  </button>
+                </div>
+                <p className="mt-4 text-center text-[11px] leading-relaxed text-muted">
+                  Your information is kept confidential. By continuing, you agree to be contacted by
+                  Rohit Sharma, Real Estate Agent.
+                </p>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+    </>
+  );
+}

@@ -1,1 +1,158 @@
-aW1wb3J0IHR5cGUgeyBNZXRhZGF0YSB9IGZyb20gIm5leHQiOwppbXBvcnQgTGluayBmcm9tICJuZXh0L2xpbmsiOwppbXBvcnQgeyBub3RGb3VuZCwgcmVkaXJlY3QgfSBmcm9tICJuZXh0L25hdmlnYXRpb24iOwppbXBvcnQgeyBnZXRTZXR0aW5ncyB9IGZyb20gIkAvbGliL2NtcyI7CmltcG9ydCB7IHNlb1RpdGxlIH0gZnJvbSAiQC9saWIvc2VvIjsKaW1wb3J0IHsKICBHVUlERVMsCiAgTEVHQUNZX0lEUywKICBnZXRHdWlkZSwKICBnZXRHdWlkZXNCeUF1ZGllbmNlLAogIGdldEF1ZGllbmNlTWV0YSwKfSBmcm9tICJAL2xpYi9ndWlkZXMvcmVnaXN0cnkiOwppbXBvcnQgeyBHVUlERV9DT05URU5UIH0gZnJvbSAiQC9saWIvZ3VpZGVzL2NvbnRlbnQiOwppbXBvcnQgeyBHdWlkZVBhZ2VTaGVsbCB9IGZyb20gIkAvY29tcG9uZW50cy9ndWlkZXMvR3VpZGVQYWdlU2hlbGwiOwppbXBvcnQgeyBHdWlkZUNvbnRlbnQgfSBmcm9tICJAL2NvbXBvbmVudHMvZ3VpZGVzL0d1aWRlQ29udGVudCI7CmltcG9ydCB7IEd1aWRlUmVwb3J0QnV0dG9ucyB9IGZyb20gIkAvY29tcG9uZW50cy9ndWlkZXMvR3VpZGVSZXBvcnRCdXR0b25zIjsKaW1wb3J0IHsgR3VpZGVBZFNsb3QgfSBmcm9tICJAL2NvbXBvbmVudHMvZ3VpZGVzL0d1aWRlQWRTbG90IjsKaW1wb3J0IHsgR3VpZGVIYXNoUmVkaXJlY3QgfSBmcm9tICJAL2NvbXBvbmVudHMvZ3VpZGVzL0d1aWRlSGFzaFJlZGlyZWN0IjsKCnR5cGUgUHJvcHMgPSB7IHBhcmFtczogUHJvbWlzZTx7IHNsdWc6IHN0cmluZyB9Pjsgc2VhcmNoUGFyYW1zPzogUHJvbWlzZTx7IGM/OiBzdHJpbmcgfT4gfTsKCmV4cG9ydCBhc3luYyBmdW5jdGlvbiBnZW5lcmF0ZU1ldGFkYXRhKHsgcGFyYW1zIH06IFByb3BzKTogUHJvbWlzZTxNZXRhZGF0YT4gewogIGNvbnN0IHsgc2x1ZyB9ID0gYXdhaXQgcGFyYW1zOwogIGNvbnN0IG1ldGEgPSBnZXRHdWlkZShzbHVnKTsKICBpZiAoIW1ldGEpIHJldHVybiB7fTsKICBjb25zdCB0aXRsZSA9IGF3YWl0IHNlb1RpdGxlKG1ldGEuc2VvVGl0bGUpOwogIHJldHVybiB7CiAgICB0aXRsZSwKICAgIGRlc2NyaXB0aW9uOiBtZXRhLnNlb0Rlc2NyaXB0aW9uLAogICAgYWx0ZXJuYXRlczogeyBjYW5vbmljYWw6IGBodHRwczovL3d3dy5nZXRzZXRzb2xkLmNhL2d1aWRlcy8ke3NsdWd9YCB9LAogICAgb3BlbkdyYXBoOiB7IHRpdGxlLCBkZXNjcmlwdGlvbjogbWV0YS5zZW9EZXNjcmlwdGlvbiwgdHlwZTogImFydGljbGUiLCB1cmw6IGBodHRwczovL3d3dy5nZXRzZXRzb2xkLmNhL2d1aWRlcy8ke3NsdWd9YCB9LAogICAgdHdpdHRlcjogeyBjYXJkOiAic3VtbWFyeSIsIHRpdGxlLCBkZXNjcmlwdGlvbjogbWV0YS5zZW9EZXNjcmlwdGlvbiB9LAogIH07Cn0KCmNvbnN0IE9GRkVSUyA9IFsKICB7CiAgICBraWNrZXI6ICJGb3IgU2VsbGVycyIsCiAgICB0aXRsZTogIlBheSBBcyBMb3cgQXMgMSUgTGlzdGluZyBGZWUhIiwKICAgIHRleHQ6ICJGdWxsLXNlcnZpY2UgcmVhbCBlc3RhdGUg4oCUIG5vIGNvbXByb21pc2Ugb24gcXVhbGl0eS4gU2F0aXNmYWN0aW9uIGd1YXJhbnRlZWQgb3IgY2FuY2VsIGFueXRpbWUuIiwKICAgIGhyZWY6ICJodHRwczovL3d3dy5nZXRzZXRzb2xkLmNhL3NlbGxpbmcteW91ci1ob21lIiwKICAgIGN0YTogIkV4cGxvcmUgTGlzdGluZyBPZmZlciIsCiAgfSwKICB7CiAgICBraWNrZXI6ICJGb3IgQnV5ZXJzIiwKICAgIHRpdGxlOiAiR2V0IFVwIFRvICQ1LDAwMCBCdXllciBDYXNoIEJhY2shIiwKICAgIHRleHQ6ICJKb2luIHRoZSBWSVAgQnV5ZXIgUHJvZ3JhbSDigJQgZWFybiByZWFsIGNhc2ggYmFjayBhdCBjbG9zaW5nIHdoZW4geW91IHB1cmNoYXNlIHdpdGggdXMuIiwKICAgIGhyZWY6ICJodHRwczovL3d3dy5nZXRzZXRzb2xkLmNhL2J1eWluZy1hLWhvbWUiLAogICAgY3RhOiAiSm9pbiBCdXllciBQcm9ncmFtIiwKICB9LAogIHsKICAgIGtpY2tlcjogIk91ciBSZXZpZXdzIiwKICAgIHRpdGxlOiAiV2hhdCBDbGllbnRzIEFyZSBTYXlpbmciLAogICAgdGV4dDogIlJhdGVkIDUgc3RhcnMgZm9yIHNlcnZpY2UsIHJlc3VsdHMsIGFuZCBzYXZpbmdzLiBSZWFsIGV4cGVyaWVuY2VzIGZyb20gYnV5ZXJzICYgc2VsbGVycy4iLAogICAgaHJlZjogImh0dHBzOi8vd3d3LmdldHNldHNvbGQuY2EvcmV2aWV3cyIsCiAgICBjdGE6ICJSZWFkIEFsbCBSZXZpZXdzIiwKICB9LApdOwoKZXhwb3J0IGRlZmF1bHQgYXN5bmMgZnVuY3Rpb24gR3VpZGVEZXRhaWxQYWdlKHsgcGFyYW1zLCBzZWFyY2hQYXJhbXMgfTogUHJvcHMpIHsKICBjb25zdCB7IHNsdWcgfSA9IGF3YWl0IHBhcmFtczsKCiAgLy8gTGVnYWN5ID9jPTxndWlkZUlkPiDihpIgY2Fub25pY2FsCiAgY29uc3QgYyA9IChhd2FpdCBzZWFyY2hQYXJhbXMpPy5jOwogIGlmIChjKSB7CiAgICBjb25zdCBpZCA9IChMRUdBQ1lfSURTIGFzIFJlY29yZDxzdHJpbmcsIHN0cmluZz4pW2NdID8/IChnZXRHdWlkZShjKSA/IGMgOiBudWxsKTsKICAgIGlmIChpZCAmJiBpZCAhPT0gc2x1ZykgcmVkaXJlY3QoYC9ndWlkZXMvJHtpZH1gKTsKICB9CgogIGNvbnN0IGd1aWRlID0gZ2V0R3VpZGUoc2x1ZykgPz8gbm90Rm91bmQoKTsKCiAgY29uc3Qgc2VjdGlvbnMgPSBHVUlERV9DT05URU5UW3NsdWddID8/IFtdOwoKICBjb25zdCBzZXR0aW5ncyA9IGF3YWl0IGdldFNldHRpbmdzKCk7CiAgY29uc3QgYWRzID0gKHNldHRpbmdzLmFkcyA/PyB7fSkgYXMgewogICAgZ3VpZGVzX2FkX2VuYWJsZWQ/OiBib29sZWFuOwogICAgZ3JpZF9hZF9jb2RlPzogc3RyaW5nOwogIH07CiAgY29uc3QgYWRDb2RlID0gYWRzLmdyaWRfYWRfY29kZSA/PyAiIjsKICBjb25zdCBzaG93QWQgPSAhIWFkcy5ndWlkZXNfYWRfZW5hYmxlZCAmJiAvZGF0YS1hZC1jbGllbnQ9Ii8udGVzdChhZENvZGUpOwoKICBjb25zdCBhdWRpZW5jZSA9IGdldEF1ZGllbmNlTWV0YShndWlkZS5hdWRpZW5jZSk7CiAgY29uc3QgbW9yZUd1aWRlcyA9IFsKICAgIC4uLmdldEd1aWRlc0J5QXVkaWVuY2UoZ3VpZGUuYXVkaWVuY2UpLmZpbHRlcigoZykgPT4gZy5pZCAhPT0gZ3VpZGUuaWQpLAogICAgLi4uR1VJREVTLmZpbHRlcigoZykgPT4gZy5hdWRpZW5jZSAhPT0gZ3VpZGUuYXVkaWVuY2UpLAogIF0uc2xpY2UoMCwgNyk7CgogIHJldHVybiAoCiAgICA8R3VpZGVQYWdlU2hlbGwgc2x1Zz17c2x1Z30+CiAgICAgIDxHdWlkZUhhc2hSZWRpcmVjdCAvPgogICAgICA8ZGl2IGNsYXNzTmFtZT0iZ3JpZCBncmlkLWNvbHMtMSBpdGVtcy1zdGFydCBnYXAtNyBsZzpncmlkLWNvbHMtWzFmcl8zMDBweF0iPgogICAgICAgIDxkaXYgY2xhc3NOYW1lPSJtaW4tdy0wIj4KICAgICAgICAgIDxHdWlkZUNvbnRlbnQgZ3VpZGU9e2d1aWRlfSBzZWN0aW9ucz17c2VjdGlvbnN9IC8+CiAgICAgICAgICB7c2hvd0FkICYmIDxHdWlkZUFkU2xvdCBhZENvZGU9e2FkQ29kZX0gY2xhc3NOYW1lPSJtdC02IiAvPn0KICAgICAgICA8L2Rpdj4KCiAgICAgICAgPGFzaWRlIGNsYXNzTmFtZT0iZmxleCBmbGV4LWNvbCBnYXAtNCBsZzpzdGlja3kgbGc6dG9wLTI0Ij4KICAgICAgICAgIDxHdWlkZVJlcG9ydEJ1dHRvbnMgZ3VpZGU9e2d1aWRlfSBzZWN0aW9ucz17c2VjdGlvbnN9IC8+CiAgICAgICAgICB7c2hvd0FkICYmIDxHdWlkZUFkU2xvdCBhZENvZGU9e2FkQ29kZX0gLz59CgogICAgICAgICAgPGRpdiBjbGFzc05hbWU9InJvdW5kZWQteGwgYm9yZGVyIGJvcmRlci1saW5lIGJnLXdoaXRlIHAtNCBzaGFkb3ctc20iPgogICAgICAgICAgICA8aDQgY2xhc3NOYW1lPSJtYi0zIHRleHQtWzExcHhdIGZvbnQtYm9sZCB1cHBlcmNhc2UgdHJhY2tpbmctd2lkZXIgdGV4dC1tdXRlZCI+CiAgICAgICAgICAgICAgTW9yZSBHdWlkZXMKICAgICAgICAgICAgPC9oND4KICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9ImZsZXggZmxleC1jb2wiPgogICAgICAgICAgICAgIHttb3JlR3VpZGVzLm1hcCgoZykgPT4gKAogICAgICAgICAgICAgICAgPExpbmsKICAgICAgICAgICAgICAgICAga2V5PXtnLmlkfQogICAgICAgICAgICAgICAgICBocmVmPXtgL2d1aWRlcy8ke2cuaWR9YH0KICAgICAgICAgICAgICAgICAgY2xhc3NOYW1lPSJmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMi41IGJvcmRlci1iIGJvcmRlci1saW5lIHB5LTIgdGV4dC1bMTIuNXB4XSBmb250LW1lZGl1bSB0ZXh0LWluayB0cmFuc2l0aW9uIGxhc3Q6Ym9yZGVyLWItMCBob3Zlcjp0ZXh0LWFjY2VudCIKICAgICAgICAgICAgICAgID4KICAgICAgICAgICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPSJsaW5lLWNsYW1wLTEiPntnLnRpdGxlfTwvc3Bhbj4KICAgICAgICAgICAgICAgIDwvTGluaz4KICAgICAgICAgICAgICApKX0KICAgICAgICAgICAgPC9kaXY+CiAgICAgICAgICA8L2Rpdj4KCiAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT0icm91bmRlZC14bCBiZy1wcmltYXJ5IHAtNCB0ZXh0LWNlbnRlciB0ZXh0LXdoaXRlIHNoYWRvdy1zbSI+CiAgICAgICAgICAgIDxwIGNsYXNzTmFtZT0idGV4dC1bMTNweF0gZm9udC1ib2xkIj5Nb3JlIHthdWRpZW5jZT8ubGFiZWwgPz8gImd1aWRlcyJ9PC9wPgogICAgICAgICAgICA8cCBjbGFzc05hbWU9Im10LTEgdGV4dC1bMTJweF0gdGV4dC13aGl0ZS83NSI+CiAgICAgICAgICAgICAgQnJvd3NlIGV2ZXJ5IGd1aWRlIGZvciB7Z3VpZGUudGFnLnRvTG93ZXJDYXNlKCkucmVwbGFjZSgiZm9yICIsICIiKX0uCiAgICAgICAgICAgIDwvcD4KICAgICAgICAgICAgPExpbmsKICAgICAgICAgICAgICBocmVmPSIvZ3VpZGVzIgogICAgICAgICAgICAgIGNsYXNzTmFtZT0ibXQtMyBpbmxpbmUtYmxvY2sgcm91bmRlZC1sZyBiZy1hY2NlbnQgcHgtNCBweS0yIHRleHQtWzEycHhdIGZvbnQtYm9sZCB0ZXh0LXdoaXRlIHRyYW5zaXRpb24gaG92ZXI6b3BhY2l0eS05MCIKICAgICAgICAgICAgPgogICAgICAgICAgICAgIEFsbCBHdWlkZXMKICAgICAgICAgICAgPC9MaW5rPgogICAgICAgICAgPC9kaXY+CiAgICAgICAgPC9hc2lkZT4KICAgICAgPC9kaXY+CgogICAgICB7LyogT2ZmZXJzIOKAlCBzaXRlIGJsb2NrIHN0eWxlOiBleWVicm93IGtpY2tlciArIGhhaXJsaW5lIGRpdmlkZXIgKi99CiAgICAgIDxzZWN0aW9uIGNsYXNzTmFtZT0ibXQtMTAgYm9yZGVyLXQgYm9yZGVyLWxpbmUgcHQtOCI+CiAgICAgICAgPGRpdiBjbGFzc05hbWU9ImdyaWQgZ3JpZC1jb2xzLTEgZ2FwLTQgc206Z3JpZC1jb2xzLTIgbGc6Z3JpZC1jb2xzLTMiPgogICAgICAgICAge09GRkVSUy5tYXAoKG8pID0+ICgKICAgICAgICAgICAgPGRpdiBrZXk9e28ua2lja2VyfSBjbGFzc05hbWU9ImZsZXggbWluLWgtWzE5MHB4XSBmbGV4LWNvbCByb3VuZGVkLXhsIGJvcmRlciBib3JkZXItbGluZSBiZy13aGl0ZSBwLTUgc2hhZG93LXNtIj4KICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT0idGV4dC1bMTFweF0gZm9udC1ib2xkIHVwcGVyY2FzZSB0cmFja2luZy1bMC4xMmVtXSB0ZXh0LWFjY2VudCI+CiAgICAgICAgICAgICAgICB7by5raWNrZXJ9CiAgICAgICAgICAgICAgPC9kaXY+CiAgICAgICAgICAgICAgPGgzIGNsYXNzTmFtZT0ibXQtMiB0ZXh0LVsxNXB4XSBmb250LWJvbGQgdGV4dC1pbmsiPntvLnRpdGxlfTwvaDM+CiAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9Im15LTMgaC1weCB3LWZ1bGwgYmctbGluZSIgLz4KICAgICAgICAgICAgICA8cCBjbGFzc05hbWU9ImZsZXgtMSB0ZXh0LVsxM3B4XSBsZWFkaW5nLXJlbGF4ZWQgdGV4dC1tdXRlZCI+e28udGV4dH08L3A+CiAgICAgICAgICAgICAgPGEKICAgICAgICAgICAgICAgIGhyZWY9e28uaHJlZn0KICAgICAgICAgICAgICAgIHRhcmdldD0iX2JsYW5rIgogICAgICAgICAgICAgICAgcmVsPSJub29wZW5lciIKICAgICAgICAgICAgICAgIGNsYXNzTmFtZT0ibXQtNCBpbmxpbmUtZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTEuNSBzZWxmLXN0YXJ0IHRleHQtWzEzcHhdIGZvbnQtYm9sZCB0ZXh0LWFjY2VudCB0cmFuc2l0aW9uIGhvdmVyOnVuZGVybGluZSIKICAgICAgICAgICAgICA+CiAgICAgICAgICAgICAgICB7by5jdGF9IDxzcGFuIGFyaWEtaGlkZGVuPuKGkjwvc3Bhbj4KICAgICAgICAgICAgICA8L2E+CiAgICAgICAgICAgIDwvZGl2PgogICAgICAgICAgKSl9CiAgICAgICAgPC9kaXY+CiAgICAgIDwvc2VjdGlvbj4KICAgIDwvR3VpZGVQYWdlU2hlbGw+CiAgKTsKfQo=
+import type { Metadata } from "next";
+import Link from "next/link";
+import { notFound, redirect } from "next/navigation";
+import { getSettings } from "@/lib/cms";
+import { seoTitle } from "@/lib/seo";
+import {
+  GUIDES,
+  LEGACY_IDS,
+  getGuide,
+  getGuidesByAudience,
+  getAudienceMeta,
+} from "@/lib/guides/registry";
+import { GUIDE_CONTENT } from "@/lib/guides/content";
+import { GuidePageShell } from "@/components/guides/GuidePageShell";
+import { GuideContent } from "@/components/guides/GuideContent";
+import { GuideReportButtons } from "@/components/guides/GuideReportButtons";
+import { GuideAdSlot } from "@/components/guides/GuideAdSlot";
+import { GuideHashRedirect } from "@/components/guides/GuideHashRedirect";
+
+type Props = { params: Promise<{ slug: string }>; searchParams?: Promise<{ c?: string }> };
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params;
+  const meta = getGuide(slug);
+  if (!meta) return {};
+  const title = await seoTitle(meta.seoTitle);
+  return {
+    title,
+    description: meta.seoDescription,
+    alternates: { canonical: `https://www.getsetsold.ca/guides/${slug}` },
+    openGraph: { title, description: meta.seoDescription, type: "article", url: `https://www.getsetsold.ca/guides/${slug}` },
+    twitter: { card: "summary", title, description: meta.seoDescription },
+  };
+}
+
+const OFFERS = [
+  {
+    kicker: "For Sellers",
+    title: "Pay As Low As 1% Listing Fee!",
+    text: "Full-service real estate — no compromise on quality. Satisfaction guaranteed or cancel anytime.",
+    href: "https://www.getsetsold.ca/selling-your-home",
+    cta: "Explore Listing Offer",
+  },
+  {
+    kicker: "For Buyers",
+    title: "Get Up To $5,000 Buyer Cash Back!",
+    text: "Join the VIP Buyer Program — earn real cash back at closing when you purchase with us.",
+    href: "https://www.getsetsold.ca/buying-a-home",
+    cta: "Join Buyer Program",
+  },
+  {
+    kicker: "Our Reviews",
+    title: "What Clients Are Saying",
+    text: "Rated 5 stars for service, results, and savings. Real experiences from buyers & sellers.",
+    href: "https://www.getsetsold.ca/reviews",
+    cta: "Read All Reviews",
+  },
+];
+
+export default async function GuideDetailPage({ params, searchParams }: Props) {
+  const { slug } = await params;
+
+  // Legacy ?c=<guideId> → canonical
+  const c = (await searchParams)?.c;
+  if (c) {
+    const id = (LEGACY_IDS as Record<string, string>)[c] ?? (getGuide(c) ? c : null);
+    if (id && id !== slug) redirect(`/guides/${id}`);
+  }
+
+  const guide = getGuide(slug) ?? notFound();
+
+  const sections = GUIDE_CONTENT[slug] ?? [];
+
+  const settings = await getSettings();
+  const ads = (settings.ads ?? {}) as {
+    guides_ad_enabled?: boolean;
+    grid_ad_code?: string;
+  };
+  const adCode = ads.grid_ad_code ?? "";
+  const showAd = !!ads.guides_ad_enabled && /data-ad-client="/.test(adCode);
+
+  const audience = getAudienceMeta(guide.audience);
+  const moreGuides = [
+    ...getGuidesByAudience(guide.audience).filter((g) => g.id !== guide.id),
+    ...GUIDES.filter((g) => g.audience !== guide.audience),
+  ].slice(0, 7);
+
+  return (
+    <GuidePageShell slug={slug}>
+      <GuideHashRedirect />
+      <div className="grid grid-cols-1 items-start gap-7 lg:grid-cols-[1fr_300px]">
+        <div className="min-w-0">
+          <GuideContent guide={guide} sections={sections} />
+          {showAd && <GuideAdSlot adCode={adCode} className="mt-6" />}
+        </div>
+
+        <aside className="flex flex-col gap-4 lg:sticky lg:top-24">
+          <GuideReportButtons guide={guide} sections={sections} />
+          {showAd && <GuideAdSlot adCode={adCode} />}
+
+          <div className="rounded-xl border border-line bg-white p-4 shadow-sm">
+            <h4 className="mb-3 text-[11px] font-bold uppercase tracking-wider text-muted">
+              More Guides
+            </h4>
+            <div className="flex flex-col">
+              {moreGuides.map((g) => (
+                <Link
+                  key={g.id}
+                  href={`/guides/${g.id}`}
+                  className="flex items-center gap-2.5 border-b border-line py-2 text-[12.5px] font-medium text-ink transition last:border-b-0 hover:text-accent"
+                >
+                  <span className="line-clamp-1">{g.title}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-xl bg-primary p-4 text-center text-white shadow-sm">
+            <p className="text-[13px] font-bold">More {audience?.label ?? "guides"}</p>
+            <p className="mt-1 text-[12px] text-white/75">
+              Browse every guide for {guide.tag.toLowerCase().replace("for ", "")}.
+            </p>
+            <Link
+              href="/guides"
+              className="mt-3 inline-block rounded-lg bg-accent px-4 py-2 text-[12px] font-bold text-white transition hover:opacity-90"
+            >
+              All Guides
+            </Link>
+          </div>
+        </aside>
+      </div>
+
+      {/* Offers — site block style: eyebrow kicker + hairline divider */}
+      <section className="mt-10 border-t border-line pt-8">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {OFFERS.map((o) => (
+            <div key={o.kicker} className="flex min-h-[190px] flex-col rounded-xl border border-line bg-white p-5 shadow-sm">
+              <div className="text-[11px] font-bold uppercase tracking-[0.12em] text-accent">
+                {o.kicker}
+              </div>
+              <h3 className="mt-2 text-[15px] font-bold text-ink">{o.title}</h3>
+              <div className="my-3 h-px w-full bg-line" />
+              <p className="flex-1 text-[13px] leading-relaxed text-muted">{o.text}</p>
+              <a
+                href={o.href}
+                target="_blank"
+                rel="noopener"
+                className="mt-4 inline-flex items-center gap-1.5 self-start text-[13px] font-bold text-accent transition hover:underline"
+              >
+                {o.cta} <span aria-hidden>→</span>
+              </a>
+            </div>
+          ))}
+        </div>
+      </section>
+    </GuidePageShell>
+  );
+}

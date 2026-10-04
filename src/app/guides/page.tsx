@@ -1,1 +1,183 @@
-aW1wb3J0IHR5cGUgeyBNZXRhZGF0YSB9IGZyb20gIm5leHQiOwppbXBvcnQgTGluayBmcm9tICJuZXh0L2xpbmsiOwppbXBvcnQgeyBnZXRTZXR0aW5ncywgZ2V0TG9nbyB9IGZyb20gIkAvbGliL2NtcyI7CmltcG9ydCB7IHRoZW1lRm9udEhyZWYsIHRoZW1lVmFycywgdGhlbWVJY29uT3ZlcnJpZGVDU1MgfSBmcm9tICJAL2xpYi90aGVtZSI7CmltcG9ydCB7IFNpdGVIZWFkZXIgfSBmcm9tICJAL2NvbXBvbmVudHMvc2l0ZS9TaXRlSGVhZGVyIjsKaW1wb3J0IHsgU2l0ZUZvb3RlciwgTW9iaWxlQ3RhQmFyIH0gZnJvbSAiQC9jb21wb25lbnRzL3NpdGUvU2l0ZUZvb3RlciI7CmltcG9ydCB7IHNlb1RpdGxlIH0gZnJvbSAiQC9saWIvc2VvIjsKaW1wb3J0IHsgR1VJREVTLCBBVURJRU5DRVMsIEdVSURFX0NPVU5ULCBMRUdBQ1lfSURTLCBnZXRHdWlkZSB9IGZyb20gIkAvbGliL2d1aWRlcy9yZWdpc3RyeSI7CmltcG9ydCB7IEd1aWRlVGFicyB9IGZyb20gIkAvY29tcG9uZW50cy9ndWlkZXMvR3VpZGVUYWJzIjsKaW1wb3J0IHsgR3VpZGVIYXNoUmVkaXJlY3QgfSBmcm9tICJAL2NvbXBvbmVudHMvZ3VpZGVzL0d1aWRlSGFzaFJlZGlyZWN0IjsKaW1wb3J0IHsgR3VpZGVBZFNsb3QgfSBmcm9tICJAL2NvbXBvbmVudHMvZ3VpZGVzL0d1aWRlQWRTbG90IjsKaW1wb3J0IHsgcmVkaXJlY3QgfSBmcm9tICJuZXh0L25hdmlnYXRpb24iOwoKZXhwb3J0IGFzeW5jIGZ1bmN0aW9uIGdlbmVyYXRlTWV0YWRhdGEoKTogUHJvbWlzZTxNZXRhZGF0YT4gewogIGNvbnN0IHRpdGxlID0gYXdhaXQgc2VvVGl0bGUoIkZyZWUgQ2FuYWRpYW4gUmVhbCBFc3RhdGUgR3VpZGVzIik7CiAgY29uc3QgZGVzY3JpcHRpb24gPQogICAgIjQ0IGZyZWUgQ2FuYWRpYW4gcmVhbCBlc3RhdGUgZ3VpZGVzIGZvciBidXllcnMsIHNlbGxlcnMsIHJlbnRlcnMgYW5kIGxhbmRsb3Jkcy4gRXhwZXJ0IGFkdmljZSBmb3IgMjAyNiDigJQgcmVhZCBvbmxpbmUgb3IgZG93bmxvYWQgdGhlIFBERi4iOwogIHJldHVybiB7CiAgICB0aXRsZSwKICAgIGRlc2NyaXB0aW9uLAogICAgYWx0ZXJuYXRlczogeyBjYW5vbmljYWw6ICJodHRwczovL3d3dy5nZXRzZXRzb2xkLmNhL2d1aWRlcyIgfSwKICAgIG9wZW5HcmFwaDogeyB0aXRsZSwgZGVzY3JpcHRpb24sIHR5cGU6ICJ3ZWJzaXRlIiwgdXJsOiAiaHR0cHM6Ly93d3cuZ2V0c2V0c29sZC5jYS9ndWlkZXMiIH0sCiAgICB0d2l0dGVyOiB7IGNhcmQ6ICJzdW1tYXJ5IiwgdGl0bGUsIGRlc2NyaXB0aW9uIH0sCiAgfTsKfQoKY29uc3QgSFVCX0ZBUVMgPSBbCiAgewogICAgcTogIldoYXQgdG9waWNzIGRvIHRoZSBDYW5hZGlhbiByZWFsIGVzdGF0ZSBndWlkZXMgY292ZXI/IiwKICAgIGE6ICI0NCBmcmVlIGd1aWRlcyBjb3ZlcmluZyBob21lIGJ1eWluZywgc2VsbGluZywgcmVudGluZywgYW5kIGxhbmRsb3JkIHRvcGljcyBpbmNsdWRpbmcgbW9ydGdhZ2VzLCBjbG9zaW5nIGNvc3RzLCBDTUhDIGluc3VyYW5jZSwgRkhTQSwgYmlkZGluZyB3YXJzLCBob21lIHN0YWdpbmcsIHRlbmFudCByaWdodHMsIGV2aWN0aW9uIG5vdGljZXMsIHByb3BlcnR5IG1hbmFnZW1lbnQsIGFuZCBtb3JlLiIsCiAgfSwKICB7CiAgICBxOiAiQXJlIHRoZSByZWFsIGVzdGF0ZSBndWlkZXMgcmVhbGx5IGZyZWU/IiwKICAgIGE6ICJZZXMsIGFsbCA0NCBndWlkZXMgYXJlIGNvbXBsZXRlbHkgZnJlZSB3aXRoIG5vIHNpZ251cCByZXF1aXJlZC4gWW91IGNhbiByZWFkIHRoZW0gb25saW5lIG9yIGRvd25sb2FkIGFueSBndWlkZSBhcyBhIFBERi4iLAogIH0sCiAgewogICAgcTogIkNhbiBJIGRvd25sb2FkIGd1aWRlcyBhcyBQREY/IiwKICAgIGE6ICJFdmVyeSBndWlkZSBoYXMgYSBEb3dubG9hZCBQREYgYnV0dG9uIHRoYXQgZ2VuZXJhdGVzIGEgcHJvZmVzc2lvbmFsIFBERiB3aXRoIGNvdmVyIHBhZ2UsIGNvbnRlbnQgc2VjdGlvbnMsIGNoZWNrbGlzdHMsIGFuZCBjb250YWN0IGluZm9ybWF0aW9uLiBZb3UgY2FuIGFsc28gZW1haWwgZ3VpZGVzIHRvIHlvdXJzZWxmIG9yIG90aGVycy4iLAogIH0sCiAgewogICAgcTogIldobyB3cml0ZXMgdGhlc2UgcmVhbCBlc3RhdGUgZ3VpZGVzPyIsCiAgICBhOiAiVGhlIGd1aWRlcyBhcmUgYXV0aG9yZWQgYW5kIG1haW50YWluZWQgYnkgUm9oaXQgU2hhcm1hLCBhIGxpY2Vuc2VkIHJlYWwgZXN0YXRlIGFnZW50IHdpdGggTG9tYmFyZCBHcm91cCBSZWFsIEVzdGF0ZSBJbmMuLCBzZXJ2aW5nIEhhbGRpbWFuZCwgSGFtaWx0b24sIEJyYW50LCBOaWFnYXJhLCBhbmQgSGFsdG9uIHJlZ2lvbnMgaW4gT250YXJpbywgQ2FuYWRhLiIsCiAgfSwKICB7CiAgICBxOiAiV2hhdCBpcyB0aGUgMSUgbGlzdGluZyBmZWUgb2ZmZXI/IiwKICAgIGE6ICJHZXRTZXRTb2xkLmNhIG9mZmVycyBmdWxsLXNlcnZpY2UgcmVhbCBlc3RhdGUgcmVwcmVzZW50YXRpb24gZm9yIGFzIGxvdyBhcyAxJSBsaXN0aW5nIGNvbW1pc3Npb24sIGNvbXBhcmVkIHRvIHRoZSB0cmFkaXRpb25hbCA1JSBjb21taXNzaW9uLiBUaGlzIGluY2x1ZGVzIHByb2Zlc3Npb25hbCBwaG90b2dyYXBoeSwgTUxTIGxpc3RpbmcsIG1hcmtldGluZywgbmVnb3RpYXRpb25zLCBhbmQgZnVsbCB0cmFuc2FjdGlvbiBtYW5hZ2VtZW50LiIsCiAgfSwKICB7CiAgICBxOiAiSG93IG11Y2ggYnV5ZXIgY2FzaCBiYWNrIGNhbiBJIGdldD8iLAogICAgYTogIkVsaWdpYmxlIGJ1eWVycyBpbiB0aGUgVklQIEJ1eWVyIFByb2dyYW0gY2FuIHJlY2VpdmUgdXAgdG8gJDUsMDAwIGNhc2ggYmFjayBhdCBjbG9zaW5nIHdoZW4gdGhleSBwdXJjaGFzZSBhIHByb3BlcnR5IHRocm91Z2ggR2V0U2V0U29sZC5jYS4iLAogIH0sCl07CgpleHBvcnQgZGVmYXVsdCBhc3luYyBmdW5jdGlvbiBHdWlkZXNIdWJQYWdlKHsKICBzZWFyY2hQYXJhbXMsCn06IHsKICBzZWFyY2hQYXJhbXM/OiBQcm9taXNlPHsgYz86IHN0cmluZyB9PjsKfSkgewogIC8vIExlZ2FjeSA/Yz08Z3VpZGVJZD4g4oaSIGNhbm9uaWNhbAogIGNvbnN0IGMgPSAoYXdhaXQgc2VhcmNoUGFyYW1zKT8uYzsKICBpZiAoYykgewogICAgY29uc3QgaWQgPSAoTEVHQUNZX0lEUyBhcyBSZWNvcmQ8c3RyaW5nLCBzdHJpbmc+KVtjXSA/PyAoZ2V0R3VpZGUoYykgPyBjIDogbnVsbCk7CiAgICBpZiAoaWQpIHJlZGlyZWN0KGAvZ3VpZGVzLyR7aWR9YCk7CiAgfQoKICBjb25zdCBzZXR0aW5ncyA9IGF3YWl0IGdldFNldHRpbmdzKCk7CiAgY29uc3QgbG9nbyA9IGF3YWl0IGdldExvZ28oc2V0dGluZ3MpOwogIGNvbnN0IGFkcyA9IChzZXR0aW5ncy5hZHMgPz8ge30pIGFzIHsKICAgIGd1aWRlc19hZF9lbmFibGVkPzogYm9vbGVhbjsKICAgIGdyaWRfYWRfY29kZT86IHN0cmluZzsKICB9OwogIGNvbnN0IGFkQ29kZSA9IGFkcy5ncmlkX2FkX2NvZGUgPz8gIiI7CiAgY29uc3Qgc2hvd0FkID0gISFhZHMuZ3VpZGVzX2FkX2VuYWJsZWQgJiYgL2RhdGEtYWQtY2xpZW50PSIvLnRlc3QoYWRDb2RlKTsKCiAgY29uc3QgY29sbGVjdGlvbkpzb25MZCA9IHsKICAgICJAY29udGV4dCI6ICJodHRwczovL3NjaGVtYS5vcmciLAogICAgIkB0eXBlIjogIkNvbGxlY3Rpb25QYWdlIiwKICAgIG5hbWU6ICJGcmVlIENhbmFkaWFuIFJlYWwgRXN0YXRlIEd1aWRlcyIsCiAgICBkZXNjcmlwdGlvbjoKICAgICAgIjQ0IGZyZWUgQ2FuYWRpYW4gcmVhbCBlc3RhdGUgZ3VpZGVzIGZvciBidXllcnMsIHNlbGxlcnMsIHJlbnRlcnMgYW5kIGxhbmRsb3JkcyB3aXRoIFBERiBkb3dubG9hZHMuIiwKICAgIHVybDogImh0dHBzOi8vd3d3LmdldHNldHNvbGQuY2EvZ3VpZGVzIiwKICAgIG51bWJlck9mSXRlbXM6IEdVSURFX0NPVU5ULAogICAgbWFpbkVudGl0eTogewogICAgICAiQHR5cGUiOiAiSXRlbUxpc3QiLAogICAgICBpdGVtTGlzdEVsZW1lbnQ6IEdVSURFUy5tYXAoKGcsIGkpID0+ICh7CiAgICAgICAgIkB0eXBlIjogIkxpc3RJdGVtIiwKICAgICAgICBwb3NpdGlvbjogaSArIDEsCiAgICAgICAgbmFtZTogZy50aXRsZSwKICAgICAgICBkZXNjcmlwdGlvbjogZy5zdWJ0aXRsZSwKICAgICAgICB1cmw6IGBodHRwczovL3d3dy5nZXRzZXRzb2xkLmNhL2d1aWRlcy8ke2cuaWR9YCwKICAgICAgfSkpLAogICAgfSwKICB9OwogIGNvbnN0IGZhcUpzb25MZCA9IHsKICAgICJAY29udGV4dCI6ICJodHRwczovL3NjaGVtYS5vcmciLAogICAgIkB0eXBlIjogIkZBUVBhZ2UiLAogICAgbWFpbkVudGl0eTogSFVCX0ZBUVMubWFwKChmKSA9PiAoewogICAgICAiQHR5cGUiOiAiUXVlc3Rpb24iLAogICAgICBuYW1lOiBmLnEsCiAgICAgIGFjY2VwdGVkQW5zd2VyOiB7ICJAdHlwZSI6ICJBbnN3ZXIiLCB0ZXh0OiBmLmEgfSwKICAgIH0pKSwKICB9OwogIGNvbnN0IGJyZWFkY3J1bWJKc29uTGQgPSB7CiAgICAiQGNvbnRleHQiOiAiaHR0cHM6Ly9zY2hlbWEub3JnIiwKICAgICJAdHlwZSI6ICJCcmVhZGNydW1iTGlzdCIsCiAgICBpdGVtTGlzdEVsZW1lbnQ6IFsKICAgICAgeyAiQHR5cGUiOiAiTGlzdEl0ZW0iLCBwb3NpdGlvbjogMSwgbmFtZTogIkhvbWUiLCBpdGVtOiAiaHR0cHM6Ly93d3cuZ2V0c2V0c29sZC5jYSIgfSwKICAgICAgeyAiQHR5cGUiOiAiTGlzdEl0ZW0iLCBwb3NpdGlvbjogMiwgbmFtZTogIkd1aWRlcyIsIGl0ZW06ICJodHRwczovL3d3dy5nZXRzZXRzb2xkLmNhL2d1aWRlcyIgfSwKICAgIF0sCiAgfTsKCiAgY29uc3Qgc3RhdHMgPSBbCiAgICB7IG51bTogU3RyaW5nKEdVSURFX0NPVU5UKSwgbGJsOiAiRnJlZSBHdWlkZXMiIH0sCiAgICB7IG51bTogU3RyaW5nKEFVRElFTkNFUy5sZW5ndGgpLCBsYmw6ICJBdWRpZW5jZXMiIH0sCiAgICB7IG51bTogIjEwMCUiLCBsYmw6ICJDYW5hZGEiIH0sCiAgICB7IG51bTogIkZyZWUiLCBsYmw6ICJObyBTaWdudXAiIH0sCiAgXTsKCiAgcmV0dXJuICgKICAgIDxkaXYgY2xhc3NOYW1lPSJtaW4taC1zY3JlZW4gYmctZ3JvdW5kIHRleHQtaW5rIiBzdHlsZT17dGhlbWVWYXJzKHNldHRpbmdzKX0+CiAgICAgIHt0aGVtZUZvbnRIcmVmKHNldHRpbmdzKSA/IDxsaW5rIHJlbD0ic3R5bGVzaGVldCIgaHJlZj17dGhlbWVGb250SHJlZihzZXR0aW5ncyl9IC8+IDogbnVsbH0KICAgICAgPHN0eWxlIGRhbmdlcm91c2x5U2V0SW5uZXJIVE1MPXt7IF9faHRtbDogdGhlbWVJY29uT3ZlcnJpZGVDU1Moc2V0dGluZ3MpIH19IC8+CiAgICAgIDxzY3JpcHQgdHlwZT0iYXBwbGljYXRpb24vbGQranNvbiIgZGFuZ2Vyb3VzbHlTZXRJbm5lckhUTUw9e3sgX19odG1sOiBKU09OLnN0cmluZ2lmeShjb2xsZWN0aW9uSnNvbkxkKSB9fSAvPgogICAgICA8c2NyaXB0IHR5cGU9ImFwcGxpY2F0aW9uL2xkK2pzb24iIGRhbmdlcm91c2x5U2V0SW5uZXJIVE1MPXt7IF9faHRtbDogSlNPTi5zdHJpbmdpZnkoZmFxSnNvbkxkKSB9fSAvPgogICAgICA8c2NyaXB0IHR5cGU9ImFwcGxpY2F0aW9uL2xkK2pzb24iIGRhbmdlcm91c2x5U2V0SW5uZXJIVE1MPXt7IF9faHRtbDogSlNPTi5zdHJpbmdpZnkoYnJlYWRjcnVtYkpzb25MZCkgfX0gLz4KICAgICAgPFNpdGVIZWFkZXIgc2V0dGluZ3M9e3NldHRpbmdzfSBsb2dvPXtsb2dvfSAvPgogICAgICA8R3VpZGVIYXNoUmVkaXJlY3QgLz4KCiAgICAgIHsvKiBIZXJvIOKAlCBzaXRlIHRoZW1lOiBkYXJrIGluayBncmFkaWVudCAqL30KICAgICAgPGRpdiBjbGFzc05hbWU9ImJnLWdyYWRpZW50LXRvLWJyIGZyb20tcHJpbWFyeSB0by1hY2NlbnQgdGV4dC13aGl0ZSI+CiAgICAgICAgPGRpdiBjbGFzc05hbWU9Im14LWF1dG8gZmxleCBtYXgtdy03eGwgZmxleC1jb2wgaXRlbXMtY2VudGVyIGdhcC0yIHB4LTUgcGItMTAgcHQtMTQgdGV4dC1jZW50ZXIiPgogICAgICAgICAgPGRpdiBjbGFzc05hbWU9Im1iLTIgZmxleCBoLTEyIHctMTIgaXRlbXMtY2VudGVyIGp1c3RpZnktY2VudGVyIHJvdW5kZWQteGwgYmctd2hpdGUvMTUgdGV4dC13aGl0ZSIgYXJpYS1oaWRkZW4+CiAgICAgICAgICAgIDxzdmcgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iY3VycmVudENvbG9yIiBzdHJva2VXaWR0aD0iMS44Ij48cGF0aCBkPSJNNCAxOS41QTIuNSAyLjUgMCAwIDEgNi41IDE3SDIwIiAvPjxwYXRoIGQ9Ik02LjUgMkgyMHYyMEg2LjVBMi41IDIuNSAwIDAgMSA0IDE5LjV2LTE1QTIuNSAyLjUgMCAwIDEgNi41IDJ6IiAvPjwvc3ZnPgogICAgICAgICAgPC9kaXY+CiAgICAgICAgICA8aDEgY2xhc3NOYW1lPSJ0ZXh0LTN4bCBmb250LWJsYWNrIHRyYWNraW5nLXRpZ2h0IHNtOnRleHQtNHhsIj4KICAgICAgICAgICAgRnJlZSBDYW5hZGlhbiBSZWFsIEVzdGF0ZSBHdWlkZXMKICAgICAgICAgIDwvaDE+CiAgICAgICAgICA8cCBjbGFzc05hbWU9Im1heC13LTJ4bCB0ZXh0LVsxM3B4XSB0ZXh0LXdoaXRlLzc1Ij4KICAgICAgICAgICAge0dVSURFX0NPVU5UfSBleHBlcnQgZ3VpZGVzIGNvdmVyaW5nIGV2ZXJ5IHNpZGUgb2YgQ2FuYWRpYW4gcmVhbCBlc3RhdGUg4oCUIHBsYWluIGxhbmd1YWdlLAogICAgICAgICAgICBmcmVlIFBERiBkb3dubG9hZHMsIGJ1aWx0IGZvciAyMDI2CiAgICAgICAgICA8L3A+CiAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT0ibXQtNCBmbGV4IGZsZXgtd3JhcCBqdXN0aWZ5LWNlbnRlciBnYXAtMyI+CiAgICAgICAgICAgIHtzdGF0cy5tYXAoKHMpID0+ICgKICAgICAgICAgICAgICA8ZGl2CiAgICAgICAgICAgICAgICBrZXk9e3MubGJsfQogICAgICAgICAgICAgICAgY2xhc3NOYW1lPSJtaW4tdy1bMTAwcHhdIHJvdW5kZWQtWzEwcHhdIGJvcmRlciBib3JkZXItd2hpdGUvMTUgYmctd2hpdGUvMTAgcHgtNCBweS0yLjUgdGV4dC1jZW50ZXIiCiAgICAgICAgICAgICAgPgogICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9InRleHQteGwgZm9udC1ibGFjayI+e3MubnVtfTwvZGl2PgogICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9Im10LTAuNSB0ZXh0LVsxMHB4XSBmb250LXNlbWlib2xkIHVwcGVyY2FzZSB0cmFja2luZy13aWRlciB0ZXh0LXdoaXRlLzcwIj4KICAgICAgICAgICAgICAgICAge3MubGJsfQogICAgICAgICAgICAgICAgPC9kaXY+CiAgICAgICAgICAgICAgPC9kaXY+CiAgICAgICAgICAgICkpfQogICAgICAgICAgPC9kaXY+CiAgICAgICAgPC9kaXY+CiAgICAgIDwvZGl2PgoKICAgICAgPG1haW4gY2xhc3NOYW1lPSJteC1hdXRvIG1heC13LTd4bCBweC01IHBiLTE2Ij4KICAgICAgICA8bmF2IGNsYXNzTmFtZT0icHQtNiB0ZXh0LVsxM3B4XSB0ZXh0LW11dGVkIiBhcmlhLWxhYmVsPSJCcmVhZGNydW1iIj4KICAgICAgICAgIDxMaW5rIGhyZWY9Ii8iIGNsYXNzTmFtZT0iaG92ZXI6dW5kZXJsaW5lIj5Ib21lPC9MaW5rPiAvIDxzcGFuPkd1aWRlczwvc3Bhbj4KICAgICAgICA8L25hdj4KCiAgICAgICAgPGRpdiBjbGFzc05hbWU9Im1iLTYgbXQtNCI+CiAgICAgICAgICA8R3VpZGVUYWJzIGd1aWRlcz17R1VJREVTfSBhdWRpZW5jZXM9e0FVRElFTkNFU30gdG90YWw9e0dVSURFX0NPVU5UfSAvPgogICAgICAgIDwvZGl2PgoKICAgICAgICB7c2hvd0FkICYmIDxHdWlkZUFkU2xvdCBhZENvZGU9e2FkQ29kZX0gY2xhc3NOYW1lPSJteS04IiAvPn0KCiAgICAgICAgPGFydGljbGUgY2xhc3NOYW1lPSJtdC00IHJvdW5kZWQtbGcgYm9yZGVyIGJvcmRlci1saW5lIGJnLXdoaXRlIHAtNSBzaGFkb3ctc20iPgogICAgICAgICAgPGgyIGNsYXNzTmFtZT0ibWItMiB0ZXh0LVsxNHB4XSBmb250LXNlbWlib2xkIHRleHQtaW5rIj5BYm91dCB0aGVzZSBndWlkZXM8L2gyPgogICAgICAgICAgPHAgY2xhc3NOYW1lPSJ0ZXh0LVsxMnB4XSBsZWFkaW5nLTcgdGV4dC1tdXRlZCI+CiAgICAgICAgICAgIEV2ZXJ5IGd1aWRlIGlzIHdyaXR0ZW4gZm9yIENhbmFkaWFucyDigJQgT250YXJpbyBydWxlcywgQ1JBIHJlZmVyZW5jZXMsIGFuZCAyMDI2IG1hcmtldAogICAgICAgICAgICBjb25kaXRpb25zIHRocm91Z2hvdXQuIFJlYWQgYW55IGd1aWRlIG9ubGluZSwgb3IgZG93bmxvYWQgaXQgYXMgYSBwcm9mZXNzaW9uYWxseQogICAgICAgICAgICBmb3JtYXR0ZWQgUERGIHRvIGtlZXAuIEZvciBpbmZvcm1hdGlvbmFsIHB1cnBvc2VzIG9ubHkg4oCUIG5vdCBsZWdhbCwgdGF4LCBvciBmaW5hbmNpYWwKICAgICAgICAgICAgYWR2aWNlLgogICAgICAgICAgPC9wPgogICAgICAgIDwvYXJ0aWNsZT4KICAgICAgPC9tYWluPgogICAgICA8U2l0ZUZvb3RlciBzZXR0aW5ncz17c2V0dGluZ3N9IC8+CiAgICAgIDxNb2JpbGVDdGFCYXIgc2V0dGluZ3M9e3NldHRpbmdzfSAvPgogICAgPC9kaXY+CiAgKTsKfQo=
+import type { Metadata } from "next";
+import Link from "next/link";
+import { getSettings, getLogo } from "@/lib/cms";
+import { themeFontHref, themeVars, themeIconOverrideCSS } from "@/lib/theme";
+import { SiteHeader } from "@/components/site/SiteHeader";
+import { SiteFooter, MobileCtaBar } from "@/components/site/SiteFooter";
+import { seoTitle } from "@/lib/seo";
+import { GUIDES, AUDIENCES, GUIDE_COUNT, LEGACY_IDS, getGuide } from "@/lib/guides/registry";
+import { GuideTabs } from "@/components/guides/GuideTabs";
+import { GuideHashRedirect } from "@/components/guides/GuideHashRedirect";
+import { GuideAdSlot } from "@/components/guides/GuideAdSlot";
+import { redirect } from "next/navigation";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const title = await seoTitle("Free Canadian Real Estate Guides");
+  const description =
+    "44 free Canadian real estate guides for buyers, sellers, renters and landlords. Expert advice for 2026 — read online or download the PDF.";
+  return {
+    title,
+    description,
+    alternates: { canonical: "https://www.getsetsold.ca/guides" },
+    openGraph: { title, description, type: "website", url: "https://www.getsetsold.ca/guides" },
+    twitter: { card: "summary", title, description },
+  };
+}
+
+const HUB_FAQS = [
+  {
+    q: "What topics do the Canadian real estate guides cover?",
+    a: "44 free guides covering home buying, selling, renting, and landlord topics including mortgages, closing costs, CMHC insurance, FHSA, bidding wars, home staging, tenant rights, eviction notices, property management, and more.",
+  },
+  {
+    q: "Are the real estate guides really free?",
+    a: "Yes, all 44 guides are completely free with no signup required. You can read them online or download any guide as a PDF.",
+  },
+  {
+    q: "Can I download guides as PDF?",
+    a: "Every guide has a Download PDF button that generates a professional PDF with cover page, content sections, checklists, and contact information. You can also email guides to yourself or others.",
+  },
+  {
+    q: "Who writes these real estate guides?",
+    a: "The guides are authored and maintained by Rohit Sharma, a licensed real estate agent with Lombard Group Real Estate Inc., serving Haldimand, Hamilton, Brant, Niagara, and Halton regions in Ontario, Canada.",
+  },
+  {
+    q: "What is the 1% listing fee offer?",
+    a: "GetSetSold.ca offers full-service real estate representation for as low as 1% listing commission, compared to the traditional 5% commission. This includes professional photography, MLS listing, marketing, negotiations, and full transaction management.",
+  },
+  {
+    q: "How much buyer cash back can I get?",
+    a: "Eligible buyers in the VIP Buyer Program can receive up to $5,000 cash back at closing when they purchase a property through GetSetSold.ca.",
+  },
+];
+
+export default async function GuidesHubPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ c?: string }>;
+}) {
+  // Legacy ?c=<guideId> → canonical
+  const c = (await searchParams)?.c;
+  if (c) {
+    const id = (LEGACY_IDS as Record<string, string>)[c] ?? (getGuide(c) ? c : null);
+    if (id) redirect(`/guides/${id}`);
+  }
+
+  const settings = await getSettings();
+  const logo = await getLogo(settings);
+  const ads = (settings.ads ?? {}) as {
+    guides_ad_enabled?: boolean;
+    grid_ad_code?: string;
+  };
+  const adCode = ads.grid_ad_code ?? "";
+  const showAd = !!ads.guides_ad_enabled && /data-ad-client="/.test(adCode);
+
+  const collectionJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: "Free Canadian Real Estate Guides",
+    description:
+      "44 free Canadian real estate guides for buyers, sellers, renters and landlords with PDF downloads.",
+    url: "https://www.getsetsold.ca/guides",
+    numberOfItems: GUIDE_COUNT,
+    mainEntity: {
+      "@type": "ItemList",
+      itemListElement: GUIDES.map((g, i) => ({
+        "@type": "ListItem",
+        position: i + 1,
+        name: g.title,
+        description: g.subtitle,
+        url: `https://www.getsetsold.ca/guides/${g.id}`,
+      })),
+    },
+  };
+  const faqJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: HUB_FAQS.map((f) => ({
+      "@type": "Question",
+      name: f.q,
+      acceptedAnswer: { "@type": "Answer", text: f.a },
+    })),
+  };
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: "https://www.getsetsold.ca" },
+      { "@type": "ListItem", position: 2, name: "Guides", item: "https://www.getsetsold.ca/guides" },
+    ],
+  };
+
+  const stats = [
+    { num: String(GUIDE_COUNT), lbl: "Free Guides" },
+    { num: String(AUDIENCES.length), lbl: "Audiences" },
+    { num: "100%", lbl: "Canada" },
+    { num: "Free", lbl: "No Signup" },
+  ];
+
+  return (
+    <div className="min-h-screen bg-ground text-ink" style={themeVars(settings)}>
+      {themeFontHref(settings) ? <link rel="stylesheet" href={themeFontHref(settings)} /> : null}
+      <style dangerouslySetInnerHTML={{ __html: themeIconOverrideCSS(settings) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
+      <SiteHeader settings={settings} logo={logo} />
+      <GuideHashRedirect />
+
+      {/* Hero — site theme: dark ink gradient */}
+      <div className="bg-gradient-to-br from-primary to-accent text-white">
+        <div className="mx-auto flex max-w-7xl flex-col items-center gap-2 px-5 pb-10 pt-14 text-center">
+          <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-xl bg-white/15 text-white" aria-hidden>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" /></svg>
+          </div>
+          <h1 className="text-3xl font-black tracking-tight sm:text-4xl">
+            Free Canadian Real Estate Guides
+          </h1>
+          <p className="max-w-2xl text-[13px] text-white/75">
+            {GUIDE_COUNT} expert guides covering every side of Canadian real estate — plain language,
+            free PDF downloads, built for 2026
+          </p>
+          <div className="mt-4 flex flex-wrap justify-center gap-3">
+            {stats.map((s) => (
+              <div
+                key={s.lbl}
+                className="min-w-[100px] rounded-[10px] border border-white/15 bg-white/10 px-4 py-2.5 text-center"
+              >
+                <div className="text-xl font-black">{s.num}</div>
+                <div className="mt-0.5 text-[10px] font-semibold uppercase tracking-wider text-white/70">
+                  {s.lbl}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <main className="mx-auto max-w-7xl px-5 pb-16">
+        <nav className="pt-6 text-[13px] text-muted" aria-label="Breadcrumb">
+          <Link href="/" className="hover:underline">Home</Link> / <span>Guides</span>
+        </nav>
+
+        <div className="mb-6 mt-4">
+          <GuideTabs guides={GUIDES} audiences={AUDIENCES} total={GUIDE_COUNT} />
+        </div>
+
+        {showAd && <GuideAdSlot adCode={adCode} className="my-8" />}
+
+        <article className="mt-4 rounded-lg border border-line bg-white p-5 shadow-sm">
+          <h2 className="mb-2 text-[14px] font-semibold text-ink">About these guides</h2>
+          <p className="text-[12px] leading-7 text-muted">
+            Every guide is written for Canadians — Ontario rules, CRA references, and 2026 market
+            conditions throughout. Read any guide online, or download it as a professionally
+            formatted PDF to keep. For informational purposes only — not legal, tax, or financial
+            advice.
+          </p>
+        </article>
+      </main>
+      <SiteFooter settings={settings} />
+      <MobileCtaBar settings={settings} />
+    </div>
+  );
+}

@@ -1,1 +1,44 @@
-aW1wb3J0IHR5cGUgeyBHdWlkZU1ldGEsIEd1aWRlU2VjdGlvbiB9IGZyb20gIkAvbGliL2d1aWRlcy90eXBlcyI7CmltcG9ydCB7IENoZWNrbGlzdCB9IGZyb20gIi4vQ2hlY2tsaXN0IjsKCi8qKgogKiBHdWlkZSBib2R5OiBpbnRybyBjYXJkLCB0aGVuIG9uZSB3aGl0ZSBjYXJkIHBlciBzZWN0aW9uCiAqIChoZWFkaW5nICsgaGFpcmxpbmUgZGl2aWRlciwgcGFyYWdyYXBocywgaW50ZXJhY3RpdmUgY2hlY2tsaXN0KS4KICogTWluaW1hbCBzaXRlIHRoZW1lOiBibGFjay93aGl0ZS9ibHVlIG9ubHkuIEFsbCBjb3B5IHZlcmJhdGltIGZyb20gdGhlIHJlZ2lzdHJ5LgogKi8KZXhwb3J0IGZ1bmN0aW9uIEd1aWRlQ29udGVudCh7CiAgZ3VpZGUsCiAgc2VjdGlvbnMsCn06IHsKICBndWlkZTogR3VpZGVNZXRhOwogIHNlY3Rpb25zOiBHdWlkZVNlY3Rpb25bXTsKfSkgewogIHJldHVybiAoCiAgICA8ZGl2PgogICAgICA8ZGl2IGNsYXNzTmFtZT0ibWItNSByb3VuZGVkLXhsIGJvcmRlciBib3JkZXItbGluZSBiZy13aGl0ZSBwLTUgc2hhZG93LXNtIj4KICAgICAgICA8cCBjbGFzc05hbWU9InRleHQtWzE1cHhdIGxlYWRpbmctOCB0ZXh0LW11dGVkIj57Z3VpZGUuaW50cm99PC9wPgogICAgICA8L2Rpdj4KCiAgICAgIHtzZWN0aW9ucy5tYXAoKHMsIGkpID0+ICgKICAgICAgICA8c2VjdGlvbiBrZXk9e2l9IGNsYXNzTmFtZT0ibWItNCByb3VuZGVkLXhsIGJvcmRlciBib3JkZXItbGluZSBiZy13aGl0ZSBwLTUgc2hhZG93LXNtIj4KICAgICAgICAgIDxoMiBjbGFzc05hbWU9Im1iLTMgYm9yZGVyLWIgYm9yZGVyLWxpbmUgcGItMiB0ZXh0LVsxNnB4XSBmb250LWJvbGQgdGV4dC1pbmsiPgogICAgICAgICAgICB7cy5oZWFkaW5nfQogICAgICAgICAgPC9oMj4KICAgICAgICAgIHtzLnBhcmFncmFwaHMubWFwKChwLCBqKSA9PiAoCiAgICAgICAgICAgIDxwIGtleT17an0gY2xhc3NOYW1lPSJtYi0zIHRleHQtWzE0cHhdIGxlYWRpbmctNyB0ZXh0LWluayBsYXN0Om1iLTAiPgogICAgICAgICAgICAgIHtwfQogICAgICAgICAgICA8L3A+CiAgICAgICAgICApKX0KICAgICAgICAgIHtzLmNoZWNrbGlzdC5sZW5ndGggPiAwICYmICgKICAgICAgICAgICAgPD4KICAgICAgICAgICAgICA8aDMgY2xhc3NOYW1lPSJtdC00IHRleHQtWzExcHhdIGZvbnQtYm9sZCB1cHBlcmNhc2UgdHJhY2tpbmctd2lkZXIgdGV4dC1pbmsiPgogICAgICAgICAgICAgICAgQ2hlY2tsaXN0CiAgICAgICAgICAgICAgPC9oMz4KICAgICAgICAgICAgICA8Q2hlY2tsaXN0IGl0ZW1zPXtzLmNoZWNrbGlzdH0gLz4KICAgICAgICAgICAgPC8+CiAgICAgICAgICApfQogICAgICAgIDwvc2VjdGlvbj4KICAgICAgKSl9CiAgICA8L2Rpdj4KICApOwp9Cg==
+import type { GuideMeta, GuideSection } from "@/lib/guides/types";
+import { Checklist } from "./Checklist";
+
+/**
+ * Guide body: intro card, then one white card per section
+ * (heading + hairline divider, paragraphs, interactive checklist).
+ * Minimal site theme: black/white/blue only. All copy verbatim from the registry.
+ */
+export function GuideContent({
+  guide,
+  sections,
+}: {
+  guide: GuideMeta;
+  sections: GuideSection[];
+}) {
+  return (
+    <div>
+      <div className="mb-5 rounded-xl border border-line bg-white p-5 shadow-sm">
+        <p className="text-[15px] leading-8 text-muted">{guide.intro}</p>
+      </div>
+
+      {sections.map((s, i) => (
+        <section key={i} className="mb-4 rounded-xl border border-line bg-white p-5 shadow-sm">
+          <h2 className="mb-3 border-b border-line pb-2 text-[16px] font-bold text-ink">
+            {s.heading}
+          </h2>
+          {s.paragraphs.map((p, j) => (
+            <p key={j} className="mb-3 text-[14px] leading-7 text-ink last:mb-0">
+              {p}
+            </p>
+          ))}
+          {s.checklist.length > 0 && (
+            <>
+              <h3 className="mt-4 text-[11px] font-bold uppercase tracking-wider text-ink">
+                Checklist
+              </h3>
+              <Checklist items={s.checklist} />
+            </>
+          )}
+        </section>
+      ))}
+    </div>
+  );
+}

@@ -1,1 +1,76 @@
-InVzZSBjbGllbnQiOwovKiogQXVkaWVuY2UgdGFicyArIGd1aWRlIGNhcmRzIGdyaWQuIENsaWVudC1zaWRlIGZpbHRlcmluZywgbm8gcGFnZSByZWxvYWRzLiAqLwppbXBvcnQgeyB1c2VTdGF0ZSB9IGZyb20gInJlYWN0IjsKaW1wb3J0IExpbmsgZnJvbSAibmV4dC9saW5rIjsKaW1wb3J0IHR5cGUgeyBHdWlkZU1ldGEsIEF1ZGllbmNlTWV0YSwgR3VpZGVBdWRpZW5jZSB9IGZyb20gIkAvbGliL2d1aWRlcy90eXBlcyI7Cgp0eXBlIFRhYiA9ICJBbGwiIHwgR3VpZGVBdWRpZW5jZTsKCmV4cG9ydCBmdW5jdGlvbiBHdWlkZVRhYnMoewogIGd1aWRlcywKICBhdWRpZW5jZXMsCiAgdG90YWwsCn06IHsKICBndWlkZXM6IEd1aWRlTWV0YVtdOwogIGF1ZGllbmNlczogQXVkaWVuY2VNZXRhW107CiAgdG90YWw6IG51bWJlcjsKfSkgewogIGNvbnN0IFt0YWIsIHNldFRhYl0gPSB1c2VTdGF0ZTxUYWI+KCJBbGwiKTsKICBjb25zdCB2aXNpYmxlID0gdGFiID09PSAiQWxsIiA/IGd1aWRlcyA6IGd1aWRlcy5maWx0ZXIoKGcpID0+IGcuYXVkaWVuY2UgPT09IHRhYik7CiAgY29uc3QgY291bnRGb3IgPSAodDogVGFiKSA9PiAodCA9PT0gIkFsbCIgPyB0b3RhbCA6IGd1aWRlcy5maWx0ZXIoKGcpID0+IGcuYXVkaWVuY2UgPT09IHQpLmxlbmd0aCk7CgogIGNvbnN0IHRhYnM6IHsga2V5OiBUYWI7IGxhYmVsOiBzdHJpbmcgfVtdID0gWwogICAgeyBrZXk6ICJBbGwiLCBsYWJlbDogYEFsbCBHdWlkZXMgKCR7Y291bnRGb3IoIkFsbCIpfSlgIH0sCiAgICAuLi5hdWRpZW5jZXMubWFwKChhKSA9PiAoeyBrZXk6IGEuYXVkaWVuY2UgYXMgVGFiLCBsYWJlbDogYCR7YS5sYWJlbH0gKCR7Y291bnRGb3IoYS5hdWRpZW5jZSBhcyBUYWIpfSlgIH0pKSwKICBdOwoKICByZXR1cm4gKAogICAgPGRpdj4KICAgICAgPGRpdiBjbGFzc05hbWU9Im1iLTUgZmxleCBmbGV4LXdyYXAgZ2FwLTAgYm9yZGVyLWItMiBib3JkZXItbGluZSI+CiAgICAgICAge3RhYnMubWFwKCh0KSA9PiAoCiAgICAgICAgICA8YnV0dG9uCiAgICAgICAgICAgIGtleT17dC5rZXl9CiAgICAgICAgICAgIG9uQ2xpY2s9eygpID0+IHNldFRhYih0LmtleSl9CiAgICAgICAgICAgIGNsYXNzTmFtZT17YC1tYi1bMnB4XSB3aGl0ZXNwYWNlLW5vd3JhcCBib3JkZXItYi1bM3B4XSBib3JkZXItdHJhbnNwYXJlbnQgYmctdHJhbnNwYXJlbnQgcHgtNSBweS0yLjUgdGV4dC1bMTNweF0gZm9udC1zZW1pYm9sZCB0cmFuc2l0aW9uICR7CiAgICAgICAgICAgICAgdGFiID09PSB0LmtleSA/ICJib3JkZXItYWNjZW50IHRleHQtYWNjZW50IiA6ICJ0ZXh0LW11dGVkIGhvdmVyOnRleHQtaW5rIgogICAgICAgICAgICB9YH0KICAgICAgICAgID4KICAgICAgICAgICAge3QubGFiZWx9CiAgICAgICAgICA8L2J1dHRvbj4KICAgICAgICApKX0KICAgICAgPC9kaXY+CgogICAgICA8ZGl2IGNsYXNzTmFtZT0iZ3JpZCBncmlkLWNvbHMtMSBnYXAtNCBzbTpncmlkLWNvbHMtMiBsZzpncmlkLWNvbHMtMyI+CiAgICAgICAge3Zpc2libGUubWFwKChnKSA9PiB7CiAgICAgICAgICByZXR1cm4gKAogICAgICAgICAgICA8TGluawogICAgICAgICAgICAgIGtleT17Zy5pZH0KICAgICAgICAgICAgICBocmVmPXtgL2d1aWRlcy8ke2cuaWR9YH0KICAgICAgICAgICAgICBjbGFzc05hbWU9Imdyb3VwIHJlbGF0aXZlIGZsZXggZmxleC1jb2wgb3ZlcmZsb3ctaGlkZGVuIHJvdW5kZWQtW3ZhcigtLXJhZGl1cy1tZCldIGJvcmRlciBib3JkZXItbGluZSBiZy13aGl0ZSBwLTYgcGItNSBzaGFkb3ctW3ZhcigtLXNoYWRvdyldIHRyYW5zaXRpb24gaG92ZXI6LXRyYW5zbGF0ZS15LTEgaG92ZXI6Ym9yZGVyLWFjY2VudCIKICAgICAgICAgICAgPgogICAgICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT0iYWJzb2x1dGUgcmlnaHQtMyB0b3AtMyByb3VuZGVkLWZ1bGwgYm9yZGVyIGJvcmRlci1saW5lIGJnLXNvZnQgcHgtMi41IHB5LTEgdGV4dC1bOXB4XSBmb250LWJvbGQgdXBwZXJjYXNlIHRyYWNraW5nLXdpZGUgdGV4dC1tdXRlZCI+CiAgICAgICAgICAgICAgICB7Zy50YWd9CiAgICAgICAgICAgICAgPC9zcGFuPgogICAgICAgICAgICAgIDxkaXYKICAgICAgICAgICAgICAgIGNsYXNzTmFtZT0ibWItNCBmbGV4IGgtWzUycHhdIHctWzUycHhdIGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWNlbnRlciByb3VuZGVkLVsxNHB4XSBiZy1zb2Z0IHRleHQtaW5rIHRyYW5zaXRpb24gZ3JvdXAtaG92ZXI6c2NhbGUtMTA1IgogICAgICAgICAgICAgICAgYXJpYS1oaWRkZW4KICAgICAgICAgICAgICA+CiAgICAgICAgICAgICAgICA8c3ZnIHdpZHRoPSIyNiIgaGVpZ2h0PSIyNiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlV2lkdGg9IjEuOCI+PHBhdGggZD0iTTE0IDJINmEyIDIgMCAwIDAtMiAydjE2YTIgMiAwIDAgMCAyIDJoMTJhMiAyIDAgMCAwIDItMlY4eiIgLz48cGF0aCBkPSJNMTQgMnY2aDYiIC8+PHBhdGggZD0iTTkgMTNoNk05IDE3aDYiIC8+PC9zdmc+CiAgICAgICAgICAgICAgPC9kaXY+CiAgICAgICAgICAgICAgPGgzIGNsYXNzTmFtZT0ibWItMiBwci00IHRleHQtWzE1cHhdIGZvbnQtYm9sZCBsZWFkaW5nLXNudWcgdGV4dC1pbmsgZ3JvdXAtaG92ZXI6dGV4dC1hY2NlbnQiPgogICAgICAgICAgICAgICAge2cudGl0bGV9CiAgICAgICAgICAgICAgPC9oMz4KICAgICAgICAgICAgICA8cCBjbGFzc05hbWU9Im1iLTQgZmxleC0xIHRleHQtWzEyLjVweF0gbGVhZGluZy1yZWxheGVkIHRleHQtbXV0ZWQiPntnLnN1YnRpdGxlfTwvcD4KICAgICAgICAgICAgICA8c3BhbiBjbGFzc05hbWU9ImlubGluZS1mbGV4IGl0ZW1zLWNlbnRlciBnYXAtMS41IHNlbGYtc3RhcnQgdGV4dC1bMTIuNXB4XSBmb250LWJvbGQgdGV4dC1hY2NlbnQiPgogICAgICAgICAgICAgICAgUmVhZCBHdWlkZSA8c3BhbiBhcmlhLWhpZGRlbiBjbGFzc05hbWU9InRyYW5zaXRpb24gZ3JvdXAtaG92ZXI6dHJhbnNsYXRlLXgtMC41Ij7ihpI8L3NwYW4+CiAgICAgICAgICAgICAgPC9zcGFuPgogICAgICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT0iYWJzb2x1dGUgYm90dG9tLTMgcmlnaHQtMyBmbGV4IGgtOCB3LTggaXRlbXMtY2VudGVyIGp1c3RpZnktY2VudGVyIHJvdW5kZWQtZnVsbCBiZy1wcmltYXJ5IHRleHQtd2hpdGUiPgogICAgICAgICAgICAgICAgPHN2ZyB3aWR0aD0iMTQiIGhlaWdodD0iMTQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZVdpZHRoPSIyLjUiIGFyaWEtaGlkZGVuPjxwYXRoIGQ9Ik03IDE3TDE3IDdNOSA3aDh2OCIgLz48L3N2Zz4KICAgICAgICAgICAgICA8L3NwYW4+CiAgICAgICAgICAgIDwvTGluaz4KICAgICAgICAgICk7CiAgICAgICAgfSl9CiAgICAgIDwvZGl2PgogICAgPC9kaXY+CiAgKTsKfQo=
+"use client";
+/** Audience tabs + guide cards grid. Client-side filtering, no page reloads. */
+import { useState } from "react";
+import Link from "next/link";
+import type { GuideMeta, AudienceMeta, GuideAudience } from "@/lib/guides/types";
+
+type Tab = "All" | GuideAudience;
+
+export function GuideTabs({
+  guides,
+  audiences,
+  total,
+}: {
+  guides: GuideMeta[];
+  audiences: AudienceMeta[];
+  total: number;
+}) {
+  const [tab, setTab] = useState<Tab>("All");
+  const visible = tab === "All" ? guides : guides.filter((g) => g.audience === tab);
+  const countFor = (t: Tab) => (t === "All" ? total : guides.filter((g) => g.audience === t).length);
+
+  const tabs: { key: Tab; label: string }[] = [
+    { key: "All", label: `All Guides (${countFor("All")})` },
+    ...audiences.map((a) => ({ key: a.audience as Tab, label: `${a.label} (${countFor(a.audience as Tab)})` })),
+  ];
+
+  return (
+    <div>
+      <div className="mb-5 flex flex-wrap gap-0 border-b-2 border-line">
+        {tabs.map((t) => (
+          <button
+            key={t.key}
+            onClick={() => setTab(t.key)}
+            className={`-mb-[2px] whitespace-nowrap border-b-[3px] border-transparent bg-transparent px-5 py-2.5 text-[13px] font-semibold transition ${
+              tab === t.key ? "border-accent text-accent" : "text-muted hover:text-ink"
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {visible.map((g) => {
+          return (
+            <Link
+              key={g.id}
+              href={`/guides/${g.id}`}
+              className="group relative flex flex-col overflow-hidden rounded-[var(--radius-md)] border border-line bg-white p-6 pb-5 shadow-[var(--shadow)] transition hover:-translate-y-1 hover:border-accent"
+            >
+              <span className="absolute right-3 top-3 rounded-full border border-line bg-soft px-2.5 py-1 text-[9px] font-bold uppercase tracking-wide text-muted">
+                {g.tag}
+              </span>
+              <div
+                className="mb-4 flex h-[52px] w-[52px] items-center justify-center rounded-[14px] bg-soft text-ink transition group-hover:scale-105"
+                aria-hidden
+              >
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6" /><path d="M9 13h6M9 17h6" /></svg>
+              </div>
+              <h3 className="mb-2 pr-4 text-[15px] font-bold leading-snug text-ink group-hover:text-accent">
+                {g.title}
+              </h3>
+              <p className="mb-4 flex-1 text-[12.5px] leading-relaxed text-muted">{g.subtitle}</p>
+              <span className="inline-flex items-center gap-1.5 self-start text-[12.5px] font-bold text-accent">
+                Read Guide <span aria-hidden className="transition group-hover:translate-x-0.5">→</span>
+              </span>
+              <span className="absolute bottom-3 right-3 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden><path d="M7 17L17 7M9 7h8v8" /></svg>
+              </span>
+            </Link>
+          );
+        })}
+      </div>
+    </div>
+  );
+}

@@ -1,1 +1,97 @@
-aW1wb3J0IExpbmsgZnJvbSAibmV4dC9saW5rIjsKaW1wb3J0IHsgZ2V0U2V0dGluZ3MsIGdldExvZ28gfSBmcm9tICJAL2xpYi9jbXMiOwppbXBvcnQgeyB0aGVtZUZvbnRIcmVmLCB0aGVtZUljb25PdmVycmlkZUNTUywgdGhlbWVWYXJzIH0gZnJvbSAiQC9saWIvdGhlbWUiOwppbXBvcnQgeyBTaXRlSGVhZGVyIH0gZnJvbSAiQC9jb21wb25lbnRzL3NpdGUvU2l0ZUhlYWRlciI7CmltcG9ydCB7IFNpdGVGb290ZXIsIE1vYmlsZUN0YUJhciB9IGZyb20gIkAvY29tcG9uZW50cy9zaXRlL1NpdGVGb290ZXIiOwppbXBvcnQgeyBnZXRHdWlkZSB9IGZyb20gIkAvbGliL2d1aWRlcy9yZWdpc3RyeSI7CmltcG9ydCB0eXBlIHsgUmVhY3ROb2RlIH0gZnJvbSAicmVhY3QiOwoKLyoqCiAqIFNoYXJlZCBwYWdlIGNocm9tZSBmb3IgZXZlcnkgZ3VpZGUgZGV0YWlsIHBhZ2UuCiAqIE1pcnJvcnMgQ2FsY3VsYXRvclBhZ2VTaGVsbDogQ01TIGhlYWRlci9mb290ZXIsIG1heC13LTd4bCwKICogYnJlYWRjcnVtYiwgYmxvY2staGVhZGVyIHN5c3RlbSwgSlNPTi1MRCBzY2hlbWEuCiAqLwpleHBvcnQgYXN5bmMgZnVuY3Rpb24gR3VpZGVQYWdlU2hlbGwoewogIHNsdWcsCiAgY2hpbGRyZW4sCn06IHsKICBzbHVnOiBzdHJpbmc7CiAgY2hpbGRyZW46IFJlYWN0Tm9kZTsKfSkgewogIGNvbnN0IG1ldGEgPSBnZXRHdWlkZShzbHVnKTsKICBpZiAoIW1ldGEpIHRocm93IG5ldyBFcnJvcihgVW5rbm93biBndWlkZSBzbHVnOiAke3NsdWd9YCk7CiAgY29uc3Qgc2V0dGluZ3MgPSBhd2FpdCBnZXRTZXR0aW5ncygpOwogIGNvbnN0IGxvZ28gPSBhd2FpdCBnZXRMb2dvKHNldHRpbmdzKTsKCiAgY29uc3QgY2Fub25pY2FsID0gYGh0dHBzOi8vd3d3LmdldHNldHNvbGQuY2EvZ3VpZGVzLyR7c2x1Z31gOwogIGNvbnN0IGJyZWFkY3J1bWJKc29uTGQgPSB7CiAgICAiQGNvbnRleHQiOiAiaHR0cHM6Ly9zY2hlbWEub3JnIiwKICAgICJAdHlwZSI6ICJCcmVhZGNydW1iTGlzdCIsCiAgICBpdGVtTGlzdEVsZW1lbnQ6IFsKICAgICAgeyAiQHR5cGUiOiAiTGlzdEl0ZW0iLCBwb3NpdGlvbjogMSwgbmFtZTogIkhvbWUiLCBpdGVtOiAiaHR0cHM6Ly93d3cuZ2V0c2V0c29sZC5jYSIgfSwKICAgICAgeyAiQHR5cGUiOiAiTGlzdEl0ZW0iLCBwb3NpdGlvbjogMiwgbmFtZTogIkd1aWRlcyIsIGl0ZW06ICJodHRwczovL3d3dy5nZXRzZXRzb2xkLmNhL2d1aWRlcyIgfSwKICAgICAgeyAiQHR5cGUiOiAiTGlzdEl0ZW0iLCBwb3NpdGlvbjogMywgbmFtZTogbWV0YS50aXRsZSwgaXRlbTogY2Fub25pY2FsIH0sCiAgICBdLAogIH07CiAgY29uc3QgYXJ0aWNsZUpzb25MZCA9IHsKICAgICJAY29udGV4dCI6ICJodHRwczovL3NjaGVtYS5vcmciLAogICAgIkB0eXBlIjogIkFydGljbGUiLAogICAgaGVhZGxpbmU6IG1ldGEudGl0bGUsCiAgICBkZXNjcmlwdGlvbjogbWV0YS5zdWJ0aXRsZSwKICAgIHVybDogY2Fub25pY2FsLAogICAgaW5MYW5ndWFnZTogImVuLUNBIiwKICAgIGF1dGhvcjogewogICAgICAiQHR5cGUiOiAiUGVyc29uIiwKICAgICAgbmFtZTogIlJvaGl0IFNoYXJtYSIsCiAgICAgIGpvYlRpdGxlOiAiTGljZW5zZWQgUmVhbCBFc3RhdGUgQWdlbnQiLAogICAgICB1cmw6ICJodHRwczovL3d3dy5nZXRzZXRzb2xkLmNhIiwKICAgIH0sCiAgICBwdWJsaXNoZXI6IHsKICAgICAgIkB0eXBlIjogIk9yZ2FuaXphdGlvbiIsCiAgICAgIG5hbWU6ICJHZXRTZXRTb2xkLmNhIiwKICAgICAgdXJsOiAiaHR0cHM6Ly93d3cuZ2V0c2V0c29sZC5jYSIsCiAgICB9LAogIH07CgogIHJldHVybiAoCiAgICA8ZGl2IGNsYXNzTmFtZT0ibWluLWgtc2NyZWVuIGJnLWdyb3VuZCB0ZXh0LWluayIgc3R5bGU9e3RoZW1lVmFycyhzZXR0aW5ncyl9PgogICAgICB7dGhlbWVGb250SHJlZihzZXR0aW5ncykgPyA8bGluayByZWw9InN0eWxlc2hlZXQiIGhyZWY9e3RoZW1lRm9udEhyZWYoc2V0dGluZ3MpfSAvPiA6IG51bGx9CiAgICAgIDxzdHlsZSBkYW5nZXJvdXNseVNldElubmVySFRNTD17eyBfX2h0bWw6IHRoZW1lSWNvbk92ZXJyaWRlQ1NTKHNldHRpbmdzKSB9fSAvPgogICAgICA8c2NyaXB0IHR5cGU9ImFwcGxpY2F0aW9uL2xkK2pzb24iIGRhbmdlcm91c2x5U2V0SW5uZXJIVE1MPXt7IF9faHRtbDogSlNPTi5zdHJpbmdpZnkoYnJlYWRjcnVtYkpzb25MZCkgfX0gLz4KICAgICAgPHNjcmlwdCB0eXBlPSJhcHBsaWNhdGlvbi9sZCtqc29uIiBkYW5nZXJvdXNseVNldElubmVySFRNTD17eyBfX2h0bWw6IEpTT04uc3RyaW5naWZ5KGFydGljbGVKc29uTGQpIH19IC8+CiAgICAgIDxTaXRlSGVhZGVyIHNldHRpbmdzPXtzZXR0aW5nc30gbG9nbz17bG9nb30gLz4KICAgICAgPG1haW4gY2xhc3NOYW1lPSJteC1hdXRvIG1heC13LTd4bCBweC01IHBiLTE2Ij4KICAgICAgICA8bmF2IGNsYXNzTmFtZT0icHQtNiB0ZXh0LVsxM3B4XSB0ZXh0LW11dGVkIiBhcmlhLWxhYmVsPSJCcmVhZGNydW1iIj4KICAgICAgICAgIDxMaW5rIGhyZWY9Ii8iIGNsYXNzTmFtZT0iaG92ZXI6dW5kZXJsaW5lIj5Ib21lPC9MaW5rPgogICAgICAgICAgeyIgLyAifQogICAgICAgICAgPExpbmsgaHJlZj0iL2d1aWRlcyIgY2xhc3NOYW1lPSJob3Zlcjp1bmRlcmxpbmUiPkd1aWRlczwvTGluaz4KICAgICAgICAgIHsiIC8gIn0KICAgICAgICAgIDxzcGFuPnttZXRhLnRpdGxlfTwvc3Bhbj4KICAgICAgICA8L25hdj4KCiAgICAgICAgPGRpdiBjbGFzc05hbWU9Im1iLTYgbXQtMiBmbGV4IGZsZXgtY29sIGdhcC0zIj4KICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPSJ0ZXh0LVsxMnB4XSBmb250LWJvbGQgdXBwZXJjYXNlIHRyYWNraW5nLVswLjEyZW1dIHRleHQtYWNjZW50Ij4KICAgICAgICAgICAge21ldGEudGFnfQogICAgICAgICAgPC9kaXY+CiAgICAgICAgICA8aDEgY2xhc3NOYW1lPSJ0ZXh0LTN4bCBmb250LWJvbGQgdHJhY2tpbmctdGlnaHQiPnttZXRhLnRpdGxlfTwvaDE+CiAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT0iaC1weCB3LWZ1bGwgYm9yZGVyLXQgYm9yZGVyLWxpbmUiIC8+CiAgICAgICAgICA8cCBjbGFzc05hbWU9Im1heC13LTN4bCB0ZXh0LVsxNXB4XSBsZWFkaW5nLXJlbGF4ZWQgdGV4dC1tdXRlZCI+e21ldGEuc3VidGl0bGV9PC9wPgogICAgICAgIDwvZGl2PgoKICAgICAgICB7Y2hpbGRyZW59CgogICAgICAgIDxhcnRpY2xlIGNsYXNzTmFtZT0ibWItMiBtdC0xMCByb3VuZGVkLWxnIGJvcmRlciBib3JkZXItbGluZSBiZy13aGl0ZSBwLTUgc2hhZG93LXNtIj4KICAgICAgICAgIDxoMyBjbGFzc05hbWU9Im1iLTIgdGV4dC1bMTRweF0gZm9udC1zZW1pYm9sZCB0ZXh0LWluayI+QWJvdXQgdGhlc2UgZ3VpZGVzPC9oMz4KICAgICAgICAgIDxwIGNsYXNzTmFtZT0idGV4dC1bMTJweF0gbGVhZGluZy03IHRleHQtbXV0ZWQiPgogICAgICAgICAgICBUaGVzZSBndWlkZXMgYXJlIHdyaXR0ZW4gZm9yIENhbmFkaWFuIGJ1eWVycywgc2VsbGVycywgcmVudGVycywgYW5kIGxhbmRsb3JkcyBhbmQgYXJlCiAgICAgICAgICAgIGtlcHQgY3VycmVudCBmb3IgMjAyNi4gVGhleSBhcmUgZm9yIGluZm9ybWF0aW9uYWwgcHVycG9zZXMgb25seSDigJQgbm90IGxlZ2FsLCB0YXgsIG9yCiAgICAgICAgICAgIGZpbmFuY2lhbCBhZHZpY2UuIFJ1bGVzIHZhcnkgYnkgcHJvdmluY2U7IGNvbmZpcm0gZGV0YWlscyB3aXRoIHlvdXIgbGF3eWVyLCBhY2NvdW50YW50LAogICAgICAgICAgICBvciBsaWNlbnNlZCByZWFsIGVzdGF0ZSBwcm9mZXNzaW9uYWwgYmVmb3JlIG1ha2luZyBkZWNpc2lvbnMuCiAgICAgICAgICA8L3A+CiAgICAgICAgPC9hcnRpY2xlPgogICAgICA8L21haW4+CiAgICAgIDxTaXRlRm9vdGVyIHNldHRpbmdzPXtzZXR0aW5nc30gLz4KICAgICAgPE1vYmlsZUN0YUJhciBzZXR0aW5ncz17c2V0dGluZ3N9IC8+CiAgICA8L2Rpdj4KICApOwp9Cg==
+import Link from "next/link";
+import { getSettings, getLogo } from "@/lib/cms";
+import { themeFontHref, themeIconOverrideCSS, themeVars } from "@/lib/theme";
+import { SiteHeader } from "@/components/site/SiteHeader";
+import { SiteFooter, MobileCtaBar } from "@/components/site/SiteFooter";
+import { getGuide } from "@/lib/guides/registry";
+import type { ReactNode } from "react";
+
+/**
+ * Shared page chrome for every guide detail page.
+ * Mirrors CalculatorPageShell: CMS header/footer, max-w-7xl,
+ * breadcrumb, block-header system, JSON-LD schema.
+ */
+export async function GuidePageShell({
+  slug,
+  children,
+}: {
+  slug: string;
+  children: ReactNode;
+}) {
+  const meta = getGuide(slug);
+  if (!meta) throw new Error(`Unknown guide slug: ${slug}`);
+  const settings = await getSettings();
+  const logo = await getLogo(settings);
+
+  const canonical = `https://www.getsetsold.ca/guides/${slug}`;
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: "https://www.getsetsold.ca" },
+      { "@type": "ListItem", position: 2, name: "Guides", item: "https://www.getsetsold.ca/guides" },
+      { "@type": "ListItem", position: 3, name: meta.title, item: canonical },
+    ],
+  };
+  const articleJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: meta.title,
+    description: meta.subtitle,
+    url: canonical,
+    inLanguage: "en-CA",
+    author: {
+      "@type": "Person",
+      name: "Rohit Sharma",
+      jobTitle: "Licensed Real Estate Agent",
+      url: "https://www.getsetsold.ca",
+    },
+    publisher: {
+      "@type": "Organization",
+      name: "GetSetSold.ca",
+      url: "https://www.getsetsold.ca",
+    },
+  };
+
+  return (
+    <div className="min-h-screen bg-ground text-ink" style={themeVars(settings)}>
+      {themeFontHref(settings) ? <link rel="stylesheet" href={themeFontHref(settings)} /> : null}
+      <style dangerouslySetInnerHTML={{ __html: themeIconOverrideCSS(settings) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
+      <SiteHeader settings={settings} logo={logo} />
+      <main className="mx-auto max-w-7xl px-5 pb-16">
+        <nav className="pt-6 text-[13px] text-muted" aria-label="Breadcrumb">
+          <Link href="/" className="hover:underline">Home</Link>
+          {" / "}
+          <Link href="/guides" className="hover:underline">Guides</Link>
+          {" / "}
+          <span>{meta.title}</span>
+        </nav>
+
+        <div className="mb-6 mt-2 flex flex-col gap-3">
+          <div className="text-[12px] font-bold uppercase tracking-[0.12em] text-accent">
+            {meta.tag}
+          </div>
+          <h1 className="text-3xl font-bold tracking-tight">{meta.title}</h1>
+          <div className="h-px w-full border-t border-line" />
+          <p className="max-w-3xl text-[15px] leading-relaxed text-muted">{meta.subtitle}</p>
+        </div>
+
+        {children}
+
+        <article className="mb-2 mt-10 rounded-lg border border-line bg-white p-5 shadow-sm">
+          <h3 className="mb-2 text-[14px] font-semibold text-ink">About these guides</h3>
+          <p className="text-[12px] leading-7 text-muted">
+            These guides are written for Canadian buyers, sellers, renters, and landlords and are
+            kept current for 2026. They are for informational purposes only — not legal, tax, or
+            financial advice. Rules vary by province; confirm details with your lawyer, accountant,
+            or licensed real estate professional before making decisions.
+          </p>
+        </article>
+      </main>
+      <SiteFooter settings={settings} />
+      <MobileCtaBar settings={settings} />
+    </div>
+  );
+}
