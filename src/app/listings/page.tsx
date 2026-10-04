@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getAnyOgImage, ogImageMeta } from "@/lib/ogImage";
+import { seoTitle } from "@/lib/seo";
 import { getSettings, getLogo } from "@/lib/cms";
 import { themeFontHref, themeVars, themeIconOverrideCSS } from "@/lib/theme";
 import { SiteHeader } from "@/components/site/SiteHeader";
@@ -11,7 +12,7 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata({ searchParams }: { searchParams: Promise<ListingsSearchParams> }): Promise<Metadata> {
   const { city } = await searchParams;
   const effective = city === "all" ? null : city || DEFAULT_CITY;
-  const title = effective ? `Homes for sale in ${effective}` : "All listings";
+  const title = await seoTitle(effective ? `Homes for sale in ${effective}` : "All listings");
   const description = effective ? `Browse MLS® listings in ${effective}.` : "Browse all MLS® listings.";
   const ogImage = await getAnyOgImage();
   return {
