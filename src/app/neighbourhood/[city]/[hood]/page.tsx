@@ -155,7 +155,7 @@ export default async function NeighbourhoodPage({
 
         {view !== "map" && totalPages > 1 ? (
           <div className="mt-8">
-            <Pagination page={page} totalPages={totalPages} hrefFor={hrefFor} />
+            <Pagination page={page} totalPages={totalPages} hrefFor={(p) => hrefFor({ page: p <= 1 ? undefined : String(p) })} />
           </div>
         ) : null}
 
