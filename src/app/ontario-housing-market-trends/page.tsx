@@ -91,6 +91,8 @@ export default async function TrendsOverviewPage() {
               </Link>
             ))}
           </div>
+        )}
+
         <p className="mt-6 text-xs text-muted">
           Data source: Canadian Real Estate Association (CREA) — MLS® Home Price Index.
         </p>
