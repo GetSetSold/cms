@@ -56,7 +56,7 @@ export async function ListingsBrowser({
   else query = query.limit(mapLimit);
   if (hasLocation) {
     const lat = Number(sp.lat), lng = Number(sp.lng);
-    const radiusKm = 25;
+    const radiusKm = 10;
     const latDelta = radiusKm / 111;
     const lngDelta = radiusKm / (111 * Math.cos((lat * Math.PI) / 180));
     query = query
@@ -114,7 +114,7 @@ export async function ListingsBrowser({
         </h1>
         {hasLocation ? (
           <p className="text-sm text-muted">
-            Showing listings within 25 km of your location.{" "}
+            Showing listings within 10 km of your location.{" "}
             <a href={hrefFor({ lat: undefined, lng: undefined, city: DEFAULT_CITY })} className="font-medium text-primary">Clear location</a>
           </p>
         ) : !fixedCity && cityWasDefaulted ? (
