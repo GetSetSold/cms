@@ -94,6 +94,12 @@ export interface SiteSettings {
   mls_office_key?: string;
   precon_cashback?: { enabled: boolean; type: "percent" | "flat"; value: number };
   scripts: { ga4_id?: string };
+  ads?: {
+    grid_ad_enabled?: boolean;
+    grid_ad_code?: string;
+    grid_ad_position?: number;
+    grid_ad_frequency?: number;
+  };
   lead_settings: { notify_emails: string[] };
 }
 
