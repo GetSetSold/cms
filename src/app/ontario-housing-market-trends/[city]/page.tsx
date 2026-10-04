@@ -55,8 +55,9 @@ export default async function TrendsDetailPage({ params }: { params: Promise<Par
   const market = await getHpiMarket(city);
   if (!market) notFound();
 
-  const [markets, settings, logo, ontAvg] = await Promise.all([
-    getHpiMarkets(), getSettings(), getLogo(), ontarioAverageBenchmark(),
+  const settings = await getSettings();
+  const [markets, logo, ontAvg] = await Promise.all([
+    getHpiMarkets(), getLogo(settings), ontarioAverageBenchmark(),
   ]);
   const ins = computeInsights(market);
   const L = market.latest;
