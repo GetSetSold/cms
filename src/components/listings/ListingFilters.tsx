@@ -53,13 +53,16 @@ function PortalDropdown({
 
   if (!pos) return null;
   return createPortal(
-    <div
-      className="z-[100] rounded-2xl border border-line bg-white p-4 shadow-2xl"
+    <>
+      <style>{`.gss-dd-scroll::-webkit-scrollbar{width:4px}.gss-dd-scroll::-webkit-scrollbar-thumb{background:#d4d4d8;border-radius:4px}.gss-dd-scroll::-webkit-scrollbar-track{background:transparent}.gss-dd-scroll{scrollbar-width:thin;scrollbar-color:#d4d4d8 transparent}`}</style>
+      <div
+      className="z-[100] rounded-2xl border border-line bg-white p-3 shadow-2xl"
       style={{ position: "absolute", top: pos.top, left: Math.max(8, pos.left), width }}
       onMouseDown={(e) => e.stopPropagation()}
     >
       {children}
-    </div>,
+      </div>
+    </>,
     document.body
   );
 }
@@ -153,14 +156,14 @@ export function ListingFilters({
                   onChange={(e) => setCityFilter(e.target.value)}
                   placeholder="Search cities..."
                   autoFocus
-                  className="mb-2 w-full rounded-xl border border-line px-3 py-2 text-sm outline-none focus:border-ink"
+                  className="mb-2 w-full rounded-[var(--radius-md)] border border-line px-3 py-2 text-sm outline-none focus:border-muted"
                 />
-                <div className="max-h-56 overflow-y-auto">
-                  <button onClick={() => go({ city: "all" })} className="block w-full rounded-xl px-3 py-2 text-left text-sm hover:bg-ground">
+                <div className="gss-dd-scroll max-h-56 divide-y divide-line/60 overflow-y-auto">
+                  <button onClick={() => go({ city: "all" })} className="block w-full px-3 py-2 text-left text-sm hover:bg-ground">
                     All cities
                   </button>
                   {cityList.map((c) => (
-                    <button key={c} onClick={() => go({ city: c })} className={`block w-full rounded-xl px-3 py-2 text-left text-sm hover:bg-ground ${sp.city === c ? "bg-ground font-medium" : ""}`}>
+                    <button key={c} onClick={() => go({ city: c })} className={`block w-full px-3 py-2 text-left text-sm hover:bg-ground ${sp.city === c ? "bg-ground font-medium" : ""}`}>
                       {c}
                     </button>
                   ))}
@@ -177,14 +180,14 @@ export function ListingFilters({
           <PortalDropdown anchorRef={{ current: refs.current["price"] }} onClose={close}>
             <div className="flex flex-col gap-3">
               <div className="flex gap-2">
-                <input value={minP} onChange={(e) => setMinP(e.target.value.replace(/\D/g, ""))} placeholder="Min" inputMode="numeric" className="w-full rounded-xl border border-line px-3 py-2 text-sm outline-none focus:border-ink" />
-                <input value={maxP} onChange={(e) => setMaxP(e.target.value.replace(/\D/g, ""))} placeholder="Max" inputMode="numeric" className="w-full rounded-xl border border-line px-3 py-2 text-sm outline-none focus:border-ink" />
+                <input value={minP} onChange={(e) => setMinP(e.target.value.replace(/\D/g, ""))} placeholder="Min" inputMode="numeric" className="w-full rounded-[var(--radius-md)] border border-line px-3 py-2 text-sm outline-none focus:border-muted" />
+                <input value={maxP} onChange={(e) => setMaxP(e.target.value.replace(/\D/g, ""))} placeholder="Max" inputMode="numeric" className="w-full rounded-[var(--radius-md)] border border-line px-3 py-2 text-sm outline-none focus:border-muted" />
               </div>
               <div className="flex gap-2">
-                <button onClick={() => go({ minPrice: minP || undefined, maxPrice: maxP || undefined })} className="flex-1 rounded-xl bg-ink py-2 text-sm font-medium text-white">
+                <button onClick={() => go({ minPrice: minP || undefined, maxPrice: maxP || undefined })} className="flex-1 rounded-[var(--radius-md)] bg-ink py-2 text-sm font-medium text-white">
                   Apply
                 </button>
-                <button onClick={() => { setMinP(""); setMaxP(""); go({ minPrice: undefined, maxPrice: undefined }); }} className="rounded-xl border border-line px-4 py-2 text-sm">
+                <button onClick={() => { setMinP(""); setMaxP(""); go({ minPrice: undefined, maxPrice: undefined }); }} className="rounded-[var(--radius-md)] border border-line px-4 py-2 text-sm">
                   Clear
                 </button>
               </div>
@@ -227,15 +230,15 @@ export function ListingFilters({
         </button>
         {open === "homeType" ? (
           <PortalDropdown anchorRef={{ current: refs.current["homeType"] }} onClose={close} width={280}>
-            <div className="flex max-h-64 flex-col gap-1 overflow-y-auto">
-              <button onClick={() => go({ homeType: undefined })} className={`rounded-xl px-3 py-2 text-left text-sm ${!sp.homeType ? "bg-ground font-medium" : "hover:bg-ground"}`}>
+            <div className="gss-dd-scroll max-h-64 divide-y divide-line/60 overflow-y-auto">
+              <button onClick={() => go({ homeType: undefined })} className={`px-3 py-2 text-left text-sm ${!sp.homeType ? "bg-ground font-medium" : "hover:bg-ground"}`}>
                 Any type
               </button>
               {(typeCounts && Object.keys(typeCounts).length > 0
                 ? Object.entries(typeCounts).sort((a, b) => b[1] - a[1])
                 : FALLBACK_TYPES.map((t) => [t, 0] as [string, number])
               ).map(([t, c]) => (
-                <button key={t} onClick={() => go({ homeType: t })} className={`flex items-center justify-between rounded-xl px-3 py-2 text-left text-sm ${sp.homeType === t ? "bg-ground font-medium" : "hover:bg-ground"}`}>
+                <button key={t} onClick={() => go({ homeType: t })} className={`flex w-full items-center justify-between px-3 py-2 text-left text-sm ${sp.homeType === t ? "bg-ground font-medium" : "hover:bg-ground"}`}>
                   <span>{t}</span>
                   {c > 0 ? <span className="text-xs text-muted">{c.toLocaleString()}</span> : null}
                 </button>
