@@ -82,21 +82,21 @@ export function HpiChart({
             </text>
           ) : null
         )}
-        <polyline points={line} fill="none" stroke="#111" strokeWidth={1.5} strokeLinejoin="round" />
+        <polyline points={line} fill="none" stroke="var(--c-primary, #111111)" strokeWidth={1.5} strokeLinejoin="round" />
         {/* hover crosshair */}
         {hover != null && (
           <g>
-            <line x1={px(hover)} y1={PAD_T} x2={px(hover)} y2={H - PAD_B} stroke="#111" strokeWidth={1} strokeDasharray="3 3" opacity={0.4} />
-            <circle cx={px(hover)} cy={py(points[hover].value)} r={4.5} fill="#111" />
+            <line x1={px(hover)} y1={PAD_T} x2={px(hover)} y2={H - PAD_B} stroke="var(--c-primary, #111111)" strokeWidth={1} strokeDasharray="3 3" opacity={0.4} />
+            <circle cx={px(hover)} cy={py(points[hover].value)} r={4.5} fill="var(--c-primary, #111111)" />
           </g>
         )}
         {/* solid dot on every data point */}
         {points.map((p, i) => (
-          <circle key={i} cx={px(i)} cy={py(p.value)} r={2.5} fill="#111" />
+          <circle key={i} cx={px(i)} cy={py(p.value)} r={2.5} fill="var(--c-primary, #111111)" />
         ))}
         {/* latest point marker */}
-        <circle cx={px(n - 1)} cy={py(last.value)} r={4.5} fill="#111" />
-        <text x={px(n - 1) - 8} y={py(last.value) - 12} textAnchor="end" fontSize={12} fontWeight={700} fill="#111">
+        <circle cx={px(n - 1)} cy={py(last.value)} r={4.5} fill="var(--c-primary, #111111)" />
+        <text x={px(n - 1) - 8} y={py(last.value) - 12} textAnchor="end" fontSize={12} fontWeight={700} fill="var(--c-primary, #111111)">
           {formatValue(last.value)}
         </text>
         {/* invisible hover targets */}
@@ -131,7 +131,7 @@ export function HpiSpark({ values, width = 110, height = 34 }: { values: number[
   const pts = values.map((v, i) => `${px(i).toFixed(1)},${py(v).toFixed(1)}`).join(" ");
   return (
     <svg viewBox={`0 0 ${width} ${height}`} style={{ width, height }} className="inline-block" aria-hidden>
-      <polyline points={pts} fill="none" stroke="#111" strokeWidth={1.5} />
+      <polyline points={pts} fill="none" stroke="var(--c-primary, #111111)" strokeWidth={1.5} />
     </svg>
   );
 }
