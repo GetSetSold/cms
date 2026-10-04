@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound, redirect, permanentRedirect } from "next/navigation";
 import { createMlsClient, daysOnMarket, displayValue, isSale, mediaItems, priceDisplay, resolveCitySlug, citySlug, listingSlug, type GridListing, type PropertyListing } from "@/lib/mls";
+import { seoTitle } from "@/lib/seo";
 import { getSettings, getLogo } from "@/lib/cms";
 import { themeFontHref, themeVars, themeIconOverrideCSS } from "@/lib/theme";
 import { SiteHeader } from "@/components/site/SiteHeader";
@@ -40,7 +41,7 @@ export async function generateMetadata({ params }: { params: Promise<{ key: stri
   const { key } = await params;
   const listing = await getListing(decodeURIComponent(key));
   if (!listing) return { title: "Listing not found" };
-  const title = `${listing.UnparsedAddress ?? listing.ListingKey} — ${priceDisplay(listing)}`;
+  const title = await seoTitle(`${listing.UnparsedAddress ?? listing.ListingKey} — ${priceDisplay(listing)}`);
   const ogImage = mediaItems(listing.Media)[0]?.MediaURL;
   return {
     title,
