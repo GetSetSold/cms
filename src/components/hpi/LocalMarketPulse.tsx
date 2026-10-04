@@ -60,7 +60,7 @@ export async function LocalMarketPulse({ citySlug, cityName }: { citySlug: strin
       </div>
 
       <p className="mt-6 text-[15px]">
-        <Link href="/contact" className="font-medium text-[#0066CC] underline">
+        <Link href="/contact" className="font-medium text-accent underline">
           Contact us
         </Link>{" "}
         for more detailed market information.
