@@ -126,31 +126,36 @@ export default async function GuidesHubPage({
       <SiteHeader settings={settings} logo={logo} />
       <GuideHashRedirect />
 
-      {/* Hero — site theme: dark ink gradient */}
-      <div className="bg-gradient-to-br from-primary to-accent text-white">
-        <div className="mx-auto flex max-w-7xl flex-col items-center gap-2 px-5 pb-10 pt-14 text-center">
-          <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-xl bg-white/15 text-white" aria-hidden>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" /></svg>
+      {/* Hero — split header: monochrome icon + eyebrow + H1 + stats */}
+      <div className="mx-auto max-w-7xl px-5 pb-8 pt-10">
+        <div className="grid grid-cols-1 items-center gap-6 md:grid-cols-[auto_1fr] md:gap-10">
+          <div className="hidden h-36 w-36 items-center justify-center rounded-2xl bg-soft text-ink md:flex" aria-hidden>
+            <svg width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" /></svg>
           </div>
-          <h1 className="text-3xl font-black tracking-tight sm:text-4xl">
-            Free Canadian Real Estate Guides
-          </h1>
-          <p className="max-w-2xl text-[13px] text-white/75">
-            {GUIDE_COUNT} expert guides covering every side of Canadian real estate — plain language,
-            free PDF downloads, built for 2026
-          </p>
-          <div className="mt-4 flex flex-wrap justify-center gap-3">
-            {stats.map((s) => (
-              <div
-                key={s.lbl}
-                className="min-w-[100px] rounded-[10px] border border-white/15 bg-white/10 px-4 py-2.5 text-center"
-              >
-                <div className="text-xl font-black">{s.num}</div>
-                <div className="mt-0.5 text-[10px] font-semibold uppercase tracking-wider text-white/70">
-                  {s.lbl}
+          <div>
+            <div className="text-[12px] font-bold uppercase tracking-[0.12em] text-accent">
+              {GUIDE_COUNT} free guides · no signup
+            </div>
+            <h1 className="mt-2 text-3xl font-bold tracking-tight text-ink sm:text-4xl">
+              Free Canadian Real Estate <span className="text-accent">Guides</span>
+            </h1>
+            <p className="mt-3 max-w-2xl text-[14px] leading-relaxed text-muted">
+              {GUIDE_COUNT} expert guides covering every side of Canadian real estate — plain language,
+              free PDF downloads, built for 2026
+            </p>
+            <div className="mt-5 flex flex-wrap gap-3">
+              {stats.map((s) => (
+                <div
+                  key={s.lbl}
+                  className="min-w-[100px] rounded-[10px] border border-line bg-white px-4 py-2.5 text-center shadow-sm"
+                >
+                  <div className="text-xl font-black text-ink">{s.num}</div>
+                  <div className="mt-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted">
+                    {s.lbl}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </div>
