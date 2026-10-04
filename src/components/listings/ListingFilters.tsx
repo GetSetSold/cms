@@ -78,7 +78,7 @@ export function ListingFilters({
       : "Any Price";
 
   const pillCls = (active: boolean) =>
-    `rounded-full border px-4 py-2 text-sm font-medium transition ${
+    `rounded-[var(--radius-md)] border px-4 py-2 text-sm font-medium transition ${
       active
         ? "border-ink bg-ink text-white"
         : "border-line bg-white text-ink hover:border-ink"
@@ -95,22 +95,22 @@ export function ListingFilters({
     <>
       {/* Desktop pill bar */}
       <div className="hidden flex-wrap items-center gap-2 md:flex">
-        <div className="flex rounded-full border border-line bg-white p-1">
+        <div className="flex rounded-[var(--radius-md)] border border-line bg-white p-1">
           <button
             onClick={() => go({ type: undefined })}
-            className={`rounded-full px-4 py-1.5 text-sm font-medium ${!sp.type ? "bg-ink text-white" : "text-ink"}`}
+            className={`rounded-[var(--radius-md)] px-4 py-1.5 text-sm font-medium ${!sp.type ? "bg-ink text-white" : "text-ink"}`}
           >
             All
           </button>
           <button
             onClick={() => go({ type: "sale" })}
-            className={`rounded-full px-4 py-1.5 text-sm font-medium ${sp.type === "sale" ? "bg-ink text-white" : "text-ink"}`}
+            className={`rounded-[var(--radius-md)] px-4 py-1.5 text-sm font-medium ${sp.type === "sale" ? "bg-ink text-white" : "text-ink"}`}
           >
             For Sale
           </button>
           <button
             onClick={() => go({ type: "rent" })}
-            className={`rounded-full px-4 py-1.5 text-sm font-medium ${sp.type === "rent" ? "bg-ink text-white" : "text-ink"}`}
+            className={`rounded-[var(--radius-md)] px-4 py-1.5 text-sm font-medium ${sp.type === "rent" ? "bg-ink text-white" : "text-ink"}`}
           >
             For Rent
           </button>
@@ -169,7 +169,7 @@ export function ListingFilters({
                 <button
                   key={b || "any"}
                   onClick={() => go({ beds: b || undefined })}
-                  className={`rounded-full border px-4 py-1.5 text-sm ${sp.beds === b || (!sp.beds && !b) ? "border-ink bg-ink text-white" : "border-line"}`}
+                  className={`rounded-[var(--radius-md)] border px-4 py-1.5 text-sm ${sp.beds === b || (!sp.beds && !b) ? "border-ink bg-ink text-white" : "border-line"}`}
                 >
                   {b ? `${b}+` : "Any"}
                 </button>
@@ -189,7 +189,7 @@ export function ListingFilters({
                 <button
                   key={b || "any"}
                   onClick={() => go({ baths: b || undefined })}
-                  className={`rounded-full border px-4 py-1.5 text-sm ${sp.baths === b || (!sp.baths && !b) ? "border-ink bg-ink text-white" : "border-line"}`}
+                  className={`rounded-[var(--radius-md)] border px-4 py-1.5 text-sm ${sp.baths === b || (!sp.baths && !b) ? "border-ink bg-ink text-white" : "border-line"}`}
                 >
                   {b ? `${b}+` : "Any"}
                 </button>
@@ -232,7 +232,7 @@ export function ListingFilters({
       <div className="md:hidden">
         <button
           onClick={() => setModal(true)}
-          className="flex items-center gap-2 rounded-full border border-line bg-white px-4 py-2.5 text-sm font-medium"
+          className="flex items-center gap-2 rounded-[var(--radius-md)] border border-line bg-white px-4 py-2.5 text-sm font-medium"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M4 6h16M7 12h10M10 18h4" />
@@ -242,7 +242,7 @@ export function ListingFilters({
           </svg>
           Filters
           {activeCount > 0 ? (
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-ink text-[11px] text-white">
+            <span className="flex h-5 w-5 items-center justify-center rounded-[var(--radius-md)] bg-ink text-[11px] text-white">
               {activeCount}
             </span>
           ) : null}
@@ -253,7 +253,7 @@ export function ListingFilters({
       {modal ? (
         <div className="fixed inset-0 z-50 md:hidden">
           <div className="absolute inset-0 bg-black/50" onClick={() => setModal(false)} />
-          <div className="absolute bottom-0 left-0 right-0 max-h-[85vh] overflow-y-auto rounded-t-3xl bg-white p-5">
+          <div className="absolute bottom-4 left-4 right-4 max-h-[85vh] overflow-y-auto rounded-[var(--radius-lg)] bg-white p-5 shadow-2xl">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-lg font-semibold">Filters</h3>
               <button onClick={() => setModal(false)} className="text-2xl leading-none text-muted">×</button>
@@ -319,7 +319,7 @@ export function ListingFilters({
                   <button
                     key={b || "any"}
                     onClick={() => go({ beds: b || undefined })}
-                    className={`rounded-full border px-4 py-2 text-sm ${sp.beds === b || (!sp.beds && !b) ? "border-ink bg-ink text-white" : "border-line"}`}
+                    className={`rounded-[var(--radius-md)] border px-4 py-2 text-sm ${sp.beds === b || (!sp.beds && !b) ? "border-ink bg-ink text-white" : "border-line"}`}
                   >
                     {b ? `${b}+` : "Any"}
                   </button>
@@ -334,7 +334,7 @@ export function ListingFilters({
                   <button
                     key={b || "any"}
                     onClick={() => go({ baths: b || undefined })}
-                    className={`rounded-full border px-4 py-2 text-sm ${sp.baths === b || (!sp.baths && !b) ? "border-ink bg-ink text-white" : "border-line"}`}
+                    className={`rounded-[var(--radius-md)] border px-4 py-2 text-sm ${sp.baths === b || (!sp.baths && !b) ? "border-ink bg-ink text-white" : "border-line"}`}
                   >
                     {b ? `${b}+` : "Any"}
                   </button>
@@ -349,7 +349,7 @@ export function ListingFilters({
                   <button
                     key={h.value}
                     onClick={() => go({ homeType: h.value || undefined })}
-                    className={`rounded-full border px-4 py-2 text-sm ${sp.homeType === h.value || (!sp.homeType && !h.value) ? "border-ink bg-ink text-white" : "border-line"}`}
+                    className={`rounded-[var(--radius-md)] border px-4 py-2 text-sm ${sp.homeType === h.value || (!sp.homeType && !h.value) ? "border-ink bg-ink text-white" : "border-line"}`}
                   >
                     {h.label}
                   </button>
