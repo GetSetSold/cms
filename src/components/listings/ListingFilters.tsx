@@ -14,12 +14,7 @@ export type FilterParams = {
 
 const BED_OPTIONS = ["", "1", "2", "3", "4", "5"];
 const BATH_OPTIONS = ["", "1", "2", "3", "4"];
-const HOME_TYPES = [
-  { value: "", label: "Any type" },
-  { value: "house", label: "House" },
-  { value: "condo", label: "Condo" },
-  { value: "townhouse", label: "Townhouse" },
-];
+const FALLBACK_TYPES = ["House", "Apartment", "Row / Townhouse"];
 
 function pillLabel(value: string | undefined, prefix: string, suffix: string, anyLabel: string) {
   if (!value) return anyLabel;
@@ -35,11 +30,13 @@ export function ListingFilters({
   sp,
   showCitySearch,
   cities,
+  typeCounts,
 }: {
   basePath: string;
   sp: Record<string, string | undefined>;
   showCitySearch?: boolean;
   cities?: string[];
+  typeCounts?: Record<string, number>;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState<string | null>(null);
@@ -200,18 +197,28 @@ export function ListingFilters({
 
         <div className="relative">
           <button onClick={() => setOpen(open === "homeType" ? null : "homeType")} className={pillCls(!!sp.homeType)}>
-            {HOME_TYPES.find((h) => h.value === (sp.homeType ?? ""))?.label ?? "Home Type"} ▾
+            {sp.homeType || "Home Type"} ▾
           </button>
           {dropdown(
             "homeType",
-            <div className="flex flex-col gap-1">
-              {HOME_TYPES.map((h) => (
+            <div className="flex max-h-64 flex-col gap-1 overflow-y-auto">
+              <button
+                onClick={() => go({ homeType: undefined })}
+                className={`rounded-xl px-3 py-2 text-left text-sm ${!sp.homeType ? "bg-ground font-medium" : "hover:bg-ground"}`}
+              >
+                Any type
+              </button>
+              {(typeCounts && Object.keys(typeCounts).length > 0
+                ? Object.entries(typeCounts).sort((a, b) => b[1] - a[1])
+                : FALLBACK_TYPES.map((t) => [t, 0] as [string, number])
+              ).map(([t, c]) => (
                 <button
-                  key={h.value}
-                  onClick={() => go({ homeType: h.value || undefined })}
-                  className={`rounded-xl px-3 py-2 text-left text-sm ${sp.homeType === h.value || (!sp.homeType && !h.value) ? "bg-ground font-medium" : "hover:bg-ground"}`}
+                  key={t}
+                  onClick={() => go({ homeType: t })}
+                  className={`flex items-center justify-between rounded-xl px-3 py-2 text-left text-sm ${sp.homeType === t ? "bg-ground font-medium" : "hover:bg-ground"}`}
                 >
-                  {h.label}
+                  <span>{t}</span>
+                  {c > 0 ? <span className="text-xs text-muted">{c.toLocaleString()}</span> : null}
                 </button>
               ))}
             </div>
@@ -345,13 +352,22 @@ export function ListingFilters({
             <div className="mb-6">
               <label className="mb-2 block text-sm font-medium">Home type</label>
               <div className="flex flex-wrap gap-2">
-                {HOME_TYPES.map((h) => (
+                <button
+                  onClick={() => go({ homeType: undefined })}
+                  className={`rounded-[var(--radius-md)] border px-4 py-2 text-sm ${!sp.homeType ? "border-ink bg-ink text-white" : "border-line"}`}
+                >
+                  Any
+                </button>
+                {(typeCounts && Object.keys(typeCounts).length > 0
+                  ? Object.keys(typeCounts).sort((a, b) => (typeCounts[b] ?? 0) - (typeCounts[a] ?? 0))
+                  : FALLBACK_TYPES
+                ).map((t) => (
                   <button
-                    key={h.value}
-                    onClick={() => go({ homeType: h.value || undefined })}
-                    className={`rounded-[var(--radius-md)] border px-4 py-2 text-sm ${sp.homeType === h.value || (!sp.homeType && !h.value) ? "border-ink bg-ink text-white" : "border-line"}`}
+                    key={t}
+                    onClick={() => go({ homeType: t })}
+                    className={`rounded-[var(--radius-md)] border px-4 py-2 text-sm ${sp.homeType === t ? "border-ink bg-ink text-white" : "border-line"}`}
                   >
-                    {h.label}
+                    {t}
                   </button>
                 ))}
               </div>
