@@ -15,11 +15,17 @@ import { CityStatsSection } from "@/components/listings/CityStatsSection";
 import { CityEditorial } from "@/components/listings/CityEditorial";
 import { CityFaq } from "@/components/listings/CityFaq";
 
-export async function cityPageMetadata(slug: string): Promise<Metadata> {
+export async function cityPageMetadata(
+  slug: string,
+  searchParams?: { page?: string; type?: string }
+): Promise<Metadata> {
   const city = await resolveCitySlug(slug);
   if (!city) return { title: "City not found" };
-  const title = await seoTitle(`Homes for sale in ${city}`);
-  const description = `Browse current listings for sale and rent in ${city}.`;
+  const page = Math.max(1, Number(searchParams?.page) || 1);
+  const isRent = searchParams?.type === "rent";
+  const base = `${city} MLS® Listings & Real Estate for ${isRent ? "Rent" : "Sale"}`;
+  const title = await seoTitle(page > 1 ? `${base} (Page ${page})` : base);
+  const description = `Browse current MLS® listings for ${isRent ? "rent" : "sale"} in ${city}. Live market stats, FAQs and updated listings.`;
   const ogImage = await getCityOgImage(city);
   return {
     title,
