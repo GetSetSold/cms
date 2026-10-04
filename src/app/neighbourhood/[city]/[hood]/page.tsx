@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { resolveHood, getHoodStats, getHoodListings } from "@/lib/neighbourhoods";
 import { getHoodOgImage, ogImageMeta } from "@/lib/ogImage";
+import { seoTitle } from "@/lib/seo";
 import { citySlug } from "@/lib/mls";
 import { getSettings, getLogo } from "@/lib/cms";
 import { themeFontHref, themeVars, themeIconOverrideCSS } from "@/lib/theme";
@@ -27,7 +28,7 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
   const hood = await resolveHood(cityParam, hoodParam);
   if (!hood) return { title: "Not found" };
   const url = `/${citySlug(hood.city)}-real-estate/${hood.hoodSlug}`;
-  const title = `Homes for sale in ${hood.hood}, ${hood.city}`;
+  const title = await seoTitle(`Homes for sale in ${hood.hood}, ${hood.city}`);
   const description = `Browse ${hood.count} MLS® listings in ${hood.hood}, ${hood.city}. Live market stats, FAQs and current homes for sale and rent.`;
   const ogImage = await getHoodOgImage(hood.city, hood.hood);
   return {
