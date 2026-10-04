@@ -10,10 +10,16 @@ import { ListingsBrowser, DEFAULT_CITY, type ListingsSearchParams } from "@/comp
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ searchParams }: { searchParams: Promise<ListingsSearchParams> }): Promise<Metadata> {
-  const { city } = await searchParams;
+  const sp = await searchParams;
+  const { city } = sp;
   const effective = city === "all" ? null : city || DEFAULT_CITY;
-  const title = await seoTitle(effective ? `Homes for sale in ${effective}` : "All listings");
-  const description = effective ? `Browse MLS® listings in ${effective}.` : "Browse all MLS® listings.";
+  const page = Math.max(1, Number(sp.page) || 1);
+  const isRent = sp.type === "rent";
+  const base = effective
+    ? `${effective} MLS® Listings & Real Estate for ${isRent ? "Rent" : "Sale"}`
+    : `MLS® Listings & Real Estate for ${isRent ? "Rent" : "Sale"}`;
+  const title = await seoTitle(page > 1 ? `${base} (Page ${page})` : base);
+  const description = effective ? `Browse MLS® listings for ${isRent ? "rent" : "sale"} in ${effective}.` : "Browse all MLS® listings.";
   const ogImage = await getAnyOgImage();
   return {
     title,
