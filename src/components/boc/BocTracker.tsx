@@ -240,12 +240,19 @@ function BocChart({ points, decisions, range, visible, onToggle }: {
           if (visible.bank && p.bank !== null) rows.push(["Bank Rate", p.bank.toFixed(2) + "%", "#1A6B8A"]);
           if (visible.prime && p.prime !== null) rows.push(["Prime Rate", p.prime.toFixed(2) + "%", "#2E86AB"]);
           if (visible.cpi && p.cpi !== null) rows.push(["CPI Inflation", p.cpi.toFixed(2) + "%", "#f59e0b"]);
-          const bx = Math.min(Math.max(px(hover) - 80, 48), CHART_W - 210);
-          const by = 20;
+          const bw = 168;
           const bh = 30 + rows.length * 18;
+          const anchorY = p.target !== null ? pyR(p.target) : pyR((rMax + rMin) / 2);
+          // Offset away from the cursor: right of the point, flip to left near the edge
+          let bx = px(hover) + 18;
+          if (bx + bw > CHART_W - 60) bx = px(hover) - bw - 18;
+          // Above the point, flip below if it would clip the top
+          let by = anchorY - bh - 14;
+          if (by < 12) by = anchorY + 22;
           return (
             <g pointerEvents="none">
-              <rect x={bx} y={by} width="162" height={bh} rx="8" fill="#fff" stroke="#e5e7eb" />
+              <line x1={px(hover)} y1={14} x2={px(hover)} y2={CHART_H - 42} stroke="#9ca3af" strokeWidth="1" strokeDasharray="3 3" opacity="0.7" />
+              <rect x={bx} y={by} width={bw} height={bh} rx="8" fill="#fff" stroke="#e5e7eb" />
               <text x={bx + 12} y={by + 20} fontSize="12" fontWeight="700" fill="#111">
                 {new Date(p.m + "-01T00:00:00").toLocaleDateString("en-CA", { month: "short", year: "numeric" })}
               </text>
@@ -253,7 +260,7 @@ function BocChart({ points, decisions, range, visible, onToggle }: {
                 <g key={label}>
                   <circle cx={bx + 16} cy={by + 32 + ri * 18} r="3.5" fill={color} />
                   <text x={bx + 26} y={by + 36 + ri * 18} fontSize="11" fill="#555">{label}:</text>
-                  <text x={bx + 150} y={by + 36 + ri * 18} fontSize="11" fontWeight="600" fill="#111" textAnchor="end">{val}</text>
+                  <text x={bx + bw - 12} y={by + 36 + ri * 18} fontSize="11" fontWeight="600" fill="#111" textAnchor="end">{val}</text>
                 </g>
               ))}
             </g>
