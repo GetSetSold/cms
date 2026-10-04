@@ -1,5 +1,6 @@
 import { createMlsClient, listNormalizedCities, rawCitiesFor, resolveCityName, type GridListing } from "@/lib/mls";
-import { ListingCard } from "@/components/listings/ListingCard";
+import { listingCardsWithAds } from "@/components/listings/ListingGrid";
+import { getSettings } from "@/lib/cms";
 import { ListingsMap } from "@/components/listings/ListingsMap";
 import { Pagination } from "@/components/listings/Pagination";
 import { ViewToggle } from "@/components/listings/ViewToggle";
@@ -97,16 +98,18 @@ export async function ListingsBrowser({
   if (sp.maxPrice) query = query.lte(priceCol, Number(sp.maxPrice));
   query = query.order("OriginalEntryTimestamp", { ascending: false });
 
-  const [{ data: listings, count }, cityList, typeCounts] = await Promise.all([
+  const [{ data: listings, count }, cityList, typeCounts, settings] = await Promise.all([
     query,
     fixedCity ? Promise.resolve([]) : listNormalizedCities(),
     cityVariants ? getCachedTypeCounts(mls, cityVariants) : Promise.resolve({} as Record<string, number>),
+    getSettings(),
   ]);
+  const cards = listingCardsWithAds((listings ?? []) as GridListing[], (settings as { ads?: Parameters<typeof listingCardsWithAds>[1] } | null)?.ads);
 
   const cities = fixedCity ? [] : cityList;
   const total = count ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / perPage));
-  const rows = (listings ?? []) as GridListing[];
+  const rows = (listings ?? []) as GridListing[]; // cards (with ads) built above
 
   const hrefFor = (patch: Record<string, string | number | undefined>) => {
     const merged: Record<string, string> = { ...sp } as Record<string, string>;
@@ -162,7 +165,7 @@ export async function ListingsBrowser({
       ) : view === "split" ? (
         <div className="grid gap-5 lg:grid-cols-2">
           <div className={`grid grid-cols-1 gap-5 ${perRow >= 3 ? "sm:grid-cols-2" : ""}`}>
-            {rows.length ? rows.map((l) => <ListingCard key={l.ListingKey} listing={l} />) : (
+            {cards.length ? cards : (
               <div className="col-span-full rounded-2xl bg-white p-10 text-center text-muted">No listings match your search right now.</div>
             )}
           </div>
@@ -172,7 +175,7 @@ export async function ListingsBrowser({
         </div>
       ) : (
         <div className={`grid grid-cols-1 gap-5 ${GRID_COLS[perRow]}`}>
-          {rows.length ? rows.map((l) => <ListingCard key={l.ListingKey} listing={l} />) : (
+          {cards.length ? cards : (
             <div className="col-span-full rounded-2xl bg-white p-10 text-center text-muted">No listings match your search right now.</div>
           )}
         </div>
