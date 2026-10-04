@@ -4,7 +4,7 @@ import { getSettings, getLogo } from "@/lib/cms";
 import { themeFontHref, themeVars, themeIconOverrideCSS } from "@/lib/theme";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter, MobileCtaBar } from "@/components/site/SiteFooter";
-import { CardArrowButton } from "@/components/site/CardArrowButton";
+import { ProvinceCityExplorer } from "@/components/listings/ProvinceCityExplorer";
 import { citySlug, createMlsClient, normalizeCity } from "@/lib/mls";
 
 export const dynamic = "force-dynamic";
@@ -89,25 +89,7 @@ export default async function ProvincePage({ params }: { params: Promise<{ provi
         <div className="mb-4 text-sm text-muted">
           <a href="/" className="hover:text-ink">Home</a> / {info.name} Real Estate
         </div>
-        <h1 className="font-display text-3xl md:text-4xl">{info.name} Real Estate &amp; MLS® Listings</h1>
-        <p className="mt-3 max-w-3xl leading-relaxed text-muted">
-          Browse {totalListings.toLocaleString()} active MLS® listings across {info.name}. Select a city
-          below to see homes for sale and rent, live market stats, and local market FAQs.
-        </p>
-
-        <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {cities.map((c) => (
-            <a
-              key={c.slug}
-              href={`/${c.slug}-real-estate`}
-              className="group relative rounded-2xl bg-white p-6 pr-16 transition hover:shadow-lg"
-            >
-              <div className="font-display text-xl">{c.city} Real Estate</div>
-              <div className="mt-1 text-sm text-muted">{c.count.toLocaleString()} active listings</div>
-              <CardArrowButton />
-            </a>
-          ))}
-        </div>
+                <ProvinceCityExplorer cities={cities} totalListings={totalListings} />
       </main>
       <SiteFooter settings={settings} />
       <MobileCtaBar settings={settings} />
