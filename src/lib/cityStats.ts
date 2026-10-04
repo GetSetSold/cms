@@ -29,7 +29,16 @@ function median(values: number[]): number | null {
  *  Cached per request. HPI trend data (index MoM/YoY, benchmark price)
  *  slots in here once the /ontario-housing-market/trends function is
  *  ported to the CMS. */
+// Module-level 1h cache — the paginated scan fetches up to N rows per 1000.
+// Without this, every page load re-runs the full scan (bandwidth killer on free plan).
+const cityStatsCache = new Map<string, { data: CityStats; expires: number }>();
+const CITY_STATS_TTL = 3600000;
+
 export const getCityStats = cache(async (city: string): Promise<CityStats> => {
+  const key = city.toLowerCase();
+  const hit = cityStatsCache.get(key);
+  if (hit && Date.now() < hit.expires) return hit.data;
+
   const mls = createMlsClient();
   const variants = await rawCitiesFor(city);
   const rows: GridRow[] = [];
@@ -58,7 +67,7 @@ export const getCityStats = cache(async (city: string): Promise<CityStats> => {
     typeCounts.set(t, (typeCounts.get(t) ?? 0) + 1);
   }
 
-  return {
+  const result: CityStats = {
     city,
     activeCount: rows.length,
     saleCount: salePrices.length,
@@ -70,6 +79,8 @@ export const getCityStats = cache(async (city: string): Promise<CityStats> => {
       .sort((a, b) => b.count - a.count)
       .slice(0, 6),
   };
+  cityStatsCache.set(key, { data: result, expires: Date.now() + CITY_STATS_TTL });
+  return result;
 });
 
 export function formatPrice(n: number | null): string {
