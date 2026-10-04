@@ -127,6 +127,7 @@ function BocChart({ points, decisions, range, visible, onToggle }: {
   visible: { target: boolean; bank: boolean; prime: boolean; cpi: boolean; holds: boolean };
   onToggle: (k: "target" | "bank" | "prime" | "cpi" | "holds") => void;
 }) {
+  const [hover, setHover] = useState<number | null>(null);
   const years = range === "all" ? 99 : parseInt(range);
   const cutoff = new Date(); cutoff.setFullYear(cutoff.getFullYear() - years);
   const pts = points.filter((p) => new Date(p.m + "-01T00:00:00") >= cutoff);
@@ -220,6 +221,44 @@ function BocChart({ points, decisions, range, visible, onToggle }: {
             {new Date(p.m + "-01T00:00:00").toLocaleDateString("en-CA", { month: "short", year: "2-digit" })}
           </text>
         ) : null)}
+        {pts.map((p, i) => (
+          <rect
+            key={"h" + p.m}
+            x={px(i) - Math.max(4, (CHART_W - 110) / pts.length / 2)}
+            y={14}
+            width={Math.max(8, (CHART_W - 110) / pts.length)}
+            height={CHART_H - 56}
+            fill="transparent"
+            onMouseEnter={() => setHover(i)}
+            onMouseLeave={() => setHover(null)}
+          />
+        ))}
+        {hover !== null && pts[hover] && (() => {
+          const p = pts[hover];
+          const rows: [string, string, string][] = [];
+          if (visible.target && p.target !== null) rows.push(["Target Rate", p.target.toFixed(2) + "%", "#111111"]);
+          if (visible.bank && p.bank !== null) rows.push(["Bank Rate", p.bank.toFixed(2) + "%", "#1A6B8A"]);
+          if (visible.prime && p.prime !== null) rows.push(["Prime Rate", p.prime.toFixed(2) + "%", "#2E86AB"]);
+          if (visible.cpi && p.cpi !== null) rows.push(["CPI Inflation", p.cpi.toFixed(2) + "%", "#f59e0b"]);
+          const bx = Math.min(Math.max(px(hover) - 80, 48), CHART_W - 210);
+          const by = 20;
+          const bh = 30 + rows.length * 18;
+          return (
+            <g pointerEvents="none">
+              <rect x={bx} y={by} width="162" height={bh} rx="8" fill="#fff" stroke="#e5e7eb" />
+              <text x={bx + 12} y={by + 20} fontSize="12" fontWeight="700" fill="#111">
+                {new Date(p.m + "-01T00:00:00").toLocaleDateString("en-CA", { month: "short", year: "numeric" })}
+              </text>
+              {rows.map(([label, val, color], ri) => (
+                <g key={label}>
+                  <circle cx={bx + 16} cy={by + 32 + ri * 18} r="3.5" fill={color} />
+                  <text x={bx + 26} y={by + 36 + ri * 18} fontSize="11" fill="#555">{label}:</text>
+                  <text x={bx + 150} y={by + 36 + ri * 18} fontSize="11" fontWeight="600" fill="#111" textAnchor="end">{val}</text>
+                </g>
+              ))}
+            </g>
+          );
+        })()}
       </svg>
     </div>
   );
@@ -329,6 +368,16 @@ export function BocTracker() {
   const stress = target !== null ? Math.max(target + 2, 5.25) : null;
   const prime = banks?.bankPrime ?? rates?.prime ?? null;
   const lastChange = changes.length > 0 ? changes[changes.length - 1] : null;
+  const today0 = new Date(); today0.setHours(0, 0, 0, 0);
+  const meetingsHeld = lastChange
+    ? BOC_SCHEDULE.filter((s) => {
+        const d = new Date(s + "T00:00:00");
+        return d > new Date(lastChange.date + "T00:00:00") && d <= today0;
+      }).length
+    : 0;
+  const daysSteady = lastChange
+    ? Math.max(0, Math.floor((today0.getTime() - new Date(lastChange.date + "T00:00:00").getTime()) / 86400000))
+    : 0;
 
   return (
     <div>
@@ -336,11 +385,19 @@ export function BocTracker() {
       <div className="mt-8">
         <BlockHead eyebrow="Live Rates" heading="Current Bank of Canada Rates" sub="Real-time policy interest rates & historical trends" />
         <section aria-label="Current Bank of Canada interest rates" className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
-          <RateCard label="Target Overnight Rate" value={fmtRate(target)} sub="Key policy rate" accent="#111111" loading={loading}
+          <RateCard label="Target Overnight Rate" value={fmtRate(target)}
+            sub={daysSteady > 0 ? `Key policy rate \u00b7 ${daysSteady} days steady` : "Key policy rate"}
+            accent="#111111" loading={loading}
             badge={lastChange ? (
-              <span className={`mt-1 inline-flex items-center gap-1 rounded px-2 py-0.5 text-[11px] font-semibold ${lastChange.direction === "up" ? "bg-red-50 text-red-600" : "bg-emerald-50 text-emerald-600"}`}>
-                {lastChange.direction === "up" ? "▲" : "▼"} {lastChange.direction === "up" ? "+" : "−"}{lastChange.change.toFixed(2)}%
-              </span>
+              meetingsHeld > 0 ? (
+                <span className="mt-1 inline-flex items-center gap-1 rounded bg-sky-50 px-2 py-0.5 text-[11px] font-semibold text-sky-700">
+                  Held {meetingsHeld}x since last change
+                </span>
+              ) : (
+                <span className={`mt-1 inline-flex items-center gap-1 rounded px-2 py-0.5 text-[11px] font-semibold ${lastChange.direction === "up" ? "bg-red-50 text-red-600" : "bg-emerald-50 text-emerald-600"}`}>
+                  {lastChange.direction === "up" ? "▲" : "▼"} {lastChange.direction === "up" ? "+" : "−"}{lastChange.change.toFixed(2)}%
+                </span>
+              )
             ) : undefined} />
           <RateCard label="Bank Rate" value={fmtRate(rates?.bank ?? null)} sub="Target + 0.25%" accent="#1A6B8A" loading={loading} />
           <RateCard label="Prime Rate" value={fmtRate(prime)} sub="Major bank prime" accent="#2E86AB" loading={loading} />
