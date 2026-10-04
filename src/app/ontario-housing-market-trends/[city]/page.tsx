@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
   if (!market) return { title: "Not found" };
   const title = await seoTitle(`${market.name} Housing Market Trends & HPI`);
   const description = `${market.name} benchmark price ${fmtMoney(market.latest.compositeBenchmark)}, ${fmtPct(market.latest.yoyChange)} year over year. Full MLS® Home Price Index trends, charts and market insights.`;
-  const ogImage = await getCityOgImage(market.name).catch(() => null);
+  const ogImage = await getCityOgImage(market.name).catch(() => undefined);
   return {
     title,
     description,
