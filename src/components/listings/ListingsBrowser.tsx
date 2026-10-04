@@ -3,7 +3,6 @@ import { ListingCard } from "@/components/listings/ListingCard";
 import { ListingsMap } from "@/components/listings/ListingsMap";
 import { Pagination } from "@/components/listings/Pagination";
 import { ViewToggle } from "@/components/listings/ViewToggle";
-import { PerPageControl } from "@/components/listings/PerPageControl";
 import { ListingFilters } from "@/components/listings/ListingFilters";
 
 export type ListingsSearchParams = { city?: string; type?: string; beds?: string; baths?: string; homeType?: string; minPrice?: string; maxPrice?: string; page?: string; perPage?: string; perRow?: string; view?: string };
@@ -32,8 +31,8 @@ export async function ListingsBrowser({
   const mls = createMlsClient();
 
   const view = (["grid", "split", "map"].includes(sp.view ?? "") ? sp.view : "grid") as "grid" | "split" | "map";
-  const perRow = [2, 3, 4].includes(Number(sp.perRow)) ? Number(sp.perRow) : 4;
-  const perPage = [8, 12, 24, 48].includes(Number(sp.perPage)) ? Number(sp.perPage) : 12;
+  const perRow = 4;
+  const perPage = 12;
   const page = Math.max(1, Number(sp.page) || 1);
   const from = (page - 1) * perPage;
 
@@ -105,16 +104,16 @@ export async function ListingsBrowser({
         )}
       </div>
 
-      <ListingFilters
-        basePath={basePath}
-        sp={sp as Record<string, string | undefined>}
-        showCitySearch={!fixedCity}
-        cities={cities}
-      />
-
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <ViewToggle view={view} hrefFor={(v) => hrefFor({ view: v })} />
-        {view !== "map" ? <PerPageControl basePath={basePath} currentParams={sp as Record<string, string>} perRow={perRow} perPage={perPage} /> : null}
+        <ListingFilters
+          basePath={basePath}
+          sp={sp as Record<string, string | undefined>}
+          showCitySearch={!fixedCity}
+          cities={cities}
+        />
+        <div className="hidden md:block">
+          <ViewToggle view={view} hrefFor={(v) => hrefFor({ view: v })} />
+        </div>
       </div>
 
       {view === "map" ? (
