@@ -126,14 +126,16 @@ export async function ListingsBrowser({
         )}
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <ListingFilters
-          basePath={basePath}
-          sp={sp as Record<string, string | undefined>}
-          showCitySearch={!fixedCity}
-          cities={cities}
-          typeCounts={typeCounts}
-        />
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <ListingFilters
+            basePath={basePath}
+            sp={sp as Record<string, string | undefined>}
+            showCitySearch={!fixedCity}
+            cities={cities}
+            typeCounts={typeCounts}
+          />
+        </div>
         <div className="hidden shrink-0 md:block">
           <ViewToggle view={view} hrefFor={(v) => hrefFor({ view: v })} />
         </div>
