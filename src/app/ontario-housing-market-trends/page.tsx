@@ -38,7 +38,7 @@ export default async function TrendsOverviewPage() {
   const updated = markets[0]?.lastUpdated ?? "";
 
   return (
-    <div className="min-h-screen bg-white text-ink" style={themeVars(settings)}>
+    <div className="min-h-screen bg-ground text-ink" style={themeVars(settings)}>
       {themeFontHref(settings) ? <link rel="stylesheet" href={themeFontHref(settings)} /> : null}
       <style dangerouslySetInnerHTML={{ __html: themeIconOverrideCSS(settings) }} />
       <SiteHeader settings={settings} logo={logo} />
@@ -82,7 +82,7 @@ export default async function TrendsOverviewPage() {
                 </div>
                 <span
                   aria-hidden
-                  className="absolute bottom-3 right-3 flex h-8 w-8 items-center justify-center rounded-full bg-black text-white"
+                  className="absolute bottom-3 right-3 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white"
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M7 17L17 7M7 7h10v10" />
