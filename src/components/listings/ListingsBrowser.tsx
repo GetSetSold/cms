@@ -54,7 +54,11 @@ export async function ListingsBrowser({
 
   const view = (["grid", "split", "map"].includes(sp.view ?? "") ? sp.view : "grid") as "grid" | "split" | "map";
   const perRow = 4;
-  const perPage = 12;
+  // Fetch settings first: if the ad card shows, use 11 listings so 11 + 1 ad = 12 cards
+  const _settings = await getSettings();
+  const _ads = (_settings as { ads?: import("./ListingGrid").AdConfig } | null)?.ads;
+  const _showAd = !!(_ads?.grid_ad_enabled && _ads?.grid_ad_code?.includes("data-ad-client"));
+  const perPage = _showAd && view !== "map" ? 11 : 12;
   const page = Math.max(1, Number(sp.page) || 1);
   const from = (page - 1) * perPage;
 
@@ -98,13 +102,12 @@ export async function ListingsBrowser({
   if (sp.maxPrice) query = query.lte(priceCol, Number(sp.maxPrice));
   query = query.order("OriginalEntryTimestamp", { ascending: false });
 
-  const [{ data: listings, count }, cityList, typeCounts, settings] = await Promise.all([
+  const [{ data: listings, count }, cityList, typeCounts] = await Promise.all([
     query,
     fixedCity ? Promise.resolve([]) : listNormalizedCities(),
     cityVariants ? getCachedTypeCounts(mls, cityVariants) : Promise.resolve({} as Record<string, number>),
-    getSettings(),
   ]);
-  const cards = listingCardsWithAds((listings ?? []) as GridListing[], (settings as { ads?: Parameters<typeof listingCardsWithAds>[1] } | null)?.ads);
+  const cards = listingCardsWithAds((listings ?? []) as GridListing[], _ads);
 
   const cities = fixedCity ? [] : cityList;
   const total = count ?? 0;
