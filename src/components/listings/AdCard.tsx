@@ -45,20 +45,23 @@ export function AdCard({ code }: { code: string }) {
   if (!client || !slot) return null;
 
   return (
-    <div className="relative flex flex-col overflow-hidden rounded-2xl border border-line bg-white">
-      <div className="flex min-h-[280px] flex-1 items-center justify-center p-4">
+    <div className="relative flex flex-col overflow-hidden rounded-[var(--radius-lg)] border-[length:var(--border-card-width)] border-line bg-white shadow-[var(--shadow-card)]">
+      <div className="relative aspect-[4/3] overflow-hidden bg-soft">
         <ins
           ref={ref}
-          className="adsbygoogle"
-          style={{ display: "block", width: "100%", minHeight: 250 }}
+          className="adsbygoogle absolute inset-0"
+          style={{ display: "block", width: "100%", height: "100%" }}
           data-ad-client={client}
           data-ad-slot={slot}
           data-ad-format="auto"
           data-full-width-responsive="true"
         />
+        <span className="absolute left-3 top-3 rounded bg-black/60 px-2 py-0.5 text-[10px] uppercase tracking-wide text-white">
+          Ad
+        </span>
       </div>
-      <div className="border-t border-line px-4 py-2">
-        <span className="text-[10px] uppercase tracking-wide text-muted">Advertisement</span>
+      <div className="flex flex-1 items-center justify-center p-4">
+        <span className="text-xs text-muted">Advertisement</span>
       </div>
     </div>
   );
