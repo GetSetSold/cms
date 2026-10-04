@@ -55,9 +55,13 @@ function cardHtml(l: GridListing): string {
   const price = isSale(l)
     ? (l.ListPrice != null ? `$${l.ListPrice.toLocaleString()}` : "—")
     : (l.TotalActualRent != null ? `$${l.TotalActualRent.toLocaleString()}/mo` : "—");
+  const sale = isSale(l);
+  const badge = sale ? "For Sale" : "For Rent";
+  const badgeBg = sale ? "#111" : "#0066CC";
   return `
     <a href="${href}" target="_blank" rel="noopener" style="display:block;width:230px;position:relative;background:#fff;text-decoration:none;color:inherit;font-family:Inter,sans-serif;border:0;border-radius:0;box-shadow:none;">
       ${img}
+      <span style="position:absolute;top:8px;left:8px;background:${badgeBg};color:#fff;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:4px 8px;border-radius:4px;">${badge}</span>
       <div style="padding:10px 12px 12px;">
         <div style="font-weight:700;font-size:16px;color:#111;">${price}</div>
         ${specs ? `<div style="font-size:12px;color:#555;margin-top:3px;">${specs}</div>` : ""}
@@ -79,6 +83,7 @@ export function ListingsMap({ listings }: { listings: GridListing[] }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
+  const popupRef = useRef<any>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -106,7 +111,8 @@ export function ListingsMap({ listings }: { listings: GridListing[] }) {
         el.style.cssText = `display:inline-flex;align-items:center;height:28px;padding:0 10px;border:0;border-radius:999px;background:${sale ? "#111" : "#0066CC"};color:#fff;font:700 12px Inter,sans-serif;box-shadow:0 2px 8px rgba(20,20,43,.25);white-space:nowrap;cursor:pointer;`;
         el.addEventListener("click", (e) => {
           e.stopPropagation();
-          new maplibregl.Popup({ offset: 12, closeButton: false, maxWidth: "250px", className: "gss-popup" })
+          popupRef.current?.remove();
+          popupRef.current = new maplibregl.Popup({ offset: 12, closeButton: false, maxWidth: "250px", className: "gss-popup" })
             .setLngLat([l.Longitude, l.Latitude])
             .setHTML(popupCss() + cardHtml(l))
             .addTo(map);
