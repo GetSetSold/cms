@@ -16,6 +16,8 @@ const nextConfig: NextConfig = {
       { source: "/listings/city/:slug", destination: "/:slug-real-estate", permanent: true },
       // Legacy HPI trends URLs -> new flat trends URLs (301)
       { source: "/ontario-housing-market/trends", destination: "/ontario-housing-market-trends", permanent: true },
+      // Legacy BoC rates URL -> CMS guide URL (301)
+      { source: "/bank-of-canada-rates", destination: "/bank-of-canada-rates-guide", permanent: true },
     ];
   },
   async rewrites() {
