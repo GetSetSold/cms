@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { resolveHood, getHoodStats, getHoodListings } from "@/lib/neighbourhoods";
+import { resolveHood, getHoodStats, getHoodListings, getHoodTypeCounts } from "@/lib/neighbourhoods";
 import { citySlug } from "@/lib/mls";
 import { getSettings, getLogo } from "@/lib/cms";
 import { themeFontHref, themeVars, themeIconOverrideCSS } from "@/lib/theme";
@@ -8,6 +8,8 @@ import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter, MobileCtaBar } from "@/components/site/SiteFooter";
 import { ListingCard } from "@/components/listings/ListingCard";
 import { ListingFilters } from "@/components/listings/ListingFilters";
+import { ViewToggle } from "@/components/listings/ViewToggle";
+import { ListingsMap } from "@/components/listings/ListingsMap";
 import { Pagination } from "@/components/listings/Pagination";
 import { CityStatsSection } from "@/components/listings/CityStatsSection";
 import { CityEditorial } from "@/components/listings/CityEditorial";
@@ -36,7 +38,7 @@ export default async function NeighbourhoodPage({
   searchParams,
 }: {
   params: Promise<Params>;
-  searchParams: Promise<{ page?: string; type?: string; minPrice?: string; maxPrice?: string; beds?: string; baths?: string; homeType?: string }>;
+  searchParams: Promise<{ page?: string; type?: string; minPrice?: string; maxPrice?: string; beds?: string; baths?: string; homeType?: string; view?: string }>;
 }) {
   const { city: cityParam, hood: hoodParam } = await params;
   const sp = await searchParams;
@@ -46,6 +48,19 @@ export default async function NeighbourhoodPage({
   const page = Math.max(1, Number(sp.page) || 1);
   const cityUrl = `/${citySlug(hood.city)}-real-estate`;
   const hoodUrl = `${cityUrl}/${hood.hoodSlug}`;
+  const view = (["grid", "split", "map"].includes(sp.view ?? "") ? sp.view : "grid") as "grid" | "split" | "map";
+
+  const hrefFor = (patch: Record<string, string | undefined>) => {
+    const merged: Record<string, string> = {};
+    for (const [k, v] of Object.entries(sp)) if (v) merged[k] = v as string;
+    for (const [k, v] of Object.entries(patch)) {
+      if (!v) delete merged[k];
+      else merged[k] = v;
+    }
+    if (!("page" in patch)) delete merged.page;
+    const qs = new URLSearchParams(merged).toString();
+    return `${hoodUrl}${qs ? `?${qs}` : ""}`;
+  };
 
   const filters = {
     type: sp.type,
@@ -55,10 +70,11 @@ export default async function NeighbourhoodPage({
     baths: sp.baths,
     homeType: sp.homeType,
   };
-  const [settings, stats, { listings, total }] = await Promise.all([
+  const [settings, stats, { listings, total }, typeCounts] = await Promise.all([
     getSettings(),
     getHoodStats(hood.city, hood.hood),
-    getHoodListings(hood.city, hood.hood, page, PER_PAGE, filters),
+    getHoodListings(hood.city, hood.hood, view === "map" ? 1 : page, view === "map" ? 100 : PER_PAGE, filters),
+    getHoodTypeCounts(hood.city, hood.hood),
   ]);
   const logo = await getLogo(settings);
   const themeVars_ = themeVars(settings);
@@ -101,23 +117,44 @@ export default async function NeighbourhoodPage({
         </p>
 
         <div className="mt-6">
-          <ListingFilters basePath={hoodUrl} sp={sp as Record<string, string | undefined>} />
+          <ListingFilters basePath={hoodUrl} sp={sp as Record<string, string | undefined>} typeCounts={typeCounts} />
         </div>
 
-        {listings.length > 0 ? (
-          <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="mt-6 flex items-center justify-end">
+          <div className="hidden md:block">
+            <ViewToggle view={view} hrefFor={(v) => hrefFor({ view: v === "grid" ? undefined : v })} />
+          </div>
+        </div>
+
+        {view === "map" ? (
+          <div className="mt-4 h-[70vh] min-h-[480px]">
+            <ListingsMap listings={listings} />
+          </div>
+        ) : view === "split" ? (
+          <div className="mt-4 grid gap-5 lg:grid-cols-2">
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+              {listings.length ? listings.map((l) => <ListingCard key={l.ListingKey} listing={l} />) : (
+                <p className="col-span-full rounded-2xl bg-white p-6 text-muted">No listings found in {hood.hood} right now.</p>
+              )}
+            </div>
+            <div className="h-[70vh] min-h-[480px] lg:sticky lg:top-24">
+              <ListingsMap listings={listings} />
+            </div>
+          </div>
+        ) : listings.length > 0 ? (
+          <div className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {listings.map((l) => (
               <ListingCard key={l.ListingKey} listing={l} />
             ))}
           </div>
         ) : (
-          <p className="mt-8 rounded-2xl bg-white p-6 text-muted">
+          <p className="mt-4 rounded-2xl bg-white p-6 text-muted">
             No listings found in {hood.hood} right now — check back soon or browse{" "}
             <a href={cityUrl} className="font-medium text-primary">all of {hood.city}</a>.
           </p>
         )}
 
-        {totalPages > 1 ? (
+        {view !== "map" && totalPages > 1 ? (
           <div className="mt-8">
             <Pagination page={page} totalPages={totalPages} hrefFor={hrefFor} />
           </div>
