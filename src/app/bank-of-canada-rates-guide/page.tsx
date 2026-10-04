@@ -134,11 +134,11 @@ export default async function BocRatesGuidePage() {
         </article>
 
         {/* Info blocks */}
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          {INFO_BLOCKS.map(([title, body], i) => (
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+          {INFO_BLOCKS.map(([title, body]) => (
             <article
               key={title}
-              className={`rounded-lg border border-line bg-white p-5 shadow-sm ${i === INFO_BLOCKS.length - 1 ? "md:col-span-2" : ""}`}
+              className="rounded-lg border border-line bg-white p-5 shadow-sm"
             >
               <h3 className="mb-2 text-[13px] font-semibold text-ink">{title}</h3>
               <p className="text-[14px] leading-7 text-muted">{body}</p>
@@ -208,9 +208,15 @@ export default async function BocRatesGuidePage() {
         </div>
         <article className="rounded-lg border border-line bg-white px-6 py-2 shadow-sm">
           {FAQS.map((f, i) => (
-            <details key={f.q} className={`py-3.5 ${i > 0 ? "border-t border-neutral-100" : ""}`} open={i === 0}>
-              <summary className="cursor-pointer font-semibold text-primary">{f.q}</summary>
-              <p className="mt-2 text-[14px] text-muted">{f.a}</p>
+            <details key={f.q} className={`group py-3.5 ${i > 0 ? "border-t border-line" : ""}`} open={i === 0}>
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-semibold text-ink [&::-webkit-details-marker]:hidden">
+                <span>{f.q}</span>
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-soft text-lg leading-none text-ink">
+                  <span className="group-open:hidden" aria-hidden>+</span>
+                  <span className="hidden group-open:block" aria-hidden>−</span>
+                </span>
+              </summary>
+              <p className="mt-2 pr-12 text-[14px] text-muted">{f.a}</p>
             </details>
           ))}
         </article>
