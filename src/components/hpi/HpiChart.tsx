@@ -69,7 +69,7 @@ export function HpiChart({
           return (
             <g key={g}>
               <line x1={PAD_L} y1={y} x2={W - PAD_R} y2={y} stroke="#e8e8e8" strokeWidth={1} />
-              <text x={PAD_L - 8} y={y + 4} textAnchor="end" fontSize={10} fill="#999">
+              <text x={PAD_L - 8} y={y + 4} textAnchor="end" fontSize={10} fill="#333">
                 {fmtMoneyShort(gv)}
               </text>
             </g>
@@ -77,7 +77,7 @@ export function HpiChart({
         })}
         {points.map((p, i) =>
           labelIdx.has(i) ? (
-            <text key={i} x={px(i)} y={H - 8} textAnchor="middle" fontSize={10} fill="#999">
+            <text key={i} x={px(i)} y={H - 8} textAnchor="middle" fontSize={10} fill="#333">
               {monthShort(p.month)}
             </text>
           ) : null
@@ -90,6 +90,10 @@ export function HpiChart({
             <circle cx={px(hover)} cy={py(points[hover].value)} r={4.5} fill="#111" />
           </g>
         )}
+        {/* solid dot on every data point */}
+        {points.map((p, i) => (
+          <circle key={i} cx={px(i)} cy={py(p.value)} r={2.5} fill="#111" />
+        ))}
         {/* latest point marker */}
         <circle cx={px(n - 1)} cy={py(last.value)} r={4.5} fill="#111" />
         <text x={px(n - 1) - 8} y={py(last.value) - 12} textAnchor="end" fontSize={12} fontWeight={700} fill="#111">
