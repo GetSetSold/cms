@@ -74,7 +74,8 @@ function cardHtml(l: GridListing): string {
 /** Strip the default maplibre popup chrome for a borderless card. */
 function popupCss(): string {
   return `<style>
-    .gss-popup .maplibregl-popup-content{background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;padding:0!important;}
+    .gss-popup .maplibregl-popup-content{background:transparent!important;border:0!important;outline:0!important;border-radius:0!important;box-shadow:none!important;padding:0!important;}
+    .gss-popup a{outline:0!important;border:0!important;}
     .gss-popup .maplibregl-popup-tip{display:none!important;}
   </style>`;
 }
