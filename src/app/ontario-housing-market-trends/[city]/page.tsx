@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   getHpiMarket, getHpiMarkets, computeInsights, ontarioAverageBenchmark,
+  availablePropertyTypes,
   fmtMoney, fmtPct, pctTone,
 } from "@/lib/hpi";
 import { seoTitle } from "@/lib/seo";
@@ -42,14 +43,6 @@ function toneCls(v: number) {
   return t === "neg" ? "text-red-700" : t === "pos" ? "text-green-700" : "text-ink";
 }
 
-const PT_ROWS = [
-  ["singleFamily", "Single Family"],
-  ["oneStorey", "One Storey"],
-  ["twoStorey", "Two Storey"],
-  ["townhouse", "Townhouse"],
-  ["apartment", "Apartment / Condo"],
-] as const;
-
 export default async function TrendsDetailPage({ params }: { params: Promise<Params> }) {
   const { city } = await params;
   const market = await getHpiMarket(city);
@@ -75,7 +68,7 @@ export default async function TrendsDetailPage({ params }: { params: Promise<Par
     { label: "Price Volatility", value: ins.volatility, sub: `std dev of monthly changes: ${ins.volatilityStd}%` },
     { label: "Affordability vs Ontario", value: affordPct != null ? `${affordPct}%` : "—", sub: ontAvg ? `Ontario avg ${fmtMoney(ontAvg)}` : "" },
     { label: "Historical Low (Trough)", value: fmtMoney(ins.trough), sub: `${ins.troughMonth} · ${fmtPct(ins.aboveTroughPct)} above low` },
-    { label: "Condo vs House Gap", value: fmtMoney(ins.condoHouseGap), sub: "single-family costs more than condos" },
+    { label: "Condo vs House Gap", value: ins.condoHouseGap != null ? fmtMoney(ins.condoHouseGap) : "—", sub: "single-family costs more than condos" },
     { label: "Best Performer", value: `${ins.bestPerformer.label} ${fmtPct(ins.bestPerformer.yoy)}`, sub: `worst: ${ins.worstPerformer.label} ${fmtPct(ins.worstPerformer.yoy)}` },
     { label: "Market Momentum Score", value: `${ins.momentumScore}/10`, sub: `${ins.momentumLabel} — trend, volatility & conditions` },
   ];
@@ -190,10 +183,9 @@ export default async function TrendsDetailPage({ params }: { params: Promise<Par
         <h2 className="mt-10 text-xl font-bold">Property Type Breakdown</h2>
         <p className="mb-4 text-sm text-muted">Latest benchmark prices by type</p>
         <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
-          {PT_ROWS.map(([k, label]) => {
-            const pt = L.propertyTypes[k];
+          {availablePropertyTypes(market).map(({ key, label, data: pt }) => {
             return (
-              <div key={k} className="rounded-xl border border-line bg-white p-4">
+              <div key={key} className="rounded-xl border border-line bg-white p-4">
                 <span className="block text-xs text-muted">{label}</span>
                 <b className="mt-1 block text-lg font-bold">{fmtMoney(pt.benchmark)}</b>
                 <span className="mt-0.5 block text-xs text-muted">HPI {pt.hpi}</span>
@@ -236,14 +228,13 @@ export default async function TrendsDetailPage({ params }: { params: Promise<Par
                 <td className="px-4 py-3">—</td>
                 <td className="px-4 py-3 text-right">—</td>
               </tr>
-              {PT_ROWS.map(([k, label]) => {
-                const pt = L.propertyTypes[k];
+              {availablePropertyTypes(market).map(({ key, label, data: pt }, idx, arr) => {
                 const sparkVals = market.history12m
-                  .map((h) => h[`${k}Benchmark` as keyof typeof h] as number | undefined)
+                  .map((h) => h[`${key}Benchmark` as keyof typeof h] as number | undefined)
                   .filter((v): v is number => typeof v === "number");
-                const rank = [...PT_ROWS].sort((a, b) => L.propertyTypes[b[0]].yoyChange - L.propertyTypes[a[0]].yoyChange).findIndex(([kk]) => kk === k) + 1;
+                const rank = [...arr].sort((a, b) => b.data.yoyChange - a.data.yoyChange).findIndex((r) => r.key === key) + 1;
                 return (
-                  <tr key={k} className="border-b border-line last:border-0">
+                  <tr key={key} className="border-b border-line last:border-0">
                     <td className="px-4 py-3">{label}</td>
                     <td className="px-4 py-3 text-right font-medium">{fmtMoney(pt.benchmark)}</td>
                     <td className="px-4 py-3 text-right">{pt.hpi}</td>
