@@ -123,7 +123,7 @@ export interface HpiInsights {
   y5Pct: number | null;
   volatility: "Low" | "Medium" | "High";
   volatilityStd: number;
-  condoHouseGap: number;
+  condoHouseGap: number | null;
   bestPerformer: { label: string; yoy: number };
   worstPerformer: { label: string; yoy: number };
   momentumScore: number; // 0-10
@@ -176,8 +176,11 @@ export function computeInsights(market: HpiMarket): HpiInsights {
   const volatility = std < 1.5 ? "Low" : std < 3 ? "Medium" : "High";
 
   const pts = market.latest.propertyTypes;
-  const ranked = PT_LABELS.map(([k, label]) => ({ label, yoy: pts[k].yoyChange })).sort((a, b) => b.yoy - a.yoy);
-  const condoHouseGap = pts.singleFamily.benchmark - pts.apartment.benchmark;
+  const available = PT_LABELS.filter(([k]) => pts[k] != null);
+  const ranked = available.map(([k, label]) => ({ label, yoy: (pts[k] as HpiPropertyType).yoyChange })).sort((a, b) => b.yoy - a.yoy);
+  const condoHouseGap = pts.singleFamily != null && pts.apartment != null
+    ? pts.singleFamily.benchmark - pts.apartment.benchmark
+    : null;
 
   // Momentum: trend direction (40%) + low volatility (30%) + seller-leaning condition (30%)
   const yoy = market.latest.yoyChange;
@@ -197,7 +200,8 @@ export function computeInsights(market: HpiMarket): HpiInsights {
     y5Pct: m60 != null ? pctChange(latest, m60) : null,
     volatility, volatilityStd: Math.round(std * 100) / 100,
     condoHouseGap,
-    bestPerformer: ranked[0], worstPerformer: ranked[ranked.length - 1],
+    bestPerformer: ranked[0] ?? { label: "—", yoy: 0 },
+    worstPerformer: ranked[ranked.length - 1] ?? { label: "—", yoy: 0 },
     momentumScore, momentumLabel,
   };
 }
@@ -214,3 +218,18 @@ export async function ontarioAverageBenchmark(): Promise<number | null> {
 
 export { fmtMoney, fmtMoneyShort, fmtPct, pctTone, monthShort } from "./hpi-format";
 export type { HpiLatest, HpiMarket, HpiMonth, HpiPropertyType } from "./hpi-format";
+
+export const PT_ROWS = [
+  ["singleFamily", "Single Family"],
+  ["oneStorey", "One Storey"],
+  ["twoStorey", "Two Storey"],
+  ["townhouse", "Townhouse"],
+  ["apartment", "Apartment / Condo"],
+] as const;
+
+/** Property-type rows actually present in a market's data. */
+export function availablePropertyTypes(market: HpiMarket): { key: (typeof PT_ROWS)[number][0]; label: string; data: HpiPropertyType }[] {
+  return PT_ROWS.filter(([k]) => market.latest.propertyTypes[k] != null).map(([k, label]) => ({
+    key: k, label, data: market.latest.propertyTypes[k] as HpiPropertyType,
+  }));
+}
