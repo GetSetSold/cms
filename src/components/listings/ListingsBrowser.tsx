@@ -4,8 +4,9 @@ import { ListingsMap } from "@/components/listings/ListingsMap";
 import { Pagination } from "@/components/listings/Pagination";
 import { ViewToggle } from "@/components/listings/ViewToggle";
 import { PerPageControl } from "@/components/listings/PerPageControl";
+import { ListingFilters } from "@/components/listings/ListingFilters";
 
-export type ListingsSearchParams = { city?: string; type?: string; beds?: string; page?: string; perPage?: string; perRow?: string; view?: string };
+export type ListingsSearchParams = { city?: string; type?: string; beds?: string; baths?: string; homeType?: string; minPrice?: string; maxPrice?: string; page?: string; perPage?: string; perRow?: string; view?: string };
 
 export const DEFAULT_CITY = "Cayuga"; // keeps the very first load from ever querying all ~50k rows
 const ALL_CITIES_SENTINEL = "all";
@@ -58,6 +59,13 @@ export async function ListingsBrowser({
   if (sp.type === "sale") query = query.not("ListPrice", "is", null);
   if (sp.type === "rent") query = query.is("ListPrice", null).not("TotalActualRent", "is", null);
   if (sp.beds) query = query.gte("BedroomsTotal", Number(sp.beds));
+  if (sp.baths) query = query.gte("BathroomsTotalInteger", Number(sp.baths));
+  if (sp.homeType === "house") query = query.eq("StructureTypeText", "House");
+  else if (sp.homeType === "condo") query = query.eq("StructureTypeText", "Apartment");
+  else if (sp.homeType === "townhouse") query = query.eq("StructureTypeText", "Row / Townhouse");
+  const priceCol = sp.type === "rent" ? "TotalActualRent" : "ListPrice";
+  if (sp.minPrice) query = query.gte(priceCol, Number(sp.minPrice));
+  if (sp.maxPrice) query = query.lte(priceCol, Number(sp.maxPrice));
   query = query.order("OriginalEntryTimestamp", { ascending: false });
 
   const [{ data: listings, count }, cityList] = await Promise.all([
@@ -97,27 +105,12 @@ export async function ListingsBrowser({
         )}
       </div>
 
-      {!fixedCity ? (
-        <form className="flex flex-col gap-3 rounded-2xl bg-white p-3 shadow-[0_8px_30px_rgba(20,20,43,0.06)] sm:flex-row sm:items-center" action={basePath}>
-          <label className="flex flex-1 items-center gap-2 rounded-xl bg-ground px-3.5 py-2.5">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0 text-primary" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
-            <input name="city" list="cities" defaultValue={effectiveCity ?? ""} placeholder="Search city or neighbourhood" className="w-full border-0 bg-transparent p-0 text-sm outline-none placeholder:text-muted" />
-            <datalist id="cities">{cities.map((c) => <option key={c} value={c} />)}</datalist>
-          </label>
-          <div className="flex flex-wrap gap-2">
-            <select name="type" defaultValue={sp.type ?? ""} className="h-11 rounded-xl border border-line bg-white px-3 text-sm">
-              <option value="">Any type</option>
-              <option value="sale">For sale</option>
-              <option value="rent">For rent</option>
-            </select>
-            <select name="beds" defaultValue={sp.beds ?? ""} className="h-11 rounded-xl border border-line bg-white px-3 text-sm">
-              <option value="">Any beds</option>
-              {[1, 2, 3, 4, 5].map((n) => <option key={n} value={n}>{n}+ beds</option>)}
-            </select>
-            <button className="btn-primary h-11 px-6">Search</button>
-          </div>
-        </form>
-      ) : null}
+      <ListingFilters
+        basePath={basePath}
+        sp={sp as Record<string, string | undefined>}
+        showCitySearch={!fixedCity}
+        cities={cities}
+      />
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <ViewToggle view={view} hrefFor={(v) => hrefFor({ view: v })} />
