@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getAnyOgImage, ogImageMeta } from "@/lib/ogImage";
+import { seoTitle } from "@/lib/seo";
 import { notFound } from "next/navigation";
 import { getSettings, getLogo } from "@/lib/cms";
 import { themeFontHref, themeVars, themeIconOverrideCSS } from "@/lib/theme";
@@ -18,7 +19,7 @@ export async function generateMetadata({ params }: { params: Promise<{ province:
   const { province } = await params;
   const info = PROVINCES[province];
   if (!info) return { title: "Not found" };
-  const title = `${info.name} Real Estate & MLS® Listings`;
+  const title = await seoTitle(`${info.name} Real Estate & MLS® Listings`);
   const description = `Browse live MLS® listings across ${info.name}. Explore homes for sale and rent by city, with market stats for every market.`;
   const ogImage = await getAnyOgImage();
   return {
