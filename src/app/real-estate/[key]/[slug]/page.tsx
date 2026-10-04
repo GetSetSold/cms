@@ -41,10 +41,22 @@ export async function generateMetadata({ params }: { params: Promise<{ key: stri
   const listing = await getListing(decodeURIComponent(key));
   if (!listing) return { title: "Listing not found" };
   const title = `${listing.UnparsedAddress ?? listing.ListingKey} — ${priceDisplay(listing)}`;
+  const ogImage = mediaItems(listing.Media)[0]?.MediaURL;
   return {
     title,
     description: (listing.PublicRemarks ?? "").slice(0, 155),
     alternates: { canonical: `/real-estate/${encodeURIComponent(listing.ListingKey)}/${listingSlug(listing)}` },
+    openGraph: {
+      title,
+      description: (listing.PublicRemarks ?? "").slice(0, 155),
+      ...(ogImage ? { images: [{ url: ogImage }] } : {}),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description: (listing.PublicRemarks ?? "").slice(0, 155),
+      ...(ogImage ? { images: [ogImage] } : {}),
+    },
   };
 }
 
