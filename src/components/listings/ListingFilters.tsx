@@ -131,7 +131,7 @@ export function ListingFilters({
   return (
     <>
       {/* Desktop pill bar */}
-      <div className="hidden items-center gap-2 md:flex">
+      <div className="gss-dd-scroll hidden items-center gap-2 overflow-x-auto pb-1 md:flex" style={{ scrollbarWidth: "none" }}>
         <div className="flex shrink-0 rounded-[var(--radius-md)] border border-line bg-white p-1">
           <button onClick={() => go({ type: undefined })} className={`rounded-[var(--radius-md)] px-4 py-1.5 text-sm font-medium ${!sp.type ? "bg-ink text-white" : "text-ink"}`}>
             All
@@ -248,7 +248,7 @@ export function ListingFilters({
         ) : null}
 
         {activeCount > 0 ? (
-          <button onClick={() => go({ type: undefined, minPrice: undefined, maxPrice: undefined, beds: undefined, baths: undefined, homeType: undefined })} className="shrink-0 text-sm font-medium text-muted underline hover:text-ink">
+          <button onClick={() => go({ type: undefined, minPrice: undefined, maxPrice: undefined, beds: undefined, baths: undefined, homeType: undefined })} className="shrink-0 rounded-[var(--radius-md)] border border-line bg-white px-4 py-2 text-sm font-medium text-ink hover:border-ink whitespace-nowrap">
             Clear all
           </button>
         ) : null}
@@ -279,7 +279,7 @@ export function ListingFilters({
             {showCitySearch ? (
               <div className="mb-5">
                 <label className="mb-2 block text-sm font-medium">City</label>
-                <input value={cityQ} onChange={(e) => setCityQ(e.target.value)} list="cities-mobile" placeholder="Search city" className="w-full rounded-xl border border-line px-3 py-2.5 text-sm outline-none focus:border-ink" />
+                <input value={cityQ} onChange={(e) => setCityQ(e.target.value)} list="cities-mobile" placeholder="Search city" className="w-full rounded-[var(--radius-md)] border border-line px-3 py-2.5 text-sm outline-none focus:border-muted" />
                 <datalist id="cities-mobile">{(cities ?? []).map((c) => <option key={c} value={c} />)}</datalist>
               </div>
             ) : null}
