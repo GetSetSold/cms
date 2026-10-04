@@ -232,12 +232,6 @@ export interface HoodFilters {
   homeType?: string;
 }
 
-const HOOD_HOME_TYPE: Record<string, string> = {
-  house: "House",
-  condo: "Apartment",
-  townhouse: "Row / Townhouse",
-};
-
 export async function getHoodListings(
   city: string,
   hood: string,
@@ -264,9 +258,10 @@ export async function getHoodListings(
   else if (f.type === "rent") q = q.is("ListPrice", null).not("TotalActualRent", "is", null);
   if (f.beds) q = q.gte("BedroomsTotal", Number(f.beds));
   if (f.baths) q = q.gte("BathroomsTotalInteger", Number(f.baths));
-  if (f.homeType === "house") q = q.ilike("StructureType", '%"House"%');
-  else if (f.homeType === "condo") q = q.ilike("StructureType", '%"Apartment"%');
-  else if (f.homeType === "townhouse") q = q.ilike("StructureType", "%Townhouse%");
+  if (f.homeType) {
+    const safe = f.homeType.replace(/[^a-zA-Z0-9 /-]/g, "").slice(0, 40);
+    if (safe) q = q.ilike("StructureType", `%"${safe}"%`);
+  }
   const priceCol = f.type === "rent" ? "TotalActualRent" : "ListPrice";
   if (f.minPrice) q = q.gte(priceCol, Number(f.minPrice));
   if (f.maxPrice) q = q.lte(priceCol, Number(f.maxPrice));
@@ -283,4 +278,37 @@ export async function getHoodListings(
       } as GridListing)
   );
   return { listings, total: count ?? 0 };
+}
+
+/** Property-type breakdown for a neighbourhood's filter dropdown. */
+export async function getHoodTypeCounts(city: string, hood: string): Promise<Record<string, number>> {
+  const mls = createMlsClient();
+  const variants = await rawCitiesFor(city);
+  const unknownVariants = await unknownCityVariants();
+  const cities = [...new Set([...variants, ...unknownVariants])];
+  const { data } = await mls
+    .from("property")
+    .select("StructureType")
+    .in("City", cities)
+    .or(`CityRegion.eq.${hood},SubdivisionName.eq.${hood}`)
+    .limit(10000);
+  const counts: Record<string, number> = {};
+  for (const r of (data ?? []) as { StructureType: unknown }[]) {
+    const raw = r.StructureType;
+    let vals: string[] = [];
+    if (Array.isArray(raw)) vals = raw as string[];
+    else if (typeof raw === "string") {
+      try {
+        const parsed = JSON.parse(raw);
+        vals = Array.isArray(parsed) ? parsed : [raw];
+      } catch {
+        vals = [raw];
+      }
+    }
+    for (const v of vals) {
+      const t = String(v).trim() || "Other";
+      counts[t] = (counts[t] || 0) + 1;
+    }
+  }
+  return counts;
 }
