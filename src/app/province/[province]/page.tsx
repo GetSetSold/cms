@@ -19,8 +19,8 @@ export async function generateMetadata({ params }: { params: Promise<{ province:
   const { province } = await params;
   const info = PROVINCES[province];
   if (!info) return { title: "Not found" };
-  const title = await seoTitle(`${info.name} Real Estate & MLS® Listings`);
-  const description = `Browse live MLS® listings across ${info.name}. Explore homes for sale and rent by city, with market stats for every market.`;
+  const title = await seoTitle(`${info.name} MLS® Listings & Real Estate for Sale`);
+  const description = `Browse live MLS® listings for sale across ${info.name}. Explore homes by city, with market stats for every market.`;
   const ogImage = await getAnyOgImage();
   return {
     title,
