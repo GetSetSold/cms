@@ -6,7 +6,7 @@ import { getSettings, getLogo } from "@/lib/cms";
 import { themeFontHref, themeVars, themeIconOverrideCSS } from "@/lib/theme";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter, MobileCtaBar } from "@/components/site/SiteFooter";
-import { getHoodOgImage, ogImageMeta } from "@/lib/ogImage";
+import { getCityOgImage, ogImageMeta } from "@/lib/ogImage";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +14,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const title = await seoTitle("Ontario MLS® Housing Market Trends & HPI");
   const description =
     "Benchmark prices, monthly and yearly changes, and market conditions for all 28 Ontario real estate markets tracked by the CREA MLS® Home Price Index.";
-  const ogImage = await getHoodOgImage("Toronto", null).catch(() => null);
+  const ogImage = await getCityOgImage("Toronto").catch(() => null);
   return {
     title,
     description,
