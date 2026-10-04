@@ -108,7 +108,7 @@ export async function ListingsBrowser({
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
-        <div className="text-sm text-muted"><a href="/" className="hover:text-ink">Home</a> / {fixedCity ? <><a href="/listings" className="hover:text-ink">Listings</a> / <span>{fixedCity}</span></> : <span>Search</span>}</div>
+        <div className="text-sm text-muted"><a href="/" className="hover:text-ink">Home</a> / {fixedCity ? <><a href="/ontario-real-estate" className="hover:text-ink">Ontario Real Estate</a> / <span>{fixedCity}</span></> : <span>Search</span>}</div>
         <h1 className="font-display text-4xl font-extrabold md:text-5xl">
           {heading ?? (hasLocation ? `${total.toLocaleString()} listings near you` : effectiveCity ? `${total.toLocaleString()} listings in ${effectiveCity}` : `${total.toLocaleString()} listings`)}
         </h1>
