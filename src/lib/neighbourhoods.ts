@@ -223,11 +223,27 @@ export const getHoodStats = cache(async (city: string, hood: string): Promise<Ci
 
 /** Paginated listings for a neighbourhood page (property table, newest first).
  *  Mapped to GridListing so ListingCard can be reused. */
+export interface HoodFilters {
+  type?: string;
+  minPrice?: string;
+  maxPrice?: string;
+  beds?: string;
+  baths?: string;
+  homeType?: string;
+}
+
+const HOOD_HOME_TYPE: Record<string, string> = {
+  house: "House",
+  condo: "Apartment",
+  townhouse: "Row / Townhouse",
+};
+
 export async function getHoodListings(
   city: string,
   hood: string,
   page: number,
-  perPage: number
+  perPage: number,
+  filters?: HoodFilters
 ): Promise<{ listings: GridListing[]; total: number }> {
   const mls = createMlsClient();
   const variants = await rawCitiesFor(city);
@@ -235,14 +251,24 @@ export async function getHoodListings(
   const cities = [...new Set([...variants, ...unknownVariants])];
   const from = (page - 1) * perPage;
 
-  const { data, error, count } = await mls
+  let q = mls
     .from("property")
     .select(
       "ListingKey,ListingId,OfficeName,ListPrice,TotalActualRent,PhotosCount,Media,UnparsedAddress,City,Province,PostalCode,Latitude,Longitude,ParkingTotal,BathroomsTotalInteger,BedroomsTotal,AboveGradeFinishedArea,StructureType,OriginalEntryTimestamp",
       { count: "exact" }
     )
     .in("City", cities)
-    .or(`CityRegion.eq.${hood},SubdivisionName.eq.${hood}`)
+    .or(`CityRegion.eq.${hood},SubdivisionName.eq.${hood}`);
+  const f = filters ?? {};
+  if (f.type === "sale") q = q.not("ListPrice", "is", null);
+  else if (f.type === "rent") q = q.is("ListPrice", null).not("TotalActualRent", "is", null);
+  if (f.beds) q = q.gte("BedroomsTotal", Number(f.beds));
+  if (f.baths) q = q.gte("BathroomsTotalInteger", Number(f.baths));
+  if (f.homeType && HOOD_HOME_TYPE[f.homeType]) q = q.contains("StructureType", [HOOD_HOME_TYPE[f.homeType]]);
+  const priceCol = f.type === "rent" ? "TotalActualRent" : "ListPrice";
+  if (f.minPrice) q = q.gte(priceCol, Number(f.minPrice));
+  if (f.maxPrice) q = q.lte(priceCol, Number(f.maxPrice));
+  const { data, error, count } = await q
     .order("OriginalEntryTimestamp", { ascending: false })
     .range(from, from + perPage - 1);
   if (error) throw new Error(`getHoodListings: ${error.message}`);
