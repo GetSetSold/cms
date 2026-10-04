@@ -37,7 +37,7 @@ export async function LocalMarketPulse({ citySlug, cityName }: { citySlug: strin
 
       <div className="mt-6 grid gap-6 md:grid-cols-3">
         {/* Price card */}
-        <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-black bg-white p-8 text-center shadow-sm">
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-line bg-white p-8 text-center shadow-sm">
           <span className="text-sm font-semibold">Market Price (CAD)</span>
           <span className="mt-1 text-4xl font-bold tracking-tight">{fmtMoney(market.latest.compositeBenchmark)}</span>
           <span className="mt-5 text-sm font-semibold">Difference over last year (%)</span>
