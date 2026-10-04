@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { resolveHood, getHoodStats, getHoodListings } from "@/lib/neighbourhoods";
 import { getHoodOgImage, ogImageMeta } from "@/lib/ogImage";
+import { listingCardsWithAds } from "@/components/listings/ListingGrid";
 import { seoTitle } from "@/lib/seo";
 import { citySlug } from "@/lib/mls";
 import { getSettings, getLogo } from "@/lib/cms";
@@ -90,6 +91,7 @@ export default async function NeighbourhoodPage({
     getHoodStats(hood.city, hood.hood),
     getHoodListings(hood.city, hood.hood, view === "map" ? 1 : page, view === "map" ? 100 : PER_PAGE, filters),
   ]);
+  const cards = listingCardsWithAds(listings, (settings as { ads?: Parameters<typeof listingCardsWithAds>[1] } | null)?.ads);
   const typeCounts: Record<string, number> = {};
   for (const t of stats.typeBreakdown ?? []) typeCounts[t.label] = t.count;
   const logo = await getLogo(settings);
@@ -147,7 +149,7 @@ export default async function NeighbourhoodPage({
         ) : view === "split" ? (
           <div className="mt-4 grid gap-5 lg:grid-cols-2">
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-              {listings.length ? listings.map((l) => <ListingCard key={l.ListingKey} listing={l} />) : (
+              {cards.length ? cards : (
                 <p className="col-span-full rounded-2xl bg-white p-6 text-muted">No listings found in {hood.hood} right now.</p>
               )}
             </div>
@@ -157,9 +159,7 @@ export default async function NeighbourhoodPage({
           </div>
         ) : listings.length > 0 ? (
           <div className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {listings.map((l) => (
-              <ListingCard key={l.ListingKey} listing={l} />
-            ))}
+            {cards}
           </div>
         ) : (
           <p className="mt-4 rounded-2xl bg-white p-6 text-muted">
