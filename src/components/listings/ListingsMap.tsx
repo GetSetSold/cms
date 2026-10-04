@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef } from "react";
 import type { GridListing } from "@/lib/mls";
-import { priceDisplay } from "@/lib/mls";
+import { isSale, listingSlug } from "@/lib/mls";
 
 const MAPTILER_KEY = "Zr8EXulAyt75JJibE0ol";
 
@@ -24,6 +24,46 @@ function loadMaplibre(): Promise<void> {
   });
 }
 
+/** Compact price for map pins: $450K, $2.5K, $1.5M */
+function shortPrice(l: GridListing): string {
+  const n = isSale(l) ? l.ListPrice : l.TotalActualRent;
+  if (n == null) return "—";
+  if (n >= 1_000_000) {
+    const v = n / 1_000_000;
+    return `$${Number(v.toFixed(1))}M`;
+  }
+  if (n >= 1_000) {
+    const v = n / 1_000;
+    return `$${Number(v.toFixed(1))}K`;
+  }
+  return `$${n.toLocaleString()}`;
+}
+
+function cardHtml(l: GridListing): string {
+  const href = `/real-estate/${encodeURIComponent(l.ListingKey)}/${listingSlug(l)}`;
+  const img = l.Media
+    ? `<img src="${l.Media}" alt="" style="width:100%;height:120px;object-fit:cover;display:block;" loading="lazy" />`
+    : `<div style="width:100%;height:120px;background:#f1f1f4;display:flex;align-items:center;justify-content:center;color:#888;font-size:12px;">No photo</div>`;
+  const specs = [
+    l.BedroomsTotal != null ? `${l.BedroomsTotal} bed` : null,
+    l.BathroomsTotalInteger != null ? `${l.BathroomsTotalInteger} bath` : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+  const price = isSale(l)
+    ? (l.ListPrice != null ? `$${l.ListPrice.toLocaleString()}` : "—")
+    : (l.TotalActualRent != null ? `$${l.TotalActualRent.toLocaleString()}/mo` : "—");
+  return `
+    <a href="${href}" target="_blank" rel="noopener" style="display:block;width:220px;text-decoration:none;color:inherit;font-family:Inter,sans-serif;">
+      ${img}
+      <div style="padding:10px 12px;">
+        <div style="font-weight:700;font-size:15px;">${price}</div>
+        ${specs ? `<div style="font-size:12px;color:#555;margin-top:2px;">${specs}</div>` : ""}
+        <div style="font-size:12px;color:#333;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${l.UnparsedAddress ?? ""}</div>
+      </div>
+    </a>`;
+}
+
 export function ListingsMap({ listings }: { listings: GridListing[] }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
@@ -41,29 +81,41 @@ export function ListingsMap({ listings }: { listings: GridListing[] }) {
         container: containerRef.current,
         style: `https://api.maptiler.com/maps/streets-v4/style.json?key=${MAPTILER_KEY}`,
         center,
-        zoom: withCoords.length ? 11 : 8,
+        zoom: withCoords.length ? 12 : 8,
       });
       map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
       mapRef.current = map;
 
       const bounds = new maplibregl.LngLatBounds();
       withCoords.forEach((l) => {
-        const el = document.createElement("a");
-        el.href = `/listings/${encodeURIComponent(l.ListingKey)}`;
-        el.textContent = priceDisplay(l).replace("/mo", "");
-        el.style.cssText = "display:inline-flex;align-items:center;height:30px;padding:0 10px;border-radius:999px;background:#fff;color:var(--c-ink);font:600 12px Inter,sans-serif;box-shadow:0 2px 8px rgba(20,20,43,.18);white-space:nowrap;text-decoration:none;";
+        const sale = isSale(l);
+        const el = document.createElement("button");
+        el.type = "button";
+        el.textContent = shortPrice(l);
+        el.style.cssText = `display:inline-flex;align-items:center;height:28px;padding:0 10px;border:0;border-radius:999px;background:${sale ? "#111" : "#0066CC"};color:#fff;font:700 12px Inter,sans-serif;box-shadow:0 2px 8px rgba(20,20,43,.25);white-space:nowrap;cursor:pointer;`;
+        el.addEventListener("click", (e) => {
+          e.stopPropagation();
+          new maplibregl.Popup({ offset: 12, closeButton: false, maxWidth: "240px" })
+            .setLngLat([l.Longitude, l.Latitude])
+            .setHTML(cardHtml(l))
+            .addTo(map);
+        });
         const marker = new maplibregl.Marker({ element: el, anchor: "bottom" })
           .setLngLat([l.Longitude, l.Latitude])
           .addTo(map);
         markersRef.current.push(marker);
         bounds.extend([l.Longitude!, l.Latitude!]);
       });
-      if (withCoords.length > 1) map.fitBounds(bounds, { padding: 60, maxZoom: 14 });
+      // Keep the zoom tight on the listing cluster
+      if (withCoords.length > 1) map.fitBounds(bounds, { padding: 40, maxZoom: 15 });
+      else if (withCoords.length === 1) map.setZoom(14);
     });
     return () => {
       cancelled = true;
       markersRef.current.forEach((m) => m.remove());
+      markersRef.current = [];
       mapRef.current?.remove();
+      mapRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [listings]);
