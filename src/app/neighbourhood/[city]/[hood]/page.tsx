@@ -115,10 +115,8 @@ export default async function NeighbourhoodPage({
           {total.toLocaleString()} active MLS® listings in {hood.hood}. Updated daily from the live feed.
         </p>
 
-        <div className="mt-6 flex items-center justify-between gap-3">
-          <div className="min-w-0 flex-1 overflow-x-auto pb-1">
-            <ListingFilters basePath={hoodUrl} sp={sp as Record<string, string | undefined>} typeCounts={typeCounts} />
-          </div>
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+          <ListingFilters basePath={hoodUrl} sp={sp as Record<string, string | undefined>} typeCounts={typeCounts} />
           <div className="hidden shrink-0 md:block">
             <ViewToggle view={view} hrefFor={(v) => hrefFor({ view: v === "grid" ? undefined : v })} />
           </div>
