@@ -23,13 +23,22 @@ const PER_PAGE = 24;
 
 type Params = { city: string; hood: string };
 
-export async function generateMetadata({ params }: { params: Promise<Params> }): Promise<Metadata> {
-  const { city: cityParam, hood: hoodParam } = await params;
+export async function generateMetadata({
+  params,
+  searchParams,
+}: {
+  params: Promise<Params>;
+  searchParams: Promise<{ page?: string; type?: string }>;
+}): Promise<Metadata> {
+  const [{ city: cityParam, hood: hoodParam }, sp] = await Promise.all([params, searchParams]);
   const hood = await resolveHood(cityParam, hoodParam);
   if (!hood) return { title: "Not found" };
   const url = `/${citySlug(hood.city)}-real-estate/${hood.hoodSlug}`;
-  const title = await seoTitle(`Homes for sale in ${hood.hood}, ${hood.city}`);
-  const description = `Browse ${hood.count} MLS® listings in ${hood.hood}, ${hood.city}. Live market stats, FAQs and current homes for sale and rent.`;
+  const page = Math.max(1, Number(sp.page) || 1);
+  const isRent = sp.type === "rent";
+  const base = `${hood.hood}, ${hood.city} MLS® Listings & Real Estate for ${isRent ? "Rent" : "Sale"}`;
+  const title = await seoTitle(page > 1 ? `${base} (Page ${page})` : base);
+  const description = `Browse ${hood.count} MLS® listings for ${isRent ? "rent" : "sale"} in ${hood.hood}, ${hood.city}. Live market stats, FAQs and updated listings.`;
   const ogImage = await getHoodOgImage(hood.city, hood.hood);
   return {
     title,
