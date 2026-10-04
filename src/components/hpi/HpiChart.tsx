@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
-import { fmtMoney, fmtMoneyShort, monthShort } from "@/lib/hpi";
+import { fmtMoney, fmtMoneyShort, monthShort } from "@/lib/hpi-format";
 
 export interface ChartPoint {
   month: string;
