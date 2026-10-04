@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
-import type React from "react";
 import { notFound, redirect } from "next/navigation";
 import { getSettings } from "@/lib/cms";
 import { seoTitle } from "@/lib/seo";
 import { getCalculator, LEGACY_TAB_SLUGS } from "@/lib/calculators/registry";
 import { getCalculatorSettings } from "@/lib/calculators/settings";
 import { CalculatorPageShell } from "@/components/calculators/CalculatorPageShell";
-import { loadCalculator } from "@/components/calculators/loaders";
+import { CalculatorLoader } from "@/components/calculators/CalculatorLoader";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -66,13 +65,10 @@ export default async function CalculatorDetailPage({ params }: Props) {
 
   const settings = await getSettings();
   const calcSettings = getCalculatorSettings(settings.calculators);
-  const Calc = loadCalculator(slug);
-  if (!Calc) notFound();
-  const CalcComponent = Calc as React.ComponentType<{ settings: typeof calcSettings }>;
 
   return (
     <CalculatorPageShell slug={slug} intro={INTROS[slug] ?? calcMeta.description}>
-      <CalcComponent settings={calcSettings} />
+      <CalculatorLoader slug={slug} settings={calcSettings} />
       <p className="mt-6 text-[12px] text-muted">
         Assumptions effective {calcSettings.effectiveDate}. Regulatory figures (stress-test rules,
         down-payment brackets, CMHC tiers, rebates) are managed in Admin → Calculators.
