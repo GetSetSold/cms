@@ -20,7 +20,7 @@ import { CityFaq } from "@/components/listings/CityFaq";
 
 export const dynamic = "force-dynamic";
 
-const PER_PAGE = 24;
+const PER_PAGE = 12;
 
 type Params = { city: string; hood: string };
 
