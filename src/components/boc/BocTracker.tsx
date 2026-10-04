@@ -421,8 +421,8 @@ export function BocTracker() {
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
             {[["RBC", "#003168"], ["TD", "#34a853"], ["Scotiabank", "#ec111a"], ["BMO", "#0075ca"], ["CIBC", "#8b1a4a"]].map(([name, color]) => (
               <div key={name} className="rounded-lg border border-line bg-soft px-2 py-4 text-center">
-                <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-lg text-[13px] font-bold text-white" style={{ background: color }}>
-                  {name === "Scotiabank" ? "Sco" : name.slice(0, 3)}
+                <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-lg font-bold text-white" style={{ background: color, fontSize: name === "Scotiabank" ? 11 : 13 }}>
+                  {name === "Scotiabank" ? "Scotia" : name}
                 </div>
                 <div className="text-[12px] font-semibold text-ink">{name}</div>
                 <div className="text-[20px] font-bold text-ink">{banks === null ? <Skeleton w={60} h={24} /> : fmtRate(prime)}</div>
@@ -532,10 +532,10 @@ export function BocTracker() {
           <BlockHead eyebrow="Decisions" heading="Rate Decision History" sub="All BoC rate decisions including holds & changes" />
           <article className="rounded-lg border border-line bg-white p-5 shadow-sm">
             <style>{`.boc-thin-scroll{scrollbar-width:thin;scrollbar-color:#d1d5db transparent}.boc-thin-scroll::-webkit-scrollbar{width:6px}.boc-thin-scroll::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:3px}.boc-thin-scroll::-webkit-scrollbar-track{background:transparent}`}</style>
-            <div className="boc-thin-scroll max-h-[460px] overflow-y-auto pr-4">
+            <div className="boc-thin-scroll max-h-[460px] overflow-y-auto pr-6">
               {decisions.length === 0 && <div className="py-10 text-center text-[13px] text-muted">Loading…</div>}
               {decisions.slice(0, 60).map((d, i, arr) => (
-                <div key={d.date + d.type} className="flex gap-3 pb-4">
+                <div key={d.date + d.type} className="flex gap-3 border-b border-line pb-4">
                   <div className="flex flex-col items-center">
                     <div className={`h-3 w-3 rounded-full border-2 ${
                       d.type === "hold" ? "border-neutral-300 bg-neutral-100"
