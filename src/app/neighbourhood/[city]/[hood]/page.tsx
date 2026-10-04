@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { resolveHood, getHoodStats, getHoodListings, getHoodTypeCounts } from "@/lib/neighbourhoods";
+import { resolveHood, getHoodStats, getHoodListings } from "@/lib/neighbourhoods";
 import { citySlug } from "@/lib/mls";
 import { getSettings, getLogo } from "@/lib/cms";
 import { themeFontHref, themeVars, themeIconOverrideCSS } from "@/lib/theme";
@@ -70,12 +70,13 @@ export default async function NeighbourhoodPage({
     baths: sp.baths,
     homeType: sp.homeType,
   };
-  const [settings, stats, { listings, total }, typeCounts] = await Promise.all([
+  const [settings, stats, { listings, total }] = await Promise.all([
     getSettings(),
     getHoodStats(hood.city, hood.hood),
     getHoodListings(hood.city, hood.hood, view === "map" ? 1 : page, view === "map" ? 100 : PER_PAGE, filters),
-    getHoodTypeCounts(hood.city, hood.hood),
   ]);
+  const typeCounts: Record<string, number> = {};
+  for (const t of stats.typeBreakdown ?? []) typeCounts[t.label] = t.count;
   const logo = await getLogo(settings);
   const themeVars_ = themeVars(settings);
   const totalPages = Math.max(1, Math.ceil(total / PER_PAGE));
