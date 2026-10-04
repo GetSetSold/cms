@@ -103,6 +103,14 @@ export interface SiteSettings {
     boc_ad_enabled?: boolean;
   };
   lead_settings: { notify_emails: string[] };
+  /** Calculator regulatory/default assumptions (Admin → Calculators). Merged over code defaults. */
+  calculators?: {
+    stressBuffer?: number; stressFloor?: number; gdsLimit?: number; tdsLimit?: number;
+    dp1pct?: number; dp1max?: number; dp2pct?: number; dp2max?: number; dp3pct?: number;
+    cmhcTiers?: { upTo: number; rate: number }[];
+    onRebate?: number; toRebate?: number;
+    effectiveDate?: string; lastUpdated?: string;
+  };
 }
 
 export interface SvgAsset {
