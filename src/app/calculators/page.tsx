@@ -6,6 +6,7 @@ import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter, MobileCtaBar } from "@/components/site/SiteFooter";
 import { CALCULATORS, LEGACY_TAB_SLUGS, CALCULATOR_MAP } from "@/lib/calculators/registry";
 import { LegacyHashRedirect } from "@/components/calculators/LegacyHashRedirect";
+import { ContentAdSlot } from "@/components/ads/ContentAdSlot";
 import { redirect } from "next/navigation";
 import type { CalculatorCategory } from "@/lib/calculators/types";
 
@@ -35,6 +36,10 @@ export default async function CalculatorsHubPage({
   }
   const settings = await getSettings();
   const logo = await getLogo(settings);
+  const ads = (settings.ads ?? {}) as Record<string, unknown>;
+  const calcAdCode = typeof ads.grid_ad_code === "string" ? ads.grid_ad_code : "";
+  const showCalcAd =
+    ads.calculators_ad_enabled === true && calcAdCode.includes("data-ad-client");
 
   const itemListJsonLd = {
     "@context": "https://schema.org",
@@ -117,6 +122,8 @@ export default async function CalculatorsHubPage({
             </section>
           );
         })}
+
+        {showCalcAd && <ContentAdSlot adCode={calcAdCode} className="mt-4" />}
 
         <article className="mt-4 rounded-lg border border-line bg-white p-5 shadow-sm">
           <h2 className="mb-2 text-[14px] font-semibold text-ink">About these calculators</h2>

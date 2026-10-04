@@ -48,16 +48,21 @@ Deno.serve(async (req) => {
 
   const db = admin();
 
-  // Rate limit: max N report emails per address per hour
+  // Rate limit: max N report emails per address per hour. Counts actual
+  // calculator-report activities so lead upserts can't bypass it.
   const hourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-  const { count } = await db
-    .from("leads")
-    .select("id", { count: "exact", head: true })
-    .eq("email", email)
-    .eq("form_key", "calculator-report")
-    .gte("created_at", hourAgo);
-  if ((count ?? 0) >= MAX_PER_HOUR) {
-    return json(req, { error: "Too many reports sent. Please try again later." }, 429);
+  const { data: leadRows } = await db.from("leads").select("id").eq("email", email);
+  const leadIds = ((leadRows ?? []) as { id: string }[]).map((r) => r.id);
+  if (leadIds.length > 0) {
+    const { count } = await db
+      .from("lead_activities")
+      .select("id", { count: "exact", head: true })
+      .in("lead_id", leadIds)
+      .eq("type", "calculator-report")
+      .gte("created_at", hourAgo);
+    if ((count ?? 0) >= MAX_PER_HOUR) {
+      return json(req, { error: "Too many reports sent. Please try again later." }, 429);
+    }
   }
 
   // Upsert the lead: reuse the existing row for this email when there is one
@@ -111,7 +116,7 @@ Deno.serve(async (req) => {
 
   await db.from("lead_activities").insert({
     lead_id: leadId,
-    type: "system",
+    type: "calculator-report",
     body: `Calculator report emailed: ${title}`,
     meta: { calculator_slug: slug, path },
   });

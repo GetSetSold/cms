@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { getPublishedSlugs } from "@/lib/cms";
 import { citySlug, listNormalizedCities } from "@/lib/mls";
 import { listNeighbourhoods } from "@/lib/neighbourhoods";
+import { GUIDES } from "@/lib/guides/registry";
 
 export const dynamic = "force-dynamic";
 
@@ -39,6 +40,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "rental-investment-forecast-calculator",
   ]) {
     entries.push({ url: `${base}/calculators/${slug}`, changeFrequency: "weekly", priority: 0.8 });
+  }
+
+  // Guides hub + detail pages
+  entries.push({ url: `${base}/guides`, changeFrequency: "weekly", priority: 0.9 });
+  for (const g of GUIDES) {
+    entries.push({ url: `${base}/guides/${g.id}`, changeFrequency: "weekly", priority: 0.8 });
   }
 
   // Province hub
