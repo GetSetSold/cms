@@ -21,6 +21,7 @@ export function ListingCard({ listing }: { listing: GridListing }) {
       mlsNumber={listing.ListingId ?? null}
       brokerage={listing.OfficeName}
       listedDays={daysOnMarket(listing.OriginalEntryTimestamp ?? null)}
+      photoCount={listing.PhotosCount}
     />
   );
 }
