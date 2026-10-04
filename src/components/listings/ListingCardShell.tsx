@@ -50,15 +50,17 @@ export function ListingCardShell(d: ListingCardData) {
           {d.statusLabel}
         </span>
       </div>
-      <div className="flex flex-col gap-1 p-4 pr-14">
+      <div className="flex flex-col gap-1 p-4">
         <div className="text-lg font-semibold text-primary">{d.price}</div>
         <div className="truncate text-[15px] font-medium text-ink">{d.address}</div>
         {d.city ? <div className="text-sm text-muted">{d.city}</div> : null}
         {d.beds || d.baths || d.area ? (
-          <div className="mt-2 flex gap-3 border-t border-line pt-2.5 text-[13px] text-muted">
-            {d.beds ? <span>{d.beds} Beds</span> : null}
-            {d.baths ? <span>{d.baths} Bathrooms</span> : null}
-            {d.area ? <span>{d.area}</span> : null}
+          <div className="mt-2 -mx-4 flex gap-3 border-t border-line px-4 pt-2.5 text-[13px] text-muted">
+            <div className="flex gap-3 pr-10">
+              {d.beds ? <span>{d.beds} Beds</span> : null}
+              {d.baths ? <span>{d.baths} Bathrooms</span> : null}
+              {d.area ? <span>{d.area}</span> : null}
+            </div>
           </div>
         ) : null}
       </div>
