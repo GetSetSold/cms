@@ -14,7 +14,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const title = await seoTitle("Ontario MLS® Housing Market Trends & HPI");
   const description =
     "Benchmark prices, monthly and yearly changes, and market conditions for all 28 Ontario real estate markets tracked by the CREA MLS® Home Price Index.";
-  const ogImage = await getCityOgImage("Toronto").catch(() => null);
+  const ogImage = await getCityOgImage("Toronto").catch(() => undefined);
   return {
     title,
     description,
