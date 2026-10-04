@@ -264,7 +264,9 @@ export async function getHoodListings(
   else if (f.type === "rent") q = q.is("ListPrice", null).not("TotalActualRent", "is", null);
   if (f.beds) q = q.gte("BedroomsTotal", Number(f.beds));
   if (f.baths) q = q.gte("BathroomsTotalInteger", Number(f.baths));
-  if (f.homeType && HOOD_HOME_TYPE[f.homeType]) q = q.contains("StructureType", [HOOD_HOME_TYPE[f.homeType]]);
+  if (f.homeType === "house") q = q.ilike("StructureType", '%"House"%');
+  else if (f.homeType === "condo") q = q.ilike("StructureType", '%"Apartment"%');
+  else if (f.homeType === "townhouse") q = q.ilike("StructureType", "%Townhouse%");
   const priceCol = f.type === "rent" ? "TotalActualRent" : "ListPrice";
   if (f.minPrice) q = q.gte(priceCol, Number(f.minPrice));
   if (f.maxPrice) q = q.lte(priceCol, Number(f.maxPrice));
