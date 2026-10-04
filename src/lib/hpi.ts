@@ -1,6 +1,6 @@
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
-import type { HpiLatest, HpiMarket, HpiMonth } from "./hpi-format";
+import type { HpiLatest, HpiMarket, HpiMonth, HpiPropertyType } from "./hpi-format";
 
 /* Data access (module-level 1h cache — free-plan friendly)             */
 /* ------------------------------------------------------------------ */
