@@ -17,6 +17,7 @@ import { Pagination } from "@/components/listings/Pagination";
 import { CityStatsSection } from "@/components/listings/CityStatsSection";
 import { CityEditorial } from "@/components/listings/CityEditorial";
 import { CityFaq } from "@/components/listings/CityFaq";
+import { LocalMarketPulse } from "@/components/hpi/LocalMarketPulse";
 
 export const dynamic = "force-dynamic";
 
@@ -181,6 +182,7 @@ export default async function NeighbourhoodPage({
         <CityStatsSection stats={stats} />
         <CityEditorial stats={stats} />
         <CityFaq stats={stats} />
+        <LocalMarketPulse citySlug={citySlug(hood.city)} cityName={hood.city} />
       </main>
       <SiteFooter settings={settings} />
       <MobileCtaBar settings={settings} />
