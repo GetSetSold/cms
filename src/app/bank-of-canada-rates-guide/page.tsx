@@ -104,28 +104,28 @@ export default async function BocRatesGuidePage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
       <SiteHeader settings={settings} logo={logo} />
-      <main>
+      <main className="mx-auto max-w-6xl px-5 pb-16">
+        <nav className="pt-6 text-[13px] text-muted" aria-label="Breadcrumb">
+          <a href="/" className="hover:underline">Home</a> / <span>Bank of Canada Rate Tracker</span>
+        </nav>
 
-      {/* Hero */}
-      <section className="bg-primary">
-        <div className="mx-auto flex max-w-[1100px] flex-col items-center gap-2 px-5 py-8 text-center">
-          <h1 className="text-[clamp(1.5rem,4vw,2.4rem)] font-bold tracking-tight text-white">
-            Bank of Canada Rate Tracker
-          </h1>
-          <p className="text-[13px] text-white/70">Real-time policy interest rates &amp; historical trends</p>
-        </div>
-      </section>
+        <h1 className="mt-2 text-3xl font-bold tracking-tight">Bank of Canada Rate Tracker</h1>
+        <p className="mt-3 max-w-3xl leading-relaxed text-muted">
+          Live BoC policy rate, prime rate, CORRA &amp; mortgage rates from Canada&apos;s Big 5 banks —
+          with historical trends, decision countdown &amp; what it means for real estate.
+        </p>
 
-      <div className="mx-auto max-w-[1100px] px-5 py-5">
         <BocTracker />
         {showAd && <BocAdSlot adCode={ads.grid_ad_code} />}
 
-        {/* Info hero */}
-        <article className="mb-4 mt-8 rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
-          <h2 className="mb-2 text-[18px] font-bold text-ink">
-            Current Bank of Canada Policy Interest Rate &amp; Real Estate Implications
-          </h2>
-          <p className="text-[14px] leading-7 text-neutral-600">
+        <div className="mb-5 mt-10 flex flex-col gap-3">
+          <div className="text-sm font-semibold uppercase tracking-wide text-accent">Guide</div>
+          <h2 className="text-[26px] font-bold leading-tight tracking-tight text-ink">Current Bank of Canada Policy Interest Rate &amp; Real Estate Implications</h2>
+          <div className="h-px w-full border-t border-line" />
+          <p className="text-[15px] font-medium leading-relaxed text-muted">How the key policy rate shapes borrowing costs and housing affordability</p>
+        </div>
+        <article className="rounded-lg border border-line bg-white p-6 shadow-sm">
+          <p className="text-[14px] leading-7 text-muted">
             The Bank of Canada Interest Rate, also known as the Key Policy Rate, plays a major role in
             shaping Canada&apos;s economy and real estate market. Changes to this rate directly influence
             mortgage interest rates, borrowing costs, and housing affordability. Understanding how the Bank
@@ -138,18 +138,21 @@ export default async function BocRatesGuidePage() {
           {INFO_BLOCKS.map(([title, body], i) => (
             <article
               key={title}
-              className={`rounded-lg border border-neutral-200 bg-white p-5 shadow-sm ${i === INFO_BLOCKS.length - 1 ? "md:col-span-2" : ""}`}
+              className={`rounded-lg border border-line bg-white p-5 shadow-sm ${i === INFO_BLOCKS.length - 1 ? "md:col-span-2" : ""}`}
             >
               <h3 className="mb-2 text-[13px] font-semibold text-ink">{title}</h3>
-              <p className="text-[14px] leading-7 text-neutral-600">{body}</p>
+              <p className="text-[14px] leading-7 text-muted">{body}</p>
             </article>
           ))}
         </div>
 
-        {/* Impact table */}
-        <article className="mt-4 rounded-lg border border-neutral-200 bg-white p-5 shadow-sm">
-          <h2 className="text-[15px] font-semibold text-ink">Rate Change Impact on Mortgage Payments</h2>
-          <p className="mb-4 text-[11px] text-neutral-400">Estimated monthly payment change based on rate increase or decrease (25-year amortization)</p>
+        <div className="mb-5 mt-10 flex flex-col gap-3">
+          <div className="text-sm font-semibold uppercase tracking-wide text-accent">Calculator</div>
+          <h2 className="text-[26px] font-bold leading-tight tracking-tight text-ink">Rate Change Impact on Mortgage Payments</h2>
+          <div className="h-px w-full border-t border-line" />
+          <p className="text-[15px] font-medium leading-relaxed text-muted">Estimated monthly payment change based on rate increase or decrease (25-year amortization)</p>
+        </div>
+        <article className="rounded-lg border border-line bg-white p-5 shadow-sm">
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-[12px]">
               <thead>
@@ -164,7 +167,7 @@ export default async function BocRatesGuidePage() {
                 {IMPACT.map(([chg, a, b, c]) => {
                   const up = chg.startsWith("+");
                   return (
-                    <tr key={chg} className="hover:bg-neutral-50">
+                    <tr key={chg} className="hover:bg-soft">
                       <td className="border-b border-neutral-100 px-3 py-2.5 font-semibold text-ink">{chg}</td>
                       {[a, b, c].map((v) => (
                         <td key={v} className={`border-b border-neutral-100 px-3 py-2.5 text-center font-semibold ${up ? "text-red-600" : "text-emerald-600"}`}>{v}</td>
@@ -175,40 +178,47 @@ export default async function BocRatesGuidePage() {
               </tbody>
             </table>
           </div>
-          <p className="mt-3 text-[10px] italic text-neutral-400">
+          <p className="mt-3 text-[10px] italic text-muted">
             * Estimates are approximate and based on standard variable-rate mortgage calculations with 25-year amortization. Actual amounts may vary by lender and mortgage terms.
           </p>
         </article>
 
-        {/* Glossary */}
-        <article className="mt-4 rounded-lg border border-neutral-200 bg-white p-5 shadow-sm">
-          <h2 className="text-[15px] font-semibold text-ink">Interest Rate Glossary</h2>
-          <p className="mb-4 text-[11px] text-neutral-400">Key terms related to Bank of Canada rates and mortgage financing</p>
+        <div className="mb-5 mt-10 flex flex-col gap-3">
+          <div className="text-sm font-semibold uppercase tracking-wide text-accent">Definitions</div>
+          <h2 className="text-[26px] font-bold leading-tight tracking-tight text-ink">Interest Rate Glossary</h2>
+          <div className="h-px w-full border-t border-line" />
+          <p className="text-[15px] font-medium leading-relaxed text-muted">Key terms related to Bank of Canada rates and mortgage financing</p>
+        </div>
+        <article className="rounded-lg border border-line bg-white p-5 shadow-sm">
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             {GLOSSARY.map(([term, def]) => (
-              <div key={term} className="rounded-lg border border-neutral-200 border-l-4 border-l-primary bg-neutral-50 px-4 py-3.5">
+              <div key={term} className="rounded-lg border border-line border-l-4 border-l-primary bg-soft px-4 py-3.5">
                 <div className="mb-1 text-[12px] font-bold text-primary">{term}</div>
-                <div className="text-[11px] leading-6 text-neutral-500">{def}</div>
+                <div className="text-[11px] leading-6 text-muted">{def}</div>
               </div>
             ))}
           </div>
         </article>
 
-        {/* FAQ */}
-        <article className="mt-4 rounded-lg border border-neutral-200 bg-white px-6 py-2 shadow-sm">
-          <h2 className="py-4 text-[15px] font-semibold text-ink">Frequently Asked Questions</h2>
+        <div className="mb-5 mt-10 flex flex-col gap-3">
+          <div className="text-sm font-semibold uppercase tracking-wide text-accent">FAQ</div>
+          <h2 className="text-[26px] font-bold leading-tight tracking-tight text-ink">Frequently Asked Questions</h2>
+          <div className="h-px w-full border-t border-line" />
+          <p className="text-[15px] font-medium leading-relaxed text-muted">Answers to common questions about the Bank of Canada policy rate</p>
+        </div>
+        <article className="rounded-lg border border-line bg-white px-6 py-2 shadow-sm">
           {FAQS.map((f, i) => (
             <details key={f.q} className={`py-3.5 ${i > 0 ? "border-t border-neutral-100" : ""}`} open={i === 0}>
               <summary className="cursor-pointer font-semibold text-primary">{f.q}</summary>
-              <p className="mt-2 text-[14px] text-neutral-600">{f.a}</p>
+              <p className="mt-2 text-[14px] text-muted">{f.a}</p>
             </details>
           ))}
         </article>
 
         {/* Data source */}
-        <article className="mb-2 mt-4 rounded-lg border border-neutral-200 bg-white p-5 shadow-sm">
+        <article className="mb-2 mt-10 rounded-lg border border-line bg-white p-5 shadow-sm">
           <h3 className="mb-2 text-[14px] font-semibold text-ink">Data Source</h3>
-          <p className="text-[12px] leading-7 text-neutral-500">
+          <p className="text-[12px] leading-7 text-muted">
             Rates sourced from the{" "}
             <a href="https://www.bankofcanada.ca" target="_blank" rel="noopener" className="font-medium text-primary">
               Bank of Canada
@@ -217,7 +227,6 @@ export default async function BocRatesGuidePage() {
             BoC&apos;s published schedule. For informational purposes only. Not financial advice.
           </p>
         </article>
-      </div>
       </main>
       <SiteFooter settings={settings} />
       <MobileCtaBar settings={settings} />
