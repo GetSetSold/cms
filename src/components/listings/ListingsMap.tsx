@@ -138,12 +138,16 @@ export function ListingsMap({ listings }: { listings: GridListing[] }) {
   }, [listings]);
 
   function useMyLocation() {
-    if (!navigator.geolocation || !mapRef.current) return;
+    if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition((pos) => {
       const { latitude, longitude } = pos.coords;
-      mapRef.current.flyTo({ center: [longitude, latitude], zoom: 13 });
-      const live = getComputedStyle(mapRef.current.getContainer()).getPropertyValue("--c-primary").trim();
-      new window.maplibregl.Marker({ color: live || "#6C5DD3" }).setLngLat([longitude, latitude]).addTo(mapRef.current);
+      const params = new URLSearchParams(window.location.search);
+      params.set("lat", latitude.toFixed(6));
+      params.set("lng", longitude.toFixed(6));
+      params.delete("city");
+      params.delete("page");
+      // Preserve view (map/split/grid) for the reload
+      window.location.href = `/listings?${params.toString()}`;
     });
   }
 
