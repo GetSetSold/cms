@@ -23,6 +23,8 @@ export type ListingCardData = {
   brokerage?: string | null;
   /** Days on market — computed from OriginalEntryTimestamp by the caller. */
   listedDays?: number | null;
+  /** Photo count badge (top-right of image) — from PhotosCount. */
+  photoCount?: number | null;
   showFavorite?: boolean;
 };
 
@@ -61,6 +63,15 @@ export function ListingCardShell(d: ListingCardData) {
         {days ? (
           <span className="absolute bottom-3 right-3 rounded-full bg-black/75 px-3 py-1 text-[11px] font-semibold text-white">
             {days}
+          </span>
+        ) : null}
+        {d.photoCount != null && d.photoCount > 0 ? (
+          <span className="absolute right-3 top-3 flex items-center gap-1.5 rounded-full bg-black/75 px-2.5 py-1 text-[11px] font-semibold text-white">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+              <circle cx="12" cy="13" r="4" />
+            </svg>
+            {d.photoCount}
           </span>
         ) : null}
       </div>
