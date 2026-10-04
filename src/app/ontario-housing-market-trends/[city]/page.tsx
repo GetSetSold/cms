@@ -74,7 +74,7 @@ export default async function TrendsDetailPage({ params }: { params: Promise<Par
   ];
 
   return (
-    <div className="min-h-screen bg-white text-ink" style={themeVars(settings)}>
+    <div className="min-h-screen bg-ground text-ink" style={themeVars(settings)}>
       {themeFontHref(settings) ? <link rel="stylesheet" href={themeFontHref(settings)} /> : null}
       <style dangerouslySetInnerHTML={{ __html: themeIconOverrideCSS(settings) }} />
       <SiteHeader settings={settings} logo={logo} />
@@ -94,7 +94,7 @@ export default async function TrendsDetailPage({ params }: { params: Promise<Par
               {" · "}<span className={toneCls(L.yoyChange)}>{fmtPct(L.yoyChange)}</span> yearly change
             </p>
           </div>
-          <span className="inline-block shrink-0 rounded-full border border-black px-3 py-1 text-xs font-semibold">
+          <span className="inline-block shrink-0 rounded-full border border-primary px-3 py-1 text-xs font-semibold">
             {conditionLabel(L.marketCondition)}
           </span>
         </div>
@@ -110,7 +110,7 @@ export default async function TrendsDetailPage({ params }: { params: Promise<Par
               key={m.slug}
               href={`/ontario-housing-market-trends/${m.slug}`}
               className={`flex shrink-0 items-center gap-2 rounded-lg border px-3 py-2 text-[13px] ${
-                m.slug === market.slug ? "border-black bg-black text-white" : "border-line bg-white hover:border-black"
+                m.slug === market.slug ? "border-primary bg-primary text-white" : "border-line bg-white hover:border-primary"
               }`}
             >
               <span>{m.name}</span>
@@ -135,7 +135,7 @@ export default async function TrendsDetailPage({ params }: { params: Promise<Par
           ))}
         </div>
 
-        <div className="mt-4 rounded-xl border border-black bg-soft p-4">
+        <div className="mt-4 rounded-xl border border-primary bg-soft p-4">
           <b>{conditionLabel(L.marketCondition)} — {market.name}.</b>{" "}
           <span className="text-muted">
             {L.marketCondition === "buyer"
@@ -208,7 +208,7 @@ export default async function TrendsDetailPage({ params }: { params: Promise<Par
         <div className="overflow-x-auto rounded-2xl border border-line">
           <table className="w-full min-w-[760px] border-collapse text-sm">
             <thead>
-              <tr className="border-b-2 border-black text-left">
+              <tr className="border-b-2 border-primary text-left">
                 <th className="px-4 py-3 text-[11px] uppercase tracking-wider text-muted">Property Type</th>
                 <th className="px-4 py-3 text-right text-[11px] uppercase tracking-wider text-muted">Benchmark</th>
                 <th className="px-4 py-3 text-right text-[11px] uppercase tracking-wider text-muted">HPI Index</th>
@@ -255,7 +255,7 @@ export default async function TrendsDetailPage({ params }: { params: Promise<Par
         <div className="overflow-x-auto rounded-2xl border border-line">
           <table className="w-full min-w-[860px] border-collapse text-sm">
             <thead>
-              <tr className="border-b-2 border-black text-left">
+              <tr className="border-b-2 border-primary text-left">
                 <th className="px-4 py-3 text-[11px] uppercase tracking-wider text-muted">Board Region</th>
                 <th className="px-4 py-3 text-right text-[11px] uppercase tracking-wider text-muted">Benchmark</th>
                 <th className="px-4 py-3 text-right text-[11px] uppercase tracking-wider text-muted">Monthly</th>
@@ -280,7 +280,7 @@ export default async function TrendsDetailPage({ params }: { params: Promise<Par
                     <td className="px-4 py-3 text-right text-muted">{mi.peakMonth} {fmtMoney(mi.peak)}</td>
                     <td className={`px-4 py-3 text-right ${toneCls(mi.fromPeakPct)}`}>{fmtPct(mi.fromPeakPct)}</td>
                     <td className="px-4 py-3">
-                      <span className="inline-block rounded-full border border-black px-2.5 py-0.5 text-xs">{conditionLabel(m.latest.marketCondition)}</span>
+                      <span className="inline-block rounded-full border border-primary px-2.5 py-0.5 text-xs">{conditionLabel(m.latest.marketCondition)}</span>
                     </td>
                   </tr>
                 );
@@ -289,7 +289,7 @@ export default async function TrendsDetailPage({ params }: { params: Promise<Par
           </table>
         </div>
 
-        <div className="mt-10 rounded-2xl border border-black p-6 text-center">
+        <div className="mt-10 rounded-2xl border border-primary p-6 text-center">
           <h3 className="text-lg font-bold">Looking to Buy a Property?</h3>
           <p className="mt-1 text-sm text-muted">Browse active MLS® listings or contact our team for expert guidance.</p>
           <Link href="/listings" className="mt-4 inline-block rounded-lg bg-black px-6 py-2.5 text-sm font-semibold text-white">
