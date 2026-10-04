@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { BocTracker } from "@/components/boc/BocTracker";
 import { BocAdSlot } from "@/components/boc/BocAdSlot";
-import { getSiteSettings } from "@/lib/settings";
+import { getSettings, getLogo } from "@/lib/cms";
+import { themeFontHref, themeVars, themeIconOverrideCSS } from "@/lib/theme";
+import { SiteHeader } from "@/components/site/SiteHeader";
+import { SiteFooter, MobileCtaBar } from "@/components/site/SiteFooter";
 
 export const metadata: Metadata = {
   title: "Bank of Canada Interest Rate Tracker | Live BoC Policy Rate, Prime Rate & Mortgage Rates Canada",
@@ -71,7 +74,8 @@ const INFO_BLOCKS: [string, string][] = [
 ];
 
 export default async function BocRatesGuidePage() {
-  const settings = await getSiteSettings();
+  const settings = await getSettings();
+  const logo = await getLogo(settings);
   const ads = (settings.ads ?? {}) as Record<string, any>;
   const showAd = ads.boc_ad_enabled === true && typeof ads.grid_ad_code === "string" && ads.grid_ad_code.includes("data-ad-client");
 
@@ -94,9 +98,13 @@ export default async function BocRatesGuidePage() {
   };
 
   return (
-    <main className="bg-ground">
+    <div className="min-h-screen bg-ground text-ink" style={themeVars(settings)}>
+      {themeFontHref(settings) ? <link rel="stylesheet" href={themeFontHref(settings)} /> : null}
+      <style dangerouslySetInnerHTML={{ __html: themeIconOverrideCSS(settings) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
+      <SiteHeader settings={settings} logo={logo} />
+      <main>
 
       {/* Hero */}
       <section className="bg-primary">
@@ -210,6 +218,9 @@ export default async function BocRatesGuidePage() {
           </p>
         </article>
       </div>
-    </main>
+      </main>
+      <SiteFooter settings={settings} />
+      <MobileCtaBar settings={settings} />
+    </div>
   );
 }
