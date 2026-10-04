@@ -86,12 +86,16 @@ export default async function NeighbourhoodPage({
     baths: sp.baths,
     homeType: sp.homeType,
   };
-  const [settings, stats, { listings, total }] = await Promise.all([
-    getSettings(),
+  // Fetch settings first: if ad shows, use 23 listings so 23 + 1 ad = 24 cards
+  const settings = await getSettings();
+  const _ads = (settings as { ads?: Parameters<typeof listingCardsWithAds>[1] } | null)?.ads;
+  const _showAd = !!(_ads?.grid_ad_enabled && _ads?.grid_ad_code?.includes("data-ad-client"));
+  const perPage = _showAd && view !== "map" ? PER_PAGE - 1 : PER_PAGE;
+  const [stats, { listings, total }] = await Promise.all([
     getHoodStats(hood.city, hood.hood),
-    getHoodListings(hood.city, hood.hood, view === "map" ? 1 : page, view === "map" ? 100 : PER_PAGE, filters),
+    getHoodListings(hood.city, hood.hood, view === "map" ? 1 : page, view === "map" ? 100 : perPage, filters),
   ]);
-  const cards = listingCardsWithAds(listings, (settings as { ads?: Parameters<typeof listingCardsWithAds>[1] } | null)?.ads);
+  const cards = listingCardsWithAds(listings, _ads);
   const typeCounts: Record<string, number> = {};
   for (const t of stats.typeBreakdown ?? []) typeCounts[t.label] = t.count;
   const logo = await getLogo(settings);
