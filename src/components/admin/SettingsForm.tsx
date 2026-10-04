@@ -34,6 +34,7 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
       navigation: s.navigation.filter((n) => n.label && n.href), header_cta: s.header_cta, header: s.header, footer: s.footer,
       contact: s.contact, scripts: s.scripts, lead_settings: s.lead_settings, mobile_cta: s.mobile_cta, blog_cta: s.blog_cta, social_links: s.social_links, precon_cashback: s.precon_cashback,
       email_provider: s.email_provider ?? "zeptomail", sms_provider: s.sms_provider ?? "vonage",
+      ads: s.ads ?? {},
     }).eq("id", 1);
     setMsg(error ? error.message : "Saved");
   }
