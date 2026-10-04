@@ -14,6 +14,8 @@ const nextConfig: NextConfig = {
       // Legacy city hub URLs -> keyword-rich canonical URLs (301)
       { source: "/city/:slug", destination: "/:slug-real-estate", permanent: true },
       { source: "/listings/city/:slug", destination: "/:slug-real-estate", permanent: true },
+      // Legacy HPI trends URLs -> new flat trends URLs (301)
+      { source: "/ontario-housing-market/trends", destination: "/ontario-housing-market-trends", permanent: true },
     ];
   },
   async rewrites() {
