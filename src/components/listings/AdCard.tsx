@@ -32,9 +32,9 @@ export function AdCard({ code }: { code: string }) {
     // Trigger the ad after the ins element is in the DOM
     const t = setTimeout(() => {
       try {
-        ((window as unknown as { adsbygoogle?: unknown[] }).adsbygoogle =
-          (window as unknown as { adsbygoogle?: unknown[] }).adsbygoogle || [];
-        ((window as unknown as { adsbygoogle: unknown[] }).adsbygoogle).push({});
+        const w = window as unknown as { adsbygoogle?: unknown[] };
+        w.adsbygoogle = w.adsbygoogle || [];
+        w.adsbygoogle.push({});
       } catch {
         /* AdSense blocked or failed — leave the placeholder */
       }
