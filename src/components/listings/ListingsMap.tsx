@@ -65,7 +65,7 @@ function cardHtml(l: GridListing): string {
       <div style="padding:10px 12px 12px;">
         <div style="font-weight:700;font-size:16px;color:#111;">${price}</div>
         ${specs ? `<div style="font-size:12px;color:#555;margin-top:3px;">${specs}</div>` : ""}
-        <div style="font-size:12px;color:#333;margin-top:3px;padding-right:36px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${l.UnparsedAddress ?? ""}</div>
+        <div style="font-size:12px;color:#333;margin-top:3px;padding-right:36px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${l.UnparsedAddress ?? ""}</div>
       </div>
       <span style="position:absolute;bottom:10px;right:10px;width:32px;height:32px;border-radius:999px;background:#f1f1f4;color:#111;display:flex;align-items:center;justify-content:center;">${ARROW_SVG}</span>
     </a>`;
