@@ -15,7 +15,31 @@
  * uses proper 0-255 RGB, so the audience colors (blue/green/purple/orange)
  * and the amber accent render as designed.
  */
-import type { jsPDF as JsPDF } from "jspdf";
+/**
+ * Minimal jsPDF surface used by this builder. The real jsPDF UMD build is
+ * loaded from CDN at runtime (see loadJsPdf) — no npm dependency needed.
+ */
+interface JsPDF {
+  setFillColor(r: number, g: number, b: number): void;
+  setTextColor(r: number, g: number, b: number): void;
+  setDrawColor(r: number, g: number, b: number): void;
+  setFontSize(s: number): void;
+  setFont(name: string, style?: string): void;
+  setLineWidth(w: number): void;
+  text(t: string | string[], x: number, y: number, opts?: Record<string, unknown>): void;
+  rect(x: number, y: number, w: number, h: number, style?: string): void;
+  roundedRect(x: number, y: number, w: number, h: number, rx: number, ry: number, style?: string): void;
+  circle(x: number, y: number, r: number, style?: string): void;
+  line(x1: number, y1: number, x2: number, y2: number): void;
+  splitTextToSize(t: string, w: number): string[];
+  getTextWidth(t: string): number;
+  addPage(): void;
+  setPage(n: number): void;
+  save(name: string): void;
+  output(type: string): string;
+  internal: { getNumberOfPages(): number };
+}
+interface JsPdfConstructor { new (opts: Record<string, unknown>): JsPDF; }
 import type { GuideMeta, GuideSection } from "./types";
 
 type RGB = [number, number, number]; // 0-255 per channel
@@ -100,9 +124,27 @@ export function guideFileName(guide: GuideMeta): string {
   return `GetSetSold-${guide.id}-Guide-2026.pdf`;
 }
 
+const JSPDF_CDN = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+
+function loadJsPdf(): Promise<JsPdfConstructor> {
+  const w = window as unknown as { jspdf?: { jsPDF: JsPdfConstructor } };
+  if (w.jspdf?.jsPDF) return Promise.resolve(w.jspdf.jsPDF);
+  return new Promise((resolve, reject) => {
+    const s = document.createElement("script");
+    s.src = JSPDF_CDN;
+    s.async = true;
+    s.onload = () => {
+      const ctor = (window as unknown as { jspdf?: { jsPDF: JsPdfConstructor } }).jspdf?.jsPDF;
+      ctor ? resolve(ctor) : reject(new Error("jsPDF failed to load"));
+    };
+    s.onerror = () => reject(new Error("jsPDF failed to load"));
+    document.head.appendChild(s);
+  });
+}
+
 export async function buildGuidePdfDoc(guide: GuideMeta, sections: GuideSection[]): Promise<JsPDF> {
-  const { jsPDF } = await import("jspdf");
-  const doc = new jsPDF({ unit: "mm", format: "a4" });
+  const JsPdf = await loadJsPdf();
+  const doc = new JsPdf({ unit: "mm", format: "a4" });
   const accent = hexToRgb(guide.color);
   const audLabel = AUDIENCE_LABEL[guide.audience] ?? guide.audience.toUpperCase();
   const audLetter = AUDIENCE_LETTER[guide.audience] ?? "G";
