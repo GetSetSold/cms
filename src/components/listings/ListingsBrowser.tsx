@@ -59,18 +59,24 @@ export async function ListingsBrowser({
   if (sp.type === "rent") query = query.is("ListPrice", null).not("TotalActualRent", "is", null);
   if (sp.beds) query = query.gte("BedroomsTotal", Number(sp.beds));
   if (sp.baths) query = query.gte("BathroomsTotalInteger", Number(sp.baths));
-  if (sp.homeType === "house") query = query.eq("StructureTypeText", "House");
-  else if (sp.homeType === "condo") query = query.eq("StructureTypeText", "Apartment");
-  else if (sp.homeType === "townhouse") query = query.eq("StructureTypeText", "Row / Townhouse");
+  if (sp.homeType) query = query.eq("StructureTypeText", sp.homeType);
   const priceCol = sp.type === "rent" ? "TotalActualRent" : "ListPrice";
   if (sp.minPrice) query = query.gte(priceCol, Number(sp.minPrice));
   if (sp.maxPrice) query = query.lte(priceCol, Number(sp.maxPrice));
   query = query.order("OriginalEntryTimestamp", { ascending: false });
 
-  const [{ data: listings, count }, cityList] = await Promise.all([
+  const [{ data: listings, count }, cityList, typeRows] = await Promise.all([
     query,
     fixedCity ? Promise.resolve([]) : listNormalizedCities(),
+    cityVariants
+      ? mls.from("grid").select("StructureTypeText").in("City", cityVariants).limit(10000)
+      : Promise.resolve({ data: [] as { StructureTypeText: string | null }[] }),
   ]);
+  const typeCounts: Record<string, number> = {};
+  for (const r of (typeRows as { data?: { StructureTypeText: string | null }[] }).data ?? []) {
+    const t = r.StructureTypeText?.trim() || "Other";
+    typeCounts[t] = (typeCounts[t] || 0) + 1;
+  }
 
   const cities = fixedCity ? [] : cityList;
   const total = count ?? 0;
@@ -110,6 +116,7 @@ export async function ListingsBrowser({
           sp={sp as Record<string, string | undefined>}
           showCitySearch={!fixedCity}
           cities={cities}
+          typeCounts={typeCounts}
         />
         <div className="hidden md:block">
           <ViewToggle view={view} hrefFor={(v) => hrefFor({ view: v })} />
