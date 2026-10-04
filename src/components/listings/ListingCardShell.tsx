@@ -82,11 +82,11 @@ export function ListingCardShell(d: ListingCardData) {
         ) : null}
 
         {location ? (
-          <div className="truncate text-[15px] text-ink">{location}</div>
+          <div className="line-clamp-2 text-sm leading-snug text-ink">{location}</div>
         ) : null}
 
         {d.mlsNumber || d.brokerage ? (
-          <div className="truncate pr-10 text-[13px] text-muted">
+          <div className="line-clamp-2 pr-10 text-xs text-muted">
             {d.mlsNumber ? `MLS® ${d.mlsNumber}` : null}
             {d.mlsNumber && d.brokerage ? " • " : null}
             {d.brokerage ? d.brokerage : null}
