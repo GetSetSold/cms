@@ -65,7 +65,6 @@ export default async function TrendsDetailPage({ params }: { params: Promise<Par
   const affordPct = ontAvg ? Math.round((L.compositeBenchmark / ontAvg) * 100) : null;
 
   const points12 = market.history12m.map((h) => ({ month: h.month, value: h.compositeBenchmark, hpi: h.compositeHPI }));
-  const fullPoints = market.fullHistory.map((h) => ({ month: h.month, value: h.compositeBenchmark, hpi: h.compositeHPI }));
 
   const insights: { label: string; value: string; sub: string }[] = [
     { label: "Price Recovery from Peak", value: fmtMoney(L.compositeBenchmark), sub: `vs peak ${fmtMoney(ins.peak)} · ${ins.peakMonth}` },
