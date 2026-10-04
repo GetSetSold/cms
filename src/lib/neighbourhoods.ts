@@ -163,7 +163,15 @@ export async function resolveHood(
 /** Live stats for a neighbourhood page — same shape as city stats so the
  *  CityStatsSection / CityEditorial / CityFaq components can be reused
  *  with the neighbourhood name. */
+// Module-level 1h cache — paginated scan, don't rerun per request (free plan bandwidth).
+const hoodStatsCache = new Map<string, { data: CityStats; expires: number }>();
+const HOOD_STATS_TTL = 3600000;
+
 export const getHoodStats = cache(async (city: string, hood: string): Promise<CityStats> => {
+  const key = `${city.toLowerCase()}|${hood.toLowerCase()}`;
+  const hit = hoodStatsCache.get(key);
+  if (hit && Date.now() < hit.expires) return hit.data;
+
   const mls = createMlsClient();
   const variants = await rawCitiesFor(city);
   const unknownVariants = await unknownCityVariants();
@@ -207,7 +215,7 @@ export const getHoodStats = cache(async (city: string, hood: string): Promise<Ci
     return s.length % 2 ? s[mid] : Math.round((s[mid - 1] + s[mid]) / 2);
   };
 
-  return {
+  const result: CityStats = {
     city: hood, // components interpolate this as the place name
     activeCount: total,
     saleCount: prices.length,
@@ -219,6 +227,8 @@ export const getHoodStats = cache(async (city: string, hood: string): Promise<Ci
       .sort((a, b) => b.count - a.count)
       .slice(0, 6),
   };
+  hoodStatsCache.set(key, { data: result, expires: Date.now() + HOOD_STATS_TTL });
+  return result;
 });
 
 /** Paginated listings for a neighbourhood page (property table, newest first).
