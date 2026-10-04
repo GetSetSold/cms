@@ -5,7 +5,7 @@ import { Pagination } from "@/components/listings/Pagination";
 import { ViewToggle } from "@/components/listings/ViewToggle";
 import { ListingFilters } from "@/components/listings/ListingFilters";
 
-export type ListingsSearchParams = { city?: string; type?: string; beds?: string; baths?: string; homeType?: string; minPrice?: string; maxPrice?: string; page?: string; perPage?: string; perRow?: string; view?: string };
+export type ListingsSearchParams = { city?: string; type?: string; beds?: string; baths?: string; homeType?: string; minPrice?: string; maxPrice?: string; lat?: string; lng?: string; page?: string; perPage?: string; perRow?: string; view?: string };
 
 export const DEFAULT_CITY = "Cayuga"; // keeps the very first load from ever querying all ~50k rows
 const ALL_CITIES_SENTINEL = "all";
@@ -36,15 +36,16 @@ export async function ListingsBrowser({
   const page = Math.max(1, Number(sp.page) || 1);
   const from = (page - 1) * perPage;
 
-  const effectiveCity = fixedCity ?? (sp.city === ALL_CITIES_SENTINEL ? null : sp.city || DEFAULT_CITY);
-  const cityWasDefaulted = !fixedCity && !sp.city;
+  const hasLocation = !fixedCity && sp.lat && sp.lng && !isNaN(Number(sp.lat)) && !isNaN(Number(sp.lng));
+  const effectiveCity = fixedCity ?? (hasLocation ? null : sp.city === ALL_CITIES_SENTINEL ? null : sp.city || DEFAULT_CITY);
+  const cityWasDefaulted = !fixedCity && !sp.city && !hasLocation;
 
   // Normalized cities expand to all raw variants ("Toronto" -> "Toronto",
   // "Toronto (Mimico)", ...). Search-box input is resolved the same way.
   let cityVariants: string[] | null = null;
   if (fixedCity) {
     cityVariants = await rawCitiesFor(fixedCity);
-  } else if (sp.city && sp.city !== ALL_CITIES_SENTINEL) {
+  } else if (!hasLocation && sp.city && sp.city !== ALL_CITIES_SENTINEL) {
     const normalized = await resolveCityName(sp.city);
     if (normalized) cityVariants = await rawCitiesFor(normalized);
   }
@@ -53,7 +54,17 @@ export async function ListingsBrowser({
   let query = mls.from("grid").select("*", { count: "exact" });
   if (view !== "map") query = query.range(from, from + perPage - 1);
   else query = query.limit(mapLimit);
-  if (cityVariants) query = query.in("City", cityVariants);
+  if (hasLocation) {
+    const lat = Number(sp.lat), lng = Number(sp.lng);
+    const radiusKm = 25;
+    const latDelta = radiusKm / 111;
+    const lngDelta = radiusKm / (111 * Math.cos((lat * Math.PI) / 180));
+    query = query
+      .gte("Latitude", lat - latDelta)
+      .lte("Latitude", lat + latDelta)
+      .gte("Longitude", lng - lngDelta)
+      .lte("Longitude", lng + lngDelta);
+  } else if (cityVariants) query = query.in("City", cityVariants);
   else if (effectiveCity) query = query.eq("City", effectiveCity);
   if (sp.type === "sale") query = query.not("ListPrice", "is", null);
   if (sp.type === "rent") query = query.is("ListPrice", null).not("TotalActualRent", "is", null);
@@ -99,9 +110,14 @@ export async function ListingsBrowser({
       <div className="flex flex-col gap-2">
         <div className="text-sm text-muted"><a href="/" className="hover:text-ink">Home</a> / {fixedCity ? <><a href="/listings" className="hover:text-ink">Listings</a> / <span>{fixedCity}</span></> : <span>Search</span>}</div>
         <h1 className="font-display text-4xl font-extrabold md:text-5xl">
-          {heading ?? (effectiveCity ? `${total.toLocaleString()} listings in ${effectiveCity}` : `${total.toLocaleString()} listings`)}
+          {heading ?? (hasLocation ? `${total.toLocaleString()} listings near you` : effectiveCity ? `${total.toLocaleString()} listings in ${effectiveCity}` : `${total.toLocaleString()} listings`)}
         </h1>
-        {!fixedCity && cityWasDefaulted ? (
+        {hasLocation ? (
+          <p className="text-sm text-muted">
+            Showing listings within 25 km of your location.{" "}
+            <a href={hrefFor({ lat: undefined, lng: undefined, city: DEFAULT_CITY })} className="font-medium text-primary">Clear location</a>
+          </p>
+        ) : !fixedCity && cityWasDefaulted ? (
           <p className="text-sm text-muted">
             Showing {DEFAULT_CITY} by default. <a href={hrefFor({ city: ALL_CITIES_SENTINEL })} className="font-medium text-primary">Search all cities</a> instead.
           </p>
