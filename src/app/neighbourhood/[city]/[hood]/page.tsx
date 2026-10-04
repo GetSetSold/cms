@@ -7,6 +7,7 @@ import { themeFontHref, themeVars, themeIconOverrideCSS } from "@/lib/theme";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter, MobileCtaBar } from "@/components/site/SiteFooter";
 import { ListingCard } from "@/components/listings/ListingCard";
+import { ListingFilters } from "@/components/listings/ListingFilters";
 import { Pagination } from "@/components/listings/Pagination";
 import { CityStatsSection } from "@/components/listings/CityStatsSection";
 import { CityEditorial } from "@/components/listings/CityEditorial";
@@ -35,7 +36,7 @@ export default async function NeighbourhoodPage({
   searchParams,
 }: {
   params: Promise<Params>;
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; type?: string; minPrice?: string; maxPrice?: string; beds?: string; baths?: string; homeType?: string }>;
 }) {
   const { city: cityParam, hood: hoodParam } = await params;
   const sp = await searchParams;
@@ -46,10 +47,18 @@ export default async function NeighbourhoodPage({
   const cityUrl = `/${citySlug(hood.city)}-real-estate`;
   const hoodUrl = `${cityUrl}/${hood.hoodSlug}`;
 
+  const filters = {
+    type: sp.type,
+    minPrice: sp.minPrice,
+    maxPrice: sp.maxPrice,
+    beds: sp.beds,
+    baths: sp.baths,
+    homeType: sp.homeType,
+  };
   const [settings, stats, { listings, total }] = await Promise.all([
     getSettings(),
     getHoodStats(hood.city, hood.hood),
-    getHoodListings(hood.city, hood.hood, page, PER_PAGE),
+    getHoodListings(hood.city, hood.hood, page, PER_PAGE, filters),
   ]);
   const logo = await getLogo(settings);
   const themeVars_ = themeVars(settings);
@@ -90,6 +99,10 @@ export default async function NeighbourhoodPage({
         <p className="mt-3 max-w-3xl leading-relaxed text-muted">
           {total.toLocaleString()} active MLS® listings in {hood.hood}. Updated daily from the live feed.
         </p>
+
+        <div className="mt-6">
+          <ListingFilters basePath={hoodUrl} sp={sp as Record<string, string | undefined>} />
+        </div>
 
         {listings.length > 0 ? (
           <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
