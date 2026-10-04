@@ -19,6 +19,27 @@ const GRID_COLS: Record<number, string> = {
 /** Renders the full search/grid/split/map listings experience. Reused by
  *  /listings (city from ?city=) and by the listing_grid CMS block and any
  *  future per-city route (city passed in directly, no query param needed). */
+// Module-level cache for home-type counts (1h TTL) — avoids a 10k-row scan on every page load.
+const typeCountsCache = new Map<string, { data: Record<string, number>; ts: number }>();
+const TYPE_CACHE_TTL = 3600000;
+
+async function getCachedTypeCounts(
+  mls: ReturnType<typeof createMlsClient>,
+  cityVariants: string[]
+): Promise<Record<string, number>> {
+  const key = [...cityVariants].sort().join("|");
+  const cached = typeCountsCache.get(key);
+  if (cached && Date.now() - cached.ts < TYPE_CACHE_TTL) return cached.data;
+  const { data } = await mls.from("grid").select("StructureTypeText").in("City", cityVariants).limit(10000);
+  const counts: Record<string, number> = {};
+  for (const r of (data ?? []) as { StructureTypeText: string | null }[]) {
+    const t = r.StructureTypeText?.trim() || "Other";
+    counts[t] = (counts[t] || 0) + 1;
+  }
+  typeCountsCache.set(key, { data: counts, ts: Date.now() });
+  return counts;
+}
+
 export async function ListingsBrowser({
   sp, basePath, fixedCity, heading,
 }: {
@@ -76,18 +97,11 @@ export async function ListingsBrowser({
   if (sp.maxPrice) query = query.lte(priceCol, Number(sp.maxPrice));
   query = query.order("OriginalEntryTimestamp", { ascending: false });
 
-  const [{ data: listings, count }, cityList, typeRows] = await Promise.all([
+  const [{ data: listings, count }, cityList, typeCounts] = await Promise.all([
     query,
     fixedCity ? Promise.resolve([]) : listNormalizedCities(),
-    cityVariants
-      ? mls.from("grid").select("StructureTypeText").in("City", cityVariants).limit(10000)
-      : Promise.resolve({ data: [] as { StructureTypeText: string | null }[] }),
+    cityVariants ? getCachedTypeCounts(mls, cityVariants) : Promise.resolve({} as Record<string, number>),
   ]);
-  const typeCounts: Record<string, number> = {};
-  for (const r of (typeRows as { data?: { StructureTypeText: string | null }[] }).data ?? []) {
-    const t = r.StructureTypeText?.trim() || "Other";
-    typeCounts[t] = (typeCounts[t] || 0) + 1;
-  }
 
   const cities = fixedCity ? [] : cityList;
   const total = count ?? 0;
