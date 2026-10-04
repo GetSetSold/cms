@@ -28,7 +28,8 @@ function conditionLabel(c: string) {
 }
 
 export default async function TrendsOverviewPage() {
-  const [markets, settings, logo] = await Promise.all([getHpiMarkets(), getSettings(), getLogo()]);
+  const settings = await getSettings();
+  const [markets, logo] = await Promise.all([getHpiMarkets(), getLogo(settings)]);
   const sorted = [...markets].sort((a, b) => b.latest.compositeBenchmark - a.latest.compositeBenchmark);
   const updated = markets[0]?.lastUpdated ?? "";
 
