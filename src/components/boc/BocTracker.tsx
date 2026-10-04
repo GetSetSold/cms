@@ -122,7 +122,11 @@ function RateCard({ label, value, sub, accent, loading, badge }: {
 const CHART_W = 760;
 const CHART_H = 260;
 
-function BocChart({ points, decisions, range }: { points: MonthPt[]; decisions: Decision[]; range: string }) {
+function BocChart({ points, decisions, range, visible, onToggle }: {
+  points: MonthPt[]; decisions: Decision[]; range: string;
+  visible: { target: boolean; bank: boolean; prime: boolean; cpi: boolean; holds: boolean };
+  onToggle: (k: "target" | "bank" | "prime" | "cpi" | "holds") => void;
+}) {
   const years = range === "all" ? 99 : parseInt(range);
   const cutoff = new Date(); cutoff.setFullYear(cutoff.getFullYear() - years);
   const pts = points.filter((p) => new Date(p.m + "-01T00:00:00") >= cutoff);
@@ -161,12 +165,29 @@ function BocChart({ points, decisions, range }: { points: MonthPt[]; decisions: 
 
   return (
     <div>
-      <div className="mb-3 flex flex-wrap gap-x-5 gap-y-1 text-[12px] text-muted">
-        <span className="inline-flex items-center gap-1.5"><span className="inline-block h-0.5 w-5 bg-ink" /> Target Rate</span>
-        <span className="inline-flex items-center gap-1.5"><span className="inline-block h-0 w-5 border-t-2 border-dashed" style={{ borderColor: "#1A6B8A" }} /> Bank Rate</span>
-        <span className="inline-flex items-center gap-1.5"><span className="inline-block h-0.5 w-5" style={{ background: "#2E86AB" }} /> Prime Rate</span>
-        <span className="inline-flex items-center gap-1.5"><span className="inline-block h-0 w-5 border-t-2 border-dashed border-amber-500" /> CPI Inflation (YoY %)</span>
-        <span className="inline-flex items-center gap-1.5"><span className="inline-block h-2.5 w-2.5 rounded-full border-2 border-neutral-400 bg-white" /> Held</span>
+      <div className="mb-3 flex flex-wrap gap-2">
+        {([
+          ["target", "Target Rate", <span key="s" className="inline-block h-0.5 w-5 bg-ink" />],
+          ["bank", "Bank Rate", <span key="s" className="inline-block h-0 w-5 border-t-2 border-dashed" style={{ borderColor: "#1A6B8A" }} />],
+          ["prime", "Prime Rate", <span key="s" className="inline-block h-0.5 w-5" style={{ background: "#2E86AB" }} />],
+          ["cpi", "CPI Inflation (YoY %)", <span key="s" className="inline-block h-0 w-5 border-t-2 border-dashed border-amber-500" />],
+          ["holds", "Held", <span key="s" className="inline-block h-2.5 w-2.5 rounded-full border-2 border-neutral-400 bg-white" />],
+        ] as const).map(([k, label, swatch]) => (
+          <button
+            key={k}
+            type="button"
+            onClick={() => onToggle(k)}
+            aria-pressed={visible[k]}
+            className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[12px] font-medium transition ${
+              visible[k] ? "border-ink bg-ink text-white" : "border-line bg-white text-muted"
+            }`}
+          >
+            <span className={`inline-flex h-3.5 w-3.5 items-center justify-center rounded-sm border ${visible[k] ? "border-white bg-white text-ink" : "border-neutral-300 bg-white"}`}>
+              {visible[k] ? <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4"><path d="M4 12l6 6L20 6" /></svg> : null}
+            </span>
+            {swatch} {label}
+          </button>
+        ))}
       </div>
       <svg viewBox={`0 0 ${CHART_W} ${CHART_H}`} className="h-auto w-full" role="img" aria-label="Historical Bank of Canada interest rates and CPI inflation chart">
         {gridRates.map((g) => (
@@ -177,18 +198,22 @@ function BocChart({ points, decisions, range }: { points: MonthPt[]; decisions: 
         ))}
         <text x={CHART_W - 56} y={pyC(cMax) + 4} fontSize="10" fill="#f59e0b" textAnchor="start">{cMax.toFixed(1)}%</text>
         <text x={CHART_W - 56} y={pyC(cMin) + 4} fontSize="10" fill="#f59e0b" textAnchor="start">{cMin.toFixed(1)}%</text>
-        <polyline points={line((p) => p.target, pyR)} fill="none" stroke="var(--c-primary,#111111)" strokeWidth="2" />
-        <polyline points={line((p) => p.bank, pyR)} fill="none" stroke="#1A6B8A" strokeWidth="1.5" strokeDasharray="5 3" />
-        <polyline points={line((p) => p.prime, pyR)} fill="none" stroke="#2E86AB" strokeWidth="1.5" />
-        <polyline points={line((p) => p.cpi, pyC)} fill="none" stroke="#f59e0b" strokeWidth="1.5" strokeDasharray="8 4" />
+        {visible.target && <polyline points={line((p) => p.target, pyR)} fill="none" stroke="var(--c-primary,#111111)" strokeWidth="2" />}
+        {visible.bank && <polyline points={line((p) => p.bank, pyR)} fill="none" stroke="#1A6B8A" strokeWidth="1.5" strokeDasharray="5 3" />}
+        {visible.prime && <polyline points={line((p) => p.prime, pyR)} fill="none" stroke="#2E86AB" strokeWidth="1.5" />}
+        {visible.cpi && <polyline points={line((p) => p.cpi, pyC)} fill="none" stroke="#f59e0b" strokeWidth="1.5" strokeDasharray="8 4" />}
         {markers.map((mk, i) => mk.type === "hold" ? (
-          <circle key={i} cx={mk.x} cy={mk.y} r="4" fill="#fff" stroke="#9ca3af" strokeWidth="2">
-            <title>Held at {fmtDate(mk.date)}</title>
-          </circle>
+          visible.holds ? (
+            <circle key={i} cx={mk.x} cy={mk.y} r="4" fill="#fff" stroke="#9ca3af" strokeWidth="2">
+              <title>Held at {fmtDate(mk.date)}</title>
+            </circle>
+          ) : null
         ) : (
-          <circle key={i} cx={mk.x} cy={mk.y} r="4" fill="var(--c-primary,#111111)">
-            <title>Changed {fmtDate(mk.date)}</title>
-          </circle>
+          visible.target ? (
+            <circle key={i} cx={mk.x} cy={mk.y} r="4" fill="var(--c-primary,#111111)">
+              <title>Changed {fmtDate(mk.date)}</title>
+            </circle>
+          ) : null
         ))}
         {pts.map((p, i) => i % labelEvery === 0 ? (
           <text key={p.m} x={px(i)} y={CHART_H - 8} fontSize="10" fill="#333" textAnchor="middle">
@@ -205,6 +230,7 @@ export function BocTracker() {
   const [banks, setBanks] = useState<{ bankPrime: number|null; mtg1yr: number|null; mtg3yr: number|null; mtg5yr: number|null } | null>(null);
   const [months, setMonths] = useState<MonthPt[]>([]);
   const [range, setRange] = useState("3");
+  const [visible, setVisible] = useState({ target: true, bank: true, prime: true, cpi: true, holds: true });
   const { next, parts } = useCountdown();
 
   useEffect(() => {
@@ -396,7 +422,13 @@ export function BocTracker() {
           </select>
         </div>
         <section aria-label="Historical interest rate trends" className="rounded-lg border border-line bg-white p-5 shadow-sm">
-          <BocChart points={months} decisions={decisions} range={range} />
+          <BocChart
+            points={months}
+            decisions={decisions}
+            range={range}
+            visible={visible}
+            onToggle={(k) => setVisible((v) => ({ ...v, [k]: !v[k] }))}
+          />
         </section>
       </div>
 
@@ -416,14 +448,14 @@ export function BocTracker() {
                 </div>
               ))}
             </div>
-            <div className="mt-4 space-y-2 border-t border-line pt-4 text-[13px]">
+            <div className="mt-4 border-t border-line pt-2 text-[13px]">
               {[["Highest Rate", stats ? stats.high.toFixed(2) + "%" : null],
                 ["Lowest Rate", stats ? stats.low.toFixed(2) + "%" : null],
                 ["Current Target", fmtRate(target)],
                 ["Current Prime", fmtRate(prime)],
                 ["Days at Current Rate", stats ? `${stats.daysSteady} days` : null],
                 ["Longest Hold Period", stats ? `${stats.longestHold} days` : null]].map(([l, v]) => (
-                <div key={l as string} className="flex justify-between">
+                <div key={l as string} className="flex justify-between border-b border-line py-2">
                   <span className="text-muted">{l}</span>
                   <span className="font-semibold text-ink">{v ?? <Skeleton w={50} h={16} />}</span>
                 </div>
@@ -435,7 +467,8 @@ export function BocTracker() {
         <div className="lg:col-span-3">
           <BlockHead eyebrow="Decisions" heading="Rate Decision History" sub="All BoC rate decisions including holds & changes" />
           <article className="rounded-lg border border-line bg-white p-5 shadow-sm">
-            <div className="max-h-[460px] overflow-y-auto pr-1">
+            <style>{`.boc-thin-scroll{scrollbar-width:thin;scrollbar-color:#d1d5db transparent}.boc-thin-scroll::-webkit-scrollbar{width:6px}.boc-thin-scroll::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:3px}.boc-thin-scroll::-webkit-scrollbar-track{background:transparent}`}</style>
+            <div className="boc-thin-scroll max-h-[460px] overflow-y-auto pr-4">
               {decisions.length === 0 && <div className="py-10 text-center text-[13px] text-muted">Loading…</div>}
               {decisions.slice(0, 60).map((d, i, arr) => (
                 <div key={d.date + d.type} className="flex gap-3 pb-4">
