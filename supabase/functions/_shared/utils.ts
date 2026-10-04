@@ -113,7 +113,9 @@ function toHtml(text: string) {
   return text.split(/\n{2,}/).map((p) => `<p>${p.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/\n/g, "<br>")}</p>`).join("");
 }
 
-async function sendEmailZeptoMail(to: string | string[], subject: string, text: string, html?: string) {
+export interface EmailAttachment { name: string; content: string; mime_type: string; }
+
+async function sendEmailZeptoMail(to: string | string[], subject: string, text: string, html?: string, attachments?: EmailAttachment[]) {
   const token = Deno.env.get("ZEPTOMAIL_TOKEN"); // "Zoho-enczapikey <send mail token>"
   const from = Deno.env.get("EMAIL_FROM");
   const fromName = Deno.env.get("EMAIL_FROM_NAME");
@@ -122,7 +124,7 @@ async function sendEmailZeptoMail(to: string | string[], subject: string, text: 
   const res = await fetch("https://api.zeptomail.com/v1.1/email", {
     method: "POST",
     headers: { Authorization: token, "Content-Type": "application/json", Accept: "application/json" },
-    body: JSON.stringify({ from: { address: from, name: fromName || undefined }, to: recipients, subject, htmlbody: html ?? toHtml(text), textbody: text }),
+    body: JSON.stringify({ from: { address: from, name: fromName || undefined }, to: recipients, subject, htmlbody: html ?? toHtml(text), textbody: text, attachments: attachments?.map((a) => ({ name: a.name, content: a.content, mime_type: a.mime_type })) }),
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.message ?? data.error?.details?.[0]?.message ?? `ZeptoMail error ${res.status}`);
@@ -145,6 +147,6 @@ async function sendEmailResend(to: string | string[], subject: string, text: str
 
 /** `provider` comes from site_settings.email_provider (fetched by the caller — this function has no
  *  DB access of its own). Defaults to ZeptoMail so any call site that doesn't pass one keeps working. */
-export async function sendEmail(to: string | string[], subject: string, text: string, html?: string, provider: "zeptomail" | "resend" = "zeptomail") {
-  return provider === "resend" ? sendEmailResend(to, subject, text, html) : sendEmailZeptoMail(to, subject, text, html);
+export async function sendEmail(to: string | string[], subject: string, text: string, html?: string, provider: "zeptomail" | "resend" = "zeptomail", attachments?: EmailAttachment[]) {
+  return provider === "resend" ? sendEmailResend(to, subject, text, html) : sendEmailZeptoMail(to, subject, text, html, attachments);
 }
