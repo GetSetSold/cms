@@ -12,6 +12,8 @@ export function createMlsClient() {
 
 export interface GridListing {
   ListingKey: string;
+  /** Public MLS® number (DDF ListingId). Column pending backfill — null until then. */
+  ListingId?: string | null;
   OfficeName: string | null;
   ListPrice: number | null;
   TotalActualRent: number | null;
@@ -28,6 +30,7 @@ export interface GridListing {
   BedroomsTotal: number | null;
   AboveGradeFinishedArea: number | null;
   StructureTypeText: string | null;
+  OriginalEntryTimestamp: string | null;
 }
 
 export interface MediaItem {
