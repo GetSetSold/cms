@@ -101,6 +101,8 @@ export interface SiteSettings {
     grid_ad_frequency?: number;
     trends_ad_enabled?: boolean;
     boc_ad_enabled?: boolean;
+    guides_ad_enabled?: boolean;
+    calculators_ad_enabled?: boolean;
   };
   lead_settings: { notify_emails: string[] };
   /** Calculator regulatory/default assumptions (Admin → Calculators). Merged over code defaults. */

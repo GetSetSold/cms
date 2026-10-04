@@ -445,6 +445,14 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
               <input type="checkbox" checked={s.ads?.boc_ad_enabled ?? false} onChange={(e) => set("ads", { ...s.ads, boc_ad_enabled: e.target.checked })} className="h-4 w-4" />
               Show ad on Bank of Canada rates guide page
             </label>
+            <label className="label flex items-center gap-2 border-t border-line pt-3">
+              <input type="checkbox" checked={s.ads?.guides_ad_enabled ?? false} onChange={(e) => set("ads", { ...s.ads, guides_ad_enabled: e.target.checked })} className="h-4 w-4" />
+              Show ads on guides pages
+            </label>
+            <label className="label flex items-center gap-2 border-t border-line pt-3">
+              <input type="checkbox" checked={s.ads?.calculators_ad_enabled ?? false} onChange={(e) => set("ads", { ...s.ads, calculators_ad_enabled: e.target.checked })} className="h-4 w-4" />
+              Show ads on calculator pages
+            </label>
           </section>
         )}
       </div>
