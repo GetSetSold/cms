@@ -133,7 +133,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
             </div>
 
             <div className="overflow-hidden rounded-2xl bg-white">
-              <FieldTable mobileCols={4} fields={statFields(listing, dom)} />
+              <FieldTable mobileCols={4} variant="stats" fields={statFields(listing, dom)} />
             </div>
 
             {listing.PublicRemarks ? (

@@ -74,11 +74,20 @@ function layoutTable(fields: DetailField[], mobileCols = 2): PlacedCell[] {
   });
 }
 
-export function FieldTable({ fields, mobileCols = 2 }: { fields: DetailField[]; mobileCols?: number }) {
+export function FieldTable({
+  fields,
+  mobileCols = 2,
+  variant = "detail",
+}: {
+  fields: DetailField[];
+  mobileCols?: number;
+  variant?: "detail" | "stats";
+}) {
   const visible = fields.filter((f) => f.value);
   if (!visible.length) return null;
   const cells = layoutTable(visible, mobileCols);
   const gridCls = mobileCols === 2 ? "grid-cols-2 md:grid-cols-4" : "grid-cols-4";
+  const stats = variant === "stats";
   return (
     <div className={`grid ${gridCls}`}>
       {cells.map((c, i) => {
@@ -87,10 +96,17 @@ export function FieldTable({ fields, mobileCols = 2 }: { fields: DetailField[]; 
         const cls = `border-line ${vCls} ${hCls} ${SPAN_CLS[c.span]}`;
         const key = c.field ? c.field.label : `empty-${i}`;
         return c.field ? (
-          <div key={key} className={`flex flex-col bg-white px-3 py-5 text-left ${cls}`}>
-            <div className="text-[11px] text-muted">{c.field.label}</div>
-            <div className="mt-1 font-display text-lg font-semibold leading-snug text-ink">{c.field.value}</div>
-          </div>
+          stats ? (
+            <div key={key} className={`flex flex-col items-center gap-1 bg-white px-2 py-5 text-center ${cls}`}>
+              <div className="font-display text-lg font-semibold leading-snug text-ink">{c.field.value}</div>
+              <div className="text-[11px] text-muted">{c.field.label}</div>
+            </div>
+          ) : (
+            <div key={key} className={`flex flex-col bg-white px-3 py-5 text-left ${cls}`}>
+              <div className="text-[11px] text-muted">{c.field.label}</div>
+              <div className="mt-1 font-display text-lg font-semibold leading-snug text-ink">{c.field.value}</div>
+            </div>
+          )
         ) : (
           <div key={key} aria-hidden="true" className={cls} />
         );
