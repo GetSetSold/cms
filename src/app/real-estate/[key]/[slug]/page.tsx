@@ -149,7 +149,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
               <div className="font-display text-3xl md:text-4xl">{priceDisplay(listing)}</div>
               <div className="mt-2 text-lg">{listing.UnparsedAddress}{listing.City ? `, ${listing.City}` : ""}{listing.Province ? `, ${listing.Province}` : ""}</div>
               <div className="mt-4 flex items-center justify-between border-t border-line pt-4 text-sm text-muted">
-                <span>MLS® <strong className="text-ink">{listing.ListingId ?? listing.ListingKey}</strong></span>
+                <span>MLS® <strong className="text-ink">{listing.ListingId ?? listing.ListingKey}</strong>{listing.OfficeName ? <> <span className="text-muted">|</span> {listing.OfficeName.toUpperCase()}</> : null}</span>
               </div>
             </div>
 
@@ -184,7 +184,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
           </div>
 
           <div className="flex flex-col gap-6 lg:sticky lg:top-24 lg:self-start">
-            <ListingContactCard listing={listing} form={inquiryForm} />
+            <ListingContactCard listing={listing} form={inquiryForm} agent={settings.agent} />
           </div>
         </div>
 
