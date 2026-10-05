@@ -1,4 +1,4 @@
-import { displayValue, type PropertyListing } from "@/lib/mls";
+import { displayValue, roomItems, roomDimensions, type PropertyListing } from "@/lib/mls";
 
 const currency = (v: unknown): string | null => {
   if (v == null || v === "") return null;
@@ -252,5 +252,35 @@ export function Financials({ listing, sale }: { listing: PropertyListing; sale: 
         ]}
       />
     </>
+  );
+}
+
+export function RoomsBlock({ listing }: { listing: PropertyListing }) {
+  const rooms = roomItems(listing.Rooms);
+  if (!rooms.length) return null;
+  return (
+    <div className="overflow-hidden rounded-2xl bg-white">
+      <h2 className="border-b border-line px-6 py-4 font-display text-xl">Rooms</h2>
+      <div className="overflow-x-auto">
+        <table className="w-full text-left">
+          <thead>
+            <tr className="border-b border-line">
+              <th className="px-4 py-3 text-[11px] font-medium text-muted md:px-6">Room</th>
+              <th className="px-3 py-3 text-[11px] font-medium text-muted">Level</th>
+              <th className="px-4 py-3 text-[11px] font-medium text-muted md:px-6">Dimensions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rooms.map((r, i) => (
+              <tr key={i} className={i > 0 ? "border-t border-line" : ""}>
+                <td className="px-4 py-4 text-[15px] font-medium text-ink md:px-6">{r.RoomType || "—"}</td>
+                <td className="px-3 py-4 text-[15px] text-ink">{r.RoomLevel || "—"}</td>
+                <td className="px-4 py-4 text-[15px] text-ink md:px-6">{roomDimensions(r) || "—"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
   );
 }

@@ -9,7 +9,7 @@ import { SiteFooter, MobileCtaBar } from "@/components/site/SiteFooter";
 import { ListingCard } from "@/components/listings/ListingCard";
 import { ListingGallery } from "@/components/listings/ListingGallery";
 import { ListingContactCard } from "@/components/listings/ListingContactCard";
-import { LocationDescription, PropertySummary, LandAndLot, ConstructionExterior, SystemsUtilities, Financials, FieldTable } from "@/components/listings/ListingDetailBlocks";
+import { LocationDescription, PropertySummary, LandAndLot, ConstructionExterior, SystemsUtilities, Financials, FieldTable, RoomsBlock } from "@/components/listings/ListingDetailBlocks";
 import { createClient } from "@/lib/supabase/server";
 import type { CmsForm } from "@/lib/types";
 
@@ -150,6 +150,8 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
             <LocationDescription listing={listing} />
 
             <PropertySummary listing={listing} />
+
+            <RoomsBlock listing={listing} />
 
             <LandAndLot listing={listing} />
 

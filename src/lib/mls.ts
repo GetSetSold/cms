@@ -223,6 +223,36 @@ export function mediaItems(media: PropertyListing["Media"]): MediaItem[] {
   return items;
 }
 
+/** DDF room record: RoomDimensions is pre-formatted when present, otherwise built from L x W. */
+export interface RoomItem {
+  RoomType?: string | null;
+  RoomLevel?: string | null;
+  RoomDimensions?: string | null;
+  RoomLength?: string | number | null;
+  RoomWidth?: string | number | null;
+  RoomLengthWidthUnits?: string | null;
+}
+
+/** Parse the property.Rooms column (array or JSON string) into room records. */
+export function roomItems(rooms: unknown): RoomItem[] {
+  let arr: unknown = rooms;
+  if (typeof rooms === "string") {
+    try { arr = JSON.parse(rooms); } catch { return []; }
+  }
+  if (!Array.isArray(arr)) return [];
+  return (arr as RoomItem[]).filter((r) => r && typeof r === "object");
+}
+
+/** "12 x 10 Feet" from a room record, preferring the pre-formatted dimensions. */
+export function roomDimensions(r: RoomItem): string | null {
+  if (r.RoomDimensions) return String(r.RoomDimensions);
+  if (r.RoomLength && r.RoomWidth) {
+    const units = r.RoomLengthWidthUnits ? ` ${r.RoomLengthWidthUnits}` : "";
+    return `${r.RoomLength} x ${r.RoomWidth}${units}`;
+  }
+  return null;
+}
+
 export function displayValue(value: unknown): string {
   if (Array.isArray(value)) return value.filter(Boolean).join(", ");
   if (typeof value === "string" && value.startsWith("[") && value.endsWith("]")) {
