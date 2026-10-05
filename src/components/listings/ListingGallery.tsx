@@ -61,13 +61,13 @@ export function ListingGallery({ items }: { items: MediaItem[] }) {
             View Gallery
           </button>
         </div>
-        <div className="hidden grid-cols-2 grid-rows-2 gap-2.5 md:grid">
+        <div className="hidden md:grid md:h-full md:grid-cols-2 md:gap-2.5" style={{ gridTemplateRows: "repeat(2, minmax(0, 1fr))" }}>
           {visible.map((m, i) => {
             const isLast = i === visible.length - 1;
             return (
-              <button key={i} onClick={() => openGallery(i + 1)} className="relative block h-full w-full cursor-zoom-in overflow-hidden rounded-xl">
+              <button key={i} onClick={() => openGallery(i + 1)} className="relative block min-h-0 w-full cursor-zoom-in overflow-hidden rounded-xl">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={m.MediaURL} alt={m.Caption ?? ""} className="h-full w-full object-cover" />
+                <img src={m.MediaURL} alt={m.Caption ?? ""} className="absolute inset-0 h-full w-full object-cover" />
                 {isLast && overflow ? (
                   <span className="absolute inset-0 flex items-center justify-center bg-black/55 text-sm font-semibold text-white">+{overflow} more</span>
                 ) : null}

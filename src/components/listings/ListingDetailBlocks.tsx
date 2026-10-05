@@ -124,7 +124,7 @@ export function FieldTable({
           ) : (
             <div key={key} className={`flex flex-col bg-white px-3 py-5 text-left ${cls}`}>
               <div className="text-[11px] font-semibold text-muted">{c.field.label}</div>
-              <div className="mt-1 font-display text-[0.9rem] font-semibold leading-snug text-ink">{c.field.value}</div>
+              <div className="mt-1 break-words font-display text-[0.9rem] font-semibold leading-snug text-ink">{c.field.value}</div>
             </div>
           )
         ) : (
@@ -140,7 +140,7 @@ export function DetailBlock({ title, fields }: { title: string; fields: DetailFi
   if (!visible.length) return null;
   return (
     <div className="overflow-hidden rounded-2xl bg-white">
-      <h2 className="border-b border-line px-6 py-4 font-display text-left text-[1.0rem]">{title}</h2>
+      <h2 className="border-b border-line px-6 py-4 font-display !text-left text-[1.0rem]">{title}</h2>
       <FieldTable fields={fields} />
     </div>
   );
@@ -280,7 +280,7 @@ export function RoomsBlock({ listing }: { listing: PropertyListing }) {
   if (!rooms.length) return null;
   return (
     <div className="overflow-hidden rounded-2xl bg-white">
-      <h2 className="border-b border-line px-6 py-4 font-display text-left text-[1.0rem]">Rooms</h2>
+      <h2 className="border-b border-line px-6 py-4 font-display !text-left text-[1.0rem]">Rooms</h2>
       <div className="overflow-x-auto">
         <table className="w-full text-left">
           <thead>
