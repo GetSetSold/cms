@@ -40,7 +40,6 @@ function AgentPhoto({ agent, photoSvg }: { agent: AgentInfo; photoSvg: SvgAsset 
 /** Tiny listing summary blended with the ask button (two-column). */
 function ListingSummaryCompact({ listing }: { listing: PropertyListing }) {
   const sale = isSale(listing);
-  const hood = ((listing.CityRegion || listing.SubdivisionName) ?? "").trim();
   return (
     <div className="min-w-0">
       <div className="flex items-center gap-1.5">
@@ -52,7 +51,6 @@ function ListingSummaryCompact({ listing }: { listing: PropertyListing }) {
       <div className="mt-0.5 truncate text-[11px] text-muted">
         {listing.UnparsedAddress}
         {listing.City ? `, ${listing.City}` : ""}
-        {hood ? ` (${hood})` : ""}
       </div>
     </div>
   );
