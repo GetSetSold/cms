@@ -167,6 +167,8 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
             </div>
 
             {showListingAd ? <ContentAdSlot adCode={adCode} /> : null}
+            {/* Mobile: flush accordion (no gaps). Desktop: spaced cards. */}
+            <div className="flex min-w-0 flex-col overflow-hidden rounded-2xl bg-white lg:gap-6 lg:overflow-visible lg:rounded-none lg:bg-transparent">
             {listing.PublicRemarks ? (
               <CollapsibleCard title="About this property">
                 <p className="whitespace-pre-line px-6 py-5 text-justify text-[0.85rem] leading-relaxed text-muted">{listing.PublicRemarks}</p>
@@ -190,6 +192,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
             <ConstructionExterior listing={listing} />
 
             <Financials listing={listing} sale={sale} />
+            </div>
           </div>
 
           <div className="flex min-w-0 flex-col gap-6 lg:sticky lg:top-24 lg:self-start">
