@@ -73,6 +73,13 @@ const statDefs = (listing: PropertyListing, dom: number | null) =>
     { value: listing.YearBuilt, label: "Year built" },
   ].filter((s) => displayValue(s.value));
 
+const statRows = (listing: PropertyListing, dom: number | null) =>
+  chunkArray(statDefs(listing, dom), 4).map((c) => {
+    const cells: ({ value: unknown; label: string } | null)[] = [...c];
+    while (cells.length < 4) cells.push(null);
+    return cells;
+  });
+
 export default async function ListingDetailPage({ params }: { params: Promise<{ key: string; slug: string }> }) {
   const { key, slug } = await params;
   const listing = await getListing(decodeURIComponent(key));
@@ -133,14 +140,18 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
             </div>
 
             <div className="overflow-hidden rounded-2xl bg-white">
-              {chunkArray(statDefs(listing, dom), 4).map((row, ri) => (
-                <div key={ri} className={`-ml-px grid grid-cols-4 ${ri > 0 ? "border-t border-line" : ""}`}>
-                  {row.map((s) => (
-                    <div key={s.label} className="flex flex-col items-center gap-1 border-l border-line px-2 py-5 text-center">
-                      <div className="font-display text-lg font-semibold">{displayValue(s.value)}</div>
-                      <div className="text-[11px] text-muted">{s.label}</div>
-                    </div>
-                  ))}
+              {statRows(listing, dom).map((row, ri) => (
+                <div key={ri} className={`grid grid-cols-4 ${ri > 0 ? "border-t border-line" : ""}`}>
+                  {row.map((s, ci) =>
+                    s ? (
+                      <div key={s.label} className="flex flex-col items-center gap-1 border-line border-l px-2 py-5 text-center first:border-l-0">
+                        <div className="font-display text-lg font-semibold">{displayValue(s.value)}</div>
+                        <div className="text-[11px] text-muted">{s.label}</div>
+                      </div>
+                    ) : (
+                      <div key={`empty-${ci}`} aria-hidden="true" className="border-line border-l first:border-l-0" />
+                    )
+                  )}
                 </div>
               ))}
             </div>
