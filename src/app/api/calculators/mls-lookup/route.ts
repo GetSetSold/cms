@@ -49,7 +49,7 @@ export async function GET(req: Request) {
     if (isMlsNum) {
       const { data, error } = await mls
         .from("property")
-        .select("ListingKey,ListingId,UnparsedAddress,City,PostalCode,ListPrice,BedroomsTotal,BathroomsTotalInteger,LivingArea,PropertyType,Media")
+        .select("ListingKey,ListingId,UnparsedAddress,City,PostalCode,ListPrice,BedroomsTotal,BathroomsTotalInteger,LivingArea,PropertySubType,Media")
         .or(`ListingId.ilike.%${digitsOnly}%,ListingKey.eq.${digitsOnly}`)
         .limit(1)
         .maybeSingle();
@@ -68,7 +68,7 @@ export async function GET(req: Request) {
           beds: d.BedroomsTotal,
           baths: d.BathroomsTotalInteger,
           sqft: d.LivingArea,
-          propertyType: d.PropertyType,
+          propertyType: d.PropertySubType,
           photo,
         },
       });

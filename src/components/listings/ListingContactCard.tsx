@@ -101,24 +101,12 @@ export function ListingContactCard({ listing, form, agent, photoSvg }: { listing
         ) : null}
 
         {form ? (
-          <>
-            <div className="flex items-center gap-3 border-t border-line pt-3">
-              <div className="min-w-0 flex-1"><ListingSummaryCompact listing={listing} /></div>
-              <button type="button" onClick={() => setOpen(true)} className="btn h-9 shrink-0 px-4 text-[13px]">
-                Send Message
-              </button>
-            </div>
-            {isSale(listing) && (listing.ListingId || listing.ListingKey) ? (
-              <a
-                href={`/calculators/affordability-calculator?mls=${encodeURIComponent(String(listing.ListingId ?? listing.ListingKey))}`}
-                target="_blank"
-                rel="noopener"
-                className="btn h-9 justify-center px-4 text-[13px]"
-              >
-                Affordability Calculator
-              </a>
-            ) : null}
-          </>
+          <div className="flex items-center gap-3 border-t border-line pt-3">
+            <div className="min-w-0 flex-1"><ListingSummaryCompact listing={listing} /></div>
+            <button type="button" onClick={() => setOpen(true)} className="btn h-9 shrink-0 px-4 text-[13px]">
+              Send Message
+            </button>
+          </div>
         ) : (
           <>
             <p className="text-sm text-muted">Contact us directly to ask about this listing.</p>

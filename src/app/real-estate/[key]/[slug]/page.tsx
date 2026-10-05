@@ -11,6 +11,7 @@ import { ListingCard } from "@/components/listings/ListingCard";
 import { ListingGallery } from "@/components/listings/ListingGallery";
 import { ListingContactCard } from "@/components/listings/ListingContactCard";
 import { ListingNearbyPlaces } from "@/components/listings/ListingNearbyPlaces";
+import { AffordabilityBanner } from "@/components/listings/AffordabilityBanner";
 import { LocationDescription, PropertySummary, LandAndLot, ConstructionExterior, SystemsUtilities, Financials, FieldTable, RoomsBlock, MapDirections } from "@/components/listings/ListingDetailBlocks";
 import { createClient } from "@/lib/supabase/server";
 import type { CmsForm } from "@/lib/types";
@@ -187,6 +188,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
 
           <div className="flex flex-col gap-6 lg:sticky lg:top-24 lg:self-start">
             <ListingContactCard listing={listing} form={inquiryForm} agent={settings.agent} photoSvg={agentPhotoSvg} />
+            {sale ? <AffordabilityBanner listing={listing} /> : null}
           </div>
         </div>
 
