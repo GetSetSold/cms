@@ -13,6 +13,7 @@ import { ListingContactCard } from "@/components/listings/ListingContactCard";
 import { ListingNearbyPlaces } from "@/components/listings/ListingNearbyPlaces";
 import { AffordabilityBanner } from "@/components/listings/AffordabilityBanner";
 import { SimilarListings } from "@/components/listings/SimilarListings";
+import { ContentAdSlot } from "@/components/ads/ContentAdSlot";
 import { LocationDescription, PropertySummary, LandAndLot, ConstructionExterior, SystemsUtilities, Financials, FieldTable, RoomsBlock, MapDirections } from "@/components/listings/ListingDetailBlocks";
 import { createClient } from "@/lib/supabase/server";
 import type { CmsForm } from "@/lib/types";
@@ -99,6 +100,9 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
   const logo = await getLogo(settings);
   const agentSvgs = settings.agent?.photo_svg_id ? await getSvgs([settings.agent.photo_svg_id]) : {};
   const agentPhotoSvg = settings.agent?.photo_svg_id ? agentSvgs[settings.agent.photo_svg_id] ?? null : null;
+  const ads = (settings.ads ?? {}) as Record<string, unknown>;
+  const adCode = typeof ads.grid_ad_code === "string" ? ads.grid_ad_code : "";
+  const showListingAd = ads.listing_ad_enabled === true && adCode.includes("data-ad-client");
   const photos = mediaItems(listing.Media);
   const dom = daysOnMarket(listing.OriginalEntryTimestamp);
   const sale = isSale(listing);
@@ -161,6 +165,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
               <FieldTable mobileCols={4} variant="stats" fields={statFields(listing, dom)} />
             </div>
 
+            {showListingAd ? <ContentAdSlot adCode={adCode} className="mb-6" /> : null}
             {listing.PublicRemarks ? (
               <div className="rounded-2xl bg-white p-6">
                 <h2 className="mb-3 border-b border-line pb-3 font-display text-[1.0rem]">About this property</h2>
@@ -190,6 +195,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
           <div className="flex flex-col gap-6 lg:sticky lg:top-24 lg:self-start">
             <ListingContactCard listing={listing} form={inquiryForm} agent={settings.agent} photoSvg={agentPhotoSvg} />
             {sale ? <AffordabilityBanner listing={listing} /> : null}
+            {showListingAd ? <ContentAdSlot adCode={adCode} /> : null}
           </div>
         </div>
 

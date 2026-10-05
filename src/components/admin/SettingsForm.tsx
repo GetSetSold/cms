@@ -462,6 +462,10 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
               <input type="checkbox" checked={s.ads?.calculators_ad_enabled ?? false} onChange={(e) => set("ads", { ...s.ads, calculators_ad_enabled: e.target.checked })} className="h-4 w-4" />
               Show ads on calculator pages
             </label>
+            <label className="label flex items-center gap-2 border-t border-line pt-3">
+              <input type="checkbox" checked={s.ads?.listing_ad_enabled ?? false} onChange={(e) => set("ads", { ...s.ads, listing_ad_enabled: e.target.checked })} className="h-4 w-4" />
+              Show ads on listing detail pages
+            </label>
           </section>
         )}
       </div>
