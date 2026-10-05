@@ -142,7 +142,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
 
         <ListingGallery items={photos} />
 
-        <div className="mt-6 grid gap-6 lg:grid-cols-[1.6fr_1fr]">
+        <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
           <div className="flex flex-col gap-6">
             <div className="rounded-2xl bg-white p-6">
               <span className={`mb-3 inline-block rounded px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-white ${sale ? "bg-ink" : "bg-accent"}`}>
