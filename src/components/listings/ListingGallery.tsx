@@ -1,9 +1,31 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { MediaItem } from "@/lib/mls";
 
 export function ListingGallery({ items }: { items: MediaItem[] }) {
-  const [open, setOpen] = useState<number | null>(null);
+  const [galleryOpen, setGalleryOpen] = useState(false);
+  const [startIndex, setStartIndex] = useState(0);
+  const imgRefs = useRef<(HTMLImageElement | null)[]>([]);
+
+  const openGallery = (i: number) => {
+    setStartIndex(i);
+    setGalleryOpen(true);
+  };
+
+  useEffect(() => {
+    if (!galleryOpen) return;
+    imgRefs.current[startIndex]?.scrollIntoView({ block: "start" });
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setGalleryOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [galleryOpen, startIndex]);
+
   if (!items.length) {
     return <div className="flex h-72 items-center justify-center rounded-2xl bg-soft text-muted">No photos available</div>;
   }
@@ -16,7 +38,7 @@ export function ListingGallery({ items }: { items: MediaItem[] }) {
       <div className="grid h-[300px] grid-cols-1 gap-2.5 overflow-hidden rounded-2xl md:h-[460px] md:grid-cols-[1.6fr_1fr]">
         <div className="relative h-full w-full">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <button onClick={() => setOpen(0)} className="block h-full w-full cursor-zoom-in">
+          <button onClick={() => openGallery(0)} className="block h-full w-full cursor-zoom-in">
             <img src={hero.MediaURL} alt={hero.Caption ?? ""} className="h-full w-full object-cover" />
           </button>
           <span className="absolute right-3 top-3 flex items-center gap-1.5 rounded-full bg-black/75 px-2.5 py-1 text-[11px] font-semibold text-white">
@@ -27,8 +49,8 @@ export function ListingGallery({ items }: { items: MediaItem[] }) {
             {items.length}
           </span>
           <button
-            onClick={() => setOpen(0)}
-            className="flex absolute bottom-3 right-3 items-center gap-1.5 rounded-full bg-white px-3.5 py-2 text-[12px] font-semibold text-ink shadow-md"
+            onClick={() => openGallery(0)}
+            className="absolute bottom-3 right-3 flex items-center gap-1.5 rounded-full bg-black/75 px-3.5 py-2 text-[12px] font-semibold text-white"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <rect x="3" y="3" width="7" height="7" rx="1" />
@@ -43,7 +65,7 @@ export function ListingGallery({ items }: { items: MediaItem[] }) {
           {visible.map((m, i) => {
             const isLast = i === visible.length - 1;
             return (
-              <button key={i} onClick={() => setOpen(i + 1)} className="relative block h-full w-full cursor-zoom-in overflow-hidden rounded-xl">
+              <button key={i} onClick={() => openGallery(i + 1)} className="relative block h-full w-full cursor-zoom-in overflow-hidden rounded-xl">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={m.MediaURL} alt={m.Caption ?? ""} className="h-full w-full object-cover" />
                 {isLast && overflow ? (
@@ -54,15 +76,28 @@ export function ListingGallery({ items }: { items: MediaItem[] }) {
           })}
         </div>
       </div>
-      {open !== null ? (
-        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-black/90 p-4" onClick={() => setOpen(null)}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={items[open].MediaURL} alt={items[open].Caption ?? ""} className="max-h-[80vh] max-w-full rounded-lg object-contain" />
-          <div className="flex items-center gap-4 text-white">
-            <button onClick={(e) => { e.stopPropagation(); setOpen((open - 1 + items.length) % items.length); }} className="rounded-full bg-white/15 px-4 py-2">Prev</button>
-            <span>{open + 1} / {items.length}</span>
-            <button onClick={(e) => { e.stopPropagation(); setOpen((open + 1) % items.length); }} className="rounded-full bg-white/15 px-4 py-2">Next</button>
-            <button onClick={() => setOpen(null)} className="ml-4 rounded-full bg-white/15 px-4 py-2">Close</button>
+      {galleryOpen ? (
+        <div className="fixed inset-0 z-50 flex flex-col bg-black/95" onClick={() => setGalleryOpen(false)}>
+          <div className="flex shrink-0 items-center justify-between px-4 py-3 text-white">
+            <span className="text-sm font-semibold">{items.length} Photos</span>
+            <button onClick={() => setGalleryOpen(false)} className="rounded-full bg-white/15 px-4 py-2 text-sm font-semibold">
+              Close
+            </button>
+          </div>
+          <div className="flex flex-col items-center gap-4 overflow-y-auto px-4 pb-10" onClick={(e) => e.stopPropagation()}>
+            {items.map((m, i) => (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                key={i}
+                ref={(el) => {
+                  imgRefs.current[i] = el;
+                }}
+                src={m.MediaURL}
+                alt={m.Caption ?? `Photo ${i + 1}`}
+                className="max-h-[80vh] w-auto max-w-full rounded-lg object-contain"
+                loading={i < 3 ? "eager" : "lazy"}
+              />
+            ))}
           </div>
         </div>
       ) : null}
