@@ -51,11 +51,12 @@ export function ListingNearbyPlaces({ lat, lng }: { lat: number; lng: number; li
           try {
             const [k, v] = cat.tag.split("=");
             const nameFilter = cat.requireName ? `["name"]` : ``;
+            // Nodes only (faster than nwr); Kumi instance is more reliable than overpass-api.de.
             const q =
-              `[out:json][timeout:25];` +
-              `nwr["${k}"="${v}"]${nameFilter}(around:${cat.radius},${lat},${lng});` +
-              `out center 100;`;
-            const res = await fetch("https://overpass-api.de/api/interpreter", {
+              `[out:json][timeout:15];` +
+              `node["${k}"="${v}"]${nameFilter}(around:${cat.radius},${lat},${lng});` +
+              `out 50;`;
+            const res = await fetch("https://overpass.kumi.systems/api/interpreter", {
               method: "POST",
               headers: { "Content-Type": "application/x-www-form-urlencoded" },
               body: "data=" + encodeURIComponent(q),
