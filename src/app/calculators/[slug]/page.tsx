@@ -8,7 +8,7 @@ import { CalculatorPageShell } from "@/components/calculators/CalculatorPageShel
 import { CalculatorLoader } from "@/components/calculators/CalculatorLoader";
 import { ContentAdSlot } from "@/components/ads/ContentAdSlot";
 
-type Props = { params: Promise<{ slug: string }> };
+type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ mls?: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
@@ -55,8 +55,9 @@ const INTROS: Record<string, string> = {
     "Model a rental property like an investor: year-by-year cash flow, expenses, mortgage paydown, equity growth and an optional sale scenario over 5–25 years.",
 };
 
-export default async function CalculatorDetailPage({ params }: Props) {
+export default async function CalculatorDetailPage({ params, searchParams }: Props) {
   const { slug } = await params;
+  const { mls } = await searchParams;
 
   // Legacy ?c=<tabId> style slugs → canonical (also covers old hash-less tab URLs)
   const legacy = LEGACY_TAB_SLUGS[slug];
@@ -73,7 +74,7 @@ export default async function CalculatorDetailPage({ params }: Props) {
 
   return (
     <CalculatorPageShell slug={slug} intro={INTROS[slug] ?? calcMeta.description}>
-      <CalculatorLoader slug={slug} settings={calcSettings} />
+      <CalculatorLoader slug={slug} settings={calcSettings} initialMls={mls} />
       {showCalcAd && <ContentAdSlot adCode={calcAdCode} className="mt-8" />}
       <p className="mt-6 text-[12px] text-muted">
         Assumptions effective {calcSettings.effectiveDate}. Regulatory figures (stress-test rules,

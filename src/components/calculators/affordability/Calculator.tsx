@@ -201,7 +201,7 @@ function computeAffordability(
 
 type LookupState = "idle" | "loading" | "found" | "notfound" | "error";
 
-export function AffordabilityCalculator({ settings, initialListing }: { settings: CalculatorSettings; initialListing?: AffordabilityListing | null }) {
+export function AffordabilityCalculator({ settings, initialListing, initialMls }: { settings: CalculatorSettings; initialListing?: AffordabilityListing | null; initialMls?: string }) {
   // Inputs — defaults match the legacy page
   const [income, setIncome] = useState(120000);
   const [down, setDown] = useState(60000);
@@ -217,7 +217,7 @@ export function AffordabilityCalculator({ settings, initialListing }: { settings
   const [address, setAddress] = useState("");
 
   // Property lookup
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(initialMls ?? "");
   const [listing, setListing] = useState<AffordabilityListing | null>(initialListing ?? null);
   const [lookupState, setLookupState] = useState<LookupState>(initialListing ? "found" : "idle");
   const [searchNonce, setSearchNonce] = useState(0);

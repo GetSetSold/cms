@@ -6,7 +6,7 @@
 import dynamic from "next/dynamic";
 import type { CalculatorSettings } from "@/lib/calculators/types";
 
-export type CalculatorComponent = React.ComponentType<{ settings: CalculatorSettings }>;
+export type CalculatorComponent = React.ComponentType<{ settings: CalculatorSettings; initialMls?: string }>;
 
 const loaders: Record<string, () => Promise<{ default: CalculatorComponent }>> = {
   "affordability-calculator": () =>

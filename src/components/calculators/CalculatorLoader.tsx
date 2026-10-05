@@ -10,11 +10,13 @@ import { loadCalculator } from "./loaders";
 export function CalculatorLoader({
   slug,
   settings,
+  initialMls,
 }: {
   slug: string;
   settings: CalculatorSettings;
+  initialMls?: string;
 }) {
   const Calc = loadCalculator(slug);
   if (!Calc) return null;
-  return <Calc settings={settings} />;
+  return <Calc settings={settings} initialMls={initialMls} />;
 }
