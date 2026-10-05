@@ -44,42 +44,16 @@ export async function GET(req: Request) {
   const isMlsNum = /^\d{6,}$/.test(digitsOnly);
 
   try {
-    // MLS number (public ListingId like "X13841510", or raw ListingKey):
-    // the grid table lacks ListingId, so search the property table.
-    if (isMlsNum) {
-      const { data, error } = await mls
-        .from("property")
-        .select("ListingKey,ListingId,UnparsedAddress,City,PostalCode,ListPrice,BedroomsTotal,BathroomsTotalInteger,LivingArea,PropertySubType,Media")
-        .or(`ListingId.ilike.%${digitsOnly}%,ListingKey.eq.${digitsOnly}`)
-        .limit(1)
-        .maybeSingle();
-      if (error) return NextResponse.json({ error: "Lookup failed. Please try again." }, { status: 500 });
-      if (!data) return NextResponse.json({ ok: true, listing: null });
-      const d = data as Record<string, unknown>;
-      const media = d.Media;
-      const photo = Array.isArray(media) && media.length > 0 ? String(media[0]) : null;
-      return NextResponse.json({
-        ok: true,
-        listing: {
-          mlsNumber: String(d.ListingId ?? d.ListingKey ?? ""),
-          price: Number(d.ListPrice) || 0,
-          address: d.UnparsedAddress,
-          city: d.City,
-          beds: d.BedroomsTotal,
-          baths: d.BathroomsTotalInteger,
-          sqft: d.LivingArea,
-          propertyType: d.PropertySubType,
-          photo,
-        },
-      });
-    }
-
+    // Grid table is faster and has all display fields. The banner passes the
+    // internal ListingKey; manual MLS-number entry falls back to address search.
     let query = mls
       .from("grid")
       .select("ListingKey,UnparsedAddress,City,PostalCode,ListPrice,BedroomsTotal,BathroomsTotal,LivingArea,PropertyType,Media")
       .limit(1);
 
-    if (isPostal) {
+    if (isMlsNum) {
+      query = query.eq("ListingKey", digitsOnly);
+    } else if (isPostal) {
       query = query.ilike("PostalCode", `${q.replace(/\s/g, "")}%`);
     } else {
       query = query.ilike("UnparsedAddress", `%${q}%`);
