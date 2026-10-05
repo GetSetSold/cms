@@ -118,13 +118,13 @@ export function FieldTable({
         return c.field ? (
           stats ? (
             <div key={key} className={`flex flex-col items-center gap-1 bg-white px-2 py-5 text-center ${cls}`}>
-              <div className="font-display text-lg font-semibold leading-snug text-ink">{c.field.value}</div>
+              <div className="font-display text-[0.9rem] font-semibold leading-snug text-ink">{c.field.value}</div>
               <div className="text-[11px] text-muted">{c.field.label}</div>
             </div>
           ) : (
             <div key={key} className={`flex flex-col bg-white px-3 py-5 text-left ${cls}`}>
               <div className="text-[11px] text-muted">{c.field.label}</div>
-              <div className="mt-1 font-display text-lg font-semibold leading-snug text-ink">{c.field.value}</div>
+              <div className="mt-1 font-display text-[0.9rem] font-semibold leading-snug text-ink">{c.field.value}</div>
             </div>
           )
         ) : (
@@ -140,7 +140,7 @@ export function DetailBlock({ title, fields }: { title: string; fields: DetailFi
   if (!visible.length) return null;
   return (
     <div className="overflow-hidden rounded-2xl bg-white">
-      <h2 className="border-b border-line px-6 py-4 font-display text-xl">{title}</h2>
+      <h2 className="border-b border-line px-6 py-4 font-display text-[1.0rem]">{title}</h2>
       <FieldTable fields={fields} />
     </div>
   );
@@ -280,7 +280,7 @@ export function RoomsBlock({ listing }: { listing: PropertyListing }) {
   if (!rooms.length) return null;
   return (
     <div className="overflow-hidden rounded-2xl bg-white">
-      <h2 className="border-b border-line px-6 py-4 font-display text-xl">Rooms</h2>
+      <h2 className="border-b border-line px-6 py-4 font-display text-[1.0rem]">Rooms</h2>
       <div className="overflow-x-auto">
         <table className="w-full text-left">
           <thead>
@@ -293,9 +293,9 @@ export function RoomsBlock({ listing }: { listing: PropertyListing }) {
           <tbody>
             {rooms.map((r, i) => (
               <tr key={i} className={i > 0 ? "border-t border-line" : ""}>
-                <td className="px-4 py-4 text-[15px] font-medium text-ink md:px-6">{r.RoomType || "—"}</td>
-                <td className="border-l border-line px-3 py-4 text-[15px] text-ink">{r.RoomLevel || "—"}</td>
-                <td className="border-l border-line px-4 py-4 text-[15px] text-ink md:px-6">{roomDimensions(r) || "—"}</td>
+                <td className="px-4 py-4 text-[0.9rem] font-medium text-ink md:px-6">{r.RoomType || "—"}</td>
+                <td className="border-l border-line px-3 py-4 text-[0.9rem] text-ink">{r.RoomLevel || "—"}</td>
+                <td className="border-l border-line px-4 py-4 text-[0.9rem] text-ink md:px-6">{roomDimensions(r) || "—"}</td>
               </tr>
             ))}
           </tbody>
