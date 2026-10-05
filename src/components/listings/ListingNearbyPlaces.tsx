@@ -1,18 +1,19 @@
 "use client";
 import { useEffect, useState } from "react";
 
-const MAPTILER_KEY = "Zr8EXulAyt75JJibE0ol"; // same public key the site's maps use
+// Mapbox public token — set via NEXT_PUBLIC_MAPBOX_TOKEN (Cloudflare env).
+const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN ?? "";
 
-type Place = { name: string; distanceKm: number; address?: string };
-type CategoryResult = { label: string; places: Place[]; error?: boolean };
+type Place = { name: string; address: string; distanceKm: number };
+type CategoryResult = { label: string; places: Place[] };
 
-// Category → MapTiler geocoding query (types=poi restricts to points of interest).
+// Mapbox Search Box category slugs.
 const CATEGORIES: { label: string; query: string }[] = [
   { label: "Schools", query: "school" },
-  { label: "Groceries", query: "grocery" },
+  { label: "Groceries", query: "supermarket" },
   { label: "Restaurants", query: "restaurant" },
   { label: "Pharmacy & Health", query: "pharmacy" },
-  { label: "Commute", query: "station" },
+  { label: "Commute", query: "bus_station" },
 ];
 
 function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
@@ -23,64 +24,64 @@ function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): nu
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) *
     Math.sin(dLng / 2) * Math.sin(dLng / 2);
-  return 2 * R * Math.asin(Math.sqrt(a));
+  return R * 2 * Math.asin(Math.sqrt(a));
 }
 
 function fmtDist(km: number): string {
   return km < 1 ? `${Math.round(km * 1000)} m` : `${km.toFixed(1)} km`;
 }
 
-type MaptilerFeature = {
-  place_name?: string;
-  text?: string;
-  center?: [number, number];
-  properties?: { address?: string };
+type MapboxFeature = {
+  properties?: { name?: string; full_address?: string };
+  geometry?: { coordinates?: [number, number] };
 };
 
 /**
- * Nearby places via MapTiler Geocoding API (free tier, types=poi).
- * Hard bbox (~5km) around the listing keeps results local.
+ * Nearby places via Mapbox Search Box Category API (free tier).
+ * Proximity biases to the listing; Haversine filters to 10km.
  */
 export function ListingNearbyPlaces({ lat, lng }: { lat: number; lng: number; listingKey: string }) {
   const [results, setResults] = useState<CategoryResult[] | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    // 8km radius for better POI coverage in suburban/rural areas.
-    const latDelta = 8 / 111;
-    const lngDelta = 8 / (111 * Math.cos((lat * Math.PI) / 180));
-    const bbox = `${lng - lngDelta},${lat - latDelta},${lng + lngDelta},${lat + latDelta}`;
+    if (!MAPBOX_TOKEN) {
+      setResults(CATEGORIES.map((c) => ({ label: c.label, places: [] })));
+      return () => { cancelled = true; };
+    }
 
     (async () => {
       const out: CategoryResult[] = await Promise.all(
         CATEGORIES.map(async (cat) => {
           try {
             const url =
-              `https://api.maptiler.com/geocoding/${encodeURIComponent(cat.query)}.json` +
-              `?key=${MAPTILER_KEY}&types=poi&bbox=${bbox}&limit=20`;
+              `https://api.mapbox.com/search/searchbox/v1/category/${cat.query}` +
+              `?access_token=${MAPBOX_TOKEN}&language=en&limit=25&proximity=${lng},${lat}`;
             const res = await fetch(url);
-            if (!res.ok) return { label: cat.label, places: [], error: true };
-            const data = (await res.json()) as { features?: MaptilerFeature[] };
+            if (!res.ok) return { label: cat.label, places: [] };
+            const data = (await res.json()) as { features?: MapboxFeature[] };
             const seen = new Set<string>();
             const places: Place[] = [];
             for (const f of data.features ?? []) {
-              const name = f.text || f.place_name?.split(",")[0] || "";
+              const name = f.properties?.name || "";
               if (!name) continue;
               const key = name.toLowerCase();
               if (seen.has(key)) continue;
               seen.add(key);
-              const c = f.center;
-              if (!c || c.length < 2) continue;
+              const coords = f.geometry?.coordinates;
+              if (!coords || coords.length < 2) continue;
+              const distanceKm = haversineKm(lat, lng, coords[1], coords[0]);
+              if (distanceKm > 10) continue;
               places.push({
                 name,
-                distanceKm: haversineKm(lat, lng, c[1], c[0]),
-                address: f.properties?.address,
+                address: f.properties?.full_address || "",
+                distanceKm,
               });
             }
             places.sort((a, b) => a.distanceKm - b.distanceKm);
             return { label: cat.label, places: places.slice(0, 5) };
           } catch {
-            return { label: cat.label, places: [], error: true };
+            return { label: cat.label, places: [] };
           }
         }),
       );
@@ -99,16 +100,6 @@ export function ListingNearbyPlaces({ lat, lng }: { lat: number; lng: number; li
     );
   }
 
-  const hasAny = results.some((r) => r.places.length > 0);
-  if (!hasAny) {
-    return (
-      <div className="mt-12">
-        <h2 className="mb-5 font-display text-2xl">Nearby Places</h2>
-        <p className="text-sm text-muted">No nearby places found in this area.</p>
-      </div>
-    );
-  }
-
   return (
     <div className="mt-12">
       <h2 className="mb-5 font-display text-2xl">Nearby Places</h2>
@@ -120,7 +111,7 @@ export function ListingNearbyPlaces({ lat, lng }: { lat: number; lng: number; li
               <ul className="flex flex-col gap-2.5">
                 {cat.places.map((p, i) => (
                   <li key={`${p.name}-${i}`} className="flex items-baseline justify-between gap-3 text-[13.5px]">
-                    <span className="min-w-0 truncate text-ink">{p.name}</span>
+                    <span className="min-w-0 truncate text-ink" title={p.address}>{p.name}</span>
                     <span className="shrink-0 text-muted">{fmtDist(p.distanceKm)}</span>
                   </li>
                 ))}
