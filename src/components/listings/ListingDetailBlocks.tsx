@@ -1,5 +1,6 @@
 import { displayValue, roomItems, roomDimensions, type PropertyListing } from "@/lib/mls";
 import { ListingDetailMap } from "./ListingDetailMap";
+import { CollapsibleCard } from "./CollapsibleCard";
 
 const currency = (v: unknown): string | null => {
   if (v == null || v === "") return null;
@@ -140,10 +141,9 @@ export function DetailBlock({ title, fields }: { title: string; fields: DetailFi
   const visible = fields.filter((f) => f.value);
   if (!visible.length) return null;
   return (
-    <div className="overflow-hidden rounded-2xl bg-white">
-      <h2 className="border-b border-line px-6 py-4 font-display !text-left text-[1.0rem]">{title}</h2>
+    <CollapsibleCard title={title}>
       <FieldTable fields={fields} />
-    </div>
+    </CollapsibleCard>
   );
 }
 
@@ -280,8 +280,7 @@ export function RoomsBlock({ listing }: { listing: PropertyListing }) {
   const rooms = roomItems(listing.Rooms);
   if (!rooms.length) return null;
   return (
-    <div className="overflow-hidden rounded-2xl bg-white">
-      <h2 className="border-b border-line px-6 py-4 font-display !text-left text-[1.0rem]">Rooms</h2>
+    <CollapsibleCard title="Rooms">
       <div className="overflow-x-auto">
         <table className="w-full text-left">
           <thead>
@@ -302,7 +301,7 @@ export function RoomsBlock({ listing }: { listing: PropertyListing }) {
           </tbody>
         </table>
       </div>
-    </div>
+    </CollapsibleCard>
   );
 }
 
@@ -313,8 +312,7 @@ export function MapDirections({ listing }: { listing: PropertyListing }) {
   if (!hasCoords) return null;
   const label = listing.UnparsedAddress ?? "this listing";
   return (
-    <div className="overflow-hidden rounded-2xl bg-white">
-      <h2 className="border-b border-line px-6 py-4 font-display !text-left text-[1.0rem]">Map & Directions</h2>
+    <CollapsibleCard title="Map & Directions">
       <ListingDetailMap lat={lat} lng={lng} label={label} listingKey={listing.ListingKey} />
       <div className="px-6 py-5">
         <a
@@ -329,6 +327,6 @@ export function MapDirections({ listing }: { listing: PropertyListing }) {
           Get Directions
         </a>
       </div>
-    </div>
+    </CollapsibleCard>
   );
 }

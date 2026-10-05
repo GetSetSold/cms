@@ -14,6 +14,7 @@ import { ListingNearbyPlaces } from "@/components/listings/ListingNearbyPlaces";
 import { AffordabilityBanner } from "@/components/listings/AffordabilityBanner";
 import { SimilarListings } from "@/components/listings/SimilarListings";
 import { ContentAdSlot } from "@/components/ads/ContentAdSlot";
+import { CollapsibleCard } from "@/components/listings/CollapsibleCard";
 import { LocationDescription, PropertySummary, LandAndLot, ConstructionExterior, SystemsUtilities, Financials, FieldTable, RoomsBlock, MapDirections } from "@/components/listings/ListingDetailBlocks";
 import { createClient } from "@/lib/supabase/server";
 import type { CmsForm } from "@/lib/types";
@@ -167,10 +168,9 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
 
             {showListingAd ? <ContentAdSlot adCode={adCode} /> : null}
             {listing.PublicRemarks ? (
-              <div className="rounded-2xl bg-white p-6">
-                <h2 className="mb-3 border-b border-line pb-3 font-display text-[1.0rem]">About this property</h2>
-                <p className="whitespace-pre-line text-justify text-[0.85rem] leading-relaxed text-muted">{listing.PublicRemarks}</p>
-              </div>
+              <CollapsibleCard title="About this property">
+                <p className="whitespace-pre-line px-6 py-5 text-justify text-[0.85rem] leading-relaxed text-muted">{listing.PublicRemarks}</p>
+              </CollapsibleCard>
             ) : null}
 
             {(listing.Heating || listing.Cooling || listing.Basement) ? (
