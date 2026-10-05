@@ -14,10 +14,31 @@ export function ListingGallery({ items }: { items: MediaItem[] }) {
   return (
     <>
       <div className="grid h-[300px] grid-cols-1 gap-2.5 overflow-hidden rounded-2xl md:h-[460px] md:grid-cols-[1.6fr_1fr]">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <button onClick={() => setOpen(0)} className="block h-full w-full cursor-zoom-in">
-          <img src={hero.MediaURL} alt={hero.Caption ?? ""} className="h-full w-full object-cover" />
-        </button>
+        <div className="relative h-full w-full">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <button onClick={() => setOpen(0)} className="block h-full w-full cursor-zoom-in">
+            <img src={hero.MediaURL} alt={hero.Caption ?? ""} className="h-full w-full object-cover" />
+          </button>
+          <span className="absolute right-3 top-3 flex items-center gap-1.5 rounded-full bg-black/75 px-2.5 py-1 text-[11px] font-semibold text-white">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+              <circle cx="12" cy="13" r="4" />
+            </svg>
+            {items.length}
+          </span>
+          <button
+            onClick={() => setOpen(0)}
+            className="flex absolute bottom-3 right-3 items-center gap-1.5 rounded-full bg-white px-3.5 py-2 text-[12px] font-semibold text-ink shadow-md"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <rect x="3" y="3" width="7" height="7" rx="1" />
+              <rect x="14" y="3" width="7" height="7" rx="1" />
+              <rect x="3" y="14" width="7" height="7" rx="1" />
+              <rect x="14" y="14" width="7" height="7" rx="1" />
+            </svg>
+            View Gallery
+          </button>
+        </div>
         <div className="hidden grid-cols-2 grid-rows-2 gap-2.5 md:grid">
           {visible.map((m, i) => {
             const isLast = i === visible.length - 1;

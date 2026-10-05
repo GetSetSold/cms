@@ -34,14 +34,25 @@ const SPAN_CLS: Record<number, string> = {
   4: "col-span-2 md:col-span-4",
 };
 
-type PlacedCell = { field: DetailField | null; span: number; dCol: number; dRow: number; mCol: number; mRow: number };
+type PlacedCell = {
+  field: DetailField | null;
+  span: number;
+  dCol: number;
+  dRow: number;
+  mCol: number;
+  mRow: number;
+  /** Fills a gap in a mobile visual row; hidden on desktop. */
+  mobileOnly?: boolean;
+};
 
 /**
  * Places fields on a flat grid: desktop flows in 4 columns honoring `span`,
  * mobile flows independently (2 columns, spans clamped). The last desktop
  * row is padded with empty cells so every row keeps the same table
- * divisions — like a basic HTML table. Each cell records its starting
- * column and row index at both breakpoints so dividers land correctly.
+ * divisions — like a basic HTML table — and incomplete mobile visual rows
+ * are filled with empty cells (hidden on desktop) so dividers never dangle.
+ * Each cell records its starting column and row index at both breakpoints
+ * so dividers land correctly.
  */
 function layoutTable(fields: DetailField[], mobileCols = 2): PlacedCell[] {
   const DCOLS = 4;
@@ -60,18 +71,27 @@ function layoutTable(fields: DetailField[], mobileCols = 2): PlacedCell[] {
   for (const f of fields) pushD(f, f.span ?? 1);
   while (dPlaced.length && dUsed < DCOLS) pushD(null, 1);
 
+  const placed: PlacedCell[] = [];
   let mRow = 0;
   let mUsed = 0;
-  return dPlaced.map((c) => {
+  const gapFill = () => {
+    while (mUsed < mobileCols) {
+      placed.push({ field: null, span: 1, dCol: -1, dRow: -1, mCol: mUsed, mRow, mobileOnly: true });
+      mUsed += 1;
+    }
+  };
+  for (const c of dPlaced) {
     const ms = Math.min(c.span, mobileCols);
     if (mUsed + ms > mobileCols) {
+      gapFill();
       mRow += 1;
       mUsed = 0;
     }
-    const out = { ...c, mCol: mUsed, mRow };
+    placed.push({ ...c, mCol: mUsed, mRow });
     mUsed += ms;
-    return out;
-  });
+  }
+  if (mUsed > 0 && mUsed < mobileCols) gapFill();
+  return placed;
 }
 
 export function FieldTable({
@@ -91,9 +111,9 @@ export function FieldTable({
   return (
     <div className={`grid ${gridCls}`}>
       {cells.map((c, i) => {
-        const vCls = `${c.mCol > 0 ? "border-l" : ""} ${c.dCol > 0 ? "md:border-l" : "md:border-l-0"}`;
-        const hCls = `${c.mRow > 0 ? "border-t" : ""} ${c.dRow > 0 ? "md:border-t" : "md:border-t-0"}`;
-        const cls = `border-line ${vCls} ${hCls} ${SPAN_CLS[c.span]}`;
+        const vCls = c.mobileOnly ? "border-l" : `${c.mCol > 0 ? "border-l" : ""} ${c.dCol > 0 ? "md:border-l" : "md:border-l-0"}`;
+        const hCls = c.mobileOnly ? "border-t" : `${c.mRow > 0 ? "border-t" : ""} ${c.dRow > 0 ? "md:border-t" : "md:border-t-0"}`;
+        const cls = `border-line ${vCls} ${hCls} ${SPAN_CLS[c.span]}${c.mobileOnly ? " md:hidden" : ""}`;
         const key = c.field ? c.field.label : `empty-${i}`;
         return c.field ? (
           stats ? (
@@ -266,16 +286,16 @@ export function RoomsBlock({ listing }: { listing: PropertyListing }) {
           <thead>
             <tr className="border-b border-line">
               <th className="px-4 py-3 text-[11px] font-medium text-muted md:px-6">Room</th>
-              <th className="px-3 py-3 text-[11px] font-medium text-muted">Level</th>
-              <th className="px-4 py-3 text-[11px] font-medium text-muted md:px-6">Dimensions</th>
+              <th className="border-l border-line px-3 py-3 text-[11px] font-medium text-muted">Level</th>
+              <th className="border-l border-line px-4 py-3 text-[11px] font-medium text-muted md:px-6">Dimensions</th>
             </tr>
           </thead>
           <tbody>
             {rooms.map((r, i) => (
               <tr key={i} className={i > 0 ? "border-t border-line" : ""}>
                 <td className="px-4 py-4 text-[15px] font-medium text-ink md:px-6">{r.RoomType || "—"}</td>
-                <td className="px-3 py-4 text-[15px] text-ink">{r.RoomLevel || "—"}</td>
-                <td className="px-4 py-4 text-[15px] text-ink md:px-6">{roomDimensions(r) || "—"}</td>
+                <td className="border-l border-line px-3 py-4 text-[15px] text-ink">{r.RoomLevel || "—"}</td>
+                <td className="border-l border-line px-4 py-4 text-[15px] text-ink md:px-6">{roomDimensions(r) || "—"}</td>
               </tr>
             ))}
           </tbody>
