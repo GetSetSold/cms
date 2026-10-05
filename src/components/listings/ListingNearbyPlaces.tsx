@@ -58,7 +58,7 @@ export function ListingNearbyPlaces({ lat, lng }: { lat: number; lng: number }) 
               }))
               .filter((p: Place) => p.name && p.distanceKm < 25)
               .sort((a: Place, b: Place) => a.distanceKm - b.distanceKm)
-              .slice(0, 3);
+              .slice(0, 5);
             return { label: cat.label, places };
           } catch {
             return { label: cat.label, places: [] as Place[] };
@@ -93,18 +93,18 @@ export function ListingNearbyPlaces({ lat, lng }: { lat: number; lng: number }) 
           <p className="text-[0.85rem] text-gray-400">Loading nearby places…</p>
         ) : (
           <>
-            <div className="grid gap-x-8 gap-y-4 md:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {visible.map((r) => (
-                <div key={r.label}>
-                  <p className="text-[0.8rem] font-semibold">{r.label}</p>
-                  <p className="text-[0.9rem] break-words">
+                <div key={r.label} className="rounded-xl border border-line p-4">
+                  <p className="mb-2 text-[0.85rem] font-semibold">{r.label}</p>
+                  <ul className="divide-y divide-line/60">
                     {r.places.map((p, i) => (
-                      <span key={i}>
-                        {i > 0 && <span className="text-gray-300"> · </span>}
-                        {p.name} <span className="whitespace-nowrap text-gray-500">({fmtDist(p.distanceKm)})</span>
-                      </span>
+                      <li key={i} className="flex items-baseline justify-between gap-3 py-1.5 text-[0.85rem]">
+                        <span className="break-words">{p.name}</span>
+                        <span className="shrink-0 text-gray-500">{fmtDist(p.distanceKm)}</span>
+                      </li>
                     ))}
-                  </p>
+                  </ul>
                 </div>
               ))}
             </div>

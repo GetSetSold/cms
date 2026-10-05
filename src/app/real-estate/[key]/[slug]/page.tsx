@@ -153,14 +153,6 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
 
             <MapDirections listing={listing} />
 
-            {(() => {
-              const nlat = Number(listing.Latitude);
-              const nlng = Number(listing.Longitude);
-              return Number.isFinite(nlat) && Number.isFinite(nlng) && (nlat !== 0 || nlng !== 0)
-                ? <ListingNearbyPlaces lat={nlat} lng={nlng} />
-                : null;
-            })()}
-
             <PropertySummary listing={listing} />
 
             <RoomsBlock listing={listing} />
@@ -176,6 +168,16 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
             <ListingContactCard listing={listing} form={inquiryForm} />
           </div>
         </div>
+
+        {(() => {
+          const nlat = Number(listing.Latitude);
+          const nlng = Number(listing.Longitude);
+          return Number.isFinite(nlat) && Number.isFinite(nlng) && (nlat !== 0 || nlng !== 0) ? (
+            <div className="mt-10">
+              <ListingNearbyPlaces lat={nlat} lng={nlng} />
+            </div>
+          ) : null;
+        })()}
 
         {similar.length ? (
           <div className="mt-12">
