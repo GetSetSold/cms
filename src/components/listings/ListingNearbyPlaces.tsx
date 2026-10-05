@@ -7,13 +7,13 @@ type Place = { name: string; distanceKm: number };
 type CategoryResult = { label: string; places: Place[] };
 
 const CATEGORIES = [
-  { label: "Groceries", query: "grocery" },
-  { label: "Restaurants & Cafes", query: "restaurant" },
-  { label: "Schools", query: "school" },
-  { label: "Parks", query: "park" },
-  { label: "Health", query: "pharmacy" },
-  { label: "Shopping", query: "shopping" },
-  { label: "Transit", query: "station" },
+  // `exclude` filters out text-search false positives (e.g. "Park" in a
+  // school name putting it under Parks, or fire stations under Transit).
+  { label: "Schools", query: "school", exclude: ["parking"] },
+  { label: "Groceries", query: "grocery", exclude: [] },
+  { label: "Restaurants", query: "restaurant", exclude: [] },
+  { label: "Pharmacy & Health", query: "pharmacy", exclude: [] },
+  { label: "Transit", query: "station", exclude: ["fire", "police", "gas"] },
 ];
 
 function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
@@ -66,7 +66,11 @@ export function ListingNearbyPlaces({ lat, lng }: { lat: number; lng: number }) 
                 name: String(f.place_name ?? f.text ?? "").split(",")[0].trim() || "Unknown",
                 distanceKm: haversineKm(lat, lng, f.center[1], f.center[0]),
               }))
-              .filter((p: Place) => p.name && p.distanceKm < 25)
+              .filter((p: Place) => {
+                if (!p.name || p.distanceKm >= 25) return false;
+                const lower = p.name.toLowerCase();
+                return !cat.exclude.some((ex) => lower.includes(ex));
+              })
               .sort((a: Place, b: Place) => a.distanceKm - b.distanceKm)
               .slice(0, 5);
             return { label: cat.label, places };
