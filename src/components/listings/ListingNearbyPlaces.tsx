@@ -1,16 +1,22 @@
 "use client";
 import { useEffect, useState } from "react";
 
+const OVERPASS_ENDPOINTS = [
+  "https://overpass-api.de/api/interpreter",
+  "https://overpass.kumi.systems/api/interpreter",
+  "https://overpass.private.coffee/api/interpreter",
+];
+
 type Place = { name: string; address: string; distanceKm: number };
 type CategoryResult = { label: string; places: Place[] };
 
-// OSM tag + search radius (meters) per category.
-const CATEGORIES: { label: string; tag: string; radius: number; requireName: boolean }[] = [
-  { label: "Schools", tag: "amenity=school", radius: 5000, requireName: true },
-  { label: "Groceries", tag: "shop=supermarket", radius: 5000, requireName: true },
-  { label: "Restaurants", tag: "amenity=restaurant", radius: 3000, requireName: true },
-  { label: "Pharmacy & Health", tag: "amenity=pharmacy", radius: 5000, requireName: true },
-  { label: "Commute", tag: "highway=bus_stop", radius: 3000, requireName: false },
+// radius in metres; multiple OSM tag filters per category.
+const POI_CATEGORIES: { label: string; radius: number; filters: [string, string][] }[] = [
+  { label: "Schools", radius: 4000, filters: [["amenity", "school"]] },
+  { label: "Commute", radius: 1500, filters: [["highway", "bus_stop"], ["railway", "station"], ["public_transport", "station"]] },
+  { label: "Pharmacy & Health", radius: 3000, filters: [["amenity", "pharmacy"], ["amenity", "clinic"], ["amenity", "hospital"]] },
+  { label: "Groceries", radius: 3000, filters: [["shop", "supermarket"], ["shop", "convenience"]] },
+  { label: "Restaurants", radius: 2000, filters: [["amenity", "restaurant"]] },
 ];
 
 function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
@@ -35,66 +41,105 @@ type OverpassElement = {
   tags?: Record<string, string>;
 };
 
+async function queryOverpass(query: string): Promise<{ elements?: OverpassElement[] } | null> {
+  for (const url of OVERPASS_ENDPOINTS) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 20000);
+    try {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: "data=" + encodeURIComponent(query),
+        signal: ctrl.signal,
+      });
+      clearTimeout(timer);
+      if (res.ok) return (await res.json()) as { elements?: OverpassElement[] };
+      console.warn("Overpass", res.status, url);
+    } catch (err) {
+      clearTimeout(timer);
+      console.warn("Overpass failed", url, (err as Error).name);
+    }
+  }
+  return null;
+}
+
 /**
- * Nearby places via Overpass API (OpenStreetMap) — real category queries
- * by OSM tag within a radius. Free, no key needed.
+ * Nearby places via Overpass API — one combined query for all categories,
+ * failover across 3 endpoints, 7-day localStorage cache.
  */
 export function ListingNearbyPlaces({ lat, lng }: { lat: number; lng: number; listingKey: string }) {
   const [results, setResults] = useState<CategoryResult[] | null>(null);
 
   useEffect(() => {
     let cancelled = false;
+    const cacheKey = `poi:${lat.toFixed(4)},${lng.toFixed(4)}`;
 
     (async () => {
-      const out: CategoryResult[] = await Promise.all(
-        CATEGORIES.map(async (cat) => {
-          try {
-            const [k, v] = cat.tag.split("=");
-            const nameFilter = cat.requireName ? `["name"]` : ``;
-            // Nodes only (faster than nwr); Kumi instance is more reliable than overpass-api.de.
-            const q =
-              `[out:json][timeout:15];` +
-              `node["${k}"="${v}"]${nameFilter}(around:${cat.radius},${lat},${lng});` +
-              `out 50;`;
-            const res = await fetch("https://overpass.kumi.systems/api/interpreter", {
-              method: "POST",
-              headers: { "Content-Type": "application/x-www-form-urlencoded" },
-              body: "data=" + encodeURIComponent(q),
-            });
-            if (!res.ok) {
-              console.error("Overpass error", res.status, cat.label);
-              return { label: cat.label, places: [] };
+      // Check cache first (7 days).
+      try {
+        const cached = JSON.parse(localStorage.getItem(cacheKey) ?? "null") as
+          | { t: number; data: CategoryResult[] }
+          | null;
+        if (cached && Date.now() - cached.t < 7 * 864e5) {
+          if (!cancelled) setResults(cached.data);
+          return;
+        }
+      } catch { /* ignore */ }
+
+      // One combined query for all categories.
+      const parts: string[] = [];
+      for (const c of POI_CATEGORIES) {
+        for (const [k, v] of c.filters) {
+          parts.push(`nwr["${k}"="${v}"](around:${c.radius},${lat},${lng});`);
+        }
+      }
+      const q = `[out:json][timeout:25];(${parts.join("")});out center 500;`;
+      const json = await queryOverpass(q);
+
+      let out: CategoryResult[];
+      if (!json) {
+        out = POI_CATEGORIES.map((c) => ({ label: c.label, places: [] }));
+      } else {
+        const byLabel: Record<string, Place[]> = {};
+        for (const c of POI_CATEGORIES) byLabel[c.label] = [];
+        const seen = new Set<string>();
+
+        for (const el of json.elements ?? []) {
+          const eLat = el.lat ?? el.center?.lat;
+          const eLng = el.lon ?? el.center?.lon;
+          if (eLat == null || eLng == null) continue;
+          const t = el.tags ?? {};
+          const name = t.name || (t.highway === "bus_stop" ? "Bus stop" : "");
+          if (!name) continue;
+          const key = name.toLowerCase();
+          if (seen.has(key)) continue;
+          seen.add(key);
+          const distanceKm = haversineKm(lat, lng, eLat, eLng);
+          const address = [t["addr:housenumber"], t["addr:street"], t["addr:city"]]
+            .filter(Boolean)
+            .join(" ") || "Address not listed";
+
+          for (const c of POI_CATEGORIES) {
+            const matches = c.filters.some(([fk, fv]) => t[fk] === fv);
+            if (matches && distanceKm <= c.radius / 1000) {
+              byLabel[c.label].push({ name, address, distanceKm });
             }
-            const data = (await res.json()) as { elements?: OverpassElement[] };
-            const seen = new Set<string>();
-            const places: Place[] = [];
-            for (const el of data.elements ?? []) {
-              const eLat = el.lat ?? el.center?.lat;
-              const eLng = el.lon ?? el.center?.lon;
-              if (eLat == null || eLng == null) continue;
-              const t = el.tags ?? {};
-              const name = t.name || (cat.requireName ? "" : "Bus Stop");
-              if (!name) continue;
-              const key = name.toLowerCase();
-              if (seen.has(key)) continue;
-              seen.add(key);
-              const address = [t["addr:housenumber"], t["addr:street"], t["addr:city"]]
-                .filter(Boolean)
-                .join(" ") || "Address not listed";
-              places.push({
-                name,
-                address,
-                distanceKm: haversineKm(lat, lng, eLat, eLng),
-              });
-            }
-            places.sort((a, b) => a.distanceKm - b.distanceKm);
-            return { label: cat.label, places: places.slice(0, 5) };
-          } catch (err) {
-            console.error("POI fetch failed:", cat.label, err);
-            return { label: cat.label, places: [] };
           }
-        }),
-      );
+        }
+
+        out = POI_CATEGORIES.map((c) => {
+          const places = byLabel[c.label]
+            .sort((a, b) => a.distanceKm - b.distanceKm)
+            .slice(0, 5);
+          return { label: c.label, places };
+        });
+
+        // Cache for 7 days.
+        try {
+          localStorage.setItem(cacheKey, JSON.stringify({ t: Date.now(), data: out }));
+        } catch { /* ignore */ }
+      }
+
       if (!cancelled) setResults(out);
     })();
 
