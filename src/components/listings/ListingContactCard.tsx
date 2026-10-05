@@ -37,7 +37,28 @@ function AgentPhoto({ agent, photoSvg }: { agent: AgentInfo; photoSvg: SvgAsset 
   );
 }
 
-/** Tiny listing summary: badge + price + address. Shown atop card and modal. */
+/** Tiny listing summary blended with the ask button (two-column). */
+function ListingSummaryCompact({ listing }: { listing: PropertyListing }) {
+  const sale = isSale(listing);
+  const hood = ((listing.CityRegion || listing.SubdivisionName) ?? "").trim();
+  return (
+    <div className="min-w-0">
+      <div className="flex items-center gap-1.5">
+        <span className={`rounded px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-white ${sale ? "bg-ink" : "bg-accent"}`}>
+          {sale ? "For Sale" : "For Rent"}
+        </span>
+        <span className="truncate text-[13px] font-semibold">{priceDisplay(listing)}</span>
+      </div>
+      <div className="mt-0.5 truncate text-[11px] text-muted">
+        {listing.UnparsedAddress}
+        {listing.City ? `, ${listing.City}` : ""}
+        {hood ? ` (${hood})` : ""}
+      </div>
+    </div>
+  );
+}
+
+/** Full listing summary for the modal. */
 function ListingSummary({ listing }: { listing: PropertyListing }) {
   const sale = isSale(listing);
   const hood = ((listing.CityRegion || listing.SubdivisionName) ?? "").trim();
@@ -66,10 +87,8 @@ export function ListingContactCard({ listing, form, agent, photoSvg }: { listing
   return (
     <>
       <div className="card flex flex-col gap-4">
-        <ListingSummary listing={listing} />
-
         {showAgent ? (
-          <div className="flex items-center gap-3 border-t border-line pt-4">
+          <div className="flex items-center gap-3">
             <AgentPhoto agent={agent} photoSvg={photoSvg ?? null} />
             <div className="min-w-0">
               {agent.name ? <div className="font-semibold leading-tight">{agent.name}</div> : null}
@@ -82,9 +101,12 @@ export function ListingContactCard({ listing, form, agent, photoSvg }: { listing
         ) : null}
 
         {form ? (
-          <button type="button" onClick={() => setOpen(true)} className="btn h-11 justify-center">
-            Ask about this property
-          </button>
+          <div className="flex items-center justify-between gap-3 border-t border-line pt-3">
+            <ListingSummaryCompact listing={listing} />
+            <button type="button" onClick={() => setOpen(true)} className="btn h-9 shrink-0 px-3 text-[13px]">
+              Ask about this property
+            </button>
+          </div>
         ) : (
           <>
             <p className="text-sm text-muted">Contact us directly to ask about this listing.</p>
