@@ -165,7 +165,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
               <FieldTable mobileCols={4} variant="stats" fields={statFields(listing, dom)} />
             </div>
 
-            {showListingAd ? <ContentAdSlot adCode={adCode} className="mb-6" /> : null}
+            {showListingAd ? <ContentAdSlot adCode={adCode} /> : null}
             {listing.PublicRemarks ? (
               <div className="rounded-2xl bg-white p-6">
                 <h2 className="mb-3 border-b border-line pb-3 font-display text-[1.0rem]">About this property</h2>

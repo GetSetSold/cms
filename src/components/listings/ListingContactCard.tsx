@@ -87,7 +87,7 @@ export function ListingContactCard({ listing, form, agent, photoSvg }: { listing
   return (
     <>
       <div className="card flex flex-col gap-4">
-        <h3 className="font-display text-lg">Ask About This Property</h3>
+        <h3 className="border-b border-line pb-3 font-display text-lg">Ask About This Property</h3>
         {showAgent ? (
           <div className="flex items-center gap-3">
             <AgentPhoto agent={agent} photoSvg={photoSvg ?? null} />
