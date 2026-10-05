@@ -106,6 +106,11 @@ export interface SiteSettings {
     calculators_ad_enabled?: boolean;
     listing_ad_enabled?: boolean;
   };
+  promo?: {
+    buyer_enabled?: boolean;
+    tenant_enabled?: boolean;
+    cities?: string[];
+  };
   lead_settings: { notify_emails: string[] };
   /** Calculator regulatory/default assumptions (Admin → Calculators). Merged over code defaults. */
   calculators?: {

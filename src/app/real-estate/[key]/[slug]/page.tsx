@@ -15,6 +15,7 @@ import { AffordabilityBanner } from "@/components/listings/AffordabilityBanner";
 import { SimilarListings } from "@/components/listings/SimilarListings";
 import { ContentAdSlot } from "@/components/ads/ContentAdSlot";
 import { CollapsibleCard } from "@/components/listings/CollapsibleCard";
+import { PromoBanner } from "@/components/listings/PromoBanner";
 import { LocationDescription, PropertySummary, LandAndLot, ConstructionExterior, SystemsUtilities, Financials, FieldTable, RoomsBlock, MapDirections } from "@/components/listings/ListingDetailBlocks";
 import { createClient } from "@/lib/supabase/server";
 import type { CmsForm } from "@/lib/types";
@@ -107,6 +108,14 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
   const photos = mediaItems(listing.Media);
   const dom = daysOnMarket(listing.OriginalEntryTimestamp);
   const sale = isSale(listing);
+  // Promo banners: buyer on For Sale, tenant on For Rent, only in selected cities.
+  const promo = settings.promo ?? {};
+  const promoCities = Array.isArray(promo.cities)
+    ? promo.cities.map((c) => c.toLowerCase().trim()).filter(Boolean)
+    : [];
+  const inPromoCity = promoCities.length === 0 || promoCities.includes((listing.City ?? "").toLowerCase().trim());
+  const showBuyerPromo = sale && promo.buyer_enabled === true && inPromoCity;
+  const showTenantPromo = !sale && promo.tenant_enabled === true && inPromoCity;
 
   const themeVars_ = themeVars(settings);
 
@@ -166,6 +175,8 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
               <FieldTable mobileCols={4} variant="stats" fields={statFields(listing, dom)} />
             </div>
 
+            {showBuyerPromo ? <PromoBanner variant="buyer" listing={listing} /> : null}
+            {showTenantPromo ? <PromoBanner variant="tenant" listing={listing} /> : null}
             {showListingAd ? <ContentAdSlot adCode={adCode} /> : null}
             {/* Mobile: flush accordion (no gaps). Desktop: spaced cards. */}
             <div className="flex min-w-0 flex-col overflow-hidden rounded-2xl bg-white lg:gap-6 lg:overflow-visible lg:rounded-none lg:bg-transparent">

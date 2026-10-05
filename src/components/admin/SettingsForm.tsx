@@ -466,6 +466,21 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
               <input type="checkbox" checked={s.ads?.listing_ad_enabled ?? false} onChange={(e) => set("ads", { ...s.ads, listing_ad_enabled: e.target.checked })} className="h-4 w-4" />
               Show ads on listing detail pages
             </label>
+            <div className="border-t border-line pt-3">
+              <h3 className="mb-2 text-sm font-semibold">Promo Banners</h3>
+              <label className="label flex items-center gap-2">
+                <input type="checkbox" checked={s.promo?.buyer_enabled ?? false} onChange={(e) => set("promo", { ...s.promo, buyer_enabled: e.target.checked })} className="h-4 w-4" />
+                Show buyer cashback banner on For Sale listings
+              </label>
+              <label className="label flex items-center gap-2">
+                <input type="checkbox" checked={s.promo?.tenant_enabled ?? false} onChange={(e) => set("promo", { ...s.promo, tenant_enabled: e.target.checked })} className="h-4 w-4" />
+                Show free rental service banner on For Rent listings
+              </label>
+              <label className="label">Service areas (cities, one per line — leave empty for all cities)
+                <textarea className="textarea" rows={4} placeholder={"Caledonia\nHaldimand\nHamilton"} value={Array.isArray(s.promo?.cities) ? (s.promo.cities as string[]).join("\n") : ""} onChange={(e) => set("promo", { ...s.promo, cities: e.target.value.split("\n").map((c) => c.trim()).filter(Boolean) })} />
+              </label>
+              <p className="text-xs text-muted">Banners appear in the left panel before the ad slot, only on listings in these cities. Buyer banner shows the 0.25% cashback on the list price.</p>
+            </div>
           </section>
         )}
       </div>

@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { PropertyListing } from "@/lib/mls";
 import { priceDisplay, isSale } from "@/lib/mls";
 import { CmsFormRenderer } from "@/components/blocks/CmsFormRenderer";
@@ -78,6 +78,12 @@ function ListingSummary({ listing }: { listing: PropertyListing }) {
 
 export function ListingContactCard({ listing, form, agent, photoSvg }: { listing: PropertyListing; form: CmsForm | null; agent?: AgentInfo; photoSvg?: SvgAsset | null }) {
   const [open, setOpen] = useState(false);
+  // Promo banners dispatch this to open the inquiry modal.
+  useEffect(() => {
+    const handler = () => setOpen(true);
+    window.addEventListener("open-inquiry", handler);
+    return () => window.removeEventListener("open-inquiry", handler);
+  }, []);
   const phone = agent?.phone;
   const email = agent?.email;
   const showAgent = agent && (agent.name || agent.brokerage);
