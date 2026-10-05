@@ -3,20 +3,11 @@ import type { PropertyListing } from "@/lib/mls";
 
 /** Small banner under the agent card (For Sale only). Opens affordability calculator in a new tab. */
 export function AffordabilityBanner({ listing }: { listing: PropertyListing }) {
-  const parts: string[] = [];
-  const mls = String(listing.ListingId ?? listing.ListingKey ?? "");
-  if (mls) parts.push(`mls=${encodeURIComponent(mls)}`);
-  if (listing.ListPrice) parts.push(`price=${encodeURIComponent(String(listing.ListPrice))}`);
-  if (listing.UnparsedAddress) parts.push(`address=${encodeURIComponent(String(listing.UnparsedAddress))}`);
-  if (listing.City) parts.push(`city=${encodeURIComponent(String(listing.City))}`);
-  if (listing.BedroomsTotal != null) parts.push(`beds=${encodeURIComponent(String(listing.BedroomsTotal))}`);
-  if (listing.BathroomsTotalInteger != null) parts.push(`baths=${encodeURIComponent(String(listing.BathroomsTotalInteger))}`);
-  if (listing.LivingArea) parts.push(`sqft=${encodeURIComponent(String(listing.LivingArea))}`);
-  const qs = parts.join("&");
+  const key = String(listing.ListingKey ?? "");
 
   return (
     <a
-      href={`/calculators/affordability-calculator${qs ? `?${qs}` : ""}`}
+      href={`/calculators/affordability-calculator${key ? `?mls=${encodeURIComponent(key)}` : ""}`}
       target="_blank"
       rel="noopener"
       className="card group flex w-full items-center gap-3 p-4 text-left transition-shadow hover:shadow-md"
