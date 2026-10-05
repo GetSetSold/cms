@@ -12,6 +12,7 @@ import { ListingGallery } from "@/components/listings/ListingGallery";
 import { ListingContactCard } from "@/components/listings/ListingContactCard";
 import { ListingNearbyPlaces } from "@/components/listings/ListingNearbyPlaces";
 import { AffordabilityBanner } from "@/components/listings/AffordabilityBanner";
+import { SimilarListings } from "@/components/listings/SimilarListings";
 import { LocationDescription, PropertySummary, LandAndLot, ConstructionExterior, SystemsUtilities, Financials, FieldTable, RoomsBlock, MapDirections } from "@/components/listings/ListingDetailBlocks";
 import { createClient } from "@/lib/supabase/server";
 import type { CmsForm } from "@/lib/types";
@@ -34,7 +35,7 @@ async function getSimilar(listing: PropertyListing) {
   if (!listing.City) return [];
   const mls = createMlsClient();
   const sale = isSale(listing);
-  const base = mls.from("grid").select("*").eq("City", listing.City).neq("ListingKey", listing.ListingKey).limit(4);
+  const base = mls.from("grid").select("*").eq("City", listing.City).neq("ListingKey", listing.ListingKey).limit(12);
   const { data } = sale
     ? await base.not("ListPrice", "is", null)
     : await base.not("TotalActualRent", "is", null);
@@ -202,14 +203,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
           ) : null;
         })()}
 
-        {similar.length ? (
-          <div className="mt-12">
-            <h2 className="mb-5 font-display text-2xl">Similar listings</h2>
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-              {similar.map((l) => <ListingCard key={l.ListingKey} listing={l} />)}
-            </div>
-          </div>
-        ) : null}
+        {similar.length ? <SimilarListings listings={similar} /> : null}
       </main>
       <SiteFooter settings={settings} />
       <MobileCtaBar settings={settings} />
