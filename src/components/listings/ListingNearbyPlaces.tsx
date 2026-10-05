@@ -34,6 +34,7 @@ type MaptilerFeature = {
   place_name?: string;
   text?: string;
   center?: [number, number];
+  geometry?: { coordinates?: [number, number] };
   properties?: { address?: string };
 };
 
@@ -53,25 +54,24 @@ export function ListingNearbyPlaces({ lat, lng }: { lat: number; lng: number; li
           try {
             const url =
               `https://api.maptiler.com/geocoding/${encodeURIComponent(cat.query)}.json` +
-              `?key=${MAPTILER_KEY}&types=poi&proximity=${lng},${lat}&limit=25`;
+              `?key=${MAPTILER_KEY}&proximity=${lng},${lat}&types=poi&limit=10&language=en`;
             const res = await fetch(url);
             if (!res.ok) return { label: cat.label, places: [] };
             const data = (await res.json()) as { features?: MaptilerFeature[] };
             const seen = new Set<string>();
             const places: Place[] = [];
             for (const f of data.features ?? []) {
-              const name = f.text || f.place_name?.split(",")[0] || "";
-              if (!name) continue;
+              const center = f.center || f.geometry?.coordinates;
+              if (!center || center.length < 2) continue;
+              const name = f.text || "No name";
               const key = name.toLowerCase();
               if (seen.has(key)) continue;
               seen.add(key);
-              const c = f.center;
-              if (!c || c.length < 2) continue;
-              const distanceKm = haversineKm(lat, lng, c[1], c[0]);
+              const distanceKm = haversineKm(lat, lng, center[1], center[0]);
               if (distanceKm > 10) continue;
               places.push({
                 name,
-                address: f.properties?.address || "",
+                address: f.place_name || "",
                 distanceKm,
               });
             }
