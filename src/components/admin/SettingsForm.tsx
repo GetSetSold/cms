@@ -35,7 +35,7 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
       contact: s.contact, scripts: s.scripts, lead_settings: s.lead_settings, mobile_cta: s.mobile_cta, blog_cta: s.blog_cta, social_links: s.social_links, precon_cashback: s.precon_cashback,
       agent: s.agent ?? {},
       email_provider: s.email_provider ?? "zeptomail", sms_provider: s.sms_provider ?? "vonage",
-      ads: s.ads ?? {},
+      ads: s.ads ?? {}, promo: s.promo ?? {},
     }).eq("id", 1);
     setMsg(error ? error.message : "Saved");
   }
