@@ -27,29 +27,52 @@ const text = (v: unknown): string | null => displayValue(v) || null;
 export type DetailField = { label: string; value: string | null };
 export type DetailSection = { heading?: string; fields: DetailField[] };
 
+/** Split an array into chunks of `size`. */
+export function chunkArray<T>(arr: T[], size: number): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+  return out;
+}
+
+type BlockRow = { key: string; heading?: string; fields?: DetailField[] };
+
 export function DetailBlock({ title, sections }: { title: string; sections: DetailSection[] }) {
   const visible = sections
     .map((s) => ({ ...s, fields: s.fields.filter((f) => f.value) }))
     .filter((s) => s.fields.length);
   if (!visible.length) return null;
+  // Flatten into full-width rows: each row is its own grid, so horizontal
+  // dividers always span the card edge to edge no matter how many cells
+  // the last row has. Every cell draws its own left divider; the row is
+  // shifted 1px left so the first column's divider is clipped by the card's
+  // overflow-hidden — no outer border, no grey gaps anywhere.
+  const rows: BlockRow[] = [];
+  visible.forEach((s, si) => {
+    if (s.heading) rows.push({ key: `h-${si}`, heading: s.heading });
+    chunkArray(s.fields, 4).forEach((fields, ri) => rows.push({ key: `r-${si}-${ri}`, fields }));
+  });
   return (
     <div className="overflow-hidden rounded-2xl bg-white">
       <h2 className="border-b border-line px-6 py-4 font-display text-xl">{title}</h2>
-      {visible.map((s, i) => (
-        <div key={i}>
-          {s.heading ? (
-            <h3 className="border-b border-line px-6 py-3 text-[11px] font-semibold tracking-wider text-muted">{s.heading}</h3>
-          ) : null}
-          <dl className="grid grid-cols-2 gap-px bg-line md:grid-cols-4">
-            {s.fields.map((f) => (
-              <div key={f.label} className="flex flex-col bg-white px-3 py-5 text-center">
-                <dd className="order-1 font-display text-lg font-semibold leading-snug text-ink">{f.value}</dd>
-                <dt className="order-2 mt-1.5 text-[11px] text-muted">{f.label}</dt>
+      {rows.map((row, i) =>
+        row.heading ? (
+          <div
+            key={row.key}
+            className={`px-6 py-3 text-[11px] font-semibold tracking-wider text-muted ${i > 0 ? "border-t border-line" : ""}`}
+          >
+            {row.heading}
+          </div>
+        ) : (
+          <div key={row.key} className={`-ml-px grid grid-cols-2 md:grid-cols-4 ${i > 0 ? "border-t border-line" : ""}`}>
+            {(row.fields ?? []).map((f) => (
+              <div key={f.label} className="flex flex-col border-l border-line bg-white px-3 py-5 text-center">
+                <div className="font-display text-lg font-semibold leading-snug text-ink">{f.value}</div>
+                <div className="mt-1.5 text-[11px] text-muted">{f.label}</div>
               </div>
             ))}
-          </dl>
-        </div>
-      ))}
+          </div>
+        )
+      )}
     </div>
   );
 }

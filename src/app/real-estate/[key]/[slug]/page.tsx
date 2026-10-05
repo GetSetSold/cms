@@ -9,7 +9,7 @@ import { SiteFooter, MobileCtaBar } from "@/components/site/SiteFooter";
 import { ListingCard } from "@/components/listings/ListingCard";
 import { ListingGallery } from "@/components/listings/ListingGallery";
 import { ListingContactCard } from "@/components/listings/ListingContactCard";
-import { LocationDescription, PropertySummary, LandAndLot, ConstructionExterior, SystemsUtilities, Financials } from "@/components/listings/ListingDetailBlocks";
+import { LocationDescription, PropertySummary, LandAndLot, ConstructionExterior, SystemsUtilities, Financials, chunkArray } from "@/components/listings/ListingDetailBlocks";
 import { createClient } from "@/lib/supabase/server";
 import type { CmsForm } from "@/lib/types";
 
@@ -62,16 +62,16 @@ export async function generateMetadata({ params }: { params: Promise<{ key: stri
   };
 }
 
-const stat = (value: unknown, label: string) => {
-  const v = displayValue(value);
-  if (!v) return null;
-  return (
-    <div className="flex flex-col items-center gap-1 border-line px-2 py-5 text-center [&:not(:nth-child(4n+1))]:border-l [&:nth-child(n+5)]:border-t">
-      <div className="font-display text-lg font-semibold">{v}</div>
-      <div className="text-[11px] text-muted">{label}</div>
-    </div>
-  );
-};
+const statDefs = (listing: PropertyListing, dom: number | null) =>
+  [
+    { value: dom != null ? `${dom} ${dom === 1 ? "day" : "days"}` : null, label: "Days on market" },
+    { value: listing.BedroomsTotal, label: "Bedrooms" },
+    { value: listing.BathroomsTotalInteger, label: "Bathrooms" },
+    { value: listing.ParkingTotal, label: "Parking" },
+    { value: listing.AboveGradeFinishedArea ? Number(listing.AboveGradeFinishedArea).toLocaleString() : null, label: "Sq ft" },
+    { value: listing.StructureType ?? listing.PropertySubType, label: "Type" },
+    { value: listing.YearBuilt, label: "Year built" },
+  ].filter((s) => displayValue(s.value));
 
 export default async function ListingDetailPage({ params }: { params: Promise<{ key: string; slug: string }> }) {
   const { key, slug } = await params;
@@ -132,14 +132,17 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
               </div>
             </div>
 
-            <div className="grid grid-cols-4 overflow-hidden rounded-2xl bg-white">
-              {stat(dom != null ? `${dom} ${dom === 1 ? "day" : "days"}` : null, "Days on market")}
-              {stat(listing.BedroomsTotal, "Bedrooms")}
-              {stat(listing.BathroomsTotalInteger, "Bathrooms")}
-              {stat(listing.ParkingTotal, "Parking")}
-              {stat(listing.AboveGradeFinishedArea ? Number(listing.AboveGradeFinishedArea).toLocaleString() : null, "Sq ft")}
-              {stat(listing.StructureType ?? listing.PropertySubType, "Type")}
-              {stat(listing.YearBuilt, "Year built")}
+            <div className="overflow-hidden rounded-2xl bg-white">
+              {chunkArray(statDefs(listing, dom), 4).map((row, ri) => (
+                <div key={ri} className={`-ml-px grid grid-cols-4 ${ri > 0 ? "border-t border-line" : ""}`}>
+                  {row.map((s) => (
+                    <div key={s.label} className="flex flex-col items-center gap-1 border-l border-line px-2 py-5 text-center">
+                      <div className="font-display text-lg font-semibold">{displayValue(s.value)}</div>
+                      <div className="text-[11px] text-muted">{s.label}</div>
+                    </div>
+                  ))}
+                </div>
+              ))}
             </div>
 
             {listing.PublicRemarks ? (
