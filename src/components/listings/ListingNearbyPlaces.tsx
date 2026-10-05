@@ -6,13 +6,20 @@ const MAPTILER_KEY = "Zr8EXulAyt75JJibE0ol"; // same key the site's other maps u
 type Place = { name: string; distanceKm: number };
 type CategoryResult = { label: string; places: Place[] };
 
-// Category matchers against the API's `properties.categories` (real OSM data).
-const CATEGORIES: { label: string; match: string[] }[] = [
-  { label: "Schools", match: ["school"] },
-  { label: "Groceries", match: ["supermarket", "grocery", "convenience", "marketplace"] },
-  { label: "Restaurants", match: ["restaurant", "cafe", "fast_food", "bar", "pub"] },
-  { label: "Pharmacy & Health", match: ["pharmacy", "clinic", "hospital", "doctors", "dentist"] },
-  { label: "Transit", match: ["bus stop", "bus_stop", "station", "railway station", "subway", "tram stop", "halt"] },
+/** ~5km bounding box around the listing for category coverage. */
+function bboxAround(lat: number, lng: number, km: number): string {
+  const dLat = km / 111;
+  const dLng = km / (111 * Math.cos((lat * Math.PI) / 180));
+  return `${lng - dLng},${lat - dLat},${lng + dLng},${lat + dLat}`;
+}
+
+// Text queries for the bbox search (supplements reverse geocode for 3-5km coverage).
+const BBOX_QUERIES: { label: string; query: string; match: string[] }[] = [
+  { label: "Schools", query: "school", match: ["school"] },
+  { label: "Groceries", query: "grocery", match: ["supermarket", "grocery", "convenience", "marketplace"] },
+  { label: "Restaurants", query: "restaurant", match: ["restaurant", "cafe", "fast_food", "bar", "pub"] },
+  { label: "Pharmacy & Health", query: "pharmacy", match: ["pharmacy", "clinic", "hospital", "doctors", "dentist"] },
+  { label: "Transit", query: "bus station", match: ["bus stop", "bus_stop", "station", "railway station", "subway", "tram stop", "halt"] },
 ];
 
 function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
@@ -45,16 +52,13 @@ export function ListingNearbyPlaces({ lat, lng }: { lat: number; lng: number }) 
     let cancelled = false;
     const load = async () => {
       try {
-        const url =
+        // 1. Reverse geocode: the 10 closest POIs (most accurate proximity).
+        const revUrl =
           `https://api.maptiler.com/geocoding/${lng},${lat}.json` +
           `?key=${MAPTILER_KEY}&types=poi&limit=10`;
-        const res = await fetch(url);
-        if (!res.ok) {
-          if (!cancelled) setResults([]);
-          return;
-        }
-        const data = await res.json();
-        const pois: (Place & { categories: string[] })[] = (data.features ?? [])
+        const revRes = await fetch(revUrl);
+        const revData = revRes.ok ? await revRes.json() : { features: [] };
+        const closest: (Place & { categories: string[] })[] = (revData.features ?? [])
           .filter((f: any) => Array.isArray(f.center))
           .map((f: any) => ({
             name: String(f.text ?? "").split(",")[0].trim(),
@@ -64,13 +68,50 @@ export function ListingNearbyPlaces({ lat, lng }: { lat: number; lng: number }) 
           .filter((p: { name: string }) => p.name.length > 0)
           .sort((a: Place, b: Place) => a.distanceKm - b.distanceKm);
 
-        const out: CategoryResult[] = CATEGORIES.map((cat) => ({
-          label: cat.label,
-          places: pois
-            .filter((p) => cat.match.some((m) => p.categories.includes(m.toLowerCase())))
-            .slice(0, 5)
-            .map(({ name, distanceKm }) => ({ name, distanceKm })),
-        }));
+        // 2. Bbox search (5km) per category to fill up to 3-5 results each.
+        const bbox = bboxAround(lat, lng, 5);
+        const bboxResults = await Promise.all(
+          BBOX_QUERIES.map(async (cat) => {
+            try {
+              const url =
+                `https://api.maptiler.com/geocoding/${encodeURIComponent(cat.query)}.json` +
+                `?key=${MAPTILER_KEY}&bbox=${bbox}&limit=10&types=poi`;
+              const res = await fetch(url);
+              if (!res.ok) return [] as (Place & { categories: string[] })[];
+              const data = await res.json();
+              return ((data.features ?? []) as any[])
+                .filter((f: any) => Array.isArray(f.center))
+                .map((f: any) => ({
+                  name: String(f.text ?? f.place_name ?? "").split(",")[0].trim(),
+                  distanceKm: haversineKm(lat, lng, f.center[1], f.center[0]),
+                  categories: ((f.properties?.categories ?? []) as string[]).map((c) => c.toLowerCase()),
+                }))
+                .filter((p: Place & { categories: string[] }) => {
+                  if (!p.name || p.distanceKm >= 5) return false;
+                  return cat.match.some((m) => p.categories.includes(m.toLowerCase()));
+                })
+                .sort((a: Place, b: Place) => a.distanceKm - b.distanceKm);
+            } catch {
+              return [] as (Place & { categories: string[] })[];
+            }
+          })
+        );
+
+        // 3. Merge: reverse-geocode hits first (closest), then bbox fills up to 5.
+        const out: CategoryResult[] = BBOX_QUERIES.map((cat, i) => {
+          const seen = new Set<string>();
+          const places: Place[] = [];
+          for (const p of [...closest, ...bboxResults[i]]) {
+            if (!cat.match.some((m) => p.categories.includes(m.toLowerCase()))) continue;
+            const key = p.name.toLowerCase();
+            if (seen.has(key)) continue;
+            seen.add(key);
+            places.push({ name: p.name, distanceKm: p.distanceKm });
+            if (places.length >= 5) break;
+          }
+          places.sort((a, b) => a.distanceKm - b.distanceKm);
+          return { label: cat.label, places };
+        });
         if (!cancelled) setResults(out);
       } catch {
         if (!cancelled) setResults([]);
