@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import type { PropertyListing } from "@/lib/mls";
-import { priceDisplay } from "@/lib/mls";
+import { priceDisplay, isSale } from "@/lib/mls";
 import { CmsFormRenderer } from "@/components/blocks/CmsFormRenderer";
 import type { CmsForm, SiteSettings, SvgAsset } from "@/lib/types";
 
@@ -13,7 +13,7 @@ function AgentPhoto({ agent, photoSvg }: { agent: AgentInfo; photoSvg: SvgAsset 
   if (photoSvg?.markup) {
     return (
       <span
-        className="inline-flex items-center justify-center overflow-hidden rounded-full bg-gray-100"
+        className="inline-flex items-center justify-center overflow-hidden rounded-full"
         style={{ width: size, height: size }}
         dangerouslySetInnerHTML={{ __html: photoSvg.markup }}
         aria-label={agent.name ?? "Agent photo"}
@@ -37,24 +37,46 @@ function AgentPhoto({ agent, photoSvg }: { agent: AgentInfo; photoSvg: SvgAsset 
   );
 }
 
+/** Tiny listing summary: badge + price + address. Shown atop card and modal. */
+function ListingSummary({ listing }: { listing: PropertyListing }) {
+  const sale = isSale(listing);
+  const hood = ((listing.CityRegion || listing.SubdivisionName) ?? "").trim();
+  return (
+    <div className="flex flex-col gap-1.5">
+      <span className={`w-fit rounded px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white ${sale ? "bg-ink" : "bg-accent"}`}>
+        {sale ? "For Sale" : "For Rent"}
+      </span>
+      <div className="text-xl font-semibold leading-tight">{priceDisplay(listing)}</div>
+      <div className="text-[11px] leading-snug text-muted">
+        {listing.UnparsedAddress}
+        {listing.City ? `, ${listing.City}` : ""}
+        {hood ? ` (${hood})` : ""}
+        {listing.Province ? `, ${listing.Province}` : ""}
+      </div>
+    </div>
+  );
+}
+
 export function ListingContactCard({ listing, form, agent, photoSvg }: { listing: PropertyListing; form: CmsForm | null; agent?: AgentInfo; photoSvg?: SvgAsset | null }) {
   const [open, setOpen] = useState(false);
   const phone = agent?.phone;
+  const email = agent?.email;
   const showAgent = agent && (agent.name || agent.brokerage);
 
   return (
     <>
       <div className="card flex flex-col gap-4">
-        <div className="text-2xl font-semibold">{priceDisplay(listing)}</div>
+        <ListingSummary listing={listing} />
 
         {showAgent ? (
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 border-t border-line pt-4">
             <AgentPhoto agent={agent} photoSvg={photoSvg ?? null} />
             <div className="min-w-0">
               {agent.name ? <div className="font-semibold leading-tight">{agent.name}</div> : null}
               {agent.title ? <div className="text-[12px] text-muted leading-tight">{agent.title}</div> : null}
               {agent.brokerage ? <div className="text-[12px] text-muted leading-tight">{agent.brokerage}</div> : null}
-              {phone ? <a href={`tel:${phone.replace(/[^+\d]/g, "")}`} className="text-[13px] font-medium hover:underline">{phone}</a> : null}
+              {phone ? <a href={`tel:${phone.replace(/[^+\d]/g, "")}`} className="block text-[13px] font-medium hover:underline">{phone}</a> : null}
+              {email ? <a href={`mailto:${email}`} className="block truncate text-[13px] font-medium hover:underline">{email}</a> : null}
             </div>
           </div>
         ) : null}
@@ -78,7 +100,7 @@ export function ListingContactCard({ listing, form, agent, photoSvg }: { listing
             <div className="mb-4 flex items-start justify-between gap-4">
               <div>
                 <h3 className="font-display text-xl">Ask about this property</h3>
-                {listing.UnparsedAddress ? <p className="mt-1 text-sm text-muted">{listing.UnparsedAddress}</p> : null}
+                <div className="mt-2"><ListingSummary listing={listing} /></div>
               </div>
               <button type="button" onClick={() => setOpen(false)} aria-label="Close dialog" className="rounded-full p-1.5 hover:bg-gray-100 text-xl leading-none">
                 ×

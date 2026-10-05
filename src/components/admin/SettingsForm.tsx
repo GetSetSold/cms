@@ -371,8 +371,8 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
                     <h3 className="mt-2 text-sm font-semibold">Agent contact card</h3>
                     <p className="text-xs text-muted">Shown on listing detail pages beside the contact form.</p>
                     <div className="grid gap-3 sm:grid-cols-2">
-                      {(["name", "title", "brokerage", "phone"] as const).map((k) => (
-                        <label key={k} className="label capitalize">{k === "phone" ? "Phone" : k}<input className="input" value={s.agent?.[k] ?? ""} onChange={(e) => set("agent", { ...s.agent, [k]: e.target.value })} placeholder={k === "name" ? "Rohit Sharma" : k === "title" ? "REALTOR®" : k === "brokerage" ? "Lombard Group Real Estate Inc., Brokerage" : k === "phone" ? "+14166057488" : ""} /></label>
+                      {(["name", "title", "brokerage", "phone", "email"] as const).map((k) => (
+                        <label key={k} className="label capitalize">{k === "phone" ? "Phone" : k}<input className="input" value={s.agent?.[k] ?? ""} onChange={(e) => set("agent", { ...s.agent, [k]: e.target.value })} placeholder={k === "name" ? "Rohit Sharma" : k === "title" ? "REALTOR®" : k === "brokerage" ? "Lombard Group Real Estate Inc., Brokerage" : k === "phone" ? "+14166057488" : k === "email" ? "rohit@getsetsold.ca" : ""} /></label>
                       ))}
                     </div>
                     <div className="label">Photo (SVG)<SvgPicker value={s.agent?.photo_svg_id ?? null} svgs={svgs} onChange={(id) => set("agent", { ...s.agent, photo_svg_id: id })} /></div>
