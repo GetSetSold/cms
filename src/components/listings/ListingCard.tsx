@@ -15,6 +15,7 @@ export function ListingCard({ listing }: { listing: GridListing }) {
       address={listing.UnparsedAddress ?? ""}
       city={listing.City}
       province={listing.Province}
+      postalCode={listing.PostalCode}
       beds={listing.BedroomsTotal}
       baths={listing.BathroomsTotalInteger}
       area={listing.AboveGradeFinishedArea ? `${Number(listing.AboveGradeFinishedArea).toLocaleString()} m²` : null}

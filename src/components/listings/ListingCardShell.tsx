@@ -13,6 +13,7 @@ export type ListingCardData = {
   address: string;
   city?: string | null;
   province?: string | null;
+  postalCode?: string | null;
   beds?: number | null;
   baths?: number | null;
   area?: string | null; // pre-formatted, e.g. "1,507 m²" — caller decides the unit
@@ -45,7 +46,7 @@ export function ListingCardShell(d: ListingCardData) {
     d.area,
   ].filter(Boolean);
 
-  const location = [d.address, d.city, d.province].filter(Boolean).join(", ");
+  const location = [d.address, d.city, d.province, d.postalCode].filter(Boolean).join(", ");
   const days = daysLabel(d.listedDays);
 
   const body = (

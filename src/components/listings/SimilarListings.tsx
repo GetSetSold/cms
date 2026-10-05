@@ -21,6 +21,18 @@ export function SimilarListings({ listings }: { listings: GridListing[] }) {
       <div className="mb-5 flex items-center justify-between">
         <h2 className="font-display text-2xl">Similar listings</h2>
         <div className="hidden gap-2 lg:flex">
+          <a
+            href="/listings"
+            target="_blank"
+            rel="noopener"
+            className="mr-1 flex h-9 items-center gap-1.5 rounded-full border border-line px-4 text-[13px] font-semibold text-ink transition hover:bg-soft"
+          >
+            Search All Listings
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <line x1="7" y1="17" x2="17" y2="7" />
+              <polyline points="7 7 17 7 17 17" />
+            </svg>
+          </a>
           <button
             type="button"
             onClick={() => scrollBy(-1)}
@@ -64,8 +76,8 @@ export function SimilarListings({ listings }: { listings: GridListing[] }) {
             <ListingCard key={l.ListingKey} listing={l} />
           ))}
         </div>
-        {visible < listings.length ? (
-          <div className="mt-6 flex justify-center">
+        <div className="mt-6 flex justify-center gap-3">
+          {visible < listings.length ? (
             <button
               type="button"
               onClick={() => setVisible((v) => v + 4)}
@@ -73,8 +85,20 @@ export function SimilarListings({ listings }: { listings: GridListing[] }) {
             >
               Load more
             </button>
-          </div>
-        ) : null}
+          ) : null}
+          <a
+            href="/listings"
+            target="_blank"
+            rel="noopener"
+            className="flex items-center gap-1.5 rounded-full border border-line bg-white px-6 py-2.5 text-[14px] font-semibold text-ink shadow-sm transition hover:bg-soft"
+          >
+            Search All Listings
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <line x1="7" y1="17" x2="17" y2="7" />
+              <polyline points="7 7 17 7 17 17" />
+            </svg>
+          </a>
+        </div>
       </div>
     </div>
   );
