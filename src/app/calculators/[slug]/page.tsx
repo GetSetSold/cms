@@ -8,7 +8,7 @@ import { CalculatorPageShell } from "@/components/calculators/CalculatorPageShel
 import { CalculatorLoader } from "@/components/calculators/CalculatorLoader";
 import { ContentAdSlot } from "@/components/ads/ContentAdSlot";
 
-type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ mls?: string }> };
+type Props = { params: Promise<{ slug: string }>; searchParams: Promise<Record<string, string | undefined>> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
@@ -57,7 +57,20 @@ const INTROS: Record<string, string> = {
 
 export default async function CalculatorDetailPage({ params, searchParams }: Props) {
   const { slug } = await params;
-  const { mls } = await searchParams;
+  const sp = await searchParams;
+  const initialMls = sp.mls;
+  // Pre-filled listing from a listing-page banner (no lookup needed).
+  const initialListing = sp.price || sp.address ? {
+    mlsNumber: sp.mls ?? "",
+    price: Number(sp.price) || 0,
+    address: sp.address ?? "",
+    city: sp.city ?? "",
+    beds: sp.beds ?? "",
+    baths: sp.baths ?? "",
+    sqft: sp.sqft ?? "",
+    propertyType: "",
+    photo: "",
+  } : null;
 
   // Legacy ?c=<tabId> style slugs → canonical (also covers old hash-less tab URLs)
   const legacy = LEGACY_TAB_SLUGS[slug];
@@ -74,7 +87,7 @@ export default async function CalculatorDetailPage({ params, searchParams }: Pro
 
   return (
     <CalculatorPageShell slug={slug} intro={INTROS[slug] ?? calcMeta.description}>
-      <CalculatorLoader slug={slug} settings={calcSettings} initialMls={mls} />
+      <CalculatorLoader slug={slug} settings={calcSettings} initialMls={initialMls} initialListing={initialListing} />
       {showCalcAd && <ContentAdSlot adCode={calcAdCode} className="mt-8" />}
       <p className="mt-6 text-[12px] text-muted">
         Assumptions effective {calcSettings.effectiveDate}. Regulatory figures (stress-test rules,
