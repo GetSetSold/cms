@@ -1,4 +1,5 @@
 import { displayValue, roomItems, roomDimensions, type PropertyListing } from "@/lib/mls";
+import { ListingDetailMap } from "./ListingDetailMap";
 
 const currency = (v: unknown): string | null => {
   if (v == null || v === "") return null;
@@ -309,27 +310,15 @@ export function MapDirections({ listing }: { listing: PropertyListing }) {
   const lat = Number(listing.Latitude);
   const lng = Number(listing.Longitude);
   const hasCoords = Number.isFinite(lat) && Number.isFinite(lng) && (lat !== 0 || lng !== 0);
-  const directions = text(listing.Directions);
-  if (!hasCoords && !directions) return null;
-  const address = [listing.UnparsedAddress, listing.City, listing.Province, listing.PostalCode]
-    .filter((p) => p && String(p).trim())
-    .join(", ");
-  const dest = hasCoords ? `${lat},${lng}` : encodeURIComponent(address);
+  if (!hasCoords) return null;
+  const label = listing.UnparsedAddress ?? "this listing";
   return (
     <div className="overflow-hidden rounded-2xl bg-white">
       <h2 className="border-b border-line px-6 py-4 font-display !text-left text-[1.0rem]">Map & Directions</h2>
-      {hasCoords ? (
-        <iframe
-          title={`Map of ${listing.UnparsedAddress ?? "this listing"}`}
-          src={`https://www.openstreetmap.org/export/embed.html?bbox=${lng - 0.02}%2C${lat - 0.012}%2C${lng + 0.02}%2C${lat + 0.012}&layer=mapnik&marker=${lat}%2C${lng}`}
-          className="h-72 w-full border-0"
-          loading="lazy"
-        />
-      ) : null}
-      <div className="flex flex-col items-start gap-3 px-6 py-5">
-        {directions ? <p className="text-[0.9rem] leading-relaxed text-ink">{directions}</p> : null}
+      <ListingDetailMap lat={lat} lng={lng} label={label} />
+      <div className="px-6 py-5">
         <a
-          href={`https://www.google.com/maps/dir/?api=1&destination=${dest}`}
+          href={`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-1.5 rounded-full bg-ink px-4 py-2 text-[12px] font-semibold text-white"
