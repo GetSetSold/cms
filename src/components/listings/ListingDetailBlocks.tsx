@@ -33,18 +33,18 @@ export function DetailBlock({ title, sections }: { title: string; sections: Deta
     .filter((s) => s.fields.length);
   if (!visible.length) return null;
   return (
-    <div className="rounded-2xl bg-white p-6">
-      <h2 className="mb-4 border-b border-line pb-3 font-display text-xl">{title}</h2>
+    <div className="overflow-hidden rounded-2xl bg-white">
+      <h2 className="border-b border-line px-6 py-4 font-display text-xl">{title}</h2>
       {visible.map((s, i) => (
-        <div key={i} className={i > 0 ? "mt-6" : ""}>
+        <div key={i}>
           {s.heading ? (
-            <h3 className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-muted">{s.heading}</h3>
+            <h3 className="border-b border-line px-6 py-3 text-[11px] font-semibold tracking-wider text-muted">{s.heading}</h3>
           ) : null}
-          <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-[var(--radius-md)] border border-line bg-line md:grid-cols-4">
+          <dl className="grid grid-cols-2 gap-px bg-line md:grid-cols-4">
             {s.fields.map((f) => (
-              <div key={f.label} className="bg-white p-4">
-                <dt className="text-[10px] font-semibold uppercase tracking-wider text-muted">{f.label}</dt>
-                <dd className="mt-1.5 text-[15px] font-semibold leading-snug text-ink">{f.value}</dd>
+              <div key={f.label} className="flex flex-col bg-white px-3 py-5 text-center">
+                <dd className="order-1 font-display text-lg font-semibold leading-snug text-ink">{f.value}</dd>
+                <dt className="order-2 mt-1.5 text-[11px] text-muted">{f.label}</dt>
               </div>
             ))}
           </dl>

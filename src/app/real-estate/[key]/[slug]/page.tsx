@@ -66,9 +66,9 @@ const stat = (value: unknown, label: string) => {
   const v = displayValue(value);
   if (!v) return null;
   return (
-    <div className="flex flex-col items-center gap-1 border-r border-b border-line px-2 py-5 text-center last:border-r-0">
+    <div className="flex flex-col items-center gap-1 border-line px-2 py-5 text-center [&:not(:nth-child(4n+1))]:border-l [&:nth-child(n+5)]:border-t">
       <div className="font-display text-lg font-semibold">{v}</div>
-      <div className="text-[10px] uppercase tracking-wide text-muted">{label}</div>
+      <div className="text-[11px] text-muted">{label}</div>
     </div>
   );
 };
