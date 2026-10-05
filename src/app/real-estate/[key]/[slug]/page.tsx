@@ -68,9 +68,10 @@ const statFields = (listing: PropertyListing, dom: number | null) =>
     { label: "Bedrooms", value: displayValue(listing.BedroomsTotal) || null },
     { label: "Bathrooms", value: displayValue(listing.BathroomsTotalInteger) || null },
     { label: "Parking", value: displayValue(listing.ParkingTotal) || null },
-    { label: "Sq ft", value: displayValue(listing.AboveGradeFinishedArea ? Number(listing.AboveGradeFinishedArea).toLocaleString() : null) || null },
     { label: "Type", value: displayValue(listing.StructureType ?? listing.PropertySubType) || null },
+    { label: "Stories", value: displayValue(listing.Stories) || null },
     { label: "Year built", value: displayValue(listing.YearBuilt) || null },
+    { label: "Sq ft", value: displayValue(listing.AboveGradeFinishedArea ? Number(listing.AboveGradeFinishedArea).toLocaleString() : null) || null },
   ];
 
 export default async function ListingDetailPage({ params }: { params: Promise<{ key: string; slug: string }> }) {
