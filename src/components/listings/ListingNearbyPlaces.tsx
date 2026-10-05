@@ -3,17 +3,17 @@ import { useEffect, useRef, useState } from "react";
 
 const MAPTILER_KEY = "Zr8EXulAyt75JJibE0ol"; // same key the site's other maps use
 
-type Place = { name: string; distanceKm: number };
+type Place = { name: string; distanceKm: number; categories: string[] };
 type CategoryResult = { label: string; places: Place[] };
 
 const CATEGORIES = [
-  // `exclude` filters out text-search false positives (e.g. "Park" in a
-  // school name putting it under Parks, or fire stations under Transit).
-  { label: "Schools", query: "school", exclude: ["parking"] },
-  { label: "Groceries", query: "grocery", exclude: [] },
-  { label: "Restaurants", query: "restaurant", exclude: [] },
-  { label: "Pharmacy & Health", query: "pharmacy", exclude: [] },
-  { label: "Transit", query: "station", exclude: ["fire", "police", "gas"] },
+  // `match` uses the API's `properties.categories` (real OSM categories), not
+  // text matching. This is what makes the results accurate.
+  { label: "Schools", query: "school", match: ["school"] },
+  { label: "Groceries", query: "grocery", match: ["supermarket", "grocery", "convenience"] },
+  { label: "Restaurants", query: "restaurant", match: ["restaurant", "cafe", "fast_food"] },
+  { label: "Pharmacy & Health", query: "pharmacy", match: ["pharmacy", "clinic", "hospital", "doctors", "dentist"] },
+  { label: "Transit", query: "transit", match: ["bus stop", "bus_stop", "station", "railway station", "subway", "tram stop", "stop"] },
 ];
 
 function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
@@ -63,13 +63,16 @@ export function ListingNearbyPlaces({ lat, lng }: { lat: number; lng: number }) 
             const places: Place[] = (data.features ?? [])
               .filter((f: any) => Array.isArray(f.center))
               .map((f: any) => ({
-                name: String(f.place_name ?? f.text ?? "").split(",")[0].trim() || "Unknown",
+                name: String(f.text ?? f.place_name ?? "").split(",")[0].trim() || "Unknown",
                 distanceKm: haversineKm(lat, lng, f.center[1], f.center[0]),
+                categories: (f.properties?.categories ?? []) as string[],
               }))
               .filter((p: Place) => {
                 if (!p.name || p.distanceKm >= 25) return false;
-                const lower = p.name.toLowerCase();
-                return !cat.exclude.some((ex) => lower.includes(ex));
+                // Must have a real OSM category matching this block. This is
+                // what keeps e.g. "Station Road" out of Transit results.
+                const cats = p.categories.map((c) => c.toLowerCase());
+                return cat.match.some((m) => cats.includes(m.toLowerCase()));
               })
               .sort((a: Place, b: Place) => a.distanceKm - b.distanceKm)
               .slice(0, 5);
