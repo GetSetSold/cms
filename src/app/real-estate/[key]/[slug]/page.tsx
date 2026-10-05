@@ -149,7 +149,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
         <ListingGallery items={photos} />
 
         <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
-          <div className="flex flex-col gap-6">
+          <div className="flex min-w-0 flex-col gap-6">
             <div className="rounded-2xl bg-white p-6">
               <span className={`mb-3 inline-block rounded px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-white ${sale ? "bg-ink" : "bg-accent"}`}>
                 {sale ? "For Sale" : "For Rent"}
@@ -192,7 +192,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
             <Financials listing={listing} sale={sale} />
           </div>
 
-          <div className="flex flex-col gap-6 lg:sticky lg:top-24 lg:self-start">
+          <div className="flex min-w-0 flex-col gap-6 lg:sticky lg:top-24 lg:self-start">
             <ListingContactCard listing={listing} form={inquiryForm} agent={settings.agent} photoSvg={agentPhotoSvg} />
             {sale ? <AffordabilityBanner listing={listing} /> : null}
             {showListingAd ? <ContentAdSlot adCode={adCode} /> : null}
