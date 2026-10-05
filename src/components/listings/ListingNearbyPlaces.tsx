@@ -157,15 +157,15 @@ export function ListingNearbyPlaces({ lat, lng }: { lat: number; lng: number; li
 
   return (
     <div className="mt-12">
-      <h2 className="mb-5 font-display text-2xl">Nearby Places</h2>
+      <h2 className="mb-5 border-b border-line pb-3 font-display text-2xl">Nearby Places</h2>
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {results.map((cat) => (
           <div key={cat.label} className="rounded-2xl bg-white p-5">
-            <h3 className="mb-3 font-display text-[1.0rem]">{cat.label}</h3>
+            <h3 className="mb-3 border-b border-line pb-2 font-display text-[1.0rem]">{cat.label}</h3>
             {cat.places.length ? (
-              <ul className="flex flex-col gap-2.5">
+              <ul className="flex flex-col divide-y divide-line">
                 {cat.places.map((p, i) => (
-                  <li key={`${p.name}-${i}`} className="flex items-baseline justify-between gap-3 text-[13.5px]">
+                  <li key={`${p.name}-${i}`} className="flex items-baseline justify-between gap-3 py-2 text-[13.5px] first:pt-0 last:pb-0">
                     <span className="min-w-0 truncate text-ink" title={p.address}>{p.name}</span>
                     <span className="shrink-0 text-muted">{fmtDist(p.distanceKm)}</span>
                   </li>
