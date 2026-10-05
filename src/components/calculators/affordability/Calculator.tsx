@@ -222,6 +222,12 @@ export function AffordabilityCalculator({ settings, initialListing, initialMls }
   const [lookupState, setLookupState] = useState<LookupState>(initialListing ? "found" : "idle");
   const [searchNonce, setSearchNonce] = useState(0);
 
+  // Sync initialMls param to query (e.g. ?mls= from listing banner).
+  useEffect(() => {
+    if (initialMls && !query) setQuery(initialMls);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialMls]);
+
   // Pre-fill from the subject property (e.g. opened from a listing page).
   useEffect(() => {
     if (initialListing && initialListing.price > 0) {

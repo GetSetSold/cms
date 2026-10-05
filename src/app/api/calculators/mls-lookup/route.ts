@@ -87,7 +87,21 @@ export async function GET(req: Request) {
     } else if (isPostal) {
       query = query.ilike("PostalCode", `${q.replace(/\s/g, "")}%`);
     } else {
-      query = query.ilike("UnparsedAddress", `%${q}%`);
+      // Address: match house number + street name loosely (DB may abbreviate
+      // "Street"→"ST", etc.). Fall back to full-query match.
+      const words = q.split(/\s+/).filter((w) => w.length > 0);
+      const num = words.find((w) => /^\d+[A-Za-z]?$/.test(w));
+      const streetWords = words.filter(
+        (w) =>
+          /^[A-Za-z]{3,}$/.test(w) &&
+          !/^(street|st|avenue|ave|road|rd|drive|dr|lane|ln|way|blvd|boulevard|crescent|cres|place|pl|terrace|terr|court|ct|trail|parkway|pkwy|north|south|east|west|n|s|e|w)$/i.test(w),
+      );
+      const esc = (s: string) => s.replace(/[%_\\]/g, "\\$&");
+      if (num && streetWords.length > 0) {
+        query = query.ilike("UnparsedAddress", `%${esc(num)}%${esc(streetWords[0])}%`);
+      } else {
+        query = query.ilike("UnparsedAddress", `%${esc(q)}%`);
+      }
     }
 
     const { data, error } = await query.maybeSingle();
