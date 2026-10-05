@@ -75,15 +75,46 @@ export default async function CalculatorsHubPage({
           <Link href="/" className="hover:underline">Home</Link> / <span>Calculators</span>
         </nav>
 
-        <div className="mb-8 mt-2 flex flex-col gap-3">
-          <div className="text-sm font-semibold uppercase tracking-wide text-accent">Free tools</div>
-          <h1 className="text-3xl font-bold tracking-tight">Free Canadian Mortgage &amp; Real Estate Calculators</h1>
-          <div className="h-px w-full border-t border-line" />
-          <p className="max-w-3xl text-[15px] leading-relaxed text-muted">
-            14 free calculators to help you buy, sell, and invest with confidence — from affordability
-            and mortgage payments to land transfer tax, closing costs, and rental forecasts.
-            Download a PDF report from any calculator, or email it to yourself.
-          </p>
+        {/* Hero — split header: monochrome icon + eyebrow + H1 + stats */}
+        <div className="mb-8 mt-2 pb-8 pt-8">
+          <div className="grid grid-cols-1 items-center gap-6 md:grid-cols-[3fr_7fr] md:gap-8">
+            <div className="hidden items-center justify-center md:flex" aria-hidden>
+              <div className="flex h-44 w-44 items-center justify-center rounded-2xl bg-soft text-ink">
+                <svg width="88" height="88" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2"><rect x="4" y="2" width="16" height="20" rx="2" /><path d="M8 6h8" /><path d="M8 11h.01M12 11h.01M16 11h.01M8 15h.01M12 15h.01M16 15h.01M8 19h.01M12 19h.01M16 19h.01" /></svg>
+              </div>
+            </div>
+            <div>
+              <div className="text-[12px] font-bold uppercase tracking-[0.12em] text-accent">
+                14 free calculators · no signup
+              </div>
+              <h1 className="mt-2 text-3xl font-bold tracking-tight text-ink sm:text-4xl">
+                Free Canadian Mortgage &amp; Real Estate <span className="text-accent">Calculators</span>
+              </h1>
+              <p className="mt-3 max-w-2xl text-[14px] leading-relaxed text-muted">
+                14 free calculators to help you buy, sell, and invest with confidence — from affordability
+                and mortgage payments to land transfer tax, closing costs, and rental forecasts.
+                Download a PDF report from any calculator, or email it to yourself.
+              </p>
+              <div className="mt-5 flex flex-wrap gap-3">
+                {[
+                  { num: "14", lbl: "Free Calculators" },
+                  { num: String(CATEGORIES.length), lbl: "Categories" },
+                  { num: "100%", lbl: "Canada" },
+                  { num: "Free", lbl: "No Signup" },
+                ].map((s) => (
+                  <div
+                    key={s.lbl}
+                    className="min-w-[100px] rounded-[10px] border border-line bg-white px-4 py-2.5 text-center shadow-sm"
+                  >
+                    <div className="text-xl font-black text-ink">{s.num}</div>
+                    <div className="mt-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted">
+                      {s.lbl}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
 
         {CATEGORIES.map((cat) => {
