@@ -34,96 +34,68 @@ const SPAN_CLS: Record<number, string> = {
   4: "col-span-2 md:col-span-4",
 };
 
-type PlacedCell = { field: DetailField | null; span: number; dCol: number; mCol: number };
+type PlacedCell = { field: DetailField | null; span: number; dCol: number; dRow: number; mCol: number; mRow: number };
 
 /**
- * Flows fields into desktop rows of 4 columns (honoring `span`), pads the
- * last row with empty cells so every row follows the same table divisions —
- * like a basic HTML table — and computes each cell's starting column on
- * desktop (dCol) and on mobile (mCol, from an independent 2-column flow with
- * spans clamped) so dividers land correctly at both breakpoints.
+ * Places fields on a flat grid: desktop flows in 4 columns honoring `span`,
+ * mobile flows independently (2 columns, spans clamped). The last desktop
+ * row is padded with empty cells so every row keeps the same table
+ * divisions — like a basic HTML table. Each cell records its starting
+ * column and row index at both breakpoints so dividers land correctly.
  */
-function layoutTable(fields: DetailField[], mobileCols = 2): PlacedCell[][] {
+function layoutTable(fields: DetailField[], mobileCols = 2): PlacedCell[] {
   const DCOLS = 4;
-  type C = { field: DetailField | null; span: number };
-  const dRows: C[][] = [];
-  let cur: C[] = [];
-  let used = 0;
-  const pushRow = () => {
-    if (cur.length) {
-      dRows.push(cur);
-      cur = [];
-      used = 0;
+  const dPlaced: { field: DetailField | null; span: number; dCol: number; dRow: number }[] = [];
+  let dRow = 0;
+  let dUsed = 0;
+  const pushD = (field: DetailField | null, span: number) => {
+    const s = Math.min(Math.max(span, 1), DCOLS);
+    if (dUsed + s > DCOLS) {
+      dRow += 1;
+      dUsed = 0;
     }
+    dPlaced.push({ field, span: s, dCol: dUsed, dRow });
+    dUsed += s;
   };
-  for (const f of fields) {
-    const s = Math.min(Math.max(f.span ?? 1, 1), DCOLS);
-    if (used + s > DCOLS) pushRow();
-    cur.push({ field: f, span: s });
-    used += s;
-  }
-  pushRow();
-  if (!dRows.length) return [];
-  // Pad the last row so the table keeps its divisions throughout.
-  const last = dRows[dRows.length - 1];
-  let lu = last.reduce((a, c) => a + c.span, 0);
-  while (lu < DCOLS) {
-    last.push({ field: null, span: 1 });
-    lu += 1;
-  }
+  for (const f of fields) pushD(f, f.span ?? 1);
+  while (dPlaced.length && dUsed < DCOLS) pushD(null, 1);
 
-  // Desktop start columns.
-  const withDCol: (C & { dCol: number })[] = [];
-  for (const row of dRows) {
-    let dc = 0;
-    for (const c of row) {
-      withDCol.push({ ...c, dCol: dc });
-      dc += c.span;
-    }
-  }
-  // Independent mobile flow for divider placement.
-  let mc = 0;
-  const placed: PlacedCell[] = withDCol.map((c) => {
+  let mRow = 0;
+  let mUsed = 0;
+  return dPlaced.map((c) => {
     const ms = Math.min(c.span, mobileCols);
-    if (mc + ms > mobileCols) mc = 0;
-    const out = { ...c, mCol: mc };
-    mc += ms;
+    if (mUsed + ms > mobileCols) {
+      mRow += 1;
+      mUsed = 0;
+    }
+    const out = { ...c, mCol: mUsed, mRow };
+    mUsed += ms;
     return out;
   });
-  // Re-chunk into desktop rows for rendering.
-  const rows: PlacedCell[][] = [];
-  let i = 0;
-  for (const row of dRows) {
-    rows.push(placed.slice(i, i + row.length));
-    i += row.length;
-  }
-  return rows;
 }
 
 export function FieldTable({ fields, mobileCols = 2 }: { fields: DetailField[]; mobileCols?: number }) {
   const visible = fields.filter((f) => f.value);
   if (!visible.length) return null;
-  const rows = layoutTable(visible, mobileCols);
+  const cells = layoutTable(visible, mobileCols);
   const gridCls = mobileCols === 2 ? "grid-cols-2 md:grid-cols-4" : "grid-cols-4";
   return (
-    <>
-      {rows.map((row, ri) => (
-        <div key={ri} className={`grid ${gridCls} ${ri > 0 ? "border-t border-line" : ""}`}>
-          {row.map((c, ci) => {
-            const borderCls = `${c.mCol > 0 ? "border-l" : ""} ${c.dCol > 0 ? "md:border-l" : "md:border-l-0"} border-line`;
-            const key = c.field ? c.field.label : `empty-${ci}`;
-            return c.field ? (
-              <div key={key} className={`flex flex-col bg-white px-3 py-5 text-center ${SPAN_CLS[c.span]} ${borderCls}`}>
-                <div className="font-display text-lg font-semibold leading-snug text-ink">{c.field.value}</div>
-                <div className="mt-1.5 text-[11px] text-muted">{c.field.label}</div>
-              </div>
-            ) : (
-              <div key={key} aria-hidden="true" className={`${SPAN_CLS[c.span]} ${borderCls}`} />
-            );
-          })}
-        </div>
-      ))}
-    </>
+    <div className={`grid ${gridCls}`}>
+      {cells.map((c, i) => {
+        const vCls = `${c.mCol > 0 ? "border-l" : ""} ${c.dCol > 0 ? "md:border-l" : "md:border-l-0"}`;
+        const hCls = `${c.mRow > 0 ? "border-t" : ""} ${c.dRow > 0 ? "md:border-t" : "md:border-t-0"}`;
+        const cls = `border-line ${vCls} ${hCls} ${SPAN_CLS[c.span]}`;
+        const key = c.field ? c.field.label : `empty-${i}`;
+        return c.field ? (
+          <div key={key} className={`flex flex-col bg-white px-3 py-5 text-left ${cls}`}>
+            <div className="text-[11px] text-muted">{c.field.label}</div>
+            <div className="mt-1 font-display text-lg font-semibold leading-snug text-ink">{c.field.value}</div>
+          </div>
+        ) : (
+          <div key={key} aria-hidden="true" className={cls} />
+        );
+      })}
+    </div>
   );
 }
 
