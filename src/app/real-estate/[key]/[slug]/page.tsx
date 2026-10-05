@@ -9,6 +9,7 @@ import { SiteFooter, MobileCtaBar } from "@/components/site/SiteFooter";
 import { ListingCard } from "@/components/listings/ListingCard";
 import { ListingGallery } from "@/components/listings/ListingGallery";
 import { ListingContactCard } from "@/components/listings/ListingContactCard";
+import { LocationDescription, PropertySummary, LandAndLot, ConstructionExterior, SystemsUtilities, Financials } from "@/components/listings/ListingDetailBlocks";
 import { createClient } from "@/lib/supabase/server";
 import type { CmsForm } from "@/lib/types";
 
@@ -127,7 +128,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
               <div className="font-display text-3xl md:text-4xl">{priceDisplay(listing)}</div>
               <div className="mt-2 text-lg">{listing.UnparsedAddress}{listing.City ? `, ${listing.City}` : ""}{listing.Province ? `, ${listing.Province}` : ""}</div>
               <div className="mt-4 flex items-center justify-between border-t border-line pt-4 text-sm text-muted">
-                <span>MLS® <strong className="text-ink">{listing.ListingKey}</strong></span>
+                <span>MLS® <strong className="text-ink">{listing.ListingId ?? listing.ListingKey}</strong></span>
               </div>
             </div>
 
@@ -149,15 +150,18 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
             ) : null}
 
             {(listing.Heating || listing.Cooling || listing.Basement) ? (
-              <div className="rounded-2xl bg-white p-6">
-                <h2 className="mb-3 border-b border-line pb-3 font-display text-xl">Features</h2>
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  {listing.Heating ? <div className="rounded-lg bg-ground px-3 py-2.5">Heating: {displayValue(listing.Heating)}</div> : null}
-                  {listing.Cooling ? <div className="rounded-lg bg-ground px-3 py-2.5">Cooling: {displayValue(listing.Cooling)}</div> : null}
-                  {listing.Basement ? <div className="rounded-lg bg-ground px-3 py-2.5">Basement: {displayValue(listing.Basement)}</div> : null}
-                </div>
-              </div>
+              <SystemsUtilities listing={listing} />
             ) : null}
+
+            <LocationDescription listing={listing} />
+
+            <PropertySummary listing={listing} />
+
+            <LandAndLot listing={listing} />
+
+            <ConstructionExterior listing={listing} />
+
+            <Financials listing={listing} sale={sale} />
           </div>
 
           <div className="flex flex-col gap-6 lg:sticky lg:top-24 lg:self-start">
