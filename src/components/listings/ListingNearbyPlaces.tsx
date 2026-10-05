@@ -1,18 +1,16 @@
 "use client";
 import { useEffect, useState } from "react";
 
-const MAPTILER_KEY = "Zr8EXulAyt75JJibE0ol"; // same public key the site's maps use
-
 type Place = { name: string; address: string; distanceKm: number };
 type CategoryResult = { label: string; places: Place[] };
 
-// MapTiler geocoding queries (types=poi restricts to points of interest).
-const CATEGORIES: { label: string; query: string }[] = [
-  { label: "Schools", query: "school" },
-  { label: "Groceries", query: "grocery" },
-  { label: "Restaurants", query: "restaurant" },
-  { label: "Pharmacy & Health", query: "pharmacy" },
-  { label: "Commute", query: "station" },
+// OSM tag + search radius (meters) per category.
+const CATEGORIES: { label: string; tag: string; radius: number; requireName: boolean }[] = [
+  { label: "Schools", tag: "amenity=school", radius: 5000, requireName: true },
+  { label: "Groceries", tag: "shop=supermarket", radius: 5000, requireName: true },
+  { label: "Restaurants", tag: "amenity=restaurant", radius: 3000, requireName: true },
+  { label: "Pharmacy & Health", tag: "amenity=pharmacy", radius: 5000, requireName: true },
+  { label: "Commute", tag: "highway=bus_stop", radius: 3000, requireName: false },
 ];
 
 function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
@@ -30,17 +28,16 @@ function fmtDist(km: number): string {
   return km < 1 ? `${Math.round(km * 1000)} m` : `${km.toFixed(1)} km`;
 }
 
-type MaptilerFeature = {
-  place_name?: string;
-  text?: string;
-  center?: [number, number];
-  geometry?: { coordinates?: [number, number] };
-  properties?: { address?: string };
+type OverpassElement = {
+  lat?: number;
+  lon?: number;
+  center?: { lat: number; lon: number };
+  tags?: Record<string, string>;
 };
 
 /**
- * Nearby places via MapTiler Geocoding API.
- * Proximity biases to the listing; Haversine filters to 10km (like the legacy script).
+ * Nearby places via Overpass API (OpenStreetMap) — real category queries
+ * by OSM tag within a radius. Free, no key needed.
  */
 export function ListingNearbyPlaces({ lat, lng }: { lat: number; lng: number; listingKey: string }) {
   const [results, setResults] = useState<CategoryResult[] | null>(null);
@@ -52,32 +49,47 @@ export function ListingNearbyPlaces({ lat, lng }: { lat: number; lng: number; li
       const out: CategoryResult[] = await Promise.all(
         CATEGORIES.map(async (cat) => {
           try {
-            const url =
-              `https://api.maptiler.com/geocoding/${encodeURIComponent(cat.query)}.json` +
-              `?key=${MAPTILER_KEY}&proximity=${lng},${lat}&types=poi&limit=10&language=en`;
-            const res = await fetch(url);
-            if (!res.ok) return { label: cat.label, places: [] };
-            const data = (await res.json()) as { features?: MaptilerFeature[] };
+            const [k, v] = cat.tag.split("=");
+            const nameFilter = cat.requireName ? `["name"]` : ``;
+            const q =
+              `[out:json][timeout:25];` +
+              `nwr["${k}"="${v}"]${nameFilter}(around:${cat.radius},${lat},${lng});` +
+              `out center 100;`;
+            const res = await fetch("https://overpass-api.de/api/interpreter", {
+              method: "POST",
+              headers: { "Content-Type": "application/x-www-form-urlencoded" },
+              body: "data=" + encodeURIComponent(q),
+            });
+            if (!res.ok) {
+              console.error("Overpass error", res.status, cat.label);
+              return { label: cat.label, places: [] };
+            }
+            const data = (await res.json()) as { elements?: OverpassElement[] };
             const seen = new Set<string>();
             const places: Place[] = [];
-            for (const f of data.features ?? []) {
-              const center = f.center || f.geometry?.coordinates;
-              if (!center || center.length < 2) continue;
-              const name = f.text || "No name";
+            for (const el of data.elements ?? []) {
+              const eLat = el.lat ?? el.center?.lat;
+              const eLng = el.lon ?? el.center?.lon;
+              if (eLat == null || eLng == null) continue;
+              const t = el.tags ?? {};
+              const name = t.name || (cat.requireName ? "" : "Bus Stop");
+              if (!name) continue;
               const key = name.toLowerCase();
               if (seen.has(key)) continue;
               seen.add(key);
-              const distanceKm = haversineKm(lat, lng, center[1], center[0]);
-              if (distanceKm > 10) continue;
+              const address = [t["addr:housenumber"], t["addr:street"], t["addr:city"]]
+                .filter(Boolean)
+                .join(" ") || "Address not listed";
               places.push({
                 name,
-                address: f.place_name || "",
-                distanceKm,
+                address,
+                distanceKm: haversineKm(lat, lng, eLat, eLng),
               });
             }
             places.sort((a, b) => a.distanceKm - b.distanceKm);
             return { label: cat.label, places: places.slice(0, 5) };
-          } catch {
+          } catch (err) {
+            console.error("POI fetch failed:", cat.label, err);
             return { label: cat.label, places: [] };
           }
         }),
@@ -114,7 +126,7 @@ export function ListingNearbyPlaces({ lat, lng }: { lat: number; lng: number; li
                 ))}
               </ul>
             ) : (
-              <p className="text-[13px] text-muted">None found nearby.</p>
+              <p className="text-[13px] text-muted">No nearby places found.</p>
             )}
           </div>
         ))}
