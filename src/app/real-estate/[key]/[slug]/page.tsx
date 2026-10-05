@@ -188,7 +188,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
 
           <div className="flex flex-col gap-6 lg:sticky lg:top-24 lg:self-start">
             <ListingContactCard listing={listing} form={inquiryForm} agent={settings.agent} photoSvg={agentPhotoSvg} />
-            {sale ? <AffordabilityBanner /> : null}
+            {sale ? <AffordabilityBanner listing={listing} /> : null}
           </div>
         </div>
 
