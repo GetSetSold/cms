@@ -7,13 +7,13 @@ type Place = { name: string; distanceKm: number };
 type CategoryResult = { label: string; places: Place[] };
 
 const CATEGORIES = [
-  { label: "Groceries", query: "grocery store" },
+  { label: "Groceries", query: "grocery" },
   { label: "Restaurants & Cafes", query: "restaurant" },
   { label: "Schools", query: "school" },
   { label: "Parks", query: "park" },
   { label: "Health", query: "pharmacy" },
-  { label: "Shopping", query: "shopping mall" },
-  { label: "Transit", query: "train station" },
+  { label: "Shopping", query: "shopping" },
+  { label: "Transit", query: "station" },
 ];
 
 function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
@@ -31,6 +31,15 @@ function fmtDist(km: number): string {
   return km < 1 ? `${Math.round(km * 1000)} m` : `${km.toFixed(1)} km`;
 }
 
+/** ~10km bounding box around the listing. The geocoding `proximity` param is
+ *  only a soft bias (it returned POIs from Italy/Zambia), so we use `bbox`
+ *  to hard-restrict results to the listing's area. */
+function bboxAround(lat: number, lng: number, km: number): string {
+  const dLat = km / 111;
+  const dLng = km / (111 * Math.cos((lat * Math.PI) / 180));
+  return `${lng - dLng},${lat - dLat},${lng + dLng},${lat + dLat}`;
+}
+
 /** Compact nearby-places block. Loads only when scrolled into view to avoid API cost. */
 export function ListingNearbyPlaces({ lat, lng }: { lat: number; lng: number }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -41,12 +50,13 @@ export function ListingNearbyPlaces({ lat, lng }: { lat: number; lng: number }) 
     if (!el) return;
     let cancelled = false;
     const load = async () => {
+      const bbox = bboxAround(lat, lng, 10);
       const out = await Promise.all(
         CATEGORIES.map(async (cat) => {
           try {
             const url =
               `https://api.maptiler.com/geocoding/${encodeURIComponent(cat.query)}.json` +
-              `?key=${MAPTILER_KEY}&proximity=${lng},${lat}&limit=5&types=poi`;
+              `?key=${MAPTILER_KEY}&bbox=${bbox}&limit=5&types=poi`;
             const res = await fetch(url);
             if (!res.ok) return { label: cat.label, places: [] as Place[] };
             const data = await res.json();
