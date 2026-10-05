@@ -82,7 +82,7 @@ export async function GET(req: Request) {
 
     let query = mls
       .from("grid")
-      .select("ListingKey,UnparsedAddress,City,PostalCode,ListPrice,BedroomsTotal,BathroomsTotal,LivingArea,PropertyType,Media")
+      .select("ListingKey,UnparsedAddress,City,PostalCode,ListPrice,BedroomsTotal,BathroomsTotalInteger,AboveGradeFinishedArea,StructureTypeText,Media")
       .limit(1);
 
     if (isMlsNum) {
@@ -111,8 +111,8 @@ export async function GET(req: Request) {
     if (error) return NextResponse.json({ error: "Lookup failed. Please try again." }, { status: 500 });
     if (!data) return NextResponse.json({ ok: true, listing: null });
 
-    const media = (data as Record<string, unknown>).Media;
-    const photo = Array.isArray(media) && media.length > 0 ? String(media[0]) : null;
+    const mediaVal = (data as Record<string, unknown>).Media;
+    const photo = typeof mediaVal === "string" && mediaVal ? mediaVal : null;
 
     return NextResponse.json({
       ok: true,
@@ -122,9 +122,9 @@ export async function GET(req: Request) {
         address: (data as Record<string, unknown>).UnparsedAddress,
         city: (data as Record<string, unknown>).City,
         beds: (data as Record<string, unknown>).BedroomsTotal,
-        baths: (data as Record<string, unknown>).BathroomsTotal,
-        sqft: (data as Record<string, unknown>).LivingArea,
-        propertyType: (data as Record<string, unknown>).PropertyType,
+        baths: (data as Record<string, unknown>).BathroomsTotalInteger,
+        sqft: (data as Record<string, unknown>).AboveGradeFinishedArea,
+        propertyType: (data as Record<string, unknown>).StructureTypeText,
         photo,
       },
     });
