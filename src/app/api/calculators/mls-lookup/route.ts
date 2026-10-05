@@ -45,34 +45,37 @@ export async function GET(req: Request) {
 
   try {
     // MLS number is the public ListingId (e.g. "X13841510"). Grid lacks that
-    // column, so search the property table by ListingId; fall back to grid by
-    // ListingKey for raw numeric keys. Address/postal use the faster grid.
+    // column, so try the property table by ListingId first (best-effort);
+    // fall back to grid by ListingKey. Address/postal use the faster grid.
     if (isMlsNum) {
-      const { data, error } = await mls
-        .from("property")
-        .select("ListingKey,ListingId,UnparsedAddress,City,ListPrice,BedroomsTotal,BathroomsTotalInteger,LivingArea,PropertySubType,Media")
-        .ilike("ListingId", `%${digitsOnly}%`)
-        .limit(1)
-        .maybeSingle();
-      if (error) return NextResponse.json({ error: "Lookup failed. Please try again." }, { status: 500 });
-      if (data) {
-        const d = data as Record<string, unknown>;
-        const media = d.Media;
-        const photo = Array.isArray(media) && media.length > 0 ? String(media[0]) : null;
-        return NextResponse.json({
-          ok: true,
-          listing: {
-            mlsNumber: String(d.ListingId ?? d.ListingKey ?? ""),
-            price: Number(d.ListPrice) || 0,
-            address: d.UnparsedAddress,
-            city: d.City,
-            beds: d.BedroomsTotal,
-            baths: d.BathroomsTotalInteger,
-            sqft: d.LivingArea,
-            propertyType: d.PropertySubType,
-            photo,
-          },
-        });
+      try {
+        const { data, error } = await mls
+          .from("property")
+          .select("ListingKey,ListingId,UnparsedAddress,City,ListPrice,BedroomsTotal,BathroomsTotalInteger,LivingArea,PropertySubType,Media")
+          .ilike("ListingId", `%${digitsOnly}%`)
+          .limit(1)
+          .maybeSingle();
+        if (!error && data) {
+          const d = data as Record<string, unknown>;
+          const media = d.Media;
+          const photo = Array.isArray(media) && media.length > 0 ? String(media[0]) : null;
+          return NextResponse.json({
+            ok: true,
+            listing: {
+              mlsNumber: String(d.ListingId ?? d.ListingKey ?? ""),
+              price: Number(d.ListPrice) || 0,
+              address: d.UnparsedAddress,
+              city: d.City,
+              beds: d.BedroomsTotal,
+              baths: d.BathroomsTotalInteger,
+              sqft: d.LivingArea,
+              propertyType: d.PropertySubType,
+              photo,
+            },
+          });
+        }
+      } catch {
+        // fall through to grid
       }
       // Fall through to grid by ListingKey below.
     }
