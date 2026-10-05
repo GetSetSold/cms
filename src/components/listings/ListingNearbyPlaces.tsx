@@ -1,19 +1,18 @@
 "use client";
 import { useEffect, useState } from "react";
 
-// Mapbox public token — set via NEXT_PUBLIC_MAPBOX_TOKEN (Cloudflare env).
-const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN ?? "";
+const MAPTILER_KEY = "Zr8EXulAyt75JJibE0ol"; // same public key the site's maps use
 
 type Place = { name: string; address: string; distanceKm: number };
 type CategoryResult = { label: string; places: Place[] };
 
-// Mapbox Search Box category slugs.
+// MapTiler geocoding queries (types=poi restricts to points of interest).
 const CATEGORIES: { label: string; query: string }[] = [
   { label: "Schools", query: "school" },
-  { label: "Groceries", query: "supermarket" },
+  { label: "Groceries", query: "grocery" },
   { label: "Restaurants", query: "restaurant" },
   { label: "Pharmacy & Health", query: "pharmacy" },
-  { label: "Commute", query: "bus_station" },
+  { label: "Commute", query: "station" },
 ];
 
 function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
@@ -31,50 +30,48 @@ function fmtDist(km: number): string {
   return km < 1 ? `${Math.round(km * 1000)} m` : `${km.toFixed(1)} km`;
 }
 
-type MapboxFeature = {
-  properties?: { name?: string; full_address?: string };
-  geometry?: { coordinates?: [number, number] };
+type MaptilerFeature = {
+  place_name?: string;
+  text?: string;
+  center?: [number, number];
+  properties?: { address?: string };
 };
 
 /**
- * Nearby places via Mapbox Search Box Category API (free tier).
- * Proximity biases to the listing; Haversine filters to 10km.
+ * Nearby places via MapTiler Geocoding API.
+ * Proximity biases to the listing; Haversine filters to 10km (like the legacy script).
  */
 export function ListingNearbyPlaces({ lat, lng }: { lat: number; lng: number; listingKey: string }) {
   const [results, setResults] = useState<CategoryResult[] | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    if (!MAPBOX_TOKEN) {
-      setResults(CATEGORIES.map((c) => ({ label: c.label, places: [] })));
-      return () => { cancelled = true; };
-    }
 
     (async () => {
       const out: CategoryResult[] = await Promise.all(
         CATEGORIES.map(async (cat) => {
           try {
             const url =
-              `https://api.mapbox.com/search/searchbox/v1/category/${cat.query}` +
-              `?access_token=${MAPBOX_TOKEN}&language=en&limit=25&proximity=${lng},${lat}`;
+              `https://api.maptiler.com/geocoding/${encodeURIComponent(cat.query)}.json` +
+              `?key=${MAPTILER_KEY}&types=poi&proximity=${lng},${lat}&limit=25`;
             const res = await fetch(url);
             if (!res.ok) return { label: cat.label, places: [] };
-            const data = (await res.json()) as { features?: MapboxFeature[] };
+            const data = (await res.json()) as { features?: MaptilerFeature[] };
             const seen = new Set<string>();
             const places: Place[] = [];
             for (const f of data.features ?? []) {
-              const name = f.properties?.name || "";
+              const name = f.text || f.place_name?.split(",")[0] || "";
               if (!name) continue;
               const key = name.toLowerCase();
               if (seen.has(key)) continue;
               seen.add(key);
-              const coords = f.geometry?.coordinates;
-              if (!coords || coords.length < 2) continue;
-              const distanceKm = haversineKm(lat, lng, coords[1], coords[0]);
+              const c = f.center;
+              if (!c || c.length < 2) continue;
+              const distanceKm = haversineKm(lat, lng, c[1], c[0]);
               if (distanceKm > 10) continue;
               places.push({
                 name,
-                address: f.properties?.full_address || "",
+                address: f.properties?.address || "",
                 distanceKm,
               });
             }
