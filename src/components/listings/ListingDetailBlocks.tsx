@@ -38,13 +38,13 @@ export function DetailBlock({ title, sections }: { title: string; sections: Deta
       {visible.map((s, i) => (
         <div key={i} className={i > 0 ? "mt-6" : ""}>
           {s.heading ? (
-            <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted">{s.heading}</h3>
+            <h3 className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-muted">{s.heading}</h3>
           ) : null}
-          <dl className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3">
+          <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-[var(--radius-md)] border border-line bg-line md:grid-cols-4">
             {s.fields.map((f) => (
-              <div key={f.label}>
-                <dt className="text-[11px] font-semibold uppercase tracking-wide text-muted">{f.label}</dt>
-                <dd className="mt-1 text-sm font-medium text-ink">{f.value}</dd>
+              <div key={f.label} className="bg-white p-4">
+                <dt className="text-[10px] font-semibold uppercase tracking-wider text-muted">{f.label}</dt>
+                <dd className="mt-1.5 text-[15px] font-semibold leading-snug text-ink">{f.value}</dd>
               </div>
             ))}
           </dl>

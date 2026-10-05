@@ -145,7 +145,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
             {listing.PublicRemarks ? (
               <div className="rounded-2xl bg-white p-6">
                 <h2 className="mb-3 border-b border-line pb-3 font-display text-xl">About this property</h2>
-                <p className="whitespace-pre-line leading-relaxed text-muted">{listing.PublicRemarks}</p>
+                <p className="whitespace-pre-line text-[15px] leading-relaxed text-muted">{listing.PublicRemarks}</p>
               </div>
             ) : null}
 
