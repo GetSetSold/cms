@@ -174,7 +174,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
           const nlng = Number(listing.Longitude);
           return Number.isFinite(nlat) && Number.isFinite(nlng) && (nlat !== 0 || nlng !== 0) ? (
             <div className="mt-10">
-              <ListingNearbyPlaces lat={nlat} lng={nlng} />
+              <ListingNearbyPlaces lat={nlat} lng={nlng} listingKey={listing.ListingKey} />
             </div>
           ) : null;
         })()}

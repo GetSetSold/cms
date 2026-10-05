@@ -22,8 +22,18 @@ function loadMaplibre(): Promise<void> {
   });
 }
 
+/** Shared POI cache: map emits when tiles load, nearby block consumes. */
+const poiCache = new Map<string, { name: string; lat: number; lng: number; cls: string; subclass: string }[]>();
+export function getCachedPois(key: string) { return poiCache.get(key); }
+function setCachedPois(key: string, pois: { name: string; lat: number; lng: number; cls: string; subclass: string }[]) {
+  poiCache.set(key, pois);
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("listing-pois", { detail: { key, pois } }));
+  }
+}
+
 /** Single-pin interactive map for the listing detail page. */
-export function ListingDetailMap({ lat, lng, label }: { lat: number; lng: number; label: string }) {
+export function ListingDetailMap({ lat, lng, label, listingKey }: { lat: number; lng: number; label: string; listingKey?: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -43,12 +53,44 @@ export function ListingDetailMap({ lat, lng, label }: { lat: number; lng: number
       el.title = label;
       el.innerHTML = `<svg width="38" height="38" viewBox="0 0 24 24" fill="#111111" stroke="#ffffff" stroke-width="1.5" aria-hidden="true"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5" fill="#ffffff" stroke="none"/></svg>`;
       new maplibregl.Marker({ element: el, anchor: "bottom" }).setLngLat([lng, lat]).addTo(map);
+      // Query POIs from the loaded vector tiles (free: no extra API calls,
+      // uses tiles already fetched for the map). Real OSM categories.
+      map.on("load", () => {
+        if (cancelled) return;
+        try {
+          // Find the POI layer(s) in the style
+          const style = map.getStyle();
+          const poiLayers = (style.layers || [])
+            .filter((l: any) => l["source-layer"] === "poi")
+            .map((l: any) => l.id);
+          if (!poiLayers.length || !listingKey) return;
+          const feats = map.queryRenderedFeatures({ layers: poiLayers });
+          const pois = feats
+            .map((f: any) => ({
+              name: String(f.properties?.name ?? "").trim(),
+              lng: f.geometry?.coordinates?.[0],
+              lat: f.geometry?.coordinates?.[1],
+              cls: String(f.properties?.class ?? ""),
+              subclass: String(f.properties?.subclass ?? ""),
+            }))
+            .filter((p: any) => p.name && Number.isFinite(p.lat) && Number.isFinite(p.lng));
+          // De-dupe by name+location
+          const seen = new Set<string>();
+          const uniq = pois.filter((p: any) => {
+            const k = `${p.name.toLowerCase()}|${p.lat.toFixed(5)},${p.lng.toFixed(5)}`;
+            if (seen.has(k)) return false;
+            seen.add(k);
+            return true;
+          });
+          setCachedPois(listingKey, uniq);
+        } catch { /* ignore */ }
+      });
     });
     return () => {
       cancelled = true;
       map?.remove();
     };
-  }, [lat, lng, label]);
+  }, [lat, lng, label, listingKey]);
 
   return <div ref={containerRef} className="h-72 w-full" aria-label={`Map of ${label}`} />;
 }

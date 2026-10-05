@@ -315,7 +315,7 @@ export function MapDirections({ listing }: { listing: PropertyListing }) {
   return (
     <div className="overflow-hidden rounded-2xl bg-white">
       <h2 className="border-b border-line px-6 py-4 font-display !text-left text-[1.0rem]">Map & Directions</h2>
-      <ListingDetailMap lat={lat} lng={lng} label={label} />
+      <ListingDetailMap lat={lat} lng={lng} label={label} listingKey={listing.ListingKey} />
       <div className="px-6 py-5">
         <a
           href={`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`}
