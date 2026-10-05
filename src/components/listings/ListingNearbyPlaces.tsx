@@ -69,6 +69,7 @@ async function queryOverpass(query: string): Promise<{ elements?: OverpassElemen
  */
 export function ListingNearbyPlaces({ lat, lng }: { lat: number; lng: number; listingKey: string }) {
   const [results, setResults] = useState<CategoryResult[] | null>(null);
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -149,15 +150,42 @@ export function ListingNearbyPlaces({ lat, lng }: { lat: number; lng: number; li
   if (results === null) {
     return (
       <div className="mt-12">
-        <h2 className="mb-5 font-display text-2xl">Nearby Places</h2>
-        <p className="text-sm text-muted">Searching nearby places…</p>
+        {/* Mobile toggle (collapsed by default) */}
+        <button
+          type="button"
+          onClick={() => setOpen((o) => !o)}
+          aria-expanded={open}
+          className="flex w-full items-center justify-between gap-4 rounded-2xl bg-white px-6 py-4 text-left lg:hidden"
+        >
+          <span className="font-display !text-left text-[1.0rem]">Nearby Places</span>
+          <span aria-hidden="true" className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-line text-lg leading-none text-ink">
+            {open ? "−" : "+"}
+          </span>
+        </button>
+        <h2 className="mb-5 hidden font-display text-2xl lg:block">Nearby Places</h2>
+        <div className={open ? "block" : "hidden lg:block"}>
+          <p className="text-sm text-muted">Searching nearby places…</p>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="mt-12">
-      <h2 className="mb-5 border-b border-line pb-3 font-display text-2xl">Nearby Places</h2>
+      {/* Mobile toggle (collapsed by default) */}
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        className="flex w-full items-center justify-between gap-4 rounded-2xl bg-white px-6 py-4 text-left lg:hidden"
+      >
+        <span className="font-display !text-left text-[1.0rem]">Nearby Places</span>
+        <span aria-hidden="true" className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-line text-lg leading-none text-ink">
+          {open ? "−" : "+"}
+        </span>
+      </button>
+      <h2 className="mb-5 hidden border-b border-line pb-3 font-display text-2xl lg:block">Nearby Places</h2>
+      <div className={open ? "block" : "hidden lg:block"}>
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {results.map((cat) => (
           <div key={cat.label} className="rounded-2xl bg-white p-5">
@@ -176,6 +204,7 @@ export function ListingNearbyPlaces({ lat, lng }: { lat: number; lng: number; li
             )}
           </div>
         ))}
+      </div>
       </div>
     </div>
   );
