@@ -1,38 +1,18 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
-import { getCachedPois } from "./ListingDetailMap";
+import { useEffect, useState } from "react";
 
-type Poi = { name: string; lat: number; lng: number; cls: string; subclass: string };
-type Place = { name: string; distanceKm: number };
-type CategoryResult = { label: string; places: Place[] };
+const MAPTILER_KEY = "Zr8EXulAyt75JJibE0ol"; // same public key the site's maps use
 
-// Match against OSM `class`/`subclass` from vector tiles (free, comprehensive).
-const CATEGORIES: { label: string; match: (p: Poi) => boolean }[] = [
-  { label: "Schools", match: (p) => p.subclass === "school" || p.cls === "education" },
-  {
-    label: "Groceries",
-    match: (p) =>
-      ["supermarket", "grocery", "convenience", "marketplace"].includes(p.subclass) ||
-      (p.cls === "shop" && /market|grocery|supermarket/i.test(p.subclass)),
-  },
-  {
-    label: "Restaurants",
-    match: (p) =>
-      ["restaurant", "cafe", "fast_food", "bar", "pub", "food_court"].includes(p.subclass),
-  },
-  {
-    label: "Pharmacy & Health",
-    match: (p) =>
-      ["pharmacy", "clinic", "hospital", "doctors", "dentist"].includes(p.subclass) ||
-      p.cls === "healthcare",
-  },
-  {
-    label: "Transit",
-    match: (p) =>
-      ["bus_stop", "bus_station", "station", "halt"].includes(p.subclass) ||
-      p.cls === "railway" ||
-      p.cls === "public_transport",
-  },
+type Place = { name: string; distanceKm: number; address?: string };
+type CategoryResult = { label: string; places: Place[]; error?: boolean };
+
+// Category → MapTiler geocoding query (types=poi restricts to points of interest).
+const CATEGORIES: { label: string; query: string }[] = [
+  { label: "Schools", query: "school" },
+  { label: "Groceries", query: "supermarket" },
+  { label: "Restaurants", query: "restaurant" },
+  { label: "Pharmacy & Health", query: "pharmacy" },
+  { label: "Transit", query: "bus station" },
 ];
 
 function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
@@ -50,108 +30,95 @@ function fmtDist(km: number): string {
   return km < 1 ? `${Math.round(km * 1000)} m` : `${km.toFixed(1)} km`;
 }
 
+type MaptilerFeature = {
+  place_name?: string;
+  text?: string;
+  center?: [number, number];
+  properties?: { address?: string };
+};
+
 /**
- * Nearby places from the map's vector tiles (free: zero extra API calls).
- * POIs are queried from the already-loaded map tiles once they render.
+ * Nearby places via MapTiler Geocoding API (free tier, types=poi).
+ * Hard bbox (~5km) around the listing keeps results local.
  */
-export function ListingNearbyPlaces({ lat, lng, listingKey }: { lat: number; lng: number; listingKey: string }) {
-  const ref = useRef<HTMLDivElement>(null);
+export function ListingNearbyPlaces({ lat, lng }: { lat: number; lng: number; listingKey: string }) {
   const [results, setResults] = useState<CategoryResult[] | null>(null);
 
   useEffect(() => {
     let cancelled = false;
+    const latDelta = 5 / 111;
+    const lngDelta = 5 / (111 * Math.cos((lat * Math.PI) / 180));
+    const bbox = `${lng - lngDelta},${lat - latDelta},${lng + lngDelta},${lat + latDelta}`;
 
-    const build = (pois: Poi[]) => {
-      const withDist = pois
-        .map((p) => ({ ...p, distanceKm: haversineKm(lat, lng, p.lat, p.lng) }))
-        .sort((a, b) => a.distanceKm - b.distanceKm);
-      const out: CategoryResult[] = CATEGORIES.map((cat) => {
-        const seen = new Set<string>();
-        const places: Place[] = [];
-        for (const p of withDist) {
-          if (!cat.match(p)) continue;
-          const key = p.name.toLowerCase();
-          if (seen.has(key)) continue;
-          seen.add(key);
-          places.push({ name: p.name, distanceKm: p.distanceKm });
-          if (places.length >= 5) break;
-        }
-        return { label: cat.label, places };
-      });
-      if (!cancelled) setResults(out);
-    };
-
-    // POIs may already be cached if the map loaded first.
-    const cached = getCachedPois(listingKey);
-    if (cached && cached.length) {
-      build(cached);
-      return () => { cancelled = true; };
-    }
-
-    // Otherwise wait for the map to emit them (only when scrolled near).
-    let io: IntersectionObserver | null = null;
-    const onPois = (e: Event) => {
-      const detail = (e as CustomEvent).detail;
-      if (detail?.key === listingKey && Array.isArray(detail.pois)) {
-        build(detail.pois);
-        cleanup();
-      }
-    };
-    const cleanup = () => {
-      window.removeEventListener("listing-pois", onPois);
-      io?.disconnect();
-    };
-    const el = ref.current;
-    if (el) {
-      io = new IntersectionObserver(
-        (entries) => {
-          if (entries[0].isIntersecting) {
-            // Section is visible; start listening (map likely already loaded).
-            window.addEventListener("listing-pois", onPois);
-            const again = getCachedPois(listingKey);
-            if (again && again.length) {
-              build(again);
-              cleanup();
+    (async () => {
+      const out: CategoryResult[] = await Promise.all(
+        CATEGORIES.map(async (cat) => {
+          try {
+            const url =
+              `https://api.maptiler.com/geocoding/${encodeURIComponent(cat.query)}.json` +
+              `?key=${MAPTILER_KEY}&types=poi&bbox=${bbox}&limit=10`;
+            const res = await fetch(url);
+            if (!res.ok) return { label: cat.label, places: [], error: true };
+            const data = (await res.json()) as { features?: MaptilerFeature[] };
+            const seen = new Set<string>();
+            const places: Place[] = [];
+            for (const f of data.features ?? []) {
+              const name = f.text || f.place_name?.split(",")[0] || "";
+              if (!name) continue;
+              const key = name.toLowerCase();
+              if (seen.has(key)) continue;
+              seen.add(key);
+              const c = f.center;
+              if (!c || c.length < 2) continue;
+              places.push({
+                name,
+                distanceKm: haversineKm(lat, lng, c[1], c[0]),
+                address: f.properties?.address,
+              });
             }
+            places.sort((a, b) => a.distanceKm - b.distanceKm);
+            return { label: cat.label, places: places.slice(0, 5) };
+          } catch {
+            return { label: cat.label, places: [], error: true };
           }
-        },
-        { rootMargin: "300px" }
+        }),
       );
-      io.observe(el);
-    } else {
-      window.addEventListener("listing-pois", onPois);
-    }
-    return () => { cancelled = true; cleanup(); };
-  }, [lat, lng, listingKey]);
+      if (!cancelled) setResults(out);
+    })();
 
-  const visible = (results ?? []).filter((r) => r.places.length > 0);
-  if (results && visible.length === 0) return null;
+    return () => { cancelled = true; };
+  }, [lat, lng]);
+
+  if (results === null) {
+    return (
+      <div className="mt-12">
+        <h2 className="mb-5 font-display text-2xl">Nearby Places</h2>
+        <p className="text-sm text-muted">Searching nearby places…</p>
+      </div>
+    );
+  }
+
+  const hasAny = results.some((r) => r.places.length > 0);
+  if (!hasAny) return null;
 
   return (
-    <div ref={ref} className="overflow-hidden rounded-2xl bg-white">
-      <h2 className="border-b border-line px-6 py-4 font-display !text-left text-[1.0rem]">Nearby Places</h2>
-      <div className="px-6 py-5">
-        {!results ? (
-          <p className="text-[0.85rem] text-gray-400">Loading nearby places…</p>
-        ) : (
-          <>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {visible.map((r) => (
-                <div key={r.label} className="rounded-xl border border-line p-4">
-                  <p className="mb-2 text-[0.85rem] font-semibold">{r.label}</p>
-                  <ul className="divide-y divide-line/60">
-                    {r.places.map((p, i) => (
-                      <li key={i} className="flex items-baseline justify-between gap-3 py-1.5 text-[0.85rem]">
-                        <span className="break-words">{p.name}</span>
-                        <span className="shrink-0 text-gray-500">{fmtDist(p.distanceKm)}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
+    <div className="mt-12">
+      <h2 className="mb-5 font-display text-2xl">Nearby Places</h2>
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {results.map((cat) =>
+          cat.places.length ? (
+            <div key={cat.label} className="rounded-2xl bg-white p-5">
+              <h3 className="mb-3 font-display text-[1.0rem]">{cat.label}</h3>
+              <ul className="flex flex-col gap-2.5">
+                {cat.places.map((p, i) => (
+                  <li key={`${p.name}-${i}`} className="flex items-baseline justify-between gap-3 text-[13.5px]">
+                    <span className="min-w-0 truncate text-ink">{p.name}</span>
+                    <span className="shrink-0 text-muted">{fmtDist(p.distanceKm)}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
-            <p className="mt-4 text-[0.75rem] text-gray-400">Distances are approximate, measured from the listing location.</p>
-          </>
+          ) : null,
         )}
       </div>
     </div>
