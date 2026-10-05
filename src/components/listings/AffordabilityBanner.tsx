@@ -3,11 +3,11 @@ import type { PropertyListing } from "@/lib/mls";
 
 /** Small banner under the agent card (For Sale only). Opens affordability calculator in a new tab. */
 export function AffordabilityBanner({ listing }: { listing: PropertyListing }) {
-  const key = String(listing.ListingKey ?? "");
+  const mls = String(listing.ListingId ?? listing.ListingKey ?? "");
 
   return (
     <a
-      href={`/calculators/affordability-calculator${key ? `?mls=${encodeURIComponent(key)}` : ""}`}
+      href={`/calculators/affordability-calculator${mls ? `?mls=${encodeURIComponent(mls)}` : ""}`}
       target="_blank"
       rel="noopener"
       className="card group flex w-full items-center gap-3 p-4 text-left transition-shadow hover:shadow-md"
