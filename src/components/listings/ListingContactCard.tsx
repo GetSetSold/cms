@@ -3,15 +3,22 @@ import { useState } from "react";
 import type { PropertyListing } from "@/lib/mls";
 import { priceDisplay } from "@/lib/mls";
 import { CmsFormRenderer } from "@/components/blocks/CmsFormRenderer";
-import type { CmsForm, SiteSettings } from "@/lib/types";
+import type { CmsForm, SiteSettings, SvgAsset } from "@/lib/types";
 
 type AgentInfo = NonNullable<SiteSettings["agent"]>;
 
-/** Round agent photo: photo URL if set, otherwise SVG initials placeholder. */
-function AgentPhoto({ agent, size = 56 }: { agent: AgentInfo; size?: number }) {
-  if (agent.photo_url) {
-    // eslint-disable-next-line @next/next/no-img-element
-    return <img src={agent.photo_url} alt={agent.name ?? "Agent"} width={size} height={size} className="rounded-full object-cover" style={{ width: size, height: size }} />;
+/** Round agent photo (30px radius): SVG asset if set, otherwise initials placeholder. */
+function AgentPhoto({ agent, photoSvg }: { agent: AgentInfo; photoSvg: SvgAsset | null }) {
+  const size = 60; // 30px radius
+  if (photoSvg?.markup) {
+    return (
+      <span
+        className="inline-flex items-center justify-center overflow-hidden rounded-full bg-gray-100"
+        style={{ width: size, height: size }}
+        dangerouslySetInnerHTML={{ __html: photoSvg.markup }}
+        aria-label={agent.name ?? "Agent photo"}
+      />
+    );
   }
   const initials = (agent.name ?? "R")
     .split(/\s+/)
@@ -30,7 +37,7 @@ function AgentPhoto({ agent, size = 56 }: { agent: AgentInfo; size?: number }) {
   );
 }
 
-export function ListingContactCard({ listing, form, agent }: { listing: PropertyListing; form: CmsForm | null; agent?: AgentInfo }) {
+export function ListingContactCard({ listing, form, agent, photoSvg }: { listing: PropertyListing; form: CmsForm | null; agent?: AgentInfo; photoSvg?: SvgAsset | null }) {
   const [open, setOpen] = useState(false);
   const phone = agent?.phone;
   const showAgent = agent && (agent.name || agent.brokerage);
@@ -42,7 +49,7 @@ export function ListingContactCard({ listing, form, agent }: { listing: Property
 
         {showAgent ? (
           <div className="flex items-center gap-3">
-            <AgentPhoto agent={agent} size={56} />
+            <AgentPhoto agent={agent} photoSvg={photoSvg ?? null} />
             <div className="min-w-0">
               {agent.name ? <div className="font-semibold leading-tight">{agent.name}</div> : null}
               {agent.title ? <div className="text-[12px] text-muted leading-tight">{agent.title}</div> : null}
@@ -50,8 +57,6 @@ export function ListingContactCard({ listing, form, agent }: { listing: Property
               {phone ? <a href={`tel:${phone.replace(/[^+\d]/g, "")}`} className="text-[13px] font-medium hover:underline">{phone}</a> : null}
             </div>
           </div>
-        ) : listing.OfficeName ? (
-          <div className="text-sm text-muted">{listing.OfficeName}</div>
         ) : null}
 
         {form ? (

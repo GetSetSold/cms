@@ -3,7 +3,7 @@ import { notFound, redirect, permanentRedirect } from "next/navigation";
 import { createMlsClient, daysOnMarket, displayValue, isSale, mediaItems, priceDisplay, resolveCitySlug, citySlug, listingSlug, normalizeCity, type GridListing, type PropertyListing } from "@/lib/mls";
 import { hoodSlug } from "@/lib/neighbourhoods";
 import { seoTitle } from "@/lib/seo";
-import { getSettings, getLogo } from "@/lib/cms";
+import { getSettings, getLogo, getSvgs } from "@/lib/cms";
 import { themeFontHref, themeVars, themeIconOverrideCSS } from "@/lib/theme";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter, MobileCtaBar } from "@/components/site/SiteFooter";
@@ -95,6 +95,8 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
 
   const [settings, similar] = await Promise.all([getSettings(), getSimilar(listing)]);
   const logo = await getLogo(settings);
+  const agentSvgs = settings.agent?.photo_svg_id ? await getSvgs([settings.agent.photo_svg_id]) : {};
+  const agentPhotoSvg = settings.agent?.photo_svg_id ? agentSvgs[settings.agent.photo_svg_id] ?? null : null;
   const photos = mediaItems(listing.Media);
   const dom = daysOnMarket(listing.OriginalEntryTimestamp);
   const sale = isSale(listing);
@@ -184,7 +186,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
           </div>
 
           <div className="flex flex-col gap-6 lg:sticky lg:top-24 lg:self-start">
-            <ListingContactCard listing={listing} form={inquiryForm} agent={settings.agent} />
+            <ListingContactCard listing={listing} form={inquiryForm} agent={settings.agent} photoSvg={agentPhotoSvg} />
           </div>
         </div>
 

@@ -368,14 +368,14 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
                       </label>
                     </div>
                     <p className="text-xs text-muted">Switching here takes effect on the next message sent — no redeploy needed. Each provider's own API key is a Supabase secret and is never stored here; make sure the secret for whichever provider you pick is set, or sending will fail.</p>
-                    <h3 className="mt-2 text-sm font-semibold">Listing agent card</h3>
-                    <p className="text-xs text-muted">Shown on listing detail pages beside the contact form. Leave blank to fall back to the listing brokerage name.</p>
+                    <h3 className="mt-2 text-sm font-semibold">Agent contact card</h3>
+                    <p className="text-xs text-muted">Shown on listing detail pages beside the contact form.</p>
                     <div className="grid gap-3 sm:grid-cols-2">
                       {(["name", "title", "brokerage", "phone"] as const).map((k) => (
                         <label key={k} className="label capitalize">{k === "phone" ? "Phone" : k}<input className="input" value={s.agent?.[k] ?? ""} onChange={(e) => set("agent", { ...s.agent, [k]: e.target.value })} placeholder={k === "name" ? "Rohit Sharma" : k === "title" ? "REALTOR®" : k === "brokerage" ? "Lombard Group Real Estate Inc., Brokerage" : k === "phone" ? "+14166057488" : ""} /></label>
                       ))}
                     </div>
-                    <label className="label">Photo URL<input className="input" value={s.agent?.photo_url ?? ""} onChange={(e) => set("agent", { ...s.agent, photo_url: e.target.value })} placeholder="https://…/headshot.jpg" /></label>
+                    <div className="label">Photo (SVG)<SvgPicker value={s.agent?.photo_svg_id ?? null} svgs={svgs} onChange={(id) => set("agent", { ...s.agent, photo_svg_id: id })} /></div>
           </section>
         )}
         {tab === "content" && (<>
