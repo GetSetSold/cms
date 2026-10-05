@@ -100,16 +100,23 @@ export function ListingNearbyPlaces({ lat, lng }: { lat: number; lng: number; li
   }
 
   const hasAny = results.some((r) => r.places.length > 0);
-  if (!hasAny) return null;
+  if (!hasAny) {
+    return (
+      <div className="mt-12">
+        <h2 className="mb-5 font-display text-2xl">Nearby Places</h2>
+        <p className="text-sm text-muted">No nearby places found in this area.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="mt-12">
       <h2 className="mb-5 font-display text-2xl">Nearby Places</h2>
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {results.map((cat) =>
-          cat.places.length ? (
-            <div key={cat.label} className="rounded-2xl bg-white p-5">
-              <h3 className="mb-3 font-display text-[1.0rem]">{cat.label}</h3>
+        {results.map((cat) => (
+          <div key={cat.label} className="rounded-2xl bg-white p-5">
+            <h3 className="mb-3 font-display text-[1.0rem]">{cat.label}</h3>
+            {cat.places.length ? (
               <ul className="flex flex-col gap-2.5">
                 {cat.places.map((p, i) => (
                   <li key={`${p.name}-${i}`} className="flex items-baseline justify-between gap-3 text-[13.5px]">
@@ -118,9 +125,11 @@ export function ListingNearbyPlaces({ lat, lng }: { lat: number; lng: number; li
                   </li>
                 ))}
               </ul>
-            </div>
-          ) : null,
-        )}
+            ) : (
+              <p className="text-[13px] text-muted">None found nearby.</p>
+            )}
+          </div>
+        ))}
       </div>
     </div>
   );
