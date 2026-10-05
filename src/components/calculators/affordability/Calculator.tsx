@@ -201,7 +201,7 @@ function computeAffordability(
 
 type LookupState = "idle" | "loading" | "found" | "notfound" | "error";
 
-export function AffordabilityCalculator({ settings }: { settings: CalculatorSettings }) {
+export function AffordabilityCalculator({ settings, initialListing }: { settings: CalculatorSettings; initialListing?: AffordabilityListing | null }) {
   // Inputs — defaults match the legacy page
   const [income, setIncome] = useState(120000);
   const [down, setDown] = useState(60000);
@@ -218,9 +218,19 @@ export function AffordabilityCalculator({ settings }: { settings: CalculatorSett
 
   // Property lookup
   const [query, setQuery] = useState("");
-  const [listing, setListing] = useState<AffordabilityListing | null>(null);
-  const [lookupState, setLookupState] = useState<LookupState>("idle");
+  const [listing, setListing] = useState<AffordabilityListing | null>(initialListing ?? null);
+  const [lookupState, setLookupState] = useState<LookupState>(initialListing ? "found" : "idle");
   const [searchNonce, setSearchNonce] = useState(0);
+
+  // Pre-fill from the subject property (e.g. opened from a listing page).
+  useEffect(() => {
+    if (initialListing && initialListing.price > 0) {
+      setAskPrice(Math.min(initialListing.price, 3000000));
+      const fullAddr = [initialListing.address, initialListing.city].filter(Boolean).join(", ");
+      if (fullAddr) setAddress(fullAddr);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const q = query.trim();

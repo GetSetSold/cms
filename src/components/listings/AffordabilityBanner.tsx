@@ -2,15 +2,29 @@
 import { useState } from "react";
 import dynamic from "next/dynamic";
 import type { CalculatorSettings } from "@/lib/calculators/types";
+import type { AffordabilityListing } from "@/components/calculators/affordability/pdf";
+import type { PropertyListing } from "@/lib/mls";
 
 const AffordabilityCalculator = dynamic(
   () => import("@/components/calculators/affordability/Calculator").then((m) => ({ default: m.AffordabilityCalculator })),
   { ssr: false, loading: () => <p className="text-sm text-muted">Loading calculator…</p> }
 );
 
-/** Small banner under the agent card (For Sale only). Opens affordability calculator in a modal. */
-export function AffordabilityBanner({ settings }: { settings: CalculatorSettings }) {
+/** Small banner under the agent card (For Sale only). Opens affordability calculator in a modal, pre-filled with the subject property. */
+export function AffordabilityBanner({ settings, listing }: { settings: CalculatorSettings; listing: PropertyListing }) {
   const [open, setOpen] = useState(false);
+
+  const initialListing: AffordabilityListing = {
+    mlsNumber: String(listing.ListingId ?? listing.ListingKey ?? ""),
+    price: Number(listing.ListPrice) || 0,
+    address: String(listing.UnparsedAddress ?? ""),
+    city: String(listing.City ?? ""),
+    beds: String(listing.BedroomsTotal ?? ""),
+    baths: String(listing.BathroomsTotalInteger ?? ""),
+    sqft: String(listing.LivingArea ?? ""),
+    propertyType: String(listing.PropertySubType ?? listing.StructureTypeText ?? ""),
+    photo: "",
+  };
 
   return (
     <>
@@ -51,7 +65,7 @@ export function AffordabilityBanner({ settings }: { settings: CalculatorSettings
                 ×
               </button>
             </div>
-            <AffordabilityCalculator settings={settings} />
+            <AffordabilityCalculator settings={settings} initialListing={initialListing} />
           </div>
         </div>
       ) : null}
