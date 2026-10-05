@@ -123,7 +123,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
       <link rel="stylesheet" href={themeFontHref(settings)} />
       {themeIconOverrideCSS(settings) ? <style dangerouslySetInnerHTML={{ __html: themeIconOverrideCSS(settings) }} /> : null}
       <SiteHeader settings={settings} logo={logo} />
-      <main className="mx-auto w-full max-w-7xl px-5 py-8 md:px-10 md:py-12">
+      <main className="mx-auto w-full max-w-7xl min-w-0 overflow-x-clip px-5 py-8 md:px-10 md:py-12">
         <div className="mb-4 text-sm text-muted">
           {(() => {
             const city = normalizeCity(listing.City ?? "");
@@ -155,7 +155,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
                 {sale ? "For Sale" : "For Rent"}
               </span>
               <div className="font-display text-3xl md:text-4xl">{priceDisplay(listing)}</div>
-              <div className="mt-2 text-lg">{listing.UnparsedAddress}{listing.City ? `, ${listing.City}` : ""}{listing.Province ? `, ${listing.Province}` : ""}</div>
+              <div className="mt-2 break-words text-lg">{listing.UnparsedAddress}{listing.City ? `, ${listing.City}` : ""}{listing.Province ? `, ${listing.Province}` : ""}{listing.PostalCode ? ` ${listing.PostalCode}` : ""}</div>
               <div className="mt-4 flex items-center justify-between border-t border-line pt-4 text-sm text-muted">
                 <span>MLS® <strong className="text-ink">{listing.ListingId ?? listing.ListingKey}</strong>{listing.OfficeName ? <> <span className="text-muted">|</span> {listing.OfficeName.toUpperCase()}</> : null}</span>
               </div>
