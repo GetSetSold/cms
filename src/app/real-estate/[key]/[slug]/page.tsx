@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound, redirect, permanentRedirect } from "next/navigation";
-import { createMlsClient, daysOnMarket, displayValue, isSale, mediaItems, priceDisplay, resolveCitySlug, citySlug, listingSlug, type GridListing, type PropertyListing } from "@/lib/mls";
+import { createMlsClient, daysOnMarket, displayValue, isSale, mediaItems, priceDisplay, resolveCitySlug, citySlug, listingSlug, normalizeCity, type GridListing, type PropertyListing } from "@/lib/mls";
+import { hoodSlug } from "@/lib/neighbourhoods";
 import { seoTitle } from "@/lib/seo";
 import { getSettings, getLogo } from "@/lib/cms";
 import { themeFontHref, themeVars, themeIconOverrideCSS } from "@/lib/theme";
@@ -116,7 +117,25 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
       <SiteHeader settings={settings} logo={logo} />
       <main className="mx-auto w-full max-w-7xl px-5 py-8 md:px-10 md:py-12">
         <div className="mb-4 text-sm text-muted">
-          <a href="/" className="hover:text-ink">Home</a> / <a href="/listings" className="hover:text-ink">Listings</a> / {listing.City}
+          {(() => {
+            const city = normalizeCity(listing.City ?? "");
+            const hood = ((listing.CityRegion || listing.SubdivisionName) ?? "").trim();
+            const cityUrl = city ? `/${citySlug(city)}-real-estate` : "/listings";
+            // Only show hood level if it exists and isn't just the city name again.
+            const showHood = hood.length > 0 && hood.toLowerCase() !== city.toLowerCase();
+            return (
+              <>
+                <a href="/" className="hover:text-ink">Home</a> /{" "}
+                <a href="/listings" className="hover:text-ink">Listings</a> /{" "}
+                {city ? <a href={cityUrl} className="hover:text-ink">{city}</a> : null}
+                {showHood ? (
+                  <>
+                    {" "}/ <a href={`${cityUrl}/${hoodSlug(hood)}`} className="hover:text-ink">{hood}</a>
+                  </>
+                ) : null}
+              </>
+            );
+          })()}
         </div>
 
         <ListingGallery items={photos} />
