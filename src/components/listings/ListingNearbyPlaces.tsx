@@ -9,10 +9,10 @@ type CategoryResult = { label: string; places: Place[]; error?: boolean };
 // Category → MapTiler geocoding query (types=poi restricts to points of interest).
 const CATEGORIES: { label: string; query: string }[] = [
   { label: "Schools", query: "school" },
-  { label: "Groceries", query: "supermarket" },
+  { label: "Groceries", query: "grocery" },
   { label: "Restaurants", query: "restaurant" },
   { label: "Pharmacy & Health", query: "pharmacy" },
-  { label: "Transit", query: "bus station" },
+  { label: "Commute", query: "station" },
 ];
 
 function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
@@ -46,8 +46,9 @@ export function ListingNearbyPlaces({ lat, lng }: { lat: number; lng: number; li
 
   useEffect(() => {
     let cancelled = false;
-    const latDelta = 5 / 111;
-    const lngDelta = 5 / (111 * Math.cos((lat * Math.PI) / 180));
+    // 8km radius for better POI coverage in suburban/rural areas.
+    const latDelta = 8 / 111;
+    const lngDelta = 8 / (111 * Math.cos((lat * Math.PI) / 180));
     const bbox = `${lng - lngDelta},${lat - latDelta},${lng + lngDelta},${lat + latDelta}`;
 
     (async () => {
@@ -56,7 +57,7 @@ export function ListingNearbyPlaces({ lat, lng }: { lat: number; lng: number; li
           try {
             const url =
               `https://api.maptiler.com/geocoding/${encodeURIComponent(cat.query)}.json` +
-              `?key=${MAPTILER_KEY}&types=poi&bbox=${bbox}&limit=10`;
+              `?key=${MAPTILER_KEY}&types=poi&bbox=${bbox}&limit=20`;
             const res = await fetch(url);
             if (!res.ok) return { label: cat.label, places: [], error: true };
             const data = (await res.json()) as { features?: MaptilerFeature[] };
