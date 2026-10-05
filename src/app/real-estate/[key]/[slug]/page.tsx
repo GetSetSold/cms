@@ -9,7 +9,7 @@ import { SiteFooter, MobileCtaBar } from "@/components/site/SiteFooter";
 import { ListingCard } from "@/components/listings/ListingCard";
 import { ListingGallery } from "@/components/listings/ListingGallery";
 import { ListingContactCard } from "@/components/listings/ListingContactCard";
-import { LocationDescription, PropertySummary, LandAndLot, ConstructionExterior, SystemsUtilities, Financials, chunkArray } from "@/components/listings/ListingDetailBlocks";
+import { LocationDescription, PropertySummary, LandAndLot, ConstructionExterior, SystemsUtilities, Financials, FieldTable } from "@/components/listings/ListingDetailBlocks";
 import { createClient } from "@/lib/supabase/server";
 import type { CmsForm } from "@/lib/types";
 
@@ -62,23 +62,16 @@ export async function generateMetadata({ params }: { params: Promise<{ key: stri
   };
 }
 
-const statDefs = (listing: PropertyListing, dom: number | null) =>
+const statFields = (listing: PropertyListing, dom: number | null) =>
   [
-    { value: dom != null ? `${dom} ${dom === 1 ? "day" : "days"}` : null, label: "Days on market" },
-    { value: listing.BedroomsTotal, label: "Bedrooms" },
-    { value: listing.BathroomsTotalInteger, label: "Bathrooms" },
-    { value: listing.ParkingTotal, label: "Parking" },
-    { value: listing.AboveGradeFinishedArea ? Number(listing.AboveGradeFinishedArea).toLocaleString() : null, label: "Sq ft" },
-    { value: listing.StructureType ?? listing.PropertySubType, label: "Type" },
-    { value: listing.YearBuilt, label: "Year built" },
-  ].filter((s) => displayValue(s.value));
-
-const statRows = (listing: PropertyListing, dom: number | null) =>
-  chunkArray(statDefs(listing, dom), 4).map((c) => {
-    const cells: ({ value: unknown; label: string } | null)[] = [...c];
-    while (cells.length < 4) cells.push(null);
-    return cells;
-  });
+    { label: "Days on market", value: displayValue(dom != null ? `${dom} ${dom === 1 ? "day" : "days"}` : null) || null },
+    { label: "Bedrooms", value: displayValue(listing.BedroomsTotal) || null },
+    { label: "Bathrooms", value: displayValue(listing.BathroomsTotalInteger) || null },
+    { label: "Parking", value: displayValue(listing.ParkingTotal) || null },
+    { label: "Sq ft", value: displayValue(listing.AboveGradeFinishedArea ? Number(listing.AboveGradeFinishedArea).toLocaleString() : null) || null },
+    { label: "Type", value: displayValue(listing.StructureType ?? listing.PropertySubType) || null },
+    { label: "Year built", value: displayValue(listing.YearBuilt) || null },
+  ];
 
 export default async function ListingDetailPage({ params }: { params: Promise<{ key: string; slug: string }> }) {
   const { key, slug } = await params;
@@ -140,20 +133,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
             </div>
 
             <div className="overflow-hidden rounded-2xl bg-white">
-              {statRows(listing, dom).map((row, ri) => (
-                <div key={ri} className={`grid grid-cols-4 ${ri > 0 ? "border-t border-line" : ""}`}>
-                  {row.map((s, ci) =>
-                    s ? (
-                      <div key={s.label} className="flex flex-col items-center gap-1 border-line border-l px-2 py-5 text-center first:border-l-0">
-                        <div className="font-display text-lg font-semibold">{displayValue(s.value)}</div>
-                        <div className="text-[11px] text-muted">{s.label}</div>
-                      </div>
-                    ) : (
-                      <div key={`empty-${ci}`} aria-hidden="true" className="border-line border-l first:border-l-0" />
-                    )
-                  )}
-                </div>
-              ))}
+              <FieldTable mobileCols={4} fields={statFields(listing, dom)} />
             </div>
 
             {listing.PublicRemarks ? (
