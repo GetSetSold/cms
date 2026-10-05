@@ -3,16 +3,16 @@ import type { PropertyListing } from "@/lib/mls";
 
 /** Small banner under the agent card (For Sale only). Opens affordability calculator in a new tab. */
 export function AffordabilityBanner({ listing }: { listing: PropertyListing }) {
-  const params = new URLSearchParams();
+  const parts: string[] = [];
   const mls = String(listing.ListingId ?? listing.ListingKey ?? "");
-  if (mls) params.set("mls", mls);
-  if (listing.ListPrice) params.set("price", String(listing.ListPrice));
-  if (listing.UnparsedAddress) params.set("address", String(listing.UnparsedAddress));
-  if (listing.City) params.set("city", String(listing.City));
-  if (listing.BedroomsTotal != null) params.set("beds", String(listing.BedroomsTotal));
-  if (listing.BathroomsTotalInteger != null) params.set("baths", String(listing.BathroomsTotalInteger));
-  if (listing.LivingArea) params.set("sqft", String(listing.LivingArea));
-  const qs = params.toString();
+  if (mls) parts.push(`mls=${encodeURIComponent(mls)}`);
+  if (listing.ListPrice) parts.push(`price=${encodeURIComponent(String(listing.ListPrice))}`);
+  if (listing.UnparsedAddress) parts.push(`address=${encodeURIComponent(String(listing.UnparsedAddress))}`);
+  if (listing.City) parts.push(`city=${encodeURIComponent(String(listing.City))}`);
+  if (listing.BedroomsTotal != null) parts.push(`beds=${encodeURIComponent(String(listing.BedroomsTotal))}`);
+  if (listing.BathroomsTotalInteger != null) parts.push(`baths=${encodeURIComponent(String(listing.BathroomsTotalInteger))}`);
+  if (listing.LivingArea) parts.push(`sqft=${encodeURIComponent(String(listing.LivingArea))}`);
+  const qs = parts.join("&");
 
   return (
     <a
