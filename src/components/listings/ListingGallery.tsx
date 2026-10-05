@@ -61,7 +61,7 @@ export function ListingGallery({ items }: { items: MediaItem[] }) {
             View Gallery
           </button>
         </div>
-        <div className="hidden md:grid md:h-full md:grid-cols-2 md:gap-2.5" style={{ gridTemplateRows: "repeat(2, minmax(0, 1fr))" }}>
+        <div className="hidden md:grid md:h-[460px] md:grid-cols-2 md:gap-2.5" style={{ gridTemplateRows: "repeat(2, minmax(0, 1fr))" }}>
           {visible.map((m, i) => {
             const isLast = i === visible.length - 1;
             return (
