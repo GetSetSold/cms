@@ -5,7 +5,7 @@ import { getCityOgImage, ogImageMeta } from "@/lib/ogImage";
 import { seoTitle } from "@/lib/seo";
 import { getCityStats } from "@/lib/cityStats";
 import { getHoodsForCity } from "@/lib/neighbourhoods";
-import { getSettings, getLogo } from "@/lib/cms";
+import { getSettings, getLogo, getSvgs } from "@/lib/cms";
 import { themeFontHref, themeVars, themeIconOverrideCSS } from "@/lib/theme";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter, MobileCtaBar } from "@/components/site/SiteFooter";
@@ -14,6 +14,7 @@ import { ListingsBrowser, type ListingsSearchParams } from "@/components/listing
 import { CityStatsSection } from "@/components/listings/CityStatsSection";
 import { CityEditorial } from "@/components/listings/CityEditorial";
 import { CityFaq } from "@/components/listings/CityFaq";
+import { LocalExpertSection } from "@/components/listings/LocalExpertSection";
 
 export async function cityPageMetadata(
   slug: string,
@@ -59,6 +60,8 @@ export async function CityPageContent({
     getHoodsForCity(city),
   ]);
   const logo = await getLogo(settings);
+  const agentSvgs = settings.agent?.photo_svg_id ? await getSvgs([settings.agent.photo_svg_id]) : {};
+  const agentPhoto = settings.agent?.photo_svg_id ? agentSvgs[settings.agent.photo_svg_id] ?? null : null;
 
   const themeVars_ = themeVars(settings);
 
@@ -90,6 +93,9 @@ export async function CityPageContent({
         ) : null}
         <CityEditorial stats={stats} />
         <CityFaq stats={stats} />
+        {settings.local_expert?.show_on_cities !== false ? (
+          <LocalExpertSection settings={settings} photo={agentPhoto} areaName={city} stats={stats} />
+        ) : null}
       </main>
       <SiteFooter settings={settings} />
       <MobileCtaBar settings={settings} />

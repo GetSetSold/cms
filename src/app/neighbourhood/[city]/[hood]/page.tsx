@@ -5,7 +5,7 @@ import { getHoodOgImage, ogImageMeta } from "@/lib/ogImage";
 import { listingCardsWithAds } from "@/components/listings/ListingGrid";
 import { seoTitle } from "@/lib/seo";
 import { citySlug } from "@/lib/mls";
-import { getSettings, getLogo } from "@/lib/cms";
+import { getSettings, getLogo, getSvgs } from "@/lib/cms";
 import { themeFontHref, themeVars, themeIconOverrideCSS } from "@/lib/theme";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter, MobileCtaBar } from "@/components/site/SiteFooter";
@@ -18,6 +18,7 @@ import { CityStatsSection } from "@/components/listings/CityStatsSection";
 import { CityEditorial } from "@/components/listings/CityEditorial";
 import { CityFaq } from "@/components/listings/CityFaq";
 import { LocalMarketPulse } from "@/components/hpi/LocalMarketPulse";
+import { LocalExpertSection } from "@/components/listings/LocalExpertSection";
 
 export const dynamic = "force-dynamic";
 
@@ -100,6 +101,8 @@ export default async function NeighbourhoodPage({
   const typeCounts: Record<string, number> = {};
   for (const t of stats.typeBreakdown ?? []) typeCounts[t.label] = t.count;
   const logo = await getLogo(settings);
+  const agentSvgs = settings.agent?.photo_svg_id ? await getSvgs([settings.agent.photo_svg_id]) : {};
+  const agentPhoto = settings.agent?.photo_svg_id ? agentSvgs[settings.agent.photo_svg_id] ?? null : null;
   const themeVars_ = themeVars(settings);
   const totalPages = Math.max(1, Math.ceil(total / PER_PAGE));
 
@@ -182,6 +185,9 @@ export default async function NeighbourhoodPage({
         <CityStatsSection stats={stats} />
         <CityEditorial stats={stats} />
         <CityFaq stats={stats} />
+        {settings.local_expert?.show_on_neighbourhoods !== false ? (
+          <LocalExpertSection settings={settings} photo={agentPhoto} areaName={`${hood.hood}, ${hood.city}`} stats={stats} />
+        ) : null}
         <LocalMarketPulse citySlug={citySlug(hood.city)} cityName={hood.city} />
       </main>
       <SiteFooter settings={settings} />

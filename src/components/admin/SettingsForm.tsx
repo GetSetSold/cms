@@ -35,7 +35,7 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
       contact: s.contact, scripts: s.scripts, lead_settings: s.lead_settings, mobile_cta: s.mobile_cta, blog_cta: s.blog_cta, social_links: s.social_links, precon_cashback: s.precon_cashback,
       agent: s.agent ?? {},
       email_provider: s.email_provider ?? "zeptomail", sms_provider: s.sms_provider ?? "vonage",
-      ads: s.ads ?? {}, promo: s.promo ?? {},
+      ads: s.ads ?? {}, promo: s.promo ?? {}, local_expert: s.local_expert ?? {},
     }).eq("id", 1);
     setMsg(error ? error.message : "Saved");
   }
@@ -376,6 +376,21 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
                       ))}
                     </div>
                     <div className="label">Photo (SVG)<SvgPicker value={s.agent?.photo_svg_id ?? null} svgs={svgs} onChange={(id) => set("agent", { ...s.agent, photo_svg_id: id })} /></div>
+                    <h3 className="mt-2 text-sm font-semibold">Local expert section</h3>
+                    <p className="text-xs text-muted">Shown on city and neighbourhood pages. Agent name, photo, brokerage and phone come from the agent contact card above.</p>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <label className="label">Service area line<input className="input" value={s.local_expert?.service_area ?? ""} onChange={(e) => set("local_expert", { ...s.local_expert, service_area: e.target.value })} placeholder="Caledonia & Haldimand County" /></label>
+                      <label className="label">Review rating<input className="input" value={s.local_expert?.review_rating ?? ""} onChange={(e) => set("local_expert", { ...s.local_expert, review_rating: e.target.value })} placeholder="5.0" /></label>
+                      <label className="label">Review count<input className="input" value={s.local_expert?.review_count ?? ""} onChange={(e) => set("local_expert", { ...s.local_expert, review_count: e.target.value })} placeholder="63" /></label>
+                      <label className="label">Listing fee<input className="input" value={s.local_expert?.listing_fee ?? ""} onChange={(e) => set("local_expert", { ...s.local_expert, listing_fee: e.target.value })} placeholder="1%" /></label>
+                      <label className="label">Buyer cash-back<input className="input" value={s.local_expert?.cashback ?? ""} onChange={(e) => set("local_expert", { ...s.local_expert, cashback: e.target.value })} placeholder="$5,000" /></label>
+                      <label className="label">Valuation URL<input className="input" value={s.local_expert?.valuation_url ?? ""} onChange={(e) => set("local_expert", { ...s.local_expert, valuation_url: e.target.value })} placeholder="/home-valuation" /></label>
+                      <label className="label">Call button label<input className="input" value={s.local_expert?.call_label ?? ""} onChange={(e) => set("local_expert", { ...s.local_expert, call_label: e.target.value })} placeholder="Call Rohit Today" /></label>
+                    </div>
+                    <div className="flex flex-wrap gap-4">
+                      <label className="label flex flex-row items-center gap-2">Show on city pages<input type="checkbox" checked={s.local_expert?.show_on_cities !== false} onChange={(e) => set("local_expert", { ...s.local_expert, show_on_cities: e.target.checked })} className="h-4 w-4" /></label>
+                      <label className="label flex flex-row items-center gap-2">Show on neighbourhood pages<input type="checkbox" checked={s.local_expert?.show_on_neighbourhoods !== false} onChange={(e) => set("local_expert", { ...s.local_expert, show_on_neighbourhoods: e.target.checked })} className="h-4 w-4" /></label>
+                    </div>
           </section>
         )}
         {tab === "content" && (<>

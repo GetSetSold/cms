@@ -91,6 +91,12 @@ export interface SiteSettings {
   blog_cta: { heading?: string; text?: string; button_label?: string; button_href?: string };
   contact: { phone?: string; email?: string; address?: string; hours?: string };
   agent?: { name?: string; title?: string; photo_svg_id?: string | null; phone?: string; email?: string; brokerage?: string };
+  local_expert?: {
+    enabled?: boolean; show_on_cities?: boolean; show_on_neighbourhoods?: boolean;
+    service_area?: string; review_rating?: string; review_count?: string;
+    listing_fee?: string; cashback?: string;
+    valuation_url?: string; call_label?: string;
+  };
   social_links: { size?: "xs" | "sm" | "md" | "lg"; items: { svg_id: string; href: string; label?: string }[] };
   mls_office_key?: string;
   precon_cashback?: { enabled: boolean; type: "percent" | "flat"; value: number };
