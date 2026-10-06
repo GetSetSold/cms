@@ -86,8 +86,8 @@ function AncillaryRow({
         onClick={onToggle}
         className="mt-1 shrink-0"
       >
-        <span className={`relative block h-6 w-11 rounded-full transition ${item.on ? "bg-accent" : "bg-neutral-300"}`}>
-          <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${item.on ? "left-[22px]" : "left-0.5"}`} />
+        <span className={`relative block h-6 w-11 rounded-[var(--radius-label)] transition ${item.on ? "bg-accent" : "bg-neutral-300"}`}>
+          <span className={`absolute top-0.5 h-5 w-5 rounded-[var(--radius-label)] bg-white shadow transition-all ${item.on ? "left-[22px]" : "left-0.5"}`} />
         </span>
       </button>
       {onRemove && (

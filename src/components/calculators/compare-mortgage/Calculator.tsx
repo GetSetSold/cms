@@ -74,7 +74,7 @@ function ScenarioCard({
       }`}
     >
       {isBest && (
-        <span className="absolute -top-3 left-4 rounded-full bg-primary px-3 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white">
+        <span className="absolute -top-3 left-4 rounded-[var(--radius-label)] bg-primary px-3 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white">
           Lowest Payment
         </span>
       )}
