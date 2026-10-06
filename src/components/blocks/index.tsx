@@ -104,7 +104,16 @@ function Hero({ data, ctx }: BlockProps) {
          color reads against a dark vs light background. */}
       {data.eyebrow ? <div className={compact ? "text-[11px] font-semibold uppercase tracking-wide text-accent" : "text-sm font-semibold uppercase tracking-wide text-primary"}>{data.eyebrow}</div> : null}
       {title}
-      {data.subheading ? (
+      {data.subheading_style === "checklist" && data.subheading_items?.length ? (
+        <ul className={`flex w-full max-w-xl flex-col gap-3 ${data.layout === "centered" ? "mx-auto" : ""}`}>
+          {data.subheading_items.map((it: any, i: number) => (
+            <li key={i} className="flex items-start gap-3 text-left">
+              <span className={`mt-0.5 flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-full text-[12px] font-bold ${dark ? "bg-white text-ink" : "bg-ink text-white"}`} aria-hidden="true">✓</span>
+              <span className={`text-[15px] leading-relaxed ${dark ? "text-ground/85" : "text-ink/80"}`}>{it.text}</span>
+            </li>
+          ))}
+        </ul>
+      ) : data.subheading ? (
         compact ? (
           <p className={`max-w-xl text-sm leading-relaxed ${dark ? "text-ground/75" : "text-muted"}`}>{data.subheading}</p>
         ) : (
@@ -169,6 +178,16 @@ function Hero({ data, ctx }: BlockProps) {
       <div className={`flex flex-col gap-4 md:gap-6 ${imageOnLeft ? "order-2" : ""}`}>
         {copy}
         <div className="flex flex-col gap-3 sm:flex-row"><Button link={data.primary_cta} dark={dark} /><Button link={data.secondary_cta} variant="outline" dark={dark} /></div>
+        {data.proof_points?.length ? (
+          <div className={`flex border-t pt-5 ${dark ? "border-white/15" : "border-line"}`}>
+            {data.proof_points.slice(0, 3).map((p: any, i: number) => (
+              <div key={i} className={`flex-1 pr-4 ${i > 0 ? `border-l pl-4 ${dark ? "border-white/15" : "border-line"}` : ""}`}>
+                <div className={`text-xl font-extrabold tracking-tight ${dark ? "text-ground" : "text-ink"}`}>{p.value}</div>
+                <div className={`mt-0.5 text-[11.5px] ${dark ? "text-ground/60" : "text-muted"}`}>{p.label}</div>
+              </div>
+            ))}
+          </div>
+        ) : null}
       </div>
       {/* Outer div stays at the column's full width always — this is what the badge anchors to, so it
          stays fixed to the actual page edge. The resizable image lives in its own inner div, so
@@ -178,7 +197,6 @@ function Hero({ data, ctx }: BlockProps) {
           <Svg asset={art} label={art?.name} className="aspect-[600/520] overflow-hidden rounded-3xl" />
         </div>
         {data.badge?.value ? (() => {
-          const layout = data.badge_layout || "callout";
           const style = data.badge_style || "solid";
           const styleCls = {
             solid: "bg-white shadow-[var(--shadow-card)]",
@@ -193,60 +211,31 @@ function Hero({ data, ctx }: BlockProps) {
           const Wrap = data.badge_href ? Link : "div";
           const wrapProps = data.badge_href ? { href: data.badge_href } : {};
 
-          if (layout === "ribbon") {
-            // Compact top-corner pill, flush to the edge — flat on the side
-            // that touches the corner, rounded on the outer side, like a
-            // dock tab rather than a floating pill. Label (small) then value
-            // (bold) reads as one phrase ("Free Home" + "Valuation"), not
-            // reversed. One fixed compact size regardless of badge_size.
-            const ribbonHorizCls = { left: "left-0", right: "right-0", center: "left-1/2 -translate-x-1/2" }[position as "left" | "right" | "center"];
-            const flatSideCls = position === "right" ? "rounded-l-full" : "rounded-r-full";
-            return (
-              <Wrap {...(wrapProps as any)} className={`absolute top-0 z-10 flex max-w-[calc(100%-1rem)] items-center gap-1.5 py-1 pl-1 pr-1.5 ${flatSideCls} ${styleCls} ${ribbonHorizCls}`}>
-                {icon ? (
-                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary">
-                    <Svg asset={icon} className="h-3 w-3" colorOverride="#FFFFFF" />
-                  </span>
-                ) : null}
-                <span className="flex min-w-0 flex-col">
-                  {data.badge.label ? <span className="truncate text-[9px] text-muted leading-tight">{data.badge.label}</span> : null}
-                  <span className="truncate text-xs font-bold leading-tight">{data.badge.value}</span>
-                </span>
-                {data.badge_href ? (
-                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary text-white">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
-                  </span>
-                ) : null}
-              </Wrap>
-            );
-          }
-
-          // "callout" — the original floating stat panel at the bottom of the image
-          const size = data.badge_size || "md";
-          const sizeCls = {
-            sm: "w-32 p-2.5 md:w-48 md:p-3.5",
-            md: "w-40 p-3 md:w-64 md:p-5",
-            lg: "w-48 p-3.5 md:w-80 md:p-6",
-          }[size as "sm" | "md" | "lg"];
-          const valueCls = {
-            sm: "text-lg md:text-2xl",
-            md: "text-xl md:text-4xl",
-            lg: "text-2xl md:text-5xl",
-          }[size as "sm" | "md" | "lg"];
-          const vertPosCls = { left: "left-4 md:-left-8", right: "right-4 md:-right-8", center: "left-1/2 -translate-x-1/2" }[position as "left" | "right" | "center"];
+          // Ribbon only — the single badge style. Compact top-corner pill,
+          // flush to the edge: flat on the side that touches the corner,
+          // rounded on the outer side, like a dock tab. Label (small) then
+          // value (bold) reads as one phrase ("Free Home" + "Valuation").
+          const ribbonHorizCls = { left: "left-0", right: "right-0", center: "left-1/2 -translate-x-1/2" }[position as "left" | "right" | "center"];
+          const flatSideCls = position === "right" ? "rounded-l-full" : "rounded-r-full";
           return (
-            <Wrap {...(wrapProps as any)} className={`absolute -bottom-4 flex items-center justify-between gap-3 rounded-[var(--radius-lg)] md:bottom-9 ${sizeCls} ${styleCls} ${vertPosCls}`}>
-              <span className="flex min-w-0 flex-col gap-1">
-                <span className="truncate text-[11px] text-muted md:text-[13px]">{data.badge.label}</span>
-                <span className={`truncate font-display font-bold ${valueCls}`}>{data.badge.value}</span>
+            <Wrap {...(wrapProps as any)} className={`absolute top-0 z-10 flex max-w-[calc(100%-1rem)] items-center gap-1.5 py-1 pl-1 pr-1.5 ${flatSideCls} ${styleCls} ${ribbonHorizCls}`}>
+              {icon ? (
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary">
+                  <Svg asset={icon} className="h-3 w-3" colorOverride="#FFFFFF" />
+                </span>
+              ) : null}
+              <span className="flex min-w-0 flex-col">
+                {data.badge.label ? <span className="truncate text-[9px] text-muted leading-tight">{data.badge.label}</span> : null}
+                <span className="truncate text-xs font-bold leading-tight">{data.badge.value}</span>
               </span>
               {data.badge_href ? (
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-white">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary text-white">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
                 </span>
               ) : null}
             </Wrap>
           );
+
         })() : null}
       </div>
     </div>
