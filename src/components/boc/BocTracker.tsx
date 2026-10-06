@@ -107,7 +107,7 @@ function RateCard({ label, value, sub, accent, loading, badge }: {
   label: string; value: string; sub: string; accent: string; loading: boolean; badge?: React.ReactNode;
 }) {
   return (
-    <div className="relative flex flex-col items-center justify-center overflow-hidden rounded-lg border border-line bg-white px-4 py-5 text-center shadow-sm">
+    <div className="relative flex flex-col items-center justify-center overflow-hidden rounded-[var(--radius-md)] border border-line bg-white px-4 py-5 text-center shadow-[var(--shadow-card)]">
       <div className="absolute left-0 right-0 top-0 h-1" style={{ background: accent }} />
       <span className="mb-1 text-[11px] font-medium uppercase tracking-wider text-muted">{label}</span>
       <div className="text-[28px] font-bold leading-tight text-ink">
@@ -179,7 +179,7 @@ function BocChart({ points, decisions, range, visible, onToggle }: {
             type="button"
             onClick={() => onToggle(k)}
             aria-pressed={visible[k]}
-            className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[12px] font-medium transition ${
+            className={`inline-flex items-center gap-2 rounded-[var(--radius-label)] border px-3 py-1.5 text-[12px] font-medium transition ${
               visible[k] ? "border-ink bg-ink text-white" : "border-line bg-white text-muted"
             }`}
           >
@@ -417,10 +417,10 @@ export function BocTracker() {
       {/* Banks */}
       <div className="mt-10">
         <BlockHead eyebrow="Big 5 Banks" heading="Major Bank Prime Rates" sub="Posted prime rates from Canada's Big 5 banks — all follow the BoC policy rate" />
-        <section aria-label="Major bank prime rates" className="rounded-lg border border-line bg-white p-5 shadow-sm">
+        <section aria-label="Major bank prime rates" className="rounded-[var(--radius-md)] border border-line bg-white p-5 shadow-[var(--shadow-card)]">
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
             {[["RBC", "#003168"], ["TD", "#34a853"], ["Scotiabank", "#ec111a"], ["BMO", "#0075ca"], ["CIBC", "#8b1a4a"]].map(([name, color]) => (
-              <div key={name} className="rounded-lg border border-line bg-soft px-2 py-4 text-center">
+              <div key={name} className="rounded-[var(--radius-md)] border border-line bg-soft px-2 py-4 text-center">
                 <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-lg font-bold text-white" style={{ background: color, fontSize: name === "Scotiabank" ? 11 : 13 }}>
                   {name === "Scotiabank" ? "Scotia" : name}
                 </div>
@@ -432,7 +432,7 @@ export function BocTracker() {
           </div>
           <div className="mt-4 grid grid-cols-1 gap-2 border-t border-line pt-4 sm:grid-cols-3">
             {[["Posted 1-Year Fixed", banks?.mtg1yr], ["Posted 3-Year Fixed", banks?.mtg3yr], ["Posted 5-Year Fixed", banks?.mtg5yr]].map(([label, v]) => (
-              <div key={label as string} className="rounded-lg border border-accent/20 bg-accent/5 px-3 py-3 text-center">
+              <div key={label as string} className="rounded-[var(--radius-md)] border border-accent/20 bg-accent/5 px-3 py-3 text-center">
                 <div className="text-[10px] uppercase tracking-wider text-muted">{label}</div>
                 <div className="mt-1 text-[20px] font-bold text-accent">{banks === null ? <Skeleton w={70} h={22} /> : fmtRate(v as number | null)}</div>
                 <div className="text-[10px] text-muted">Conventional mortgage</div>
@@ -443,7 +443,7 @@ export function BocTracker() {
       </div>
 
       {/* Countdown */}
-      <section aria-label="Next Bank of Canada rate decision" className="mt-10 rounded-lg border border-line bg-white p-5 text-center shadow-sm">
+      <section aria-label="Next Bank of Canada rate decision" className="mt-10 rounded-[var(--radius-md)] border border-line bg-white p-5 text-center shadow-[var(--shadow-card)]">
         <div className="text-[13px] font-semibold text-ink">Next Rate Decision</div>
         {next && parts ? (
           <>
@@ -485,7 +485,7 @@ export function BocTracker() {
             <option value="all">All Time</option>
           </select>
         </div>
-        <section aria-label="Historical interest rate trends" className="rounded-lg border border-line bg-white p-5 shadow-sm">
+        <section aria-label="Historical interest rate trends" className="rounded-[var(--radius-md)] border border-line bg-white p-5 shadow-[var(--shadow-card)]">
           <BocChart
             points={months}
             decisions={decisions}
@@ -500,13 +500,13 @@ export function BocTracker() {
       <div className="mt-10 grid grid-cols-1 gap-8 lg:grid-cols-5">
         <div className="lg:col-span-2">
           <BlockHead eyebrow="Statistics" heading="Rate Summary" sub="Key statistics from recent changes" />
-          <article className="rounded-lg border border-line bg-white p-5 shadow-sm">
+          <article className="rounded-[var(--radius-md)] border border-line bg-white p-5 shadow-[var(--shadow-card)]">
             <div className="grid grid-cols-3 gap-2">
               {[["Total Changes", stats?.total], ["Rate Holds", stats?.holds],
                 ["Net Change", stats ? (stats.net > 0 ? "+" : "") + stats.net.toFixed(2) + "%" : null],
                 ["Increases", stats?.ups], ["Decreases", stats?.downs],
                 ["Total Decisions", stats?.totalDecisions]].map(([l, v]) => (
-                <div key={l as string} className="rounded-lg bg-soft px-2 py-3 text-center">
+                <div key={l as string} className="rounded-[var(--radius-md)] bg-soft px-2 py-3 text-center">
                   <div className="text-[18px] font-bold text-ink">{v ?? <Skeleton w={40} h={20} />}</div>
                   <div className="mt-1 text-[10px] uppercase tracking-wider text-muted">{l}</div>
                 </div>
@@ -530,7 +530,7 @@ export function BocTracker() {
 
         <div className="lg:col-span-3">
           <BlockHead eyebrow="Decisions" heading="Rate Decision History" sub="All BoC rate decisions including holds & changes" />
-          <article className="rounded-lg border border-line bg-white p-5 shadow-sm">
+          <article className="rounded-[var(--radius-md)] border border-line bg-white p-5 shadow-[var(--shadow-card)]">
             <style>{`.boc-thin-scroll{scrollbar-width:thin;scrollbar-color:#d1d5db transparent}.boc-thin-scroll::-webkit-scrollbar{width:6px}.boc-thin-scroll::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:3px}.boc-thin-scroll::-webkit-scrollbar-track{background:transparent}`}</style>
             <div className="boc-thin-scroll max-h-[460px] overflow-y-auto pr-6">
               {decisions.length === 0 && <div className="py-10 text-center text-[13px] text-muted">Loading…</div>}

@@ -118,7 +118,7 @@ function Hero({ data, ctx }: BlockProps) {
         <ul className={`flex w-full max-w-xl flex-col gap-3 ${data.layout === "centered" ? "mx-auto" : ""}`}>
           {data.subheading_items.map((it: any, i: number) => (
             <li key={i} className="flex items-start gap-3 text-left">
-              <span className={`mt-0.5 flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-full text-[12px] font-bold ${dark ? "bg-white text-ink" : "bg-ink text-white"}`} aria-hidden="true">✓</span>
+              <span className={`mt-0.5 flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-[var(--radius-label)] text-[12px] font-bold ${dark ? "bg-white text-ink" : "bg-ink text-white"}`} aria-hidden="true">✓</span>
               <span className={`text-[15px] leading-relaxed ${dark ? "text-ground/85" : "text-ink/80"}`}>{it.text}</span>
             </li>
           ))}
@@ -251,7 +251,7 @@ function Hero({ data, ctx }: BlockProps) {
                 <span className="truncate text-xs font-bold leading-tight">{data.badge.value}</span>
               </span>
               {data.badge_href ? (
-                <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${badgeDark ? "bg-white text-ink" : "bg-primary text-white"}`}>
+                <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-[var(--radius-label)] ${badgeDark ? "bg-white text-ink" : "bg-primary text-white"}`}>
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
                 </span>
               ) : null}
@@ -301,7 +301,7 @@ function Services({ data, ctx }: BlockProps) {
                 <h3 className="text-base font-semibold md:text-[22px]">{s.title}</h3>
                 <p className="text-sm leading-relaxed text-muted md:text-base">{s.text}</p>
                 {s.href ? (
-                  <span className="mt-2 inline-flex w-fit items-center gap-1 rounded-full border border-line px-3.5 py-1.5 text-[13px] font-medium text-primary transition group-hover:bg-primary group-hover:text-white">
+                  <span className="mt-2 inline-flex w-fit items-center gap-1 rounded-[var(--radius-label)] border border-line px-3.5 py-1.5 text-[13px] font-medium text-primary transition group-hover:bg-primary group-hover:text-white">
                     {s.link_label || "Learn more"} →
                   </span>
                 ) : null}
@@ -343,7 +343,7 @@ function Features({ data, ctx }: BlockProps) {
               <h3 className={`text-xl font-semibold ${heading(ctx)}`}>{f.title}</h3>
               <p className={`leading-relaxed ${muted(ctx)}`}>{f.text}</p>
               {f.href ? (
-                <span className={`mt-1 inline-flex h-10 w-fit items-center rounded-full px-5 text-sm font-medium ${btnCls}`}>
+                <span className={`mt-1 inline-flex h-10 w-fit items-center rounded-[var(--radius-label)] px-5 text-sm font-medium ${btnCls}`}>
                   {f.link_label || "Learn more"} →
                 </span>
               ) : null}
@@ -542,7 +542,7 @@ function Pricing({ data, ctx }: BlockProps) {
               {String(p.features ?? "").split("\n").filter(Boolean).map((f: string, j: number) => <li key={j}>✓ {f}</li>)}
             </ul>
             {p.cta_label ? (
-              <Link href={p.cta_href || "#"} className={`mt-auto flex h-12 items-center justify-center rounded-full font-medium ${p.highlight ? "bg-white text-ink" : "bg-primary text-white"}`}>
+              <Link href={p.cta_href || "#"} className={`mt-auto flex h-12 items-center justify-center rounded-[var(--radius-btn)] font-medium ${p.highlight ? "bg-white text-ink" : "bg-primary text-white"}`}>
                 {p.cta_label}
               </Link>
             ) : null}
@@ -641,7 +641,7 @@ function ServiceAreas({ data, ctx }: BlockProps) {
       {data.heading ? <h2 className={`font-display text-2xl font-bold ${heading(ctx)}`}>{data.heading}</h2> : null}
       <div className="flex flex-wrap gap-2.5">
         {items.map((it: any, i: number) => (
-          <Link key={i} href={it.href || `/listings/city/${(it.label ?? "").toLowerCase().trim().replace(/\s+/g, "-")}`} prefetch={false} className="flex h-10 items-center rounded-full bg-ground px-4.5 text-sm font-medium hover:bg-soft">
+          <Link key={i} href={it.href || `/listings/city/${(it.label ?? "").toLowerCase().trim().replace(/\s+/g, "-")}`} prefetch={false} className="flex h-10 items-center rounded-[var(--radius-btn)] bg-ground px-4.5 text-sm font-medium hover:bg-soft">
             {it.label}
           </Link>
         ))}
@@ -725,7 +725,7 @@ function IconCard({ data, ctx }: BlockProps) {
       {data.heading ? <h3 className={`text-lg font-semibold md:text-xl ${dark ? "text-ground" : ""}`}>{data.heading}</h3> : null}
       {data.text ? <p className={`text-[13px] leading-relaxed md:text-base ${dark ? "text-ground/75" : "text-muted"}`}>{data.text}</p> : null}
       {data.link?.label ? (
-        <Link href={data.link.href} className={`mt-1 inline-flex h-10 items-center rounded-full px-5 text-sm font-medium transition ${btnCls}`}>
+        <Link href={data.link.href} className={`mt-1 inline-flex h-10 items-center rounded-[var(--radius-btn)] px-5 text-sm font-medium transition ${btnCls}`}>
           {data.link.label}
         </Link>
       ) : null}
@@ -799,7 +799,7 @@ function ProcessSteps({ data, ctx }: BlockProps) {
         {items.map((it: any, i: number) => (
           <div key={i} className="relative flex flex-col gap-4 p-6 md:p-9">
             {/* The mock shows this dot at every breakpoint (just repositioned on mobile), not desktop-only. */}
-            <span aria-hidden className="absolute -top-[5px] left-6 h-[9px] w-[9px] rounded-full md:left-9" style={{ background: accent, boxShadow: `0 0 0 5px ${dotRing}` }} />
+            <span aria-hidden className="absolute -top-[5px] left-6 h-[9px] w-[9px] rounded-[var(--radius-label)] md:left-9" style={{ background: accent, boxShadow: `0 0 0 5px ${dotRing}` }} />
             <div className="font-display text-5xl font-bold leading-none md:text-6xl" style={{ color: accent }}>{String(i + 1).padStart(2, "0")}</div>
             <h3 className={`text-lg font-semibold leading-snug md:text-xl ${heading(ctx)}`}>{it.title}</h3>
             {it.text ? <p className={`text-[15px] leading-relaxed md:text-base ${muted(ctx)}`}>{it.text}</p> : null}
@@ -1117,7 +1117,7 @@ function WhatsIncluded({ data, ctx }: BlockProps) {
                 {it.title ? <div className={`${compact ? "text-sm" : "text-[15px]"} font-semibold leading-snug ${heading(ctx)}`}>{it.title}</div> : null}
                 {it.text ? <p className={`text-[13px] leading-relaxed ${muted(ctx)}`}>{it.text}</p> : null}
               </div>
-              <span className={`mt-auto inline-flex items-center gap-1.5 rounded-full bg-primary px-3 text-[10px] font-bold text-white ${compact ? "h-[22px]" : "h-[26px]"}`} style={compact ? { background: "var(--color-accent)" } : undefined}>
+              <span className={`mt-auto inline-flex items-center gap-1.5 rounded-[var(--radius-label)] bg-primary px-3 text-[10px] font-bold text-white ${compact ? "h-[22px]" : "h-[26px]"}`} style={compact ? { background: "var(--color-accent)" } : undefined}>
                 <span aria-hidden>✓</span> Included
               </span>
             </div>

@@ -26,7 +26,7 @@ export function ServiceCard({ s, style, align, color, ctx }: {
   const iconVars = { "--c-primary": on, "--c-accent": on } as React.CSSProperties;
   const icon = (size: string) => art
     ? <Svg asset={art} className={size} style={iconVars} colorOverride={on} />
-    : <span aria-hidden className={`block rounded-full border-2 ${size}`} style={{ borderColor: on }} />;
+    : <span aria-hidden className={`block rounded-[var(--radius-label)] border-2 ${size}`} style={{ borderColor: on }} />;
 
   // The whole card is the link (as in the classic style), so this is a styled
   // <span>, not a nested <a>.
@@ -36,7 +36,7 @@ export function ServiceCard({ s, style, align, color, ctx }: {
     : bordered ? { border: `1.5px solid ${fill}`, color: dark ? fill : "#14142B" } : { background: fill, color: on };
   const button = s.href ? (
     <div className="mt-auto flex justify-end pt-6">
-      <span className="inline-flex h-12 items-center gap-2 rounded-full px-6 text-[15px] font-semibold transition group-hover:brightness-95" style={btnStyle}>
+      <span className="inline-flex h-12 items-center gap-2 rounded-[var(--radius-label)] px-6 text-[15px] font-semibold transition group-hover:brightness-95" style={btnStyle}>
         {s.link_label || "Learn more"} <span aria-hidden>→</span>
       </span>
     </div>
@@ -50,7 +50,7 @@ export function ServiceCard({ s, style, align, color, ctx }: {
     return (
       <article className="flex h-full min-h-[360px] flex-col gap-6 rounded-[var(--radius-lg)] p-7 md:p-8" style={{ background: fill, color: on }}>
         <div className={`flex ${JUSTIFY[align]}`}>
-          <span className="flex h-28 w-28 items-center justify-center rounded-full border md:h-36 md:w-36" style={{ borderColor: `${on}66` }}>
+          <span className="flex h-28 w-28 items-center justify-center rounded-[var(--radius-label)] border md:h-36 md:w-36" style={{ borderColor: `${on}66` }}>
             {icon("h-12 w-12 md:h-14 md:w-14")}
           </span>
         </div>
