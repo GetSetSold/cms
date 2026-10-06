@@ -234,22 +234,18 @@ function Hero({ data, ctx }: BlockProps) {
           const wrapProps = data.badge_href ? { href: data.badge_href } : {};
 
           // Ribbon only — the single badge style. Rectangular tab flush to the
-          // top corner, with a concave "inner curve" scoop at the outer
-          // bottom corner (CSS mask), like a dock tab.
+          // top corner, with a rounded outer bottom corner (convex radius).
           const ribbonHorizCls = { left: "left-0", right: "right-0", center: "left-1/2 -translate-x-1/2" }[position as "left" | "right" | "center"];
-          const scoopMasks = {
-            left: "radial-gradient(circle 20px at 100% 100%, transparent 20px, black 20.5px)",
-            right: "radial-gradient(circle 20px at 0% 100%, transparent 20px, black 20.5px)",
-            center: "radial-gradient(circle 20px at 0% 100%, transparent 20px, black 20.5px), radial-gradient(circle 20px at 100% 100%, transparent 20px, black 20.5px)",
+          const ribbonRadiusCls = {
+            left: "rounded-br-[20px]",
+            right: "rounded-bl-[20px]",
+            center: "rounded-b-[20px]",
           }[position as "left" | "right" | "center"];
           const scoopStyle: React.CSSProperties = {
             ...(customBg ? { background: customBg } : undefined),
-            WebkitMask: scoopMasks,
-            mask: scoopMasks,
-            ...(position === "center" ? { WebkitMaskComposite: "intersect", maskComposite: "intersect" } : undefined),
           };
           return (
-            <Wrap {...(wrapProps as any)} style={scoopStyle} className={`absolute top-0 z-10 flex max-w-[calc(100%-1rem)] items-center gap-1.5 py-1 pl-1 pr-1.5 ${styleCls} ${ribbonHorizCls} ${badgeDark ? "text-white" : ""}`}>
+            <Wrap {...(wrapProps as any)} style={scoopStyle} className={`absolute top-0 z-10 flex max-w-[calc(100%-1rem)] items-center gap-1.5 py-1 pl-1 pr-1.5 ${ribbonRadiusCls} ${styleCls} ${ribbonHorizCls} ${badgeDark ? "text-white" : ""}`}>
               {icon ? (
                 <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary">
                   <Svg asset={icon} className="h-3 w-3" colorOverride="#FFFFFF" />
