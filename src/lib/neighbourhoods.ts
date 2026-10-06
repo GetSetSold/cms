@@ -164,10 +164,30 @@ export async function listNeighbourhoods(): Promise<Neighbourhood[]> {
 
 
 
-/** Neighbourhoods for one normalized city, sorted by listing count. */
+/** Neighbourhoods for one normalized city, sorted by listing count.
+ *  Scoped to the city's listings only (1 query) — never scans the full table. */
 export async function getHoodsForCity(city: string): Promise<Neighbourhood[]> {
-  const all = await listNeighbourhoods();
-  return all.filter((h) => h.city === city).sort((a, b) => b.count - a.count);
+  const mls = createMlsClient();
+  const variants = await rawCitiesFor(city);
+  const { data, error } = await mls
+    .from("property")
+    .select("CityRegion,SubdivisionName")
+    .in("City", variants)
+    .limit(10000);
+  if (error) throw new Error(`getHoodsForCity: ${error.message}`);
+  const pairCounts = new Map<string, number>();
+  const displayNames = new Map<string, string>();
+  for (const r of (data ?? []) as HoodRow[]) {
+    const hood = coalesceHood(r);
+    if (!hood) continue;
+    const slug = hoodSlug(hood);
+    pairCounts.set(slug, (pairCounts.get(slug) ?? 0) + 1);
+    if (!displayNames.has(slug)) displayNames.set(slug, hood);
+  }
+  return [...pairCounts.entries()]
+    .filter(([, count]) => count >= HOOD_MIN_LISTINGS)
+    .map(([hoodSlug, count]) => ({ city, hood: displayNames.get(hoodSlug) ?? hoodSlug, hoodSlug, count }))
+    .sort((a, b) => b.count - a.count);
 }
 
 /** Resolve (citySlug, hoodSlug) to a Neighbourhood, or null. */

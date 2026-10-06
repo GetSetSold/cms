@@ -46,20 +46,23 @@ async function getProvinceCities(): Promise<CityCount[]> {
   if (provinceCache && Date.now() < provinceCache.expires) return provinceCache.data;
   const mls = createMlsClient();
   const counts = new Map<string, number>();
-  // Sequential pages: reliable on Workers.
-  const PAGE = 1000;
-  let from = 0;
-  while (true) {
-    const { data, error } = await mls.from("grid").select("City").range(from, from + PAGE - 1);
+  // Parallel pages, 2000 rows each: 57k rows = ~29 subrequests (under the
+  // 50/request Workers limit). Fetches only the narrow City column.
+  const PAGE = 2000;
+  const { count } = await mls.from("grid").select("City", { count: "exact", head: true });
+  const pages = Math.max(1, Math.ceil((count ?? 0) / PAGE));
+  const results = await Promise.all(
+    Array.from({ length: pages }, (_, i) =>
+      mls.from("grid").select("City").range(i * PAGE, i * PAGE + PAGE - 1)
+    )
+  );
+  for (const { data, error } of results) {
     if (error) throw new Error(`provinceCities: ${error.message}`);
-    if (!data || !data.length) break;
-    for (const r of data as { City: string | null }[]) {
+    for (const r of (data ?? []) as { City: string | null }[]) {
       const n = normalizeCity(r.City || "");
       if (!n || n.toLowerCase() === "unknown") continue;
       counts.set(n, (counts.get(n) ?? 0) + 1);
     }
-    if (data.length < PAGE) break;
-    from += PAGE;
   }
   const result = [...counts.entries()]
     .map(([city, count]) => ({ city, slug: citySlug(city), count }))
