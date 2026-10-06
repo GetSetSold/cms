@@ -121,7 +121,7 @@ export function SiteHeader({ settings, logo }: { settings: SiteSettings; logo?: 
                       <div key={i} className="flex flex-col">
                         {col.heading ? <div className="pb-1 pt-2 text-xs font-semibold uppercase tracking-wide text-[#0066CC]">{col.heading}</div> : null}
                         {col.links.map((l, j) => (
-                          <Link key={l.href} href={l.href} onClick={() => setOpen(false)} className={`border-b border-line/50 py-2.5 text-base ${j === col.links.length - 1 && i === n.columns.length - 1 ? "border-b-0" : ""}`}>{l.label}</Link>
+                          <Link key={l.href} href={l.href} onClick={() => setOpen(false)} className={`border-b border-line/50 py-2.5 text-base ${j === col.links.length - 1 && i === (n.columns?.length ?? 0) - 1 ? "border-b-0" : ""}`}>{l.label}</Link>
                         ))}
                       </div>
                     ))}
