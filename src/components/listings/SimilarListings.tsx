@@ -13,7 +13,11 @@ export function SimilarListings({ listings }: { listings: GridListing[] }) {
   const scrollBy = (dir: 1 | -1) => {
     const el = scrollRef.current;
     if (!el) return;
-    el.scrollBy({ left: dir * el.clientWidth * 0.8, behavior: "smooth" });
+    const card = el.querySelector<HTMLElement>(":scope > div");
+    if (!card) return;
+    const gap = parseFloat(getComputedStyle(el).columnGap || "20");
+    const page = (card.offsetWidth + gap) * 4;
+    el.scrollBy({ left: dir * page, behavior: "smooth" });
   };
 
   return (
@@ -59,11 +63,11 @@ export function SimilarListings({ listings }: { listings: GridListing[] }) {
       {/* Desktop: horizontal scroll */}
       <div
         ref={scrollRef}
-        className="hidden overflow-x-auto pb-2 lg:flex lg:snap-x"
+        className="hidden overflow-x-auto pb-2 lg:flex"
         style={{ scrollbarWidth: "none", gap: "max(20px, calc((100% - 1120px) / 3))" }}
       >
         {listings.map((l) => (
-          <div key={l.ListingKey} className="w-[280px] shrink-0 snap-start">
+          <div key={l.ListingKey} className="w-[280px] shrink-0">
             <ListingCard listing={l} />
           </div>
         ))}

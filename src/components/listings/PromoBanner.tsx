@@ -40,7 +40,7 @@ export function PromoBanner({
     return (
       <div className="flex flex-col gap-5 rounded-[var(--radius-lg)] bg-ink p-6 text-white md:flex-row md:items-center md:gap-6 md:p-7">
         <div className="min-w-0 flex-1">
-          <span className="mb-3 inline-block rounded-full bg-white px-3.5 py-1.5 text-[11px] font-extrabold uppercase tracking-[1.5px] text-ink">
+          <span className="mb-3 inline-block rounded-[var(--radius-label)] bg-white px-3.5 py-1.5 text-[11px] font-extrabold uppercase tracking-[1.5px] text-ink">
             Exclusive Buyer Offer
           </span>
           <h3 className="font-display text-2xl font-extrabold tracking-tight">
@@ -72,7 +72,7 @@ export function PromoBanner({
   return (
     <div className="flex flex-col gap-5 rounded-[var(--radius-lg)] bg-ink p-6 text-white md:flex-row md:items-center md:gap-6 md:p-7">
       <div className="min-w-0 flex-1">
-        <span className="mb-3 inline-block rounded-full bg-accent px-3.5 py-1.5 text-[11px] font-extrabold uppercase tracking-[1.5px] text-white">
+        <span className="mb-3 inline-block rounded-[var(--radius-label)] bg-accent px-3.5 py-1.5 text-[11px] font-extrabold uppercase tracking-[1.5px] text-white">
           Renter-Friendly Service
         </span>
         <h3 className="font-display text-2xl font-extrabold tracking-tight">

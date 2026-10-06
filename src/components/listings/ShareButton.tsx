@@ -28,7 +28,7 @@ export function ShareButton({ title, url }: { title: string; url: string }) {
     <button
       type="button"
       onClick={share}
-      className="inline-flex items-center gap-1.5 rounded-full border border-line px-3.5 py-1.5 text-[13px] font-medium text-ink transition hover:bg-soft"
+      className="inline-flex items-center gap-1.5 rounded-[var(--radius-btn)] border border-line px-3.5 py-1.5 text-[13px] font-medium text-ink transition hover:bg-soft"
       aria-label="Share this listing"
     >
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

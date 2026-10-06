@@ -104,16 +104,16 @@ export function LocalExpertSection({
           />
           <div className="mt-2.5 flex flex-wrap gap-2">
             {[`${listingFee} listing fee`, `${cashback} buyer cash-back`, "Free valuations"].map((c) => (
-              <span key={c} className="rounded-full bg-soft px-3 py-1 text-[12px] text-ink">{c}</span>
+              <span key={c} className="rounded-[var(--radius-label)] bg-soft px-3 py-1 text-[12px] text-ink">{c}</span>
             ))}
           </div>
         </div>
         <div className="flex shrink-0 flex-row gap-2.5 md:flex-col">
-          <a href={valuationUrl} className="flex h-11 items-center justify-center rounded-full bg-accent px-5 text-[14px] font-semibold text-white">
+          <a href={valuationUrl} className="flex h-11 items-center justify-center rounded-[var(--radius-btn)] bg-accent px-5 text-[14px] font-semibold text-white">
             Free Home Valuation <span className="ml-1.5">↗</span>
           </a>
           {phone ? (
-            <a href={`tel:${phone.replace(/[^+\d]/g, "")}`} className="flex h-11 items-center justify-center rounded-full border-[1.5px] border-ink bg-white px-5 text-[14px] font-semibold text-ink">
+            <a href={`tel:${phone.replace(/[^+\d]/g, "")}`} className="flex h-11 items-center justify-center rounded-[var(--radius-btn)] border-[1.5px] border-ink bg-white px-5 text-[14px] font-semibold text-ink">
               {callLabel} <span className="ml-1.5">↗</span>
             </a>
           ) : null}

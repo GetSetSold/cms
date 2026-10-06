@@ -153,10 +153,10 @@ export function ListingsMap({ listings }: { listings: GridListing[] }) {
   }
 
   return (
-    <div className="relative h-full w-full overflow-hidden rounded-2xl">
+    <div className="relative h-full w-full overflow-hidden rounded-[var(--radius-lg)]">
       <div ref={containerRef} className="h-full w-full" />
       <button onClick={useMyLocation} type="button"
-        className="absolute bottom-4 left-4 flex h-10 items-center gap-2 rounded-full bg-white px-3.5 text-sm font-medium shadow-md">
+        className="absolute bottom-4 left-4 flex h-10 items-center gap-2 rounded-[var(--radius-btn)] bg-white px-3.5 text-sm font-medium shadow-md">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3" /><path d="M12 2v3M12 19v3M2 12h3M19 12h3" /></svg>
         My location
       </button>
