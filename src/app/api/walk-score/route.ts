@@ -19,17 +19,28 @@ export async function GET(req: NextRequest) {
   const rlat = Number(lat).toFixed(3);
   const rlng = Number(lng).toFixed(3);
 
+  // Don't cache failures: a bad key or empty response must not poison the
+  // 90-day cache. Only successful scores get the long revalidate.
   const res = await fetch(
     `https://api.walkscore.com/score?format=json&lat=${rlat}&lon=${rlng}&wsapikey=${encodeURIComponent(key)}`,
-    { next: { revalidate: 60 * 60 * 24 * 90 } }
+    { cache: "no-store" }
   );
-  if (!res.ok) return Response.json({ error: "upstream" }, { status: 502 });
-  const d = await res.json();
+  const d = await res.json().catch(() => null);
+  // Walk Score returns status !== 1 on error (bad key, over limit, etc.)
+  if (!res.ok || !d || d.status !== 1) {
+    return Response.json(
+      { error: "upstream", detail: d?.status_description ?? d?.error ?? null },
+      { status: 502 }
+    );
+  }
 
-  return Response.json({
-    walkscore: typeof d.walkscore === "number" ? d.walkscore : null,
-    description: d.description ?? null,
-    transit: d.transit?.score != null ? { score: d.transit.score, description: d.transit.description ?? null } : null,
-    bike: d.bike?.score != null ? { score: d.bike.score, description: d.bike.description ?? null } : null,
-  });
+  return Response.json(
+    {
+      walkscore: typeof d.walkscore === "number" ? d.walkscore : null,
+      description: d.description ?? null,
+      transit: d.transit?.score != null ? { score: d.transit.score, description: d.transit.description ?? null } : null,
+      bike: d.bike?.score != null ? { score: d.bike.score, description: d.bike.description ?? null } : null,
+    },
+    { headers: { "Cache-Control": "public, s-maxage=7776000, max-age=86400" } } // 90d edge, 1d browser
+  );
 }
