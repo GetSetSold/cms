@@ -25,11 +25,17 @@ export async function GET(req: NextRequest) {
     `https://api.walkscore.com/score?format=json&lat=${rlat}&lon=${rlng}&wsapikey=${encodeURIComponent(key)}`,
     { cache: "no-store" }
   );
-  const d = await res.json().catch(() => null);
+  const raw = await res.text();
+  const d = (() => { try { return JSON.parse(raw); } catch { return null; } })();
   // Walk Score returns status !== 1 on error (bad key, over limit, etc.)
   if (!res.ok || !d || d.status !== 1) {
     return Response.json(
-      { error: "upstream", detail: d?.status_description ?? d?.error ?? null },
+      {
+        error: "upstream",
+        http_status: res.status,
+        ws_status: d?.status ?? null,
+        detail: d?.status_description ?? d?.error ?? raw.slice(0, 200),
+      },
       { status: 502 }
     );
   }
