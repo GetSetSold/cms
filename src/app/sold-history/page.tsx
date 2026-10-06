@@ -63,10 +63,10 @@ export default async function SoldHistoryPage({ searchParams }: { searchParams: 
         </div>
 
         <div className="mb-10 flex flex-wrap gap-2.5">
-          <a href="/sold-history" className={`flex h-10 items-center rounded-full px-4.5 text-sm font-medium ${!status ? "bg-primary text-white" : "border border-line bg-white"}`}>All ({allRows.length})</a>
-          <a href="/sold-history?status=sold" className={`flex h-10 items-center rounded-full px-4.5 text-sm font-medium ${status === "sold" ? "bg-primary text-white" : "border border-line bg-white"}`}>Sold ({counts.sold})</a>
-          <a href="/sold-history?status=leased" className={`flex h-10 items-center rounded-full px-4.5 text-sm font-medium ${status === "leased" ? "bg-primary text-white" : "border border-line bg-white"}`}>Leased ({counts.leased})</a>
-          <a href="/sold-history?status=purchased" className={`flex h-10 items-center rounded-full px-4.5 text-sm font-medium ${status === "purchased" ? "bg-primary text-white" : "border border-line bg-white"}`}>Purchased ({counts.purchased})</a>
+          <a href="/sold-history" className={`flex h-10 items-center rounded-[var(--radius-btn)] px-4.5 text-sm font-medium ${!status ? "bg-primary text-white" : "border border-line bg-white"}`}>All ({allRows.length})</a>
+          <a href="/sold-history?status=sold" className={`flex h-10 items-center rounded-[var(--radius-btn)] px-4.5 text-sm font-medium ${status === "sold" ? "bg-primary text-white" : "border border-line bg-white"}`}>Sold ({counts.sold})</a>
+          <a href="/sold-history?status=leased" className={`flex h-10 items-center rounded-[var(--radius-btn)] px-4.5 text-sm font-medium ${status === "leased" ? "bg-primary text-white" : "border border-line bg-white"}`}>Leased ({counts.leased})</a>
+          <a href="/sold-history?status=purchased" className={`flex h-10 items-center rounded-[var(--radius-btn)] px-4.5 text-sm font-medium ${status === "purchased" ? "bg-primary text-white" : "border border-line bg-white"}`}>Purchased ({counts.purchased})</a>
         </div>
 
         {rows.length ? (

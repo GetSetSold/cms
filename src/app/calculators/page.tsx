@@ -135,7 +135,7 @@ export default async function CalculatorsHubPage({
                     className="group relative flex flex-col rounded-[var(--radius-md)] border border-line bg-white p-5 shadow-[var(--shadow)] transition hover:border-accent"
                   >
                     {c.tag && (
-                      <span className="absolute right-4 top-4 rounded-full bg-soft px-2.5 py-1 text-[11px] font-bold text-accent">
+                      <span className="absolute right-4 top-4 rounded-[var(--radius-label)] bg-soft px-2.5 py-1 text-[11px] font-bold text-accent">
                         {c.tag}
                       </span>
                     )}

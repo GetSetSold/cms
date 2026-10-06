@@ -62,15 +62,15 @@ export default async function ModelPage({ params }: { params: Promise<{ slug: st
             {(() => {
               const cb = getCashbackAmount(model.starting_price, settings.precon_cashback);
               return cb ? (
-                <span className="flex items-center gap-2 rounded-full bg-gradient-to-r from-[#065f46] via-[#059669] to-[#10b981] px-4 py-2 text-sm font-bold text-white">
+                <span className="flex items-center gap-2 rounded-[var(--radius-label)] bg-gradient-to-r from-[#065f46] via-[#059669] to-[#10b981] px-4 py-2 text-sm font-bold text-white">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>
                   Up to {formatCashback(cb)} Cashback — Exclusive Buyer Perk
                 </span>
               ) : null;
             })()}
             <div className="flex gap-3 pt-1">
-              <a href="#lead" className="flex h-11 items-center rounded-full bg-primary px-6 text-sm font-medium text-white md:h-13 md:px-7">Register Interest</a>
-              <a href="#lead" className="flex h-11 items-center rounded-full border border-white/50 px-6 text-sm font-medium text-white md:h-13 md:px-7">Book a Showing</a>
+              <a href="#lead" className="flex h-11 items-center rounded-[var(--radius-btn)] bg-primary px-6 text-sm font-medium text-white md:h-13 md:px-7">Register Interest</a>
+              <a href="#lead" className="flex h-11 items-center rounded-[var(--radius-btn)] border border-white/50 px-6 text-sm font-medium text-white md:h-13 md:px-7">Book a Showing</a>
             </div>
           </div>
         </section>
@@ -148,7 +148,7 @@ export default async function ModelPage({ params }: { params: Promise<{ slug: st
                   <Link key={m.id} href={`${basePath}/${m.slug}`} prefetch={false} className={`group flex flex-col overflow-hidden ${card}`}>
                     <div className="relative aspect-[4/3] bg-soft">
                       {m.model_image_url ? <img src={m.model_image_url} alt={m.model_name ?? ""} className="h-full w-full object-cover" /> : null}
-                      {cb ? <span className="absolute right-3 top-3 flex items-center gap-1 rounded-full bg-gradient-to-r from-[#065f46] to-[#059669] px-2.5 py-1 text-[11px] font-semibold text-white">{formatCashback(cb)} cashback</span> : null}
+                      {cb ? <span className="absolute right-3 top-3 flex items-center gap-1 rounded-[var(--radius-label)] bg-gradient-to-r from-[#065f46] to-[#059669] px-2.5 py-1 text-[11px] font-semibold text-white">{formatCashback(cb)} cashback</span> : null}
                       <CardArrowButton />
                     </div>
                     <div className="flex flex-col gap-1 p-4">

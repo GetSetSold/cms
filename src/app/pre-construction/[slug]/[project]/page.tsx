@@ -54,18 +54,18 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
             {(() => {
               const cb = getCashbackAmount(project.p_start_price, settings.precon_cashback);
               return cb ? (
-                <span className="flex items-center gap-2 rounded-full bg-gradient-to-r from-[#065f46] via-[#059669] to-[#10b981] px-4 py-2 text-sm font-bold text-white">
+                <span className="flex items-center gap-2 rounded-[var(--radius-label)] bg-gradient-to-r from-[#065f46] via-[#059669] to-[#10b981] px-4 py-2 text-sm font-bold text-white">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>
                   Up to {formatCashback(cb)} Cashback — Exclusive Buyer Perk
                 </span>
               ) : null;
             })()}
             {promos[0]?.badge ? (
-              <span className="flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur md:text-sm">{promos[0].badge} — {promos[0].title}</span>
+              <span className="flex items-center gap-1.5 rounded-[var(--radius-label)] bg-white/15 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur md:text-sm">{promos[0].badge} — {promos[0].title}</span>
             ) : null}
             <div className="flex gap-3 pt-1">
-              <a href="#lead" className="flex h-11 items-center rounded-full bg-primary px-6 text-sm font-medium text-white md:h-13 md:px-7">Register Now</a>
-              <a href="#models" className="flex h-11 items-center rounded-full border border-white/50 px-6 text-sm font-medium text-white md:h-13 md:px-7">View Models</a>
+              <a href="#lead" className="flex h-11 items-center rounded-[var(--radius-btn)] bg-primary px-6 text-sm font-medium text-white md:h-13 md:px-7">Register Now</a>
+              <a href="#models" className="flex h-11 items-center rounded-[var(--radius-btn)] border border-white/50 px-6 text-sm font-medium text-white md:h-13 md:px-7">View Models</a>
             </div>
           </div>
         </section>
@@ -118,7 +118,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
               <a href="#lead" className="flex h-12 items-center justify-center rounded-[var(--radius-btn)] border border-white/30 text-sm font-bold">Request Brochure</a>
               <div className="flex flex-wrap gap-2 border-t border-white/10 pt-4">
                 {[project.project_status, project.vip_release ? `VIP: ${project.vip_release}` : null, project.city].filter(Boolean).map((tag) => (
-                  <span key={tag} className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold">{tag}</span>
+                  <span key={tag} className="rounded-[var(--radius-label)] bg-white/10 px-3 py-1 text-xs font-semibold">{tag}</span>
                 ))}
               </div>
             </div>
@@ -136,7 +136,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
               {promos.map((promo) => (
                 <div key={promo.id} className={`flex flex-col gap-1 p-4 ${card}`}>
-                  {promo.badge ? <span className="w-fit rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-bold text-primary">{promo.badge}</span> : null}
+                  {promo.badge ? <span className="w-fit rounded-[var(--radius-label)] bg-primary/10 px-2.5 py-1 text-[11px] font-bold text-primary">{promo.badge}</span> : null}
                   <strong className="text-sm">{promo.title}</strong>
                   {promo.description ? <span className="text-xs text-muted">{promo.description}</span> : null}
                 </div>

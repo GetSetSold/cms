@@ -62,8 +62,8 @@ export default async function BuilderOrCityPage({ params }: { params: Promise<{ 
               <h1 className="font-display text-2xl font-extrabold text-white md:text-5xl">{builder.builder_name}</h1>
               {builder.description ? <p className="max-w-xl text-sm text-white/65 md:text-base">{builder.description}</p> : null}
               <div className="flex gap-3 pt-2">
-                <a href="#lead" className="flex h-11 items-center rounded-full bg-primary px-6 text-sm font-medium text-white md:h-13 md:px-7 md:text-base">Register Interest</a>
-                <a href="#projects" className="flex h-11 items-center rounded-full border border-white/50 px-6 text-sm font-medium text-white md:h-13 md:px-7 md:text-base">View Projects</a>
+                <a href="#lead" className="flex h-11 items-center rounded-[var(--radius-btn)] bg-primary px-6 text-sm font-medium text-white md:h-13 md:px-7 md:text-base">Register Interest</a>
+                <a href="#projects" className="flex h-11 items-center rounded-[var(--radius-btn)] border border-white/50 px-6 text-sm font-medium text-white md:h-13 md:px-7 md:text-base">View Projects</a>
               </div>
             </div>
           </section>
@@ -102,7 +102,7 @@ export default async function BuilderOrCityPage({ params }: { params: Promise<{ 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
                 {promos.map((promo) => (
                   <div key={promo.id} className="flex flex-col gap-2 rounded-[var(--radius-md)] border border-line bg-white p-5 pl-6" style={{ borderLeftWidth: 4, borderLeftColor: "var(--color-primary)" }}>
-                    {promo.badge ? <span className="w-fit rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-primary">{promo.badge}</span> : null}
+                    {promo.badge ? <span className="w-fit rounded-[var(--radius-label)] bg-primary/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-primary">{promo.badge}</span> : null}
                     <strong className="text-sm">{promo.title}</strong>
                   </div>
                 ))}
@@ -127,10 +127,10 @@ export default async function BuilderOrCityPage({ params }: { params: Promise<{ 
                       <Link key={p.id} href={`/pre-construction/${slug}/${p.slug}`} prefetch={false} className={`group flex flex-col overflow-hidden ${card}`}>
                         <div className="relative aspect-[4/3] bg-soft">
                           {p.main_image_url ? <img src={p.main_image_url} alt={p.project_name} className="h-full w-full object-cover" /> : null}
-                          {p.project_status ? <span className="absolute left-3 top-3 rounded-full bg-primary px-2.5 py-1 text-[11px] font-semibold text-white">{p.project_status}</span> : null}
-                          {p.vip_release === "Yes" ? <span className="absolute right-3 top-3 rounded-full bg-amber-500 px-2.5 py-1 text-[11px] font-semibold text-white">VIP Access</span> : null}
-                          {cb ? <span className="absolute right-3 top-11 flex items-center gap-1 rounded-full bg-gradient-to-r from-[#065f46] to-[#059669] px-2.5 py-1 text-[11px] font-semibold text-white">{formatCashback(cb)} cashback</span> : null}
-                          <span className="absolute bottom-3 left-3 rounded-full bg-white/95 px-3 py-1.5 text-sm font-bold">{p.p_start_price ? `From $${Number(p.p_start_price).toLocaleString()}` : "Price TBA"}</span>
+                          {p.project_status ? <span className="absolute left-3 top-3 rounded-[var(--radius-label)] bg-primary px-2.5 py-1 text-[11px] font-semibold text-white">{p.project_status}</span> : null}
+                          {p.vip_release === "Yes" ? <span className="absolute right-3 top-3 rounded-[var(--radius-label)] bg-amber-500 px-2.5 py-1 text-[11px] font-semibold text-white">VIP Access</span> : null}
+                          {cb ? <span className="absolute right-3 top-11 flex items-center gap-1 rounded-[var(--radius-label)] bg-gradient-to-r from-[#065f46] to-[#059669] px-2.5 py-1 text-[11px] font-semibold text-white">{formatCashback(cb)} cashback</span> : null}
+                          <span className="absolute bottom-3 left-3 rounded-[var(--radius-label)] bg-white/95 px-3 py-1.5 text-sm font-bold">{p.p_start_price ? `From $${Number(p.p_start_price).toLocaleString()}` : "Price TBA"}</span>
                           <CardArrowButton />
                         </div>
                         <div className="flex flex-col gap-2 p-4">
@@ -226,8 +226,8 @@ export default async function BuilderOrCityPage({ params }: { params: Promise<{ 
           <h1 className="font-display text-2xl font-extrabold md:text-5xl">Pre-Construction Homes & Condos in {cityName}</h1>
           <p className="max-w-xl text-sm text-muted md:text-lg">Explore the latest pre-construction communities in {cityName} with VIP pricing, exclusive floor plans, and builder incentives.</p>
           <div className="flex gap-3 pt-1">
-            <a href="#projects" className="flex h-11 items-center rounded-full bg-primary px-6 text-sm font-medium text-white md:h-13 md:px-7">View Projects</a>
-            <a href="#lead" className="flex h-11 items-center rounded-full border border-ink px-6 text-sm font-medium md:h-13 md:px-7">Register for VIP Access</a>
+            <a href="#projects" className="flex h-11 items-center rounded-[var(--radius-btn)] bg-primary px-6 text-sm font-medium text-white md:h-13 md:px-7">View Projects</a>
+            <a href="#lead" className="flex h-11 items-center rounded-[var(--radius-btn)] border border-ink px-6 text-sm font-medium md:h-13 md:px-7">Register for VIP Access</a>
           </div>
         </section>
         <section className={`${wrap} pb-10`}>
@@ -246,8 +246,8 @@ export default async function BuilderOrCityPage({ params }: { params: Promise<{ 
                 <Link key={p.id} href={`/pre-construction/${p.builder.slug}/${p.slug}`} prefetch={false} className={`group flex flex-col overflow-hidden ${card}`}>
                   <div className="relative aspect-[4/3] bg-soft">
                     {p.main_image_url ? <img src={p.main_image_url} alt={p.project_name} className="h-full w-full object-cover" /> : null}
-                    {p.project_status ? <span className="absolute left-3 top-3 rounded-full bg-primary px-2.5 py-1 text-[11px] font-semibold text-white">{p.project_status}</span> : null}
-                    {cb ? <span className="absolute right-3 top-3 flex items-center gap-1 rounded-full bg-gradient-to-r from-[#065f46] to-[#059669] px-2.5 py-1 text-[11px] font-semibold text-white">{formatCashback(cb)} cashback</span> : null}
+                    {p.project_status ? <span className="absolute left-3 top-3 rounded-[var(--radius-label)] bg-primary px-2.5 py-1 text-[11px] font-semibold text-white">{p.project_status}</span> : null}
+                    {cb ? <span className="absolute right-3 top-3 flex items-center gap-1 rounded-[var(--radius-label)] bg-gradient-to-r from-[#065f46] to-[#059669] px-2.5 py-1 text-[11px] font-semibold text-white">{formatCashback(cb)} cashback</span> : null}
                     <CardArrowButton />
                   </div>
                   <div className="flex flex-col gap-1 p-4">
@@ -285,7 +285,7 @@ export default async function BuilderOrCityPage({ params }: { params: Promise<{ 
             <div className="flex flex-wrap gap-2">
               {otherCities.map((c) => (
                 <Link key={c.city} href={`/pre-construction/${c.city.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`} prefetch={false}
-                  className="flex h-9 items-center rounded-full border border-line bg-white px-4 text-sm font-medium">
+                  className="flex h-9 items-center rounded-[var(--radius-btn)] border border-line bg-white px-4 text-sm font-medium">
                   {c.city} ({c.count})
                 </Link>
               ))}

@@ -94,7 +94,7 @@ export default async function TrendsDetailPage({ params }: { params: Promise<Par
               {" · "}<span className={toneCls(L.yoyChange)}>{fmtPct(L.yoyChange)}</span> yearly change
             </p>
           </div>
-          <span className="inline-block shrink-0 rounded-full border border-primary px-3 py-1 text-xs font-semibold">
+          <span className="inline-block shrink-0 rounded-[var(--radius-label)] border border-primary px-3 py-1 text-xs font-semibold">
             {conditionLabel(L.marketCondition)}
           </span>
         </div>
@@ -280,7 +280,7 @@ export default async function TrendsDetailPage({ params }: { params: Promise<Par
                     <td className="px-4 py-3 text-right text-muted">{mi.peakMonth} {fmtMoney(mi.peak)}</td>
                     <td className={`px-4 py-3 text-right ${toneCls(mi.fromPeakPct)}`}>{fmtPct(mi.fromPeakPct)}</td>
                     <td className="px-4 py-3">
-                      <span className="inline-block rounded-full border border-primary px-2.5 py-0.5 text-xs">{conditionLabel(m.latest.marketCondition)}</span>
+                      <span className="inline-block rounded-[var(--radius-label)] border border-primary px-2.5 py-0.5 text-xs">{conditionLabel(m.latest.marketCondition)}</span>
                     </td>
                   </tr>
                 );
