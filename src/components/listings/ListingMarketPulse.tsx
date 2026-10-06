@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { getHpiMarket, hpiMarketForCity, fmtMoney, fmtPct, pctTone } from "@/lib/hpi";
+import { HpiChart } from "../hpi/HpiChart";
 
 /**
- * Compact market pulse for the listing detail page.
- * Shows the city HPI benchmark + YoY change, linking to the full trends page.
+ * Market pulse for the listing detail page — price card + two mini charts
+ * (Year over year, Past 10 years) with thin dividers, stacking on mobile.
  */
 export async function ListingMarketPulse({ citySlug, cityName }: { citySlug: string; cityName: string }) {
   const hpiSlug = hpiMarketForCity(citySlug);
@@ -14,9 +15,18 @@ export async function ListingMarketPulse({ citySlug, cityName }: { citySlug: str
   const yoy = market.latest.yoyChange;
   const tone = pctTone(yoy);
 
+  const yoyPoints = market.history12m.map((h) => ({ month: h.month, value: h.compositeBenchmark, hpi: h.compositeHPI }));
+  const byYear = new Map<string, { month: string; value: number }>();
+  for (const h of market.fullHistory) {
+    const y = h.month.slice(0, 4);
+    byYear.set(y, { month: `${y}-12`, value: h.compositeBenchmark });
+  }
+  const tenYr = [...byYear.entries()].sort().slice(-10).map(([, v]) => ({ month: v.month, value: v.value }));
+
   return (
-    <div className="rounded-2xl bg-white p-6">
-      <div className="flex items-center justify-between gap-4">
+    <div className="overflow-hidden rounded-2xl bg-white">
+      {/* Price header */}
+      <div className="flex items-center justify-between gap-4 p-6">
         <div>
           <div className="text-[12px] font-semibold uppercase tracking-wide text-muted">
             {market.name} market
@@ -43,6 +53,18 @@ export async function ListingMarketPulse({ citySlug, cityName }: { citySlug: str
             <polyline points="7 7 17 7 17 17" />
           </svg>
         </Link>
+      </div>
+
+      {/* Mini charts with thin dividers, stacked on mobile */}
+      <div className="grid grid-cols-1 divide-y divide-line border-t border-line sm:grid-cols-2 sm:divide-x sm:divide-y-0">
+        <div className="p-5">
+          <h3 className="mb-2 text-center text-[13px] font-semibold">Year over year</h3>
+          <HpiChart points={yoyPoints} height={160} />
+        </div>
+        <div className="p-5">
+          <h3 className="mb-2 text-center text-[13px] font-semibold">Past 10 years</h3>
+          <HpiChart points={tenYr} height={160} />
+        </div>
       </div>
     </div>
   );
