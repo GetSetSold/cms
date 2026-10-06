@@ -100,7 +100,7 @@ export default async function PostPage({ params, searchParams }: { params: Promi
             ))}
 
             <article className="overflow-hidden rounded-[var(--radius-lg)] bg-white px-6 py-10 md:px-14 md:py-14">
-              <span className="mb-4 inline-block w-fit rounded-full bg-primary-soft px-3 py-1 text-xs font-bold uppercase tracking-wide text-primary">{cat.name}</span>
+              <span className="mb-4 inline-block w-fit rounded-[var(--radius-label)] bg-primary-soft px-3 py-1 text-xs font-bold uppercase tracking-wide text-primary">{cat.name}</span>
               <h1 className="mb-4 font-display text-2xl font-extrabold leading-tight md:text-5xl">{post.title}</h1>
               {post.excerpt ? <p className="mb-6 text-lg text-muted">{post.excerpt}</p> : null}
 
@@ -119,7 +119,7 @@ export default async function PostPage({ params, searchParams }: { params: Promi
               {post.tags.length ? (
                 <div className="mt-8 flex flex-wrap gap-2">
                   {post.tags.map((t) => (
-                    <Link key={t} href={`/updates/tag/${encodeURIComponent(t)}`} className="rounded-full bg-ground px-3 py-1 text-xs font-medium text-muted hover:bg-soft hover:text-ink">#{t}</Link>
+                    <Link key={t} href={`/updates/tag/${encodeURIComponent(t)}`} className="rounded-[var(--radius-btn)] bg-ground px-3 py-1 text-xs font-medium text-muted hover:bg-soft hover:text-ink">#{t}</Link>
                   ))}
                 </div>
               ) : null}
@@ -158,7 +158,7 @@ export default async function PostPage({ params, searchParams }: { params: Promi
                 <strong className="text-lg">{settings.blog_cta.heading}</strong>
                 {settings.blog_cta.text ? <span className="text-sm text-white/75">{settings.blog_cta.text}</span> : null}
                 {settings.blog_cta.button_label && settings.blog_cta.button_href ? (
-                  <Link href={settings.blog_cta.button_href} className="mt-1 flex h-11 items-center justify-center rounded-full bg-white text-sm font-bold text-ink">{settings.blog_cta.button_label}</Link>
+                  <Link href={settings.blog_cta.button_href} className="mt-1 flex h-11 items-center justify-center rounded-[var(--radius-btn)] bg-white text-sm font-bold text-ink">{settings.blog_cta.button_label}</Link>
                 ) : null}
               </div>
             ) : null}

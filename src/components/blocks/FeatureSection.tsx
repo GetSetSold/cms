@@ -23,7 +23,7 @@ function Icon({ it, ctx, t, boxed }: { it: Item; ctx: BlockCtx; t: Tone; boxed?:
   const art = it.svg_id ? ctx.svgs[it.svg_id] : null;
   const glyph = art
     ? <Svg asset={art} className="h-7 w-7 md:h-8 md:w-8" colorOverride={it.icon_color || t.icon} />
-    : <span aria-hidden className={`block h-6 w-6 rounded-full border-2 border-current ${t.accent}`} />;
+    : <span aria-hidden className={`block h-6 w-6 rounded-[var(--radius-label)] border-2 border-current ${t.accent}`} />;
   return boxed
     ? <span className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-[var(--radius-lg)] border ${t.iconBox}`}>{glyph}</span>
     : <span className="shrink-0">{glyph}</span>;
@@ -43,7 +43,7 @@ function Cta({ href, label, t, style, textSize = "", className = "" }: { href: s
     ? t.dark ? "bg-white text-ink hover:brightness-95" : "bg-primary text-white hover:brightness-110"
     : t.dark ? "border border-white text-white hover:bg-white/10" : "border border-ink text-ink hover:bg-ground";
   return (
-    <Link href={href} className={`inline-flex h-11 w-fit items-center justify-center gap-1.5 rounded-full px-5 text-sm font-semibold transition md:h-12 md:px-6 md:text-base ${look} ${className}`}>
+    <Link href={href} className={`inline-flex h-11 w-fit items-center justify-center gap-1.5 rounded-[var(--radius-btn)] px-5 text-sm font-semibold transition md:h-12 md:px-6 md:text-base ${look} ${className}`}>
       {label} <span aria-hidden>→</span>
     </Link>
   );

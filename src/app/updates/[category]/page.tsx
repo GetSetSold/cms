@@ -47,9 +47,9 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
         </div>
 
         <div className="mb-10 flex flex-wrap gap-2.5">
-          <Link href="/updates" className="flex h-10 items-center rounded-full border border-line bg-white px-4.5 text-sm">All posts</Link>
+          <Link href="/updates" className="flex h-10 items-center rounded-[var(--radius-btn)] border border-line bg-white px-4.5 text-sm">All posts</Link>
           {categories.map((c) => (
-            <Link key={c.id} href={`/updates/${c.slug}`} className={`flex h-10 items-center rounded-full px-4.5 text-sm ${c.slug === slug ? "bg-primary font-semibold text-white" : "border border-line bg-white"}`}>{c.name}</Link>
+            <Link key={c.id} href={`/updates/${c.slug}`} className={`flex h-10 items-center rounded-[var(--radius-btn)] px-4.5 text-sm ${c.slug === slug ? "bg-primary font-semibold text-white" : "border border-line bg-white"}`}>{c.name}</Link>
           ))}
         </div>
 

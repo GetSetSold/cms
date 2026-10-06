@@ -40,9 +40,9 @@ export default async function UpdatesLanding() {
         </div>
 
         <div className="mb-10 flex flex-wrap gap-2.5">
-          <Link href="/updates" className="flex h-10 items-center rounded-full bg-primary px-4.5 text-sm font-semibold text-white">All posts</Link>
+          <Link href="/updates" className="flex h-10 items-center rounded-[var(--radius-btn)] bg-primary px-4.5 text-sm font-semibold text-white">All posts</Link>
           {categories.map((c) => (
-            <Link key={c.id} href={`/updates/${c.slug}`} className="flex h-10 items-center rounded-full border border-line bg-white px-4.5 text-sm">{c.name}</Link>
+            <Link key={c.id} href={`/updates/${c.slug}`} className="flex h-10 items-center rounded-[var(--radius-btn)] border border-line bg-white px-4.5 text-sm">{c.name}</Link>
           ))}
         </div>
 
@@ -51,7 +51,7 @@ export default async function UpdatesLanding() {
             className="mb-14 grid gap-10 rounded-[var(--radius-lg)] bg-white p-7 shadow-[var(--shadow-card)] md:grid-cols-2 md:items-center md:p-8">
             <Svg asset={featured.cover_svg_id ? svgs[featured.cover_svg_id] : undefined} fill className="aspect-[16/11] overflow-hidden rounded-[var(--radius-lg)]" />
             <div className="flex flex-col gap-3.5">
-              <span className="w-fit rounded-full bg-primary-soft px-3 py-1 text-xs font-bold uppercase tracking-wide text-primary">Featured{(featured as any).blog_categories ? ` · ${(featured as any).blog_categories.name}` : ""}</span>
+              <span className="w-fit rounded-[var(--radius-label)] bg-primary-soft px-3 py-1 text-xs font-bold uppercase tracking-wide text-primary">Featured{(featured as any).blog_categories ? ` · ${(featured as any).blog_categories.name}` : ""}</span>
               <h2 className="font-display text-2xl font-extrabold leading-tight md:text-3xl">{featured.title}</h2>
               {featured.excerpt ? <p className="text-muted">{featured.excerpt}</p> : null}
               <div className="flex items-center gap-2 text-sm text-muted">

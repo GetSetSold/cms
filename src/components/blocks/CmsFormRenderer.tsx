@@ -87,8 +87,8 @@ function BoxChoice({ kind, label, checked, onClick, inputProps }: { kind: "radio
   return (
     <label className={`flex min-h-[52px] cursor-pointer items-start gap-3 rounded-[var(--radius-md)] border px-4 py-3.5 text-[15px] leading-relaxed transition-colors ${checked ? "border-[var(--fq-accent)] bg-[var(--fq-accent-soft)]" : "border-[var(--fq-line)] bg-[var(--fq-surface)] hover:border-[var(--fq-accent)]"}`}>
       <input type={kind === "radio" ? "radio" : "checkbox"} checked={checked} onChange={onClick} className="sr-only" {...inputProps} />
-      <span aria-hidden className={`mt-0.5 flex h-[18px] w-[18px] shrink-0 items-center justify-center border-[1.5px] ${kind === "radio" ? "rounded-full" : "rounded-[5px]"} ${checked ? "border-0 bg-[var(--fq-accent)]" : "border-[var(--fq-choice-border)]"}`}>
-        {checked && kind === "radio" ? <span className="h-[9px] w-[9px] rounded-full bg-white" /> : null}
+      <span aria-hidden className={`mt-0.5 flex h-[18px] w-[18px] shrink-0 items-center justify-center border-[1.5px] ${kind === "radio" ? "rounded-[var(--radius-label)]" : "rounded-[5px]"} ${checked ? "border-0 bg-[var(--fq-accent)]" : "border-[var(--fq-choice-border)]"}`}>
+        {checked && kind === "radio" ? <span className="h-[9px] w-[9px] rounded-[var(--radius-label)] bg-white" /> : null}
         {checked && kind === "check" ? (
           <svg viewBox="0 0 16 16" width="10" height="10" fill="none" stroke="white" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M3 8.5l3 3 7-7" /></svg>
         ) : null}
@@ -102,9 +102,9 @@ function BoxChoice({ kind, label, checked, onClick, inputProps }: { kind: "radio
  *  options like Yes/No or Full-Time/Part-Time, matching the approved template mockup. */
 function PillChoice({ label, checked, onClick, inputProps }: { label: React.ReactNode; checked: boolean; onClick: () => void; inputProps: Record<string, unknown> }) {
   return (
-    <label className={`flex h-10 cursor-pointer items-center gap-2 rounded-full border px-4 text-[14px] font-medium transition-colors ${checked ? "border-[var(--fq-accent)] bg-[var(--fq-accent-soft)] text-[var(--fq-ink)]" : "border-[var(--fq-choice-border)] bg-[var(--fq-surface)] text-[var(--fq-ink)] hover:border-[var(--fq-accent)]"}`}>
+    <label className={`flex h-10 cursor-pointer items-center gap-2 rounded-[var(--radius-btn)] border px-4 text-[14px] font-medium transition-colors ${checked ? "border-[var(--fq-accent)] bg-[var(--fq-accent-soft)] text-[var(--fq-ink)]" : "border-[var(--fq-choice-border)] bg-[var(--fq-surface)] text-[var(--fq-ink)] hover:border-[var(--fq-accent)]"}`}>
       <input onChange={onClick} checked={checked} className="sr-only" {...inputProps} />
-      <span aria-hidden className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-[1.5px] ${checked ? "border-0 bg-[var(--fq-accent)]" : "border-[var(--fq-choice-border)]"}`}>
+      <span aria-hidden className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-[var(--radius-label)] border-[1.5px] ${checked ? "border-0 bg-[var(--fq-accent)]" : "border-[var(--fq-choice-border)]"}`}>
         {checked ? <span className="h-1.5 w-1.5 rounded-full bg-white" /> : null}
       </span>
       {label}
@@ -666,7 +666,7 @@ export function CmsFormRenderer({ form, pageId, extraFields, secondaryAction }: 
         {!form.hide_header ? (
           <div className="flex flex-col gap-3">
             {form.name ? <h2 className="text-3xl font-bold leading-tight">{form.name}</h2> : null}
-            <span className="h-[3px] w-9 rounded-full" style={{ background: "var(--fq-accent)" }} />
+            <span className="h-[3px] w-9 rounded-[var(--radius-label)]" style={{ background: "var(--fq-accent)" }} />
             {form.description ? <p className="text-sm text-white/70">{form.description}</p> : null}
           </div>
         ) : null}
