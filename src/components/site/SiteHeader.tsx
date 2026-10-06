@@ -6,7 +6,7 @@ import { Svg } from "./Svg";
 
 function PlusMinus({ open }: { open: boolean }) {
   return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" className="shrink-0">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" className="shrink-0">
       <path d="M5 12h14" />
       {open ? null : <path d="M12 5v14" />}
     </svg>
@@ -70,10 +70,10 @@ export function SiteHeader({ settings, logo }: { settings: SiteSettings; logo?: 
                   <div className="absolute left-1/2 top-full z-50 w-[560px] -translate-x-1/2 pt-3">
                     <div className="grid grid-cols-[repeat(auto-fit,minmax(160px,1fr))] gap-8 rounded-[var(--radius-lg)] border-[length:var(--border-card-width)] border-line bg-white p-6 text-ink shadow-[var(--shadow-card)]">
                       {n.columns.map((col, i) => (
-                        <div key={i} className="flex flex-col gap-2.5">
-                          {col.heading ? <div className="text-xs font-semibold uppercase tracking-wide text-muted">{col.heading}</div> : null}
-                          {col.links.map((l) => (
-                            <Link key={l.href} href={l.href} className={`hover:text-primary ${compact ? "text-[13px]" : "text-[15px]"}`} onClick={() => setOpenMega(null)}>{l.label}</Link>
+                        <div key={i} className="flex flex-col">
+                          {col.heading ? <div className="pb-2 text-xs font-semibold uppercase tracking-wide text-[#0066CC]">{col.heading}</div> : null}
+                          {col.links.map((l, j) => (
+                            <Link key={l.href} href={l.href} className={`border-b border-line/50 py-2.5 hover:text-primary ${j === col.links.length - 1 ? "border-b-0" : ""} ${compact ? "text-[13px]" : "text-[15px]"}`} onClick={() => setOpenMega(null)}>{l.label}</Link>
                           ))}
                         </div>
                       ))}
@@ -116,12 +116,12 @@ export function SiteHeader({ settings, logo }: { settings: SiteSettings; logo?: 
                   <PlusMinus open={openMobileGroup === n.href} />
                 </button>
                 {openMobileGroup === n.href ? (
-                  <div className="flex flex-col gap-4 pb-3 pl-3">
+                  <div className="flex flex-col pb-3 pl-3">
                     {n.columns.map((col, i) => (
-                      <div key={i} className="flex flex-col gap-1.5">
-                        {col.heading ? <div className="text-xs font-semibold uppercase tracking-wide text-muted">{col.heading}</div> : null}
-                        {col.links.map((l) => (
-                          <Link key={l.href} href={l.href} onClick={() => setOpen(false)} className="py-1.5 text-base">{l.label}</Link>
+                      <div key={i} className="flex flex-col">
+                        {col.heading ? <div className="pb-1 pt-2 text-xs font-semibold uppercase tracking-wide text-[#0066CC]">{col.heading}</div> : null}
+                        {col.links.map((l, j) => (
+                          <Link key={l.href} href={l.href} onClick={() => setOpen(false)} className={`border-b border-line/50 py-2.5 text-base ${j === col.links.length - 1 && i === n.columns.length - 1 ? "border-b-0" : ""}`}>{l.label}</Link>
                         ))}
                       </div>
                     ))}
