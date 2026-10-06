@@ -41,7 +41,7 @@ async function getSimilar(listing: PropertyListing) {
   if (!listing.City) return [];
   const mls = createMlsClient();
   const sale = isSale(listing);
-  const base = mls.from("grid").select("*").eq("City", listing.City).neq("ListingKey", listing.ListingKey).limit(12);
+  const base = mls.from("grid").select("*").eq("City", listing.City).neq("ListingKey", listing.ListingKey).limit(20);
   const { data } = sale
     ? await base.not("ListPrice", "is", null)
     : await base.not("TotalActualRent", "is", null);
