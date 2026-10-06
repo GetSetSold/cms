@@ -26,7 +26,8 @@ export function PromoBanner({
   variant: "buyer" | "tenant";
   listing: PropertyListing;
 }) {
-  const price = Number(listing.ListPrice ?? 0);
+  // Rentals price in TotalActualRent; sales in ListPrice.
+  const price = Number((variant === "tenant" ? listing.TotalActualRent : listing.ListPrice) ?? 0);
   const address = listing.UnparsedAddress ?? "";
   const city = listing.City ?? "";
 
