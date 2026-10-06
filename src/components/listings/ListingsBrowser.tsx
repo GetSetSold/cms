@@ -80,8 +80,8 @@ export async function ListingsBrowser({
 
   const mapLimit = view === "map" ? Math.max(perPage, 100) : perPage; // map shows a wider set than one grid page, still bounded
   // Select only the columns the cards need (not *) — cuts transfer ~70%.
-  const GRID_COLS = "ListingKey,ListingId,OfficeName,ListPrice,TotalActualRent,PhotosCount,Media,UnparsedAddress,City,Province,PostalCode,Latitude,Longitude,ParkingTotal,BathroomsTotalInteger,BedroomsTotal,AboveGradeFinishedArea,StructureTypeText,OriginalEntryTimestamp";
-  let query = mls.from("grid").select(GRID_COLS, { count: "exact" });
+  const CARD_COLS = "ListingKey,ListingId,OfficeName,ListPrice,TotalActualRent,PhotosCount,Media,UnparsedAddress,City,Province,PostalCode,Latitude,Longitude,ParkingTotal,BathroomsTotalInteger,BedroomsTotal,AboveGradeFinishedArea,StructureTypeText,OriginalEntryTimestamp";
+  let query = mls.from("grid").select(CARD_COLS, { count: "exact" });
   if (view !== "map") query = query.range(from, from + perPage - 1);
   else query = query.limit(mapLimit);
   if (hasLocation) {
