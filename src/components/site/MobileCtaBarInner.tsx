@@ -78,7 +78,7 @@ export function MobileCtaBarInner({
           : dark ? "border border-white/30 text-white" : "border border-ink text-ink";
         const cls = square
           ? `flex ${sizing.sq} flex-col items-center justify-center gap-1 rounded-[var(--radius-md)] font-medium ${base}`
-          : `flex ${sizing.rect} items-center justify-center gap-2 rounded-full font-medium ${base}`;
+          : `flex ${sizing.rect} items-center justify-center gap-2 rounded-[var(--radius-btn)] font-medium ${base}`;
         return (
           <a key={i} href={btn.href} className={cls}>
             {icon(btn, square ? sizing.iconSq : sizing.icon)}

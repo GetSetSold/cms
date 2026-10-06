@@ -122,7 +122,7 @@ export default async function GuideDetailPage({ params, searchParams }: Props) {
             </p>
             <Link
               href="/guides"
-              className="mt-3 inline-block rounded-[var(--radius-md)] bg-accent px-4 py-2 text-[12px] font-bold text-white transition hover:opacity-90"
+              className="mt-3 inline-block rounded-[var(--radius-btn)] bg-accent px-4 py-2 text-[12px] font-bold text-white transition hover:opacity-90"
             >
               All Guides
             </Link>

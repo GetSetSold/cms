@@ -57,7 +57,7 @@ export function PromoBanner({
           <button
             type="button"
             onClick={openInquiry}
-            className="group inline-flex items-center gap-2.5 rounded-[var(--radius-md)] bg-white px-5 py-3 text-[14px] font-bold text-ink"
+            className="group inline-flex items-center gap-2.5 rounded-[var(--radius-btn)] bg-white px-5 py-3 text-[14px] font-bold text-ink"
           >
             Claim Offer
             <span className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5">
@@ -89,7 +89,7 @@ export function PromoBanner({
         <button
           type="button"
           onClick={openInquiry}
-          className="group inline-flex items-center gap-2.5 rounded-[var(--radius-md)] bg-accent px-5 py-3 text-[14px] font-bold text-white"
+          className="group inline-flex items-center gap-2.5 rounded-[var(--radius-btn)] bg-accent px-5 py-3 text-[14px] font-bold text-white"
         >
           Apply Now
           <span className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5">

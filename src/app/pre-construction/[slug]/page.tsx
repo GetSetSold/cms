@@ -90,8 +90,8 @@ export default async function BuilderOrCityPage({ params }: { params: Promise<{ 
                 ) : null}
                 <div><h3 className="font-display text-lg font-bold">{builder.builder_name}</h3><p className="text-xs text-white/60">Pre-Construction Specialist · Ontario</p></div>
                 <div><div className="font-display text-2xl font-bold text-primary">{projects.length}</div><div className="text-[11px] uppercase tracking-wide text-white/40">Active Projects</div></div>
-                <a href="#projects" className="flex h-12 items-center justify-center rounded-[var(--radius-md)] bg-primary text-sm font-bold">Browse Projects</a>
-                <a href="#lead" className="flex h-12 items-center justify-center rounded-[var(--radius-md)] border border-white/30 text-sm font-bold">Request Info Package</a>
+                <a href="#projects" className="flex h-12 items-center justify-center rounded-[var(--radius-btn)] bg-primary text-sm font-bold">Browse Projects</a>
+                <a href="#lead" className="flex h-12 items-center justify-center rounded-[var(--radius-btn)] border border-white/30 text-sm font-bold">Request Info Package</a>
               </div>
             </div>
           </section>
@@ -141,7 +141,7 @@ export default async function BuilderOrCityPage({ params }: { params: Promise<{ 
                             {p.baths ? <span className="rounded-md bg-soft px-2 py-1 text-xs font-semibold">{p.baths} Baths</span> : null}
                             {p.sqft ? <span className="rounded-md bg-soft px-2 py-1 text-xs font-semibold">{p.sqft} Sqft</span> : null}
                           </div>
-                          <span className="mt-1 flex h-11 items-center justify-center rounded-[var(--radius-md)] bg-primary text-sm font-bold text-white">View Project →</span>
+                          <span className="mt-1 flex h-11 items-center justify-center rounded-[var(--radius-btn)] bg-primary text-sm font-bold text-white">View Project →</span>
                         </div>
                       </Link>
                     );
@@ -164,7 +164,7 @@ export default async function BuilderOrCityPage({ params }: { params: Promise<{ 
                       <div className="py-3"><div className="font-display text-xl font-bold text-primary">{projects.length}</div><div className="text-[10px] uppercase tracking-wide text-white/40">Projects on Map</div></div>
                       <div className="py-3"><div className="font-display text-xl font-bold text-primary">{cities.size}</div><div className="text-[10px] uppercase tracking-wide text-white/40">Cities</div></div>
                     </div>
-                    <a href="#lead" className="flex h-11 items-center justify-center gap-2 rounded-[var(--radius-md)] bg-primary text-sm font-bold">Find My Community</a>
+                    <a href="#lead" className="flex h-11 items-center justify-center gap-2 rounded-[var(--radius-btn)] bg-primary text-sm font-bold">Find My Community</a>
                   </div>
                 </div>
               </div>

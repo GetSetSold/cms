@@ -114,8 +114,8 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
                   </div>
                 ) : null;
               })()}
-              <a href="#lead" className="flex h-12 items-center justify-center rounded-[var(--radius-md)] bg-primary text-sm font-bold">Register Now</a>
-              <a href="#lead" className="flex h-12 items-center justify-center rounded-[var(--radius-md)] border border-white/30 text-sm font-bold">Request Brochure</a>
+              <a href="#lead" className="flex h-12 items-center justify-center rounded-[var(--radius-btn)] bg-primary text-sm font-bold">Register Now</a>
+              <a href="#lead" className="flex h-12 items-center justify-center rounded-[var(--radius-btn)] border border-white/30 text-sm font-bold">Request Brochure</a>
               <div className="flex flex-wrap gap-2 border-t border-white/10 pt-4">
                 {[project.project_status, project.vip_release ? `VIP: ${project.vip_release}` : null, project.city].filter(Boolean).map((tag) => (
                   <span key={tag} className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold">{tag}</span>
@@ -173,7 +173,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
                     </div>
                   ))}
                 </div>
-                <a href={`https://www.google.com/maps/dir/?api=1&destination=${project.lat},${project.lng}`} target="_blank" rel="noopener" className="flex h-11 items-center justify-center gap-2 rounded-[var(--radius-md)] bg-ink text-sm font-bold text-white">Get Directions</a>
+                <a href={`https://www.google.com/maps/dir/?api=1&destination=${project.lat},${project.lng}`} target="_blank" rel="noopener" className="flex h-11 items-center justify-center gap-2 rounded-[var(--radius-btn)] bg-ink text-sm font-bold text-white">Get Directions</a>
               </div>
             </div>
           </section>

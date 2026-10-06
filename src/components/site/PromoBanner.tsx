@@ -36,7 +36,7 @@ export function PromoBanner({ promo }: { promo: Promo }) {
           </div>
           <p className="font-display text-lg font-bold text-white">Act Before<br />It Expires</p>
           <p className="max-w-[200px] text-xs text-white/45">Limited availability — speak with an agent today</p>
-          <a href="#lead" className="flex h-12 w-full max-w-[240px] items-center justify-center rounded-[var(--radius-md)] bg-primary text-sm font-extrabold text-white">Claim This Offer →</a>
+          <a href="#lead" className="flex h-12 w-full max-w-[240px] items-center justify-center rounded-[var(--radius-btn)] bg-primary text-sm font-extrabold text-white">Claim This Offer →</a>
           <span className="flex items-center gap-1.5 text-[11px] text-white/30"><IconLock className="h-3.5 w-3.5" />No obligation required</span>
         </div>
       </div>
