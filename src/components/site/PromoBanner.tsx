@@ -12,7 +12,7 @@ export function PromoBanner({ promo }: { promo: Promo }) {
     <div className="overflow-hidden rounded-[var(--radius-lg)] bg-gradient-to-br from-[#1e3d6e] to-[#162840]">
       <div className="grid grid-cols-1 md:grid-cols-[7fr_3fr]">
         <div className="flex flex-col gap-4 border-b border-white/10 p-6 md:border-b-0 md:border-r md:p-10">
-          {promo.badge ? <span className="flex w-fit items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-1.5 text-[10px] font-extrabold uppercase tracking-widest text-white"><IconStar className="h-3 w-3" />{promo.badge}</span> : null}
+          {promo.badge ? <span className="flex w-fit items-center gap-1.5 rounded-[var(--radius-label)] bg-white/10 px-3.5 py-1.5 text-[10px] font-extrabold uppercase tracking-widest text-white"><IconStar className="h-3 w-3" />{promo.badge}</span> : null}
           <h2 className="font-display text-xl font-bold text-white md:text-3xl">{promo.title}</h2>
           {promo.description ? <p className="max-w-xl text-sm leading-relaxed text-white/65 md:text-base">{promo.description}</p> : null}
           {bullets.length ? (

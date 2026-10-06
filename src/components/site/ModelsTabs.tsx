@@ -15,8 +15,8 @@ export function ModelsTabs({ models, basePath, cashback }: { models: HomeModel[]
   return (
     <div className="flex flex-col gap-5">
       <div className="flex gap-2">
-        <button onClick={() => setTab("precon")} className={`flex h-10 items-center rounded-full px-4 text-sm font-medium ${tab === "precon" ? "bg-primary text-white" : "border border-line bg-white"}`}>Pre-Construction</button>
-        <button onClick={() => setTab("ready")} className={`flex h-10 items-center rounded-full px-4 text-sm font-medium ${tab === "ready" ? "bg-primary text-white" : "border border-line bg-white"}`}>Move-In Ready</button>
+        <button onClick={() => setTab("precon")} className={`flex h-10 items-center rounded-[var(--radius-btn)] px-4 text-sm font-medium ${tab === "precon" ? "bg-primary text-white" : "border border-line bg-white"}`}>Pre-Construction</button>
+        <button onClick={() => setTab("ready")} className={`flex h-10 items-center rounded-[var(--radius-btn)] px-4 text-sm font-medium ${tab === "ready" ? "bg-primary text-white" : "border border-line bg-white"}`}>Move-In Ready</button>
       </div>
       {visible.length ? (
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -26,7 +26,7 @@ export function ModelsTabs({ models, basePath, cashback }: { models: HomeModel[]
               <Link key={m.id} href={`${basePath}/${m.slug}`} prefetch={false} className={`group flex flex-col overflow-hidden ${card}`}>
                 <div className="relative aspect-[4/3] bg-soft">
                   {m.model_image_url ? <img src={m.model_image_url} alt={m.model_name ?? ""} className="h-full w-full object-cover" /> : null}
-                  {cb ? <span className="absolute right-3 top-3 flex items-center gap-1 rounded-full bg-gradient-to-r from-[#065f46] to-[#059669] px-2.5 py-1 text-[11px] font-semibold text-white">{formatCashback(cb)} cashback</span> : null}
+                  {cb ? <span className="absolute right-3 top-3 flex items-center gap-1 rounded-[var(--radius-label)] bg-gradient-to-r from-[#065f46] to-[#059669] px-2.5 py-1 text-[11px] font-semibold text-white">{formatCashback(cb)} cashback</span> : null}
                   <CardArrowButton />
                 </div>
                 <div className="flex flex-col gap-1 p-4">

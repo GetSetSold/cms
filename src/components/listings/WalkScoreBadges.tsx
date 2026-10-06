@@ -107,7 +107,7 @@ export function WalkScoreBadges({ lat, lng }: { lat: number; lng: number }) {
               <div key={it.label} className="flex items-center gap-5">
                 {i > 0 ? <div className="h-7 w-px bg-line" /> : null}
                 <div className="flex items-center gap-2.5">
-                  <span className={`flex h-9 w-9 items-center justify-center rounded-full text-[13px] font-bold ${ringColor(it.score)}`}>
+                  <span className={`flex h-9 w-9 items-center justify-center rounded-[var(--radius-label)] text-[13px] font-bold ${ringColor(it.score)}`}>
                     {it.score}
                   </span>
                   <span className="text-[13px]">
@@ -128,7 +128,7 @@ export function WalkScoreBadges({ lat, lng }: { lat: number; lng: number }) {
                     {it.desc ? <div className="text-[12px] text-muted">{it.desc}</div> : null}
                   </td>
                   <td className="w-14 py-3.5 text-right">
-                    <span className={`inline-flex h-10 w-10 items-center justify-center rounded-full text-[15px] font-bold ${ringColor(it.score)}`}>
+                    <span className={`inline-flex h-10 w-10 items-center justify-center rounded-[var(--radius-label)] text-[15px] font-bold ${ringColor(it.score)}`}>
                       {it.score}
                     </span>
                   </td>

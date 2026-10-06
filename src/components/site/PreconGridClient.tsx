@@ -88,7 +88,7 @@ export function PreconGridClient({
       </div>
       {!filtered.length ? <p className="text-center text-muted">No projects match your filters. Try adjusting your search.</p> : null}
       {visibleCount < filtered.length ? (
-        <button onClick={() => setVisibleCount((c) => c + PAGE_SIZE)} className="mx-auto flex h-11 items-center rounded-full border border-ink px-6 text-sm font-medium">Load More Projects</button>
+        <button onClick={() => setVisibleCount((c) => c + PAGE_SIZE)} className="mx-auto flex h-11 items-center rounded-[var(--radius-btn)] border border-ink px-6 text-sm font-medium">Load More Projects</button>
       ) : null}
 
       {cities.length ? (
