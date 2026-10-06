@@ -15,14 +15,14 @@ export function CityStatsSection({ stats }: { stats: CityStats }) {
       <h2 className="mb-5 font-display text-2xl">Market stats in {stats.city}</h2>
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
         {cards.map((c) => (
-          <div key={c.label} className="rounded-[var(--radius-lg)] bg-white p-5">
+          <div key={c.label} className="rounded-[var(--radius-lg)] border-[length:var(--border-card-width)] border-line bg-white p-5 shadow-[var(--shadow-card)]">
             <div className="font-display text-2xl font-semibold">{c.value}</div>
             <div className="mt-1 text-sm text-muted">{c.label}</div>
           </div>
         ))}
       </div>
       {stats.typeBreakdown.length > 1 ? (
-        <div className="mt-4 rounded-[var(--radius-lg)] bg-white p-6">
+        <div className="mt-4 rounded-[var(--radius-lg)] border-[length:var(--border-card-width)] border-line bg-white p-6 shadow-[var(--shadow-card)]">
           <h3 className="mb-3 font-display text-lg">Property types in {stats.city}</h3>
           <div className="flex flex-wrap gap-2">
             {stats.typeBreakdown.map((t) => (

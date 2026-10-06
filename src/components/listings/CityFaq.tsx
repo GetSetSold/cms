@@ -47,7 +47,7 @@ export function CityFaq({ stats }: { stats: CityStats }) {
       <h2 className="mb-5 font-display text-2xl">FAQs about {city} real estate</h2>
       <div className="flex flex-col gap-4">
         {faqs.map((f) => (
-          <div key={f.q} className="rounded-2xl bg-white p-6">
+          <div key={f.q} className="rounded-[var(--radius-lg)] border-[length:var(--border-card-width)] border-line bg-white p-6 shadow-[var(--shadow-card)]">
             <h3 className="font-display text-lg">{f.q}</h3>
             <p className="mt-2 leading-relaxed text-muted">{f.a}</p>
           </div>

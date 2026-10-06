@@ -58,7 +58,7 @@ export function ListingCardShell(d: ListingCardData) {
         ) : (
           <div className="flex h-full items-center justify-center text-sm text-muted">No photo</div>
         )}
-        <span className={`absolute bottom-3 left-3 rounded px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-white ${TONE[d.statusTone]}`}>
+        <span className={`absolute bottom-3 left-3 rounded-[var(--radius-label)] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-white ${TONE[d.statusTone]}`}>
           {d.statusLabel}
         </span>
         {days ? (

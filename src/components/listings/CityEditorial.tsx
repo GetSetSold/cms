@@ -7,7 +7,7 @@ export function CityEditorial({ stats }: { stats: CityStats }) {
   const { city } = stats;
   const topType = stats.typeBreakdown[0]?.label.toLowerCase() ?? "homes";
   return (
-    <section className="mt-12 rounded-2xl bg-white p-6 md:p-8">
+    <section className="mt-12 rounded-[var(--radius-lg)] border-[length:var(--border-card-width)] border-line bg-white p-6 md:p-8 shadow-[var(--shadow-card)]">
       <h2 className="mb-4 font-display text-2xl">About {city} real estate</h2>
       <div className="flex flex-col gap-4 leading-relaxed text-muted">
         <p>

@@ -1,24 +1,29 @@
 "use client";
-import { useRef, useState } from "react";
+import { useRef, useState, useCallback } from "react";
 import { ListingCard } from "@/components/listings/ListingCard";
 import type { GridListing } from "@/lib/mls";
 
 const INITIAL_MOBILE = 4;
+const PER_PAGE = 4;
 
 /** Similar listings: horizontal scroll with arrows on desktop, load-more on mobile. */
 export function SimilarListings({ listings }: { listings: GridListing[] }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(INITIAL_MOBILE);
+  const [page, setPage] = useState(0);
+  const pageCount = Math.max(1, Math.ceil(listings.length / PER_PAGE));
 
-  const scrollBy = (dir: 1 | -1) => {
+  const goToPage = useCallback((p: number) => {
     const el = scrollRef.current;
     if (!el) return;
-    const card = el.querySelector<HTMLElement>(":scope > div");
-    if (!card) return;
-    const gap = parseFloat(getComputedStyle(el).columnGap || "20");
-    const page = (card.offsetWidth + gap) * 4;
-    el.scrollBy({ left: dir * page, behavior: "smooth" });
-  };
+    const target = Math.max(0, Math.min(pageCount - 1, p));
+    const cards = el.querySelectorAll<HTMLElement>(":scope > div");
+    if (cards.length < 2) return;
+    const cardW = cards[0].offsetWidth;
+    const gap = cards[1].offsetLeft - (cards[0].offsetLeft + cardW);
+    el.scrollTo({ left: target * (cardW + gap) * PER_PAGE, behavior: "smooth" });
+    setPage(target);
+  }, [pageCount]);
 
   return (
     <div className="mt-12">
@@ -39,9 +44,10 @@ export function SimilarListings({ listings }: { listings: GridListing[] }) {
           </a>
           <button
             type="button"
-            onClick={() => scrollBy(-1)}
+            onClick={() => goToPage(page - 1)}
+            disabled={page === 0}
             aria-label="Scroll left"
-            className="flex h-9 w-9 items-center justify-center rounded-[var(--radius-btn)] border border-line text-ink transition hover:bg-soft"
+            className="flex h-9 w-9 items-center justify-center rounded-[var(--radius-btn)] border border-line text-ink transition hover:bg-soft disabled:pointer-events-none disabled:opacity-40"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <polyline points="15 18 9 12 15 6" />
@@ -49,9 +55,10 @@ export function SimilarListings({ listings }: { listings: GridListing[] }) {
           </button>
           <button
             type="button"
-            onClick={() => scrollBy(1)}
+            onClick={() => goToPage(page + 1)}
+            disabled={page >= pageCount - 1}
             aria-label="Scroll right"
-            className="flex h-9 w-9 items-center justify-center rounded-[var(--radius-btn)] border border-line text-ink transition hover:bg-soft"
+            className="flex h-9 w-9 items-center justify-center rounded-[var(--radius-btn)] border border-line text-ink transition hover:bg-soft disabled:pointer-events-none disabled:opacity-40"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <polyline points="9 18 15 12 9 6" />
@@ -61,16 +68,18 @@ export function SimilarListings({ listings }: { listings: GridListing[] }) {
       </div>
 
       {/* Desktop: horizontal scroll */}
-      <div
-        ref={scrollRef}
-        className="hidden overflow-x-auto pb-2 lg:flex"
-        style={{ scrollbarWidth: "none", gap: "max(20px, calc((100% - 1120px) / 3))" }}
-      >
-        {listings.map((l) => (
-          <div key={l.ListingKey} className="w-[280px] shrink-0">
-            <ListingCard listing={l} />
-          </div>
-        ))}
+      <div className="-mx-5 px-5">
+        <div
+          ref={scrollRef}
+          className="hidden overflow-x-auto pb-8 lg:flex"
+          style={{ scrollbarWidth: "none", gap: "max(20px, calc((100% - 1120px) / 3))" }}
+        >
+          {listings.map((l) => (
+            <div key={l.ListingKey} className="w-[280px] shrink-0">
+              <ListingCard listing={l} />
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Mobile: grid with load more */}
