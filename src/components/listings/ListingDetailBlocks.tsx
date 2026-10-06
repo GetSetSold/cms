@@ -1,5 +1,6 @@
 import { displayValue, roomItems, roomDimensions, type PropertyListing } from "@/lib/mls";
 import { ListingDetailMap } from "./ListingDetailMap";
+import { WalkScoreBadges } from "./WalkScoreBadges";
 import { CollapsibleCard } from "./CollapsibleCard";
 
 const currency = (v: unknown): string | null => {
@@ -314,19 +315,7 @@ export function MapDirections({ listing }: { listing: PropertyListing }) {
   return (
     <CollapsibleCard title="Map & Directions">
       <ListingDetailMap lat={lat} lng={lng} label={label} listingKey={listing.ListingKey} />
-      <div className="px-6 py-5">
-        <a
-          href={`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 rounded-full bg-ink px-4 py-2 text-[12px] font-semibold text-white"
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <polygon points="3 11 22 2 13 21 11 13 3 11" />
-          </svg>
-          Get Directions
-        </a>
-      </div>
+      <WalkScoreBadges lat={lat} lng={lng} />
     </CollapsibleCard>
   );
 }
