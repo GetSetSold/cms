@@ -24,24 +24,18 @@ function DirectionsIcon() {
   );
 }
 
-function Buttons({ lat, lng, hasScores }: { lat: number; lng: number; hasScores: boolean }) {
-  const cls = "inline-flex items-center gap-1.5 rounded-full bg-ink px-4 py-2 text-[12px] font-semibold text-white";
+function Buttons({ lat, lng }: { lat: number; lng: number }) {
   return (
     <div className="flex flex-wrap gap-2.5">
       <a
         href={`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`}
         target="_blank"
         rel="noopener noreferrer"
-        className={cls}
+        className="inline-flex items-center gap-1.5 rounded-full bg-ink px-4 py-2 text-[12px] font-semibold text-white"
       >
         <DirectionsIcon />
         Get Directions
       </a>
-      {hasScores ? (
-        <a href="https://www.walkscore.com/how-it-works/" target="_blank" rel="noopener noreferrer" className={cls}>
-          About these scores <span aria-hidden="true">↗</span>
-        </a>
-      ) : null}
     </div>
   );
 }
@@ -98,7 +92,7 @@ export function WalkScoreBadges({ lat, lng }: { lat: number; lng: number }) {
   if (!done) {
     return (
       <div className="border-t border-line px-6 py-5">
-        <Buttons lat={lat} lng={lng} hasScores={false} />
+        <Buttons lat={lat} lng={lng} />
       </div>
     );
   }
@@ -145,7 +139,7 @@ export function WalkScoreBadges({ lat, lng }: { lat: number; lng: number }) {
         </>
       ) : null}
       <div className={hasScores ? "mt-4" : ""}>
-        <Buttons lat={lat} lng={lng} hasScores={hasScores} />
+        <Buttons lat={lat} lng={lng} />
       </div>
       {hasScores ? (
         <p className="mt-3 text-[11px] text-muted">

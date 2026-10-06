@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
   // Don't cache failures: a bad key or empty response must not poison the
   // 90-day cache. Only successful scores get the long revalidate.
   const res = await fetch(
-    `https://api.walkscore.com/score?format=json&lat=${rlat}&lon=${rlng}&wsapikey=${encodeURIComponent(key)}`,
+    `https://api.walkscore.com/score?format=json&lat=${rlat}&lon=${rlng}&transit=1&bike=1&wsapikey=${encodeURIComponent(key)}`,
     { cache: "no-store" }
   );
   const raw = await res.text();
