@@ -143,8 +143,8 @@ export function Toggle({ checked, onChange, label }: { checked: boolean; onChang
       className="flex w-full items-center justify-between gap-3 rounded-[var(--radius-sm)] border border-line bg-white px-3 py-2.5 text-left"
     >
       <span className="text-[14px] font-medium text-ink">{label}</span>
-      <span className={`relative h-6 w-11 shrink-0 rounded-full transition ${checked ? "bg-[#0066CC]" : "bg-neutral-300"}`}>
-        <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${checked ? "left-[22px]" : "left-0.5"}`} />
+      <span className={`relative h-6 w-11 shrink-0 rounded-[var(--radius-label)] transition ${checked ? "bg-[#0066CC]" : "bg-neutral-300"}`}>
+        <span className={`absolute top-0.5 h-5 w-5 rounded-[var(--radius-label)] bg-white shadow transition-all ${checked ? "left-[22px]" : "left-0.5"}`} />
       </span>
     </button>
   );
@@ -189,7 +189,7 @@ export function Card({ title, children, action }: { title?: string; children: Re
 
 export function PassFail({ pass, label }: { pass: boolean; label: string }) {
   return (
-    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide ${pass ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"}`}>
+    <span className={`inline-flex items-center rounded-[var(--radius-label)] px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide ${pass ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"}`}>
       {pass ? "Pass" : "Fail"} · {label}
     </span>
   );

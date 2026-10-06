@@ -48,7 +48,7 @@ export function GuideTabs({
               href={`/guides/${g.id}`}
               className="group relative flex flex-col overflow-hidden rounded-[var(--radius-md)] border border-line bg-white p-6 pb-5 shadow-[var(--shadow)] transition hover:-translate-y-1 hover:border-accent"
             >
-              <span className="absolute right-3 top-3 rounded-full border border-line bg-soft px-2.5 py-1 text-[9px] font-bold uppercase tracking-wide text-muted">
+              <span className="absolute right-3 top-3 rounded-[var(--radius-label)] border border-line bg-soft px-2.5 py-1 text-[9px] font-bold uppercase tracking-wide text-muted">
                 {g.tag}
               </span>
               <div

@@ -123,13 +123,13 @@ export function ListingContactCard({ listing, form, agent, photoSvg }: { listing
       {open && form ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Ask about this property">
           <button type="button" aria-label="Close" onClick={() => setOpen(false)} className="absolute inset-0 bg-black/55" />
-          <div className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-6">
+          <div className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-[var(--radius-lg)] bg-white p-6">
             <div className="mb-4 flex items-start justify-between gap-4">
               <div>
                 <h3 className="font-display text-xl">Ask about this property</h3>
                 <div className="mt-2"><ListingSummary listing={listing} /></div>
               </div>
-              <button type="button" onClick={() => setOpen(false)} aria-label="Close dialog" className="rounded-full p-1.5 hover:bg-gray-100 text-xl leading-none">
+              <button type="button" onClick={() => setOpen(false)} aria-label="Close dialog" className="rounded-[var(--radius-btn)] p-1.5 hover:bg-gray-100 text-xl leading-none">
                 ×
               </button>
             </div>

@@ -41,7 +41,7 @@ export function ListingGallery({ items }: { items: MediaItem[] }) {
           <button onClick={() => openGallery(0)} className="block h-full w-full cursor-zoom-in">
             <img src={hero.MediaURL} alt={hero.Caption ?? ""} className="h-full w-full object-cover" />
           </button>
-          <span className="absolute right-3 top-3 flex items-center gap-1.5 rounded-full bg-black/75 px-2.5 py-1 text-[11px] font-semibold text-white">
+          <span className="absolute right-3 top-3 flex items-center gap-1.5 rounded-[var(--radius-label)] bg-black/75 px-2.5 py-1 text-[11px] font-semibold text-white">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
               <circle cx="12" cy="13" r="4" />
@@ -80,7 +80,7 @@ export function ListingGallery({ items }: { items: MediaItem[] }) {
         <div className="fixed inset-0 z-50 flex flex-col bg-black/95" onClick={() => setGalleryOpen(false)}>
           <div className="flex shrink-0 items-center justify-between px-4 py-3 text-white">
             <span className="text-sm font-semibold">{items.length} Photos</span>
-            <button onClick={() => setGalleryOpen(false)} className="rounded-full bg-white/15 px-4 py-2 text-sm font-semibold">
+            <button onClick={() => setGalleryOpen(false)} className="rounded-[var(--radius-btn)] bg-white/15 px-4 py-2 text-sm font-semibold">
               Close
             </button>
           </div>

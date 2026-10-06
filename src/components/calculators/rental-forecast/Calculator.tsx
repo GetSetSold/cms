@@ -44,7 +44,7 @@ function MiniSwitch({ checked, onChange, label }: { checked: boolean; onChange: 
       onClick={() => onChange(!checked)}
       className="shrink-0"
     >
-      <span className={`relative block h-6 w-11 rounded-full transition ${checked ? "bg-accent" : "bg-neutral-300"}`}>
+      <span className={`relative block h-6 w-11 rounded-[var(--radius-label)] transition ${checked ? "bg-accent" : "bg-neutral-300"}`}>
         <span
           className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${checked ? "left-[22px]" : "left-0.5"}`}
         />
