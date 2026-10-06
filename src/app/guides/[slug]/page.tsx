@@ -98,7 +98,7 @@ export default async function GuideDetailPage({ params, searchParams }: Props) {
           <GuideReportButtons guide={guide} sections={sections} />
           {showAd && <GuideAdSlot adCode={adCode} />}
 
-          <div className="rounded-xl border border-line bg-white p-4 shadow-sm">
+          <div className="rounded-[var(--radius-md)] border border-line bg-white p-4 shadow-[var(--shadow-card)]">
             <h4 className="mb-3 text-[11px] font-bold uppercase tracking-wider text-muted">
               More Guides
             </h4>
@@ -115,14 +115,14 @@ export default async function GuideDetailPage({ params, searchParams }: Props) {
             </div>
           </div>
 
-          <div className="rounded-xl bg-primary p-4 text-center text-white shadow-sm">
+          <div className="rounded-[var(--radius-md)] bg-primary p-4 text-center text-white shadow-[var(--shadow-card)]">
             <p className="text-[13px] font-bold">More {audience?.label ?? "guides"}</p>
             <p className="mt-1 text-[12px] text-white/75">
               Browse every guide for {guide.tag.toLowerCase().replace("for ", "")}.
             </p>
             <Link
               href="/guides"
-              className="mt-3 inline-block rounded-lg bg-accent px-4 py-2 text-[12px] font-bold text-white transition hover:opacity-90"
+              className="mt-3 inline-block rounded-[var(--radius-md)] bg-accent px-4 py-2 text-[12px] font-bold text-white transition hover:opacity-90"
             >
               All Guides
             </Link>
@@ -134,7 +134,7 @@ export default async function GuideDetailPage({ params, searchParams }: Props) {
       <section className="mt-10 border-t border-line pt-8">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {OFFERS.map((o) => (
-            <div key={o.kicker} className="flex min-h-[190px] flex-col rounded-xl border border-line bg-white p-5 shadow-sm">
+            <div key={o.kicker} className="flex min-h-[190px] flex-col rounded-[var(--radius-md)] border border-line bg-white p-5 shadow-[var(--shadow-card)]">
               <div className="text-[11px] font-bold uppercase tracking-[0.12em] text-accent">
                 {o.kicker}
               </div>

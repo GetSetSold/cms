@@ -158,7 +158,7 @@ export default async function NeighbourhoodPage({
           <div className="mt-4 grid gap-5 lg:grid-cols-2">
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
               {cards.length ? cards : (
-                <p className="col-span-full rounded-2xl bg-white p-6 text-muted">No listings found in {hood.hood} right now.</p>
+                <p className="col-span-full rounded-[var(--radius-lg)] bg-white p-6 text-muted">No listings found in {hood.hood} right now.</p>
               )}
             </div>
             <div className="h-[70vh] min-h-[480px] lg:sticky lg:top-24">
@@ -170,7 +170,7 @@ export default async function NeighbourhoodPage({
             {cards}
           </div>
         ) : (
-          <p className="mt-4 rounded-2xl bg-white p-6 text-muted">
+          <p className="mt-4 rounded-[var(--radius-lg)] bg-white p-6 text-muted">
             No listings found in {hood.hood} right now — check back soon or browse{" "}
             <a href={cityUrl} className="font-medium text-primary">all of {hood.city}</a>.
           </p>

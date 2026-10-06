@@ -55,7 +55,7 @@ export default async function TrendsOverviewPage() {
         </p>
 
         {markets.length === 0 ? (
-          <p className="mt-8 rounded-2xl border border-line bg-white p-8 text-muted">
+          <p className="mt-8 rounded-[var(--radius-lg)] border border-line bg-white p-8 text-muted">
             Market data hasn&apos;t been uploaded yet. Add it from Admin → Market Data.
           </p>
         ) : (

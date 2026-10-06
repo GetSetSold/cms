@@ -109,7 +109,7 @@ export default async function TrendsDetailPage({ params }: { params: Promise<Par
             <Link
               key={m.slug}
               href={`/ontario-housing-market-trends/${m.slug}`}
-              className={`flex shrink-0 items-center gap-2 rounded-lg border px-3 py-2 text-[13px] ${
+              className={`flex shrink-0 items-center gap-2 rounded-[var(--radius-md)] border px-3 py-2 text-[13px] ${
                 m.slug === market.slug ? "border-primary bg-primary text-white" : "border-line bg-white hover:border-primary"
               }`}
             >
@@ -127,7 +127,7 @@ export default async function TrendsDetailPage({ params }: { params: Promise<Par
             { l: "Yearly Change", v: fmtPct(L.yoyChange), s: "year over year", tone: toneCls(L.yoyChange) },
             { l: "All-Time Peak", v: fmtMoney(ins.peak), s: `${fmtPct(ins.fromPeakPct)} from peak · ${ins.peakMonth}` },
           ].map((c) => (
-            <div key={c.l} className="rounded-xl border border-line bg-white p-4">
+            <div key={c.l} className="rounded-[var(--radius-md)] border border-line bg-white p-4">
               <span className="text-[11px] uppercase tracking-wider text-muted">{c.l}</span>
               <div className={`mt-1 text-2xl font-bold tracking-tight ${c.tone ?? ""}`}>{c.v}</div>
               <span className="text-[13px] text-muted">{c.s}</span>
@@ -135,7 +135,7 @@ export default async function TrendsDetailPage({ params }: { params: Promise<Par
           ))}
         </div>
 
-        <div className="mt-4 rounded-xl border border-primary bg-soft p-4">
+        <div className="mt-4 rounded-[var(--radius-md)] border border-primary bg-soft p-4">
           <b>{conditionLabel(L.marketCondition)} — {market.name}.</b>{" "}
           <span className="text-muted">
             {L.marketCondition === "buyer"
@@ -151,7 +151,7 @@ export default async function TrendsDetailPage({ params }: { params: Promise<Par
         <p className="mb-4 text-sm text-muted">Key signals computed from full price history</p>
         <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
           {insights.map((c) => (
-            <div key={c.label} className="rounded-xl border border-line bg-white p-4">
+            <div key={c.label} className="rounded-[var(--radius-md)] border border-line bg-white p-4">
               <span className="block text-[11px] uppercase tracking-wider text-muted">{c.label}</span>
               <b className="mt-1.5 block text-lg font-bold tracking-tight">{c.value}</b>
               <span className="mt-0.5 block text-xs text-muted">{c.sub}</span>
@@ -162,20 +162,20 @@ export default async function TrendsDetailPage({ params }: { params: Promise<Par
         {/* 12-month chart */}
         <h2 className="mt-10 text-xl font-bold">Benchmark Price Trend</h2>
         <p className="mb-4 text-sm text-muted">12-month composite benchmark price</p>
-        <div className="rounded-2xl border border-line bg-white p-5">
+        <div className="rounded-[var(--radius-lg)] border border-line bg-white p-5">
           <HpiChart points={points12} height={240} />
         </div>
 
         {/* Full history */}
         <h2 className="mt-10 text-xl font-bold">Benchmark Price Over Time</h2>
         <p className="mb-4 text-sm text-muted">Composite benchmark price history</p>
-        <div className="rounded-2xl border border-line bg-white p-5">
+        <div className="rounded-[var(--radius-lg)] border border-line bg-white p-5">
           <HpiRangeChart history={market.fullHistory} height={260} />
         </div>
 
         <h2 className="mt-10 text-xl font-bold">HPI Index Over Time</h2>
         <p className="mb-4 text-sm text-muted">Composite HPI (base 100)</p>
-        <div className="rounded-2xl border border-line bg-white p-5">
+        <div className="rounded-[var(--radius-lg)] border border-line bg-white p-5">
           <HpiRangeChart history={market.fullHistory} height={260} valueKey="compositeHPI" />
         </div>
 
@@ -185,7 +185,7 @@ export default async function TrendsDetailPage({ params }: { params: Promise<Par
         <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
           {availablePropertyTypes(market).map(({ key, label, data: pt }) => {
             return (
-              <div key={key} className="rounded-xl border border-line bg-white p-4">
+              <div key={key} className="rounded-[var(--radius-md)] border border-line bg-white p-4">
                 <span className="block text-xs text-muted">{label}</span>
                 <b className="mt-1 block text-lg font-bold">{fmtMoney(pt.benchmark)}</b>
                 <span className="mt-0.5 block text-xs text-muted">HPI {pt.hpi}</span>
@@ -205,7 +205,7 @@ export default async function TrendsDetailPage({ params }: { params: Promise<Par
         {/* Property type details table */}
         <h2 className="mt-10 text-xl font-bold">Property Type Details</h2>
         <p className="mb-4 text-sm text-muted">Detailed breakdown for {market.name}</p>
-        <div className="overflow-x-auto rounded-2xl border border-line">
+        <div className="overflow-x-auto rounded-[var(--radius-lg)] border border-line">
           <table className="w-full min-w-[760px] border-collapse text-sm">
             <thead>
               <tr className="border-b-2 border-primary text-left">
@@ -252,7 +252,7 @@ export default async function TrendsDetailPage({ params }: { params: Promise<Par
         {/* All markets comparison */}
         <h2 className="mt-10 text-xl font-bold">All Ontario Markets</h2>
         <p className="mb-4 text-sm text-muted">Compare benchmark prices and changes across all {markets.length} Ontario markets.</p>
-        <div className="overflow-x-auto rounded-2xl border border-line">
+        <div className="overflow-x-auto rounded-[var(--radius-lg)] border border-line">
           <table className="w-full min-w-[860px] border-collapse text-sm">
             <thead>
               <tr className="border-b-2 border-primary text-left">
@@ -289,10 +289,10 @@ export default async function TrendsDetailPage({ params }: { params: Promise<Par
           </table>
         </div>
 
-        <div className="mt-10 rounded-2xl border border-primary p-6 text-center">
+        <div className="mt-10 rounded-[var(--radius-lg)] border border-primary p-6 text-center">
           <h3 className="text-lg font-bold">Looking to Buy a Property?</h3>
           <p className="mt-1 text-sm text-muted">Browse active MLS® listings or contact our team for expert guidance.</p>
-          <Link href="/listings" className="mt-4 inline-block rounded-lg bg-black px-6 py-2.5 text-sm font-semibold text-white">
+          <Link href="/listings" className="mt-4 inline-block rounded-[var(--radius-md)] bg-black px-6 py-2.5 text-sm font-semibold text-white">
             Browse Listings
           </Link>
         </div>

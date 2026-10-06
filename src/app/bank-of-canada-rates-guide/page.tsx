@@ -124,7 +124,7 @@ export default async function BocRatesGuidePage() {
           <div className="h-px w-full border-t border-line" />
           <p className="text-[15px] font-medium leading-relaxed text-muted">How the key policy rate shapes borrowing costs and housing affordability</p>
         </div>
-        <article className="rounded-lg border border-line bg-white p-6 shadow-sm">
+        <article className="rounded-[var(--radius-md)] border border-line bg-white p-6 shadow-[var(--shadow-card)]">
           <p className="text-[14px] leading-7 text-muted">
             The Bank of Canada Interest Rate, also known as the Key Policy Rate, plays a major role in
             shaping Canada&apos;s economy and real estate market. Changes to this rate directly influence
@@ -138,7 +138,7 @@ export default async function BocRatesGuidePage() {
           {INFO_BLOCKS.map(([title, body]) => (
             <article
               key={title}
-              className="rounded-lg border border-line bg-white p-5 shadow-sm"
+              className="rounded-[var(--radius-md)] border border-line bg-white p-5 shadow-[var(--shadow-card)]"
             >
               <h3 className="mb-2 text-[13px] font-semibold text-ink">{title}</h3>
               <p className="text-[14px] leading-7 text-muted">{body}</p>
@@ -152,7 +152,7 @@ export default async function BocRatesGuidePage() {
           <div className="h-px w-full border-t border-line" />
           <p className="text-[15px] font-medium leading-relaxed text-muted">Estimated monthly payment change based on rate increase or decrease (25-year amortization)</p>
         </div>
-        <article className="rounded-lg border border-line bg-white p-5 shadow-sm">
+        <article className="rounded-[var(--radius-md)] border border-line bg-white p-5 shadow-[var(--shadow-card)]">
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-[12px]">
               <thead>
@@ -189,10 +189,10 @@ export default async function BocRatesGuidePage() {
           <div className="h-px w-full border-t border-line" />
           <p className="text-[15px] font-medium leading-relaxed text-muted">Key terms related to Bank of Canada rates and mortgage financing</p>
         </div>
-        <article className="rounded-lg border border-line bg-white p-5 shadow-sm">
+        <article className="rounded-[var(--radius-md)] border border-line bg-white p-5 shadow-[var(--shadow-card)]">
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             {GLOSSARY.map(([term, def]) => (
-              <div key={term} className="rounded-lg border border-line border-l-4 border-l-primary bg-soft px-4 py-3.5">
+              <div key={term} className="rounded-[var(--radius-md)] border border-line border-l-4 border-l-primary bg-soft px-4 py-3.5">
                 <div className="mb-1 text-[12px] font-bold text-primary">{term}</div>
                 <div className="text-[11px] leading-6 text-muted">{def}</div>
               </div>
@@ -206,7 +206,7 @@ export default async function BocRatesGuidePage() {
           <div className="h-px w-full border-t border-line" />
           <p className="text-[15px] font-medium leading-relaxed text-muted">Answers to common questions about the Bank of Canada policy rate</p>
         </div>
-        <article className="rounded-lg border border-line bg-white px-6 py-2 shadow-sm">
+        <article className="rounded-[var(--radius-md)] border border-line bg-white px-6 py-2 shadow-[var(--shadow-card)]">
           {FAQS.map((f, i) => (
             <details key={f.q} className={`group py-3.5 ${i > 0 ? "border-t border-line" : ""}`} open={i === 0}>
               <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-semibold text-ink [&::-webkit-details-marker]:hidden">
@@ -222,7 +222,7 @@ export default async function BocRatesGuidePage() {
         </article>
 
         {/* Data source */}
-        <article className="mb-2 mt-10 rounded-lg border border-line bg-white p-5 shadow-sm">
+        <article className="mb-2 mt-10 rounded-[var(--radius-md)] border border-line bg-white p-5 shadow-[var(--shadow-card)]">
           <h3 className="mb-2 text-[14px] font-semibold text-ink">Data Source</h3>
           <p className="text-[12px] leading-7 text-muted">
             Rates sourced from the{" "}

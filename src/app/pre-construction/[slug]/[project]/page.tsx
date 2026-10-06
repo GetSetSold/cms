@@ -108,14 +108,14 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
               {(() => {
                 const cb = getCashbackAmount(project.p_start_price, settings.precon_cashback);
                 return cb ? (
-                  <div className="flex items-center gap-3 rounded-lg bg-gradient-to-br from-[#065f46] to-[#059669] p-4">
+                  <div className="flex items-center gap-3 rounded-[var(--radius-md)] bg-gradient-to-br from-[#065f46] to-[#059669] p-4">
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/15"><IconCheckBadge className="h-5 w-5" /></span>
                     <div><div className="font-display text-lg font-bold">{formatCashback(cb)} Cashback</div><div className="text-[11px] text-white/70">Your exclusive advantage when you buy with us</div></div>
                   </div>
                 ) : null;
               })()}
-              <a href="#lead" className="flex h-12 items-center justify-center rounded-lg bg-primary text-sm font-bold">Register Now</a>
-              <a href="#lead" className="flex h-12 items-center justify-center rounded-lg border border-white/30 text-sm font-bold">Request Brochure</a>
+              <a href="#lead" className="flex h-12 items-center justify-center rounded-[var(--radius-md)] bg-primary text-sm font-bold">Register Now</a>
+              <a href="#lead" className="flex h-12 items-center justify-center rounded-[var(--radius-md)] border border-white/30 text-sm font-bold">Request Brochure</a>
               <div className="flex flex-wrap gap-2 border-t border-white/10 pt-4">
                 {[project.project_status, project.vip_release ? `VIP: ${project.vip_release}` : null, project.city].filter(Boolean).map((tag) => (
                   <span key={tag} className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold">{tag}</span>
@@ -173,7 +173,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
                     </div>
                   ))}
                 </div>
-                <a href={`https://www.google.com/maps/dir/?api=1&destination=${project.lat},${project.lng}`} target="_blank" rel="noopener" className="flex h-11 items-center justify-center gap-2 rounded-lg bg-ink text-sm font-bold text-white">Get Directions</a>
+                <a href={`https://www.google.com/maps/dir/?api=1&destination=${project.lat},${project.lng}`} target="_blank" rel="noopener" className="flex h-11 items-center justify-center gap-2 rounded-[var(--radius-md)] bg-ink text-sm font-bold text-white">Get Directions</a>
               </div>
             </div>
           </section>

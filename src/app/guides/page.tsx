@@ -130,7 +130,7 @@ export default async function GuidesHubPage({
       <div className="mx-auto max-w-7xl px-5 pb-8 pt-10">
         <div className="grid grid-cols-1 items-center gap-6 md:grid-cols-[3fr_7fr] md:gap-8">
           <div className="hidden items-center justify-center md:flex" aria-hidden>
-            <div className="flex h-44 w-44 items-center justify-center rounded-2xl bg-soft text-ink">
+            <div className="flex h-44 w-44 items-center justify-center rounded-[var(--radius-lg)] bg-soft text-ink">
               <svg width="88" height="88" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" /></svg>
             </div>
           </div>
@@ -173,7 +173,7 @@ export default async function GuidesHubPage({
 
         {showAd && <GuideAdSlot adCode={adCode} className="my-8" />}
 
-        <article className="mt-4 rounded-lg border border-line bg-white p-5 shadow-sm">
+        <article className="mt-4 rounded-[var(--radius-md)] border border-line bg-white p-5 shadow-[var(--shadow-card)]">
           <h2 className="mb-2 text-[14px] font-semibold text-ink">About these guides</h2>
           <p className="text-[12px] leading-7 text-muted">
             Every guide is written for Canadians — Ontario rules, CRA references, and 2026 market

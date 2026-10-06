@@ -79,7 +79,7 @@ export default async function CalculatorsHubPage({
         <div className="mb-8 mt-2 pb-8 pt-8">
           <div className="grid grid-cols-1 items-center gap-6 md:grid-cols-[3fr_7fr] md:gap-8">
             <div className="hidden items-center justify-center md:flex" aria-hidden>
-              <div className="flex h-44 w-44 items-center justify-center rounded-2xl bg-soft text-ink">
+              <div className="flex h-44 w-44 items-center justify-center rounded-[var(--radius-lg)] bg-soft text-ink">
                 <svg width="88" height="88" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2"><rect x="4" y="2" width="16" height="20" rx="2" /><path d="M8 6h8" /><path d="M8 11h.01M12 11h.01M16 11h.01M8 15h.01M12 15h.01M16 15h.01M8 19h.01M12 19h.01M16 19h.01" /></svg>
               </div>
             </div>
@@ -156,7 +156,7 @@ export default async function CalculatorsHubPage({
 
         {showCalcAd && <ContentAdSlot adCode={calcAdCode} className="mt-4" />}
 
-        <article className="mt-4 rounded-lg border border-line bg-white p-5 shadow-sm">
+        <article className="mt-4 rounded-[var(--radius-md)] border border-line bg-white p-5 shadow-[var(--shadow-card)]">
           <h2 className="mb-2 text-[14px] font-semibold text-ink">About these calculators</h2>
           <p className="text-[12px] leading-7 text-muted">
             All calculations use current Canadian mortgage rules, including the mortgage stress test,
