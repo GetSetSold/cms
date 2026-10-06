@@ -145,6 +145,13 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
                             <option value="sharp">Sharp</option>
                           </select>
                         </label>
+                        <label className="label">Labels
+                          <select className="input w-full sm:w-36" value={s.theme.label_radius ?? "pill"} onChange={(e) => set("theme", { ...s.theme, label_radius: e.target.value as "pill" | "soft" | "sharp" })}>
+                            <option value="pill">Pill (default)</option>
+                            <option value="soft">Soft</option>
+                            <option value="sharp">Sharp</option>
+                          </select>
+                        </label>
                       </div>
                     </div>
 

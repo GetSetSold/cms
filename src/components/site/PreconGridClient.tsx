@@ -72,9 +72,9 @@ export function PreconGridClient({
             <Link key={p.id} href={`/pre-construction/${p.builder.slug}/${p.slug}`} prefetch={false} className={`group flex flex-col overflow-hidden ${card}`}>
               <div className="relative aspect-[4/3] bg-soft">
                 {p.main_image_url ? <img src={p.main_image_url} alt={p.project_name} className="h-full w-full object-cover" /> : null}
-                {p.project_status ? <span className="absolute left-3 top-3 rounded-full bg-primary px-2.5 py-1 text-[11px] font-semibold text-white">{p.project_status}</span> : null}
-                {p.vip_release === "Yes" ? <span className="absolute right-3 top-3 rounded-full bg-ink/70 px-2.5 py-1 text-[11px] font-semibold text-white backdrop-blur">VIP</span> : null}
-                {cb ? <span className="absolute right-3 top-11 flex items-center gap-1 rounded-full bg-gradient-to-r from-[#065f46] to-[#059669] px-2.5 py-1 text-[11px] font-semibold text-white">{formatCashback(cb)} cashback</span> : null}
+                {p.project_status ? <span className="absolute left-3 top-3 rounded-[var(--radius-label)] bg-primary px-2.5 py-1 text-[11px] font-semibold text-white">{p.project_status}</span> : null}
+                {p.vip_release === "Yes" ? <span className="absolute right-3 top-3 rounded-[var(--radius-label)] bg-ink/70 px-2.5 py-1 text-[11px] font-semibold text-white backdrop-blur">VIP</span> : null}
+                {cb ? <span className="absolute right-3 top-11 flex items-center gap-1 rounded-[var(--radius-label)] bg-gradient-to-r from-[#065f46] to-[#059669] px-2.5 py-1 text-[11px] font-semibold text-white">{formatCashback(cb)} cashback</span> : null}
                 <CardArrowButton />
               </div>
               <div className="flex flex-col gap-1 p-4">
