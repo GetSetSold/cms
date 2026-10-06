@@ -379,7 +379,7 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
                     <h3 className="mt-2 text-sm font-semibold">Local expert section</h3>
                     <p className="text-xs text-muted">Shown on city and neighbourhood pages. Agent name, photo, brokerage and phone come from the agent contact card above.</p>
                     <div className="grid gap-3 sm:grid-cols-2">
-                      <label className="label">Service area line<input className="input" value={s.local_expert?.service_area ?? ""} onChange={(e) => set("local_expert", { ...s.local_expert, service_area: e.target.value })} placeholder="Caledonia & Haldimand County" /></label>
+                      <label className="label">Service area line<input className="input" value={s.local_expert?.service_area ?? ""} onChange={(e) => set("local_expert", { ...s.local_expert, service_area: e.target.value })} placeholder="Serving {city} & surrounding areas" /></label>
                       <label className="label">Review rating<input className="input" value={s.local_expert?.review_rating ?? ""} onChange={(e) => set("local_expert", { ...s.local_expert, review_rating: e.target.value })} placeholder="5.0" /></label>
                       <label className="label">Review count<input className="input" value={s.local_expert?.review_count ?? ""} onChange={(e) => set("local_expert", { ...s.local_expert, review_count: e.target.value })} placeholder="63" /></label>
                       <label className="label">Listing fee<input className="input" value={s.local_expert?.listing_fee ?? ""} onChange={(e) => set("local_expert", { ...s.local_expert, listing_fee: e.target.value })} placeholder="1%" /></label>

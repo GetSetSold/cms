@@ -31,7 +31,8 @@ export function LocalExpertSection({
   const title = agent.title || "REALTOR®";
   const brokerage = agent.brokerage || "Lombard Group Real Estate Inc., Brokerage";
   const phone = agent.phone || "";
-  const serviceArea = le.service_area || "Caledonia & Haldimand County";
+  const serviceAreaRaw = le.service_area || "Serving {city} & surrounding areas";
+  const serviceArea = serviceAreaRaw.replace("{city}", areaName);
   const rating = le.review_rating || "5.0";
   const reviewCount = le.review_count || "63";
   const listingFee = le.listing_fee || "1%";
@@ -68,9 +69,10 @@ export function LocalExpertSection({
           <div className="text-xs font-semibold uppercase tracking-[1.5px] text-accent">Meet your {areaName} expert</div>
           <h2 className="mt-1 font-display text-xl">{name}</h2>
           <div className="mt-0.5 text-[13px] text-muted">{title} · {brokerage}</div>
-          <div className="mt-1.5 flex flex-wrap items-center gap-x-2 text-[13px] text-ink">
-            <span className="tracking-[2px]">★★★★★</span>
-            <span>{rating} · {reviewCount} Google reviews · {serviceArea}</span>
+          <div className="mt-1.5 text-[13px] text-ink">
+            <span className="tracking-[2px]">★★★★★</span>{" "}
+            <span className="whitespace-nowrap">{rating} · {reviewCount} Google reviews</span>
+            {" · "}{serviceArea}
           </div>
           {statBits.length > 0 ? (
             <p
