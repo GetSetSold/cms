@@ -581,13 +581,33 @@ function TeamProfile({ data, ctx }: BlockProps) {
   // In the narrow side-by-side merged card there is no room for photo + text in
   // two columns, so the photo goes above the text.
   const stack = ctx.embedded === "side";
+  const radiusCls = {
+    none: "rounded-none",
+    sm: "rounded-lg",
+    md: "rounded-2xl",
+    lg: "rounded-3xl",
+    full: "rounded-full",
+  }[(data.photo_radius as string) || "lg"];
+  const alignCls = {
+    left: "justify-self-start",
+    center: "justify-self-center",
+    right: "justify-self-end",
+  }[(data.photo_align as string) || "left"];
+  const credentials = [data.credential_1, data.credential_2].filter(Boolean);
   return (
     <div className={`${wrap} grid items-center ${stack ? "gap-8" : "gap-14 py-16 md:grid-cols-[320px_1fr] md:py-20"}`}>
-      <Svg asset={art} label={art?.name} className={`aspect-[8/9] overflow-hidden rounded-3xl ${stack ? "w-full max-w-[280px]" : ""}`} />
+      <Svg asset={art} label={art?.name} className={`aspect-[8/9] overflow-hidden ${radiusCls} ${alignCls} ${stack ? "w-full max-w-[280px]" : ""}`} />
       <div className="flex flex-col gap-3.5">
         {data.eyebrow ? <div className="text-xs font-bold uppercase tracking-[0.08em] text-primary">{data.eyebrow}</div> : null}
         <h2 className={`font-display text-[24px] md:text-[32px] font-bold ${heading(ctx)}`}>{data.name}</h2>
         {data.role ? <div className={`text-[13px] md:text-[15px] ${muted(ctx)}`}>{data.role}</div> : null}
+        {credentials.length ? (
+          <div className="flex flex-col gap-1">
+            {credentials.map((c: string, i: number) => (
+              <div key={i} className={`text-[11px] md:text-xs font-semibold uppercase tracking-[0.08em] ${muted(ctx)}`}>{c}</div>
+            ))}
+          </div>
+        ) : null}
         {data.bio ? <p className={`max-w-xl text-[13px] md:text-[15px] leading-relaxed ${muted(ctx)}`}>{data.bio}</p> : null}
         <div className="mt-2 flex gap-3"><Button link={data.primary_cta} dark={ctx.dark} /><Button link={data.secondary_cta} variant="outline" dark={ctx.dark} /></div>
       </div>

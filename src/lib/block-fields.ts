@@ -107,7 +107,11 @@ export const BLOCK_FIELDS: Record<string, Field[]> = {
   ],
   team_profile: [
     t("eyebrow", "Eyebrow"), t("name", "Name"), t("role", "Role / brokerage"), ta("bio", "Bio"),
+    t("credential_1", "Credential line 1 (e.g. LICENSED, BY REAL ESTATE COUNCIL OF ONTARIO)"),
+    t("credential_2", "Credential line 2 (e.g. MEMBER, TORONTO REAL ESTATE BOARD)"),
     { key: "svg_id", label: "Photo (illustration)", type: "svg" },
+    { key: "photo_radius", label: "Photo corner radius", type: "select", options: ["none", "sm", "md", "lg", "full"] },
+    { key: "photo_align", label: "Photo alignment", type: "select", options: ["left", "center", "right"] },
     { key: "primary_cta", label: "Primary button", type: "link" },
     { key: "secondary_cta", label: "Secondary button", type: "link" },
   ],
