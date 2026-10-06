@@ -133,11 +133,32 @@ async function scanNeighbourhoods(): Promise<Neighbourhood[]> {
 /** Module-level cache (1h). unstable_cache does not persist on Workers. */
 let hoodsCache: { data: Neighbourhood[]; expires: number } | null = null;
 
-/** All neighbourhoods with >= HOOD_MIN_LISTINGS. */
+const HOODS_CACHE_KEY = "https://internal/hoods-v1";
+const HOODS_CACHE_TTL = 3600; // 1 hour
+
+/** All neighbourhoods with >= HOOD_MIN_LISTINGS. Uses Cloudflare Cache API
+ *  so the 57k-row scan runs once per hour, not per request. */
 export async function listNeighbourhoods(): Promise<Neighbourhood[]> {
   if (hoodsCache && Date.now() < hoodsCache.expires) return hoodsCache.data;
+  // Try edge cache first (persists across Workers isolates).
+  try {
+    const cache = await caches.open("gss-static");
+    const hit = await cache.match(HOODS_CACHE_KEY);
+    if (hit) {
+      const data = (await hit.json()) as Neighbourhood[];
+      hoodsCache = { data, expires: Date.now() + 3600_000 };
+      return data;
+    }
+  } catch { /* cache unavailable — fall through to scan */ }
   const data = await scanNeighbourhoods();
   hoodsCache = { data, expires: Date.now() + 3600_000 };
+  try {
+    const cache = await caches.open("gss-static");
+    await cache.put(
+      HOODS_CACHE_KEY,
+      new Response(JSON.stringify(data), { headers: { "Content-Type": "application/json", "Cache-Control": `public, max-age=${HOODS_CACHE_TTL}` } })
+    );
+  } catch { /* best-effort */ }
   return data;
 }
 
