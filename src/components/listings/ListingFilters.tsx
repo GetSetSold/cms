@@ -298,8 +298,8 @@ export function ListingFilters({
             <div className="mb-5">
               <label className="mb-2 block text-sm font-medium">Price range</label>
               <div className="flex gap-2">
-                <input value={minP} onChange={(e) => setMinP(e.target.value.replace(/\D/g, ""))} placeholder="Min price" inputMode="numeric" className="w-full rounded-xl border border-line px-3 py-2.5 text-sm outline-none focus:border-ink" />
-                <input value={maxP} onChange={(e) => setMaxP(e.target.value.replace(/\D/g, ""))} placeholder="Max price" inputMode="numeric" className="w-full rounded-xl border border-line px-3 py-2.5 text-sm outline-none focus:border-ink" />
+                <input value={minP} onChange={(e) => setMinP(e.target.value.replace(/\D/g, ""))} placeholder="Min price" inputMode="numeric" className="w-full rounded-[var(--radius-md)] border border-line px-3 py-2.5 text-sm outline-none focus:border-ink" />
+                <input value={maxP} onChange={(e) => setMaxP(e.target.value.replace(/\D/g, ""))} placeholder="Max price" inputMode="numeric" className="w-full rounded-[var(--radius-md)] border border-line px-3 py-2.5 text-sm outline-none focus:border-ink" />
               </div>
             </div>
             <div className="mb-5">

@@ -52,7 +52,7 @@ export function ProvinceCityExplorer({
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search cities..."
             aria-label="Search cities"
-            className="w-full rounded-xl border border-line bg-white py-2.5 pl-10 pr-4 text-sm outline-none placeholder:text-muted focus:border-primary"
+            className="w-full rounded-[var(--radius-md)] border border-line bg-white py-2.5 pl-10 pr-4 text-sm outline-none placeholder:text-muted focus:border-primary"
           />
         </div>
       </div>

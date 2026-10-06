@@ -31,7 +31,7 @@ function Buttons({ lat, lng }: { lat: number; lng: number }) {
         href={`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`}
         target="_blank"
         rel="noopener noreferrer"
-        className="inline-flex items-center gap-1.5 rounded-full bg-ink px-4 py-2 text-[12px] font-semibold text-white"
+        className="inline-flex items-center gap-1.5 rounded-[var(--radius-label)] bg-ink px-4 py-2 text-[12px] font-semibold text-white"
       >
         <DirectionsIcon />
         Get Directions
