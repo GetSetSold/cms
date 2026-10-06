@@ -167,7 +167,7 @@ export function GuideReportButtons({
           aria-label="Email guide"
         >
           <div
-            className="w-full max-w-md rounded-[var(--radius-md)] bg-white p-6 shadow-xl"
+            className="w-full max-w-md rounded-[var(--radius-md)] bg-white p-6 shadow-[var(--shadow-card)]"
             onClick={(e) => e.stopPropagation()}
           >
             {sent ? (

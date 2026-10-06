@@ -10,7 +10,7 @@ export function CollapsibleCard({ title, children }: { title: string; children: 
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="border-b border-line bg-white last:border-b-0 lg:overflow-hidden lg:rounded-2xl lg:border-b-0">
+    <div className="border-b border-line bg-white last:border-b-0 lg:overflow-hidden lg:rounded-[var(--radius-lg)] lg:border-b-0">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}

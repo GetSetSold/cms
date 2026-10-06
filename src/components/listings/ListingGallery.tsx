@@ -27,7 +27,7 @@ export function ListingGallery({ items }: { items: MediaItem[] }) {
   }, [galleryOpen, startIndex]);
 
   if (!items.length) {
-    return <div className="flex h-72 items-center justify-center rounded-2xl bg-soft text-muted">No photos available</div>;
+    return <div className="flex h-72 items-center justify-center rounded-[var(--radius-lg)] bg-soft text-muted">No photos available</div>;
   }
   const [hero, ...rest] = items;
   const visible = rest.slice(0, 4);
@@ -35,7 +35,7 @@ export function ListingGallery({ items }: { items: MediaItem[] }) {
 
   return (
     <>
-      <div className="grid h-[300px] grid-cols-1 gap-2.5 overflow-hidden rounded-2xl md:h-[460px] md:grid-cols-[1.6fr_1fr]">
+      <div className="grid h-[300px] grid-cols-1 gap-2.5 overflow-hidden rounded-[var(--radius-lg)] md:h-[460px] md:grid-cols-[1.6fr_1fr]">
         <div className="relative h-full w-full">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <button onClick={() => openGallery(0)} className="block h-full w-full cursor-zoom-in">
@@ -65,7 +65,7 @@ export function ListingGallery({ items }: { items: MediaItem[] }) {
           {visible.map((m, i) => {
             const isLast = i === visible.length - 1;
             return (
-              <button key={i} onClick={() => openGallery(i + 1)} className="relative block min-h-0 w-full cursor-zoom-in overflow-hidden rounded-xl">
+              <button key={i} onClick={() => openGallery(i + 1)} className="relative block min-h-0 w-full cursor-zoom-in overflow-hidden rounded-[var(--radius-md)]">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={m.MediaURL} alt={m.Caption ?? ""} className="absolute inset-0 h-full w-full object-cover" />
                 {isLast && overflow ? (

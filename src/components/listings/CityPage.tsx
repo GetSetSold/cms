@@ -81,7 +81,7 @@ export async function CityPageContent({
                 <a
                   key={h.hoodSlug}
                   href={`${cityUrl}/${h.hoodSlug}`}
-                  className="group relative rounded-2xl bg-white p-6 pr-16 transition hover:shadow-lg"
+                  className="group relative rounded-[var(--radius-lg)] bg-white p-6 pr-16 transition hover:shadow-[var(--shadow-card)]"
                 >
                   <div className="font-display text-xl">{h.hood}</div>
                   <div className="mt-1 text-sm text-muted">{h.count.toLocaleString()} active listings</div>

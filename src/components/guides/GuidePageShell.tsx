@@ -80,7 +80,7 @@ export async function GuidePageShell({
 
         {children}
 
-        <article className="mb-2 mt-10 rounded-lg border border-line bg-white p-5 shadow-sm">
+        <article className="mb-2 mt-10 rounded-[var(--radius-md)] border border-line bg-white p-5 shadow-[var(--shadow-card)]">
           <h3 className="mb-2 text-[14px] font-semibold text-ink">About these guides</h3>
           <p className="text-[12px] leading-7 text-muted">
             These guides are written for Canadian buyers, sellers, renters, and landlords and are

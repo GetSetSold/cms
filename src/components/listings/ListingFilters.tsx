@@ -56,7 +56,7 @@ function PortalDropdown({
     <>
       <style>{`.gss-dd-scroll::-webkit-scrollbar{width:4px}.gss-dd-scroll::-webkit-scrollbar-thumb{background:#d4d4d8;border-radius:4px}.gss-dd-scroll::-webkit-scrollbar-track{background:transparent}.gss-dd-scroll{scrollbar-width:thin;scrollbar-color:#d4d4d8 transparent}`}</style>
       <div
-      className="z-[100] rounded-2xl border border-line bg-white p-3 shadow-2xl"
+      className="z-[100] rounded-[var(--radius-lg)] border border-line bg-white p-3 shadow-[var(--shadow-card)]"
       style={{ position: "absolute", top: pos.top, left: Math.max(8, pos.left), width }}
       onMouseDown={(e) => e.stopPropagation()}
     >
@@ -273,7 +273,7 @@ export function ListingFilters({
       {modal ? (
         <div className="fixed inset-0 z-[100] md:hidden">
           <div className="absolute inset-0 bg-black/50" onClick={() => setModal(false)} />
-          <div className="absolute bottom-4 left-4 right-4 max-h-[85vh] overflow-y-auto rounded-[var(--radius-lg)] bg-white p-5 shadow-2xl">
+          <div className="absolute bottom-4 left-4 right-4 max-h-[85vh] overflow-y-auto rounded-[var(--radius-lg)] bg-white p-5 shadow-[var(--shadow-card)]">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-lg font-semibold">Filters</h3>
               <button onClick={() => setModal(false)} className="text-2xl leading-none text-muted">×</button>

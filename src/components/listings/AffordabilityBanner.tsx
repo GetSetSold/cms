@@ -10,7 +10,7 @@ export function AffordabilityBanner({ listing }: { listing: PropertyListing }) {
       href={`/calculators/affordability-calculator${key ? `?mls=${encodeURIComponent(key)}` : ""}`}
       target="_blank"
       rel="noopener"
-      className="card group flex w-full items-center gap-3 p-4 text-left transition-shadow hover:shadow-md"
+      className="card group flex w-full items-center gap-3 p-4 text-left transition-shadow hover:shadow-[var(--shadow-card)]"
     >
       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-ink text-white">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
