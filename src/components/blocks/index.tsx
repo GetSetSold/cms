@@ -198,11 +198,13 @@ function Hero({ data, ctx }: BlockProps) {
         </div>
         {data.badge?.value ? (() => {
           const style = data.badge_style || "solid";
+          const darkBadge = style === "dark";
           const styleCls = {
             solid: "bg-white shadow-[var(--shadow-card)]",
             bordered: "bg-white border-2 border-ink",
             glass: "bg-white/70 backdrop-blur-md shadow-[var(--shadow-card)]",
-          }[style as "solid" | "bordered" | "glass"];
+            dark: "bg-ink text-white shadow-[var(--shadow-card)]",
+          }[style as "solid" | "bordered" | "glass" | "dark"];
           // Explicit left/center/right when set; otherwise the original
           // behavior (opposite side from the image) for existing content
           // that never set this.
@@ -225,11 +227,11 @@ function Hero({ data, ctx }: BlockProps) {
                 </span>
               ) : null}
               <span className="flex min-w-0 flex-col">
-                {data.badge.label ? <span className="truncate text-[9px] text-muted leading-tight">{data.badge.label}</span> : null}
+                {data.badge.label ? <span className={`truncate text-[9px] leading-tight ${darkBadge ? "text-white/60" : "text-muted"}`}>{data.badge.label}</span> : null}
                 <span className="truncate text-xs font-bold leading-tight">{data.badge.value}</span>
               </span>
               {data.badge_href ? (
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary text-white">
+                <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${darkBadge ? "bg-white text-ink" : "bg-primary text-white"}`}>
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
                 </span>
               ) : null}
