@@ -36,7 +36,7 @@ export function ListingGallery({ items }: { items: MediaItem[] }) {
   return (
     <>
       <div className="grid h-[300px] grid-cols-1 gap-2.5 overflow-hidden rounded-[var(--radius-lg)] md:h-[460px] md:grid-cols-[1.6fr_1fr]">
-        <div className="relative h-full w-full">
+        <div className="relative h-full w-full overflow-hidden rounded-[var(--radius-md)]">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <button onClick={() => openGallery(0)} className="block h-full w-full cursor-zoom-in">
             <img src={hero.MediaURL} alt={hero.Caption ?? ""} className="h-full w-full object-cover" />
