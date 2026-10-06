@@ -231,6 +231,8 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
         })()}
 
         {(() => {
+          // HPI is sales data — hide on rental listings.
+          if (!sale) return null;
           const city = normalizeCity(listing.City ?? "");
           return city ? (
             <div className="mt-10">
