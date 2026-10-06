@@ -126,7 +126,9 @@ export function ListingFilters({
     refs.current[id] = el;
   };
 
-  const cityList = (cities ?? []).filter((c) => c.toLowerCase().includes(cityFilter.toLowerCase())).slice(0, 50);
+  const cityMatches = (cities ?? []).filter((c) => c.toLowerCase().includes(cityFilter.toLowerCase()));
+  // Only cap when searching; empty filter shows the full scrollable list.
+  const cityList = cityFilter ? cityMatches.slice(0, 50) : cityMatches;
 
   return (
     <>
