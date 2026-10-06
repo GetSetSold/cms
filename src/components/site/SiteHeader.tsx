@@ -58,22 +58,22 @@ export function SiteHeader({ settings, logo }: { settings: SiteSettings; logo?: 
         <nav className={`hidden gap-9 md:flex ${compact ? "text-[13px]" : "text-[15px]"}`} aria-label="Main">
           {settings.navigation.map((n) =>
             n.columns?.length ? (
-              <div key={n.href} className="relative" onMouseEnter={() => setOpenMega(n.href)} onMouseLeave={() => setOpenMega(null)}>
+              <div key={n.href} onMouseEnter={() => setOpenMega(n.href)} onMouseLeave={() => setOpenMega(null)}>
                 <button
-                  className={`flex items-center gap-1.5 border-b-2 pb-1 hover:text-primary ${openMega === n.href ? "border-primary text-primary" : "border-transparent"}`}
+                  className={`border-b-2 pb-1 hover:text-[#0066CC] ${openMega === n.href ? "border-[#0066CC] text-[#0066CC]" : "border-transparent"}`}
                   aria-expanded={openMega === n.href}
                   onClick={() => setOpenMega(openMega === n.href ? null : n.href)}
                 >
-                  {n.label}<PlusMinus open={openMega === n.href} />
+                  {n.label}
                 </button>
                 {openMega === n.href ? (
-                  <div className="absolute left-1/2 top-full z-50 w-[560px] -translate-x-1/2 pt-3">
-                    <div className="grid grid-cols-[repeat(auto-fit,minmax(160px,1fr))] gap-8 rounded-[var(--radius-lg)] border-[length:var(--border-card-width)] border-line bg-white p-6 text-ink shadow-[var(--shadow-card)]">
+                  <div className="absolute inset-x-0 top-full z-50 border-b border-line bg-white/95 backdrop-blur">
+                    <div className="mx-auto grid max-w-7xl grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-10 px-5 py-8 text-ink md:px-10">
                       {n.columns.map((col, i) => (
                         <div key={i} className="flex flex-col">
                           {col.heading ? <div className="pb-2 text-xs font-semibold uppercase tracking-wide text-[#0066CC]">{col.heading}</div> : null}
                           {col.links.map((l, j) => (
-                            <Link key={l.href} href={l.href} className={`border-b border-line/50 py-2.5 hover:text-primary ${j === col.links.length - 1 ? "border-b-0" : ""} ${compact ? "text-[13px]" : "text-[15px]"}`} onClick={() => setOpenMega(null)}>{l.label}</Link>
+                            <Link key={l.href} href={l.href} className={`border-b border-line/50 py-2.5 hover:text-[#0066CC] ${j === col.links.length - 1 ? "border-b-0" : ""} ${compact ? "text-[13px]" : "text-[15px]"}`} onClick={() => setOpenMega(null)}>{l.label}</Link>
                           ))}
                         </div>
                       ))}
@@ -82,7 +82,7 @@ export function SiteHeader({ settings, logo }: { settings: SiteSettings; logo?: 
                 ) : null}
               </div>
             ) : (
-              <Link key={n.href} href={n.href} className="hover:text-primary">{n.label}</Link>
+              <Link key={n.href} href={n.href} className="hover:text-[#0066CC]">{n.label}</Link>
             ),
           )}
         </nav>
