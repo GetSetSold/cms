@@ -638,19 +638,19 @@ export function CmsFormRenderer({ form, pageId, extraFields, secondaryAction }: 
 
       {paginated ? (
         <div className="flex flex-wrap justify-center gap-3">
-          {curStep > 0 ? <button type="button" onClick={() => setStep(curStep - 1)} className="h-13 w-full rounded-full py-3.5 text-base font-medium text-white disabled:opacity-60 sm:w-48" style={{ background: "#0066cc" }}>Back</button> : null}
-          <button type="submit" disabled={state === "sending"} className="h-13 w-full rounded-full py-3.5 text-base font-medium text-white disabled:opacity-60 sm:w-48" style={{ background: "#333333" }}>
+          {curStep > 0 ? <button type="button" onClick={() => setStep(curStep - 1)} className="h-13 w-full rounded-[var(--radius-btn)] py-3.5 text-base font-medium text-white disabled:opacity-60 sm:w-48" style={{ background: "#0066cc" }}>Back</button> : null}
+          <button type="submit" disabled={state === "sending"} className="h-13 w-full rounded-[var(--radius-btn)] py-3.5 text-base font-medium text-white disabled:opacity-60 sm:w-48" style={{ background: "#333333" }}>
             {lastStep ? (state === "sending" ? "Sending…" : form.submit_label) : "Next"}
           </button>
         </div>
       ) : (
         <div className="flex flex-wrap justify-center gap-3">
           {secondaryAction ? (
-            <a href={secondaryAction.href} className="flex h-13 w-full items-center justify-center rounded-full py-3.5 text-base font-medium text-white sm:w-48" style={{ background: "#0066cc" }}>
+            <a href={secondaryAction.href} className="flex h-13 w-full items-center justify-center rounded-[var(--radius-btn)] py-3.5 text-base font-medium text-white sm:w-48" style={{ background: "#0066cc" }}>
               {secondaryAction.label}
             </a>
           ) : null}
-          <button type="submit" disabled={state === "sending"} className="h-13 w-full rounded-full py-3.5 text-base font-medium text-white disabled:opacity-60 sm:w-48" style={{ background: "#333333" }}>
+          <button type="submit" disabled={state === "sending"} className="h-13 w-full rounded-[var(--radius-btn)] py-3.5 text-base font-medium text-white disabled:opacity-60 sm:w-48" style={{ background: "#333333" }}>
             {state === "sending" ? "Sending…" : form.submit_label}
           </button>
         </div>

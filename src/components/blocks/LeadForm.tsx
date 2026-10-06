@@ -57,7 +57,7 @@ export function LeadForm({ data, pageId, siteName }: Props) {
 
   if (state === "done") {
     return (
-      <div className="rounded-2xl bg-white p-8 text-center" role="status">
+      <div className="rounded-[var(--radius-lg)] bg-white p-8 text-center" role="status">
         <p className="font-display text-3xl">{data.success_message || "Thanks — we'll be in touch."}</p>
       </div>
     );
@@ -82,7 +82,7 @@ export function LeadForm({ data, pageId, siteName }: Props) {
         </label>
       ) : null}
       {state === "error" ? <p className="text-sm text-red-700 sm:col-span-2" role="alert">{error}</p> : null}
-      <button disabled={state === "sending"} className="h-13 rounded-full bg-ink py-3.5 text-base font-medium text-white disabled:opacity-60 sm:col-span-2">
+      <button disabled={state === "sending"} className="h-13 rounded-[var(--radius-btn)] bg-ink py-3.5 text-base font-medium text-white disabled:opacity-60 sm:col-span-2">
         {state === "sending" ? "Sending…" : data.submit_label || "Send"}
       </button>
     </form>

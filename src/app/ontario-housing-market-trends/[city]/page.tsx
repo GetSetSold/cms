@@ -292,7 +292,7 @@ export default async function TrendsDetailPage({ params }: { params: Promise<Par
         <div className="mt-10 rounded-[var(--radius-lg)] border border-primary p-6 text-center">
           <h3 className="text-lg font-bold">Looking to Buy a Property?</h3>
           <p className="mt-1 text-sm text-muted">Browse active MLS® listings or contact our team for expert guidance.</p>
-          <Link href="/listings" className="mt-4 inline-block rounded-[var(--radius-md)] bg-black px-6 py-2.5 text-sm font-semibold text-white">
+          <Link href="/listings" className="mt-4 inline-block rounded-[var(--radius-btn)] bg-black px-6 py-2.5 text-sm font-semibold text-white">
             Browse Listings
           </Link>
         </div>
