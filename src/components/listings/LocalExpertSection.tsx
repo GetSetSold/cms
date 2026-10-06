@@ -39,11 +39,27 @@ export function LocalExpertSection({
   const cashback = le.cashback || "$5,000";
   const valuationUrl = le.valuation_url || "/home-valuation";
   const callLabel = le.call_label || "Call Rohit Today";
+  const reviewUrl = le.review_url || "";
+  const aboutUrl = le.about_url || "/about";
+  const firstName = name.split(" ")[0];
+  const photoLabel = `${name}, real estate agent in ${areaName}`;
 
   const median = fmtMoney(stats.medianSalePrice);
-  const statBits: string[] = [];
-  if (stats.activeCount > 0) statBits.push(`<strong>${stats.activeCount}</strong> active listings`);
-  if (median) statBits.push(`<strong>${median}</strong> median`);
+  const medianHtml = median ? ` with a <strong>${median}</strong> median` : "";
+
+  // Market-condition templates: same component, different copy per market
+  // shape — keeps 1,900 pages from reading as spun content.
+  const n = stats.activeCount;
+  let take: string;
+  if (n > 0 && n < 40) {
+    take = `Only <strong>${n} active listings</strong> in ${areaName}${medianHtml} — inventory is tight, so well-priced homes move fast. Selling? This is your window. Buying? You need someone who gets you in first.`;
+  } else if (n >= 150) {
+    take = `<strong>${n} active listings</strong> in ${areaName}${medianHtml} — buyers have real choice and negotiating room right now. Whether you're buying below ask or selling against competition, strategy decides who wins.`;
+  } else if (n > 0) {
+    take = `<strong>${n} active listings</strong> in ${areaName}${medianHtml} — a balanced market where pricing strategy decides who wins. <strong>Ask me what your street is doing.</strong>`;
+  } else {
+    take = `Tracking every listing in ${areaName}${medianHtml}. <strong>Ask me what your street is doing.</strong>`;
+  }
 
   const schema = {
     "@context": "https://schema.org",
@@ -61,7 +77,7 @@ export function LocalExpertSection({
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
       <div className="flex flex-col gap-5 md:flex-row md:items-center md:gap-6">
         {photo ? (
-          <Svg asset={photo} className="h-20 w-20 shrink-0 rounded-full object-cover" style={{ width: 84, height: 84 }} />
+          <Svg asset={photo} label={photoLabel} className="h-20 w-20 shrink-0 rounded-full object-cover" style={{ width: 84, height: 84 }} />
         ) : (
           <div className="flex h-[84px] w-[84px] shrink-0 items-center justify-center rounded-full bg-soft text-xs text-muted">Photo</div>
         )}
@@ -71,17 +87,21 @@ export function LocalExpertSection({
           <div className="mt-0.5 text-[13px] text-muted">{title} · {brokerage}</div>
           <div className="mt-1.5 text-[13px] text-ink">
             <span className="tracking-[2px]">★★★★★</span>{" "}
-            <span className="whitespace-nowrap">{rating} · {reviewCount} Google reviews</span>
+            {reviewUrl ? (
+              <a href={reviewUrl} target="_blank" rel="noopener" className="whitespace-nowrap font-medium text-accent hover:underline">
+                {rating} · {reviewCount} Google reviews
+              </a>
+            ) : (
+              <span className="whitespace-nowrap">{rating} · {reviewCount} Google reviews</span>
+            )}
             {" · "}{serviceArea}
+            {" · "}
+            <a href={aboutUrl} className="font-medium text-accent hover:underline">More about {firstName} →</a>
           </div>
-          {statBits.length > 0 ? (
-            <p
-              className="mt-2 max-w-2xl text-[14px] leading-relaxed text-ink"
-              dangerouslySetInnerHTML={{
-                __html: `${statBits.join(" · ")} in ${areaName} right now. Ask me what your street is doing.`,
-              }}
-            />
-          ) : null}
+          <p
+            className="mt-2 max-w-2xl text-[14px] leading-relaxed text-ink"
+            dangerouslySetInnerHTML={{ __html: take }}
+          />
           <div className="mt-2.5 flex flex-wrap gap-2">
             {[`${listingFee} listing fee`, `${cashback} buyer cash-back`, "Free valuations"].map((c) => (
               <span key={c} className="rounded-full bg-soft px-3 py-1 text-[12px] text-ink">{c}</span>

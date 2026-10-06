@@ -93,9 +93,9 @@ export interface SiteSettings {
   agent?: { name?: string; title?: string; photo_svg_id?: string | null; phone?: string; email?: string; brokerage?: string };
   local_expert?: {
     enabled?: boolean; show_on_cities?: boolean; show_on_neighbourhoods?: boolean;
-    service_area?: string; review_rating?: string; review_count?: string;
+    service_area?: string; review_rating?: string; review_count?: string; review_url?: string;
     listing_fee?: string; cashback?: string;
-    valuation_url?: string; call_label?: string;
+    valuation_url?: string; call_label?: string; about_url?: string;
   };
   social_links: { size?: "xs" | "sm" | "md" | "lg"; items: { svg_id: string; href: string; label?: string }[] };
   mls_office_key?: string;

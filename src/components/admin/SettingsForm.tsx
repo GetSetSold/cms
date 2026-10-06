@@ -386,6 +386,8 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
                       <label className="label">Buyer cash-back<input className="input" value={s.local_expert?.cashback ?? ""} onChange={(e) => set("local_expert", { ...s.local_expert, cashback: e.target.value })} placeholder="$5,000" /></label>
                       <label className="label">Valuation URL<input className="input" value={s.local_expert?.valuation_url ?? ""} onChange={(e) => set("local_expert", { ...s.local_expert, valuation_url: e.target.value })} placeholder="/home-valuation" /></label>
                       <label className="label">Call button label<input className="input" value={s.local_expert?.call_label ?? ""} onChange={(e) => set("local_expert", { ...s.local_expert, call_label: e.target.value })} placeholder="Call Rohit Today" /></label>
+                      <label className="label">Google reviews URL<input className="input" value={s.local_expert?.review_url ?? ""} onChange={(e) => set("local_expert", { ...s.local_expert, review_url: e.target.value })} placeholder="https://g.page/…" /></label>
+                      <label className="label">About page URL<input className="input" value={s.local_expert?.about_url ?? ""} onChange={(e) => set("local_expert", { ...s.local_expert, about_url: e.target.value })} placeholder="/about" /></label>
                     </div>
                     <div className="flex flex-wrap gap-4">
                       <label className="label flex flex-row items-center gap-2">Show on city pages<input type="checkbox" checked={s.local_expert?.show_on_cities !== false} onChange={(e) => set("local_expert", { ...s.local_expert, show_on_cities: e.target.checked })} className="h-4 w-4" /></label>
