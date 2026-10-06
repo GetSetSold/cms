@@ -6,7 +6,8 @@ import { slugifyAddress, type PropertyListing } from "@/lib/mls";
  * Logo links to the same listing on realtor.ca.
  */
 export function RealtorAttribution({ listing }: { listing: PropertyListing }) {
-  const mlsId = listing.ListingId ?? listing.ListingKey;
+  // realtor.ca uses the ListingKey in its URL
+  const mlsId = listing.ListingKey;
   // realtor.ca slug style: address + city + district, e.g. 32-steven-court-brampton-heart-lake-west
   const slug = slugifyAddress(listing.UnparsedAddress, listing.City, listing.CityRegion);
   const realtorUrl = `https://www.realtor.ca/real-estate/${mlsId}/${slug}`;
@@ -14,7 +15,7 @@ export function RealtorAttribution({ listing }: { listing: PropertyListing }) {
   return (
     <div className="rounded-2xl bg-white p-5">
       <div className="text-[12px] text-muted">Listing Data Provided By</div>
-      <div className="mt-2 flex items-start gap-4">
+      <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
         <a
           id="realtor-logo"
           href={realtorUrl}
