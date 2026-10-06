@@ -169,7 +169,7 @@ export async function ListingsBrowser({
         <div className="grid gap-5 lg:grid-cols-2">
           <div className={`grid grid-cols-1 gap-5 ${perRow >= 3 ? "sm:grid-cols-2" : ""}`}>
             {cards.length ? cards : (
-              <div className="col-span-full rounded-2xl bg-white p-10 text-center text-muted">No listings match your search right now.</div>
+              <div className="col-span-full rounded-[var(--radius-lg)] bg-white p-10 text-center text-muted">No listings match your search right now.</div>
             )}
           </div>
           <div className="h-[70vh] min-h-[480px] lg:sticky lg:top-24">
@@ -179,7 +179,7 @@ export async function ListingsBrowser({
       ) : (
         <div className={`grid grid-cols-1 gap-5 ${GRID_COLS[perRow]}`}>
           {cards.length ? cards : (
-            <div className="col-span-full rounded-2xl bg-white p-10 text-center text-muted">No listings match your search right now.</div>
+            <div className="col-span-full rounded-[var(--radius-lg)] bg-white p-10 text-center text-muted">No listings match your search right now.</div>
           )}
         </div>
       )}

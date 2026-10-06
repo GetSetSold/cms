@@ -24,7 +24,7 @@ export async function ListingMarketPulse({ citySlug, cityName }: { citySlug: str
   const tenYr = [...byYear.entries()].sort().slice(-10).map(([, v]) => ({ month: v.month, value: v.value }));
 
   return (
-    <div className="overflow-hidden rounded-2xl bg-white">
+    <div className="overflow-hidden rounded-[var(--radius-lg)] bg-white">
       {/* Price header */}
       <div className="flex items-center justify-between gap-4 p-6">
         <div>
@@ -45,7 +45,7 @@ export async function ListingMarketPulse({ citySlug, cityName }: { citySlug: str
         </div>
         <Link
           href={`/ontario-housing-market-trends/${hpiSlug}`}
-          className="group inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-ink px-4 py-2.5 text-[13px] font-bold text-white"
+          className="group inline-flex shrink-0 items-center gap-1.5 rounded-[var(--radius-md)] bg-ink px-4 py-2.5 text-[13px] font-bold text-white"
         >
           Trends
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5">

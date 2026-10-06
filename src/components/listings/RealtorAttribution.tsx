@@ -13,7 +13,7 @@ export function RealtorAttribution({ listing }: { listing: PropertyListing }) {
   const realtorUrl = `https://www.realtor.ca/real-estate/${mlsId}/${slug}`;
 
   return (
-    <div className="rounded-2xl bg-white p-5">
+    <div className="rounded-[var(--radius-lg)] bg-white p-5">
       <div className="text-[12px] text-muted">Listing Data Provided By</div>
       <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
         <a

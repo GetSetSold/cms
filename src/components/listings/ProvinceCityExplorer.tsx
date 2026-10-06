@@ -71,7 +71,7 @@ export function ProvinceCityExplorer({
           <a
             key={c.slug}
             href={`/${c.slug}-real-estate`}
-            className="group relative rounded-2xl bg-white p-6 pr-16 transition hover:shadow-lg"
+            className="group relative rounded-[var(--radius-lg)] bg-white p-6 pr-16 transition hover:shadow-[var(--shadow-card)]"
           >
             <div className="font-display text-xl">{c.city} Real Estate</div>
             <div className="mt-1 text-sm text-muted">{c.count.toLocaleString()} active listings</div>
@@ -81,7 +81,7 @@ export function ProvinceCityExplorer({
       </div>
 
       {filtered.length === 0 ? (
-        <p className="mt-8 rounded-2xl bg-white p-6 text-center text-muted">
+        <p className="mt-8 rounded-[var(--radius-lg)] bg-white p-6 text-center text-muted">
           No cities match &ldquo;{query.trim()}&rdquo;. Try another search.
         </p>
       ) : null}

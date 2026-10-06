@@ -38,7 +38,7 @@ export function PromoBanner({
     // 0.25% cashback, matching the $599K → $1,497.50 example.
     const cashback = Math.round(price * 0.0025);
     return (
-      <div className="flex flex-col gap-5 rounded-2xl bg-ink p-6 text-white md:flex-row md:items-center md:gap-6 md:p-7">
+      <div className="flex flex-col gap-5 rounded-[var(--radius-lg)] bg-ink p-6 text-white md:flex-row md:items-center md:gap-6 md:p-7">
         <div className="min-w-0 flex-1">
           <span className="mb-3 inline-block rounded-full bg-white px-3.5 py-1.5 text-[11px] font-extrabold uppercase tracking-[1.5px] text-ink">
             Exclusive Buyer Offer
@@ -57,7 +57,7 @@ export function PromoBanner({
           <button
             type="button"
             onClick={openInquiry}
-            className="group inline-flex items-center gap-2.5 rounded-lg bg-white px-5 py-3 text-[14px] font-bold text-ink"
+            className="group inline-flex items-center gap-2.5 rounded-[var(--radius-md)] bg-white px-5 py-3 text-[14px] font-bold text-ink"
           >
             Claim Offer
             <span className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5">
@@ -70,7 +70,7 @@ export function PromoBanner({
   }
 
   return (
-    <div className="flex flex-col gap-5 rounded-2xl bg-ink p-6 text-white md:flex-row md:items-center md:gap-6 md:p-7">
+    <div className="flex flex-col gap-5 rounded-[var(--radius-lg)] bg-ink p-6 text-white md:flex-row md:items-center md:gap-6 md:p-7">
       <div className="min-w-0 flex-1">
         <span className="mb-3 inline-block rounded-full bg-accent px-3.5 py-1.5 text-[11px] font-extrabold uppercase tracking-[1.5px] text-white">
           Renter-Friendly Service
@@ -89,7 +89,7 @@ export function PromoBanner({
         <button
           type="button"
           onClick={openInquiry}
-          className="group inline-flex items-center gap-2.5 rounded-lg bg-accent px-5 py-3 text-[14px] font-bold text-white"
+          className="group inline-flex items-center gap-2.5 rounded-[var(--radius-md)] bg-accent px-5 py-3 text-[14px] font-bold text-white"
         >
           Apply Now
           <span className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5">

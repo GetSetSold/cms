@@ -155,7 +155,7 @@ export function ListingNearbyPlaces({ lat, lng }: { lat: number; lng: number; li
           type="button"
           onClick={() => setOpen((o) => !o)}
           aria-expanded={open}
-          className="flex w-full items-center justify-between gap-4 rounded-2xl bg-white px-6 py-4 text-left lg:hidden"
+          className="flex w-full items-center justify-between gap-4 rounded-[var(--radius-lg)] bg-white px-6 py-4 text-left lg:hidden"
         >
           <span className="font-display !text-left text-[1.0rem]">Nearby Places</span>
           <span aria-hidden="true" className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-line text-lg leading-none text-ink">
@@ -177,7 +177,7 @@ export function ListingNearbyPlaces({ lat, lng }: { lat: number; lng: number; li
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        className="flex w-full items-center justify-between gap-4 rounded-2xl bg-white px-6 py-4 text-left lg:hidden"
+        className="flex w-full items-center justify-between gap-4 rounded-[var(--radius-lg)] bg-white px-6 py-4 text-left lg:hidden"
       >
         <span className="font-display !text-left text-[1.0rem]">Nearby Places</span>
         <span aria-hidden="true" className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-line text-lg leading-none text-ink">
@@ -188,7 +188,7 @@ export function ListingNearbyPlaces({ lat, lng }: { lat: number; lng: number; li
       <div className={open ? "block" : "hidden lg:block"}>
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {results.map((cat) => (
-          <div key={cat.label} className="rounded-2xl bg-white p-5">
+          <div key={cat.label} className="rounded-[var(--radius-lg)] bg-white p-5">
             <h3 className="mb-3 border-b border-line pb-2 font-display text-[1.0rem]">{cat.label}</h3>
             {cat.places.length ? (
               <ul className="flex flex-col divide-y divide-line">
