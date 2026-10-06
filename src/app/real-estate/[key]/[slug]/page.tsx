@@ -16,6 +16,9 @@ import { SimilarListings } from "@/components/listings/SimilarListings";
 import { ContentAdSlot } from "@/components/ads/ContentAdSlot";
 import { CollapsibleCard } from "@/components/listings/CollapsibleCard";
 import { PromoBanner } from "@/components/listings/PromoBanner";
+import { PaymentEstimate } from "@/components/listings/PaymentEstimate";
+import { ShareButton } from "@/components/listings/ShareButton";
+import { ListingMarketPulse } from "@/components/listings/ListingMarketPulse";
 import { LocationDescription, PropertySummary, LandAndLot, ConstructionExterior, SystemsUtilities, Financials, FieldTable, RoomsBlock, MapDirections } from "@/components/listings/ListingDetailBlocks";
 import { createClient } from "@/lib/supabase/server";
 import type { CmsForm } from "@/lib/types";
@@ -165,9 +168,13 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
                 {sale ? "For Sale" : "For Rent"}
               </span>
               <div className="font-display text-3xl md:text-4xl">{priceDisplay(listing)}</div>
+              {sale && Number(listing.ListPrice) > 0 ? (
+                <PaymentEstimate price={Number(listing.ListPrice)} listingKey={String(listing.ListingKey ?? "")} />
+              ) : null}
               <div className="mt-2 break-words text-lg">{listing.UnparsedAddress}{listing.City ? `, ${listing.City}` : ""}{listing.Province ? `, ${listing.Province}` : ""}{listing.PostalCode ? ` ${listing.PostalCode}` : ""}</div>
               <div className="mt-4 flex items-center justify-between border-t border-line pt-4 text-sm text-muted">
                 <span>MLS® <strong className="text-ink">{listing.ListingId ?? listing.ListingKey}</strong>{listing.OfficeName ? <> <span className="text-muted">|</span> {listing.OfficeName.toUpperCase()}</> : null}</span>
+                <ShareButton title={`${listing.UnparsedAddress ?? "Listing"} — ${priceDisplay(listing)}`} url="" />
               </div>
             </div>
 
@@ -219,6 +226,15 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
           return Number.isFinite(nlat) && Number.isFinite(nlng) && (nlat !== 0 || nlng !== 0) ? (
             <div className="mt-10">
               <ListingNearbyPlaces lat={nlat} lng={nlng} listingKey={listing.ListingKey} />
+            </div>
+          ) : null;
+        })()}
+
+        {(() => {
+          const city = normalizeCity(listing.City ?? "");
+          return city ? (
+            <div className="mt-10">
+              <ListingMarketPulse citySlug={citySlug(city)} cityName={city} />
             </div>
           ) : null;
         })()}
