@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireStaff } from "@/lib/auth";
 import { LEAD_STATUSES, type Lead } from "@/lib/types";
+import { AddLeadButton } from "@/components/admin/AddLeadButton";
 
 // One color per stage — light column tint, a matching dot/border accent — so the board reads at a
 // glance instead of every column looking the same.
@@ -40,9 +41,12 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
     <div className="flex flex-col gap-5 p-6">
       <div className="flex items-center gap-3">
         <h1 className="font-display text-4xl">Leads</h1>
-        <div className="ml-auto flex rounded-[10px] bg-soft/70 p-1">
+        <div className="ml-auto flex items-center gap-2">
+          <AddLeadButton />
+          <div className="flex rounded-[10px] bg-soft/70 p-1">
           <Link href={{ query: { q, form } }} className={`flex h-8 items-center rounded-[7px] px-3 ${board ? "bg-white shadow-sm" : "text-muted"}`}>Board</Link>
           <Link href={{ query: { q, form, view: "table" } }} className={`flex h-8 items-center rounded-[7px] px-3 ${!board ? "bg-white shadow-sm" : "text-muted"}`}>Table</Link>
+          </div>
         </div>
       </div>
       <form className="flex gap-2">
