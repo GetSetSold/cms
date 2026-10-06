@@ -63,7 +63,7 @@ export function SimilarListings({ listings }: { listings: GridListing[] }) {
         style={{ scrollbarWidth: "none" }}
       >
         {listings.map((l) => (
-          <div key={l.ListingKey} className="w-[280px] shrink-0 snap-start">
+          <div key={l.ListingKey} className="w-[280px] shrink-0 grow snap-start">
             <ListingCard listing={l} />
           </div>
         ))}
