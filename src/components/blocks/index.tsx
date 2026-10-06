@@ -44,6 +44,16 @@ const cardLg = `rounded-[var(--radius-lg)] ${cardShadow}`;
 const cardMd = `rounded-[var(--radius-md)] ${cardShadow}`;
 const paragraphs = (text?: string) =>
   (text ?? "").split(/\n{2,}/).filter(Boolean).map((p, i) => <p key={i}>{p}</p>);
+// Luminance check for custom badge/backdrop colors — picks readable text.
+function isDarkHex(hex: string): boolean {
+  const h = hex.trim().replace("#", "");
+  const full = h.length === 3 ? h.split("").map((c) => c + c).join("") : h;
+  if (!/^[0-9a-fA-F]{6}$/.test(full)) return false;
+  const r = parseInt(full.slice(0, 2), 16);
+  const g = parseInt(full.slice(2, 4), 16);
+  const b = parseInt(full.slice(4, 6), 16);
+  return (0.299 * r + 0.587 * g + 0.114 * b) / 255 < 0.5;
+}
 
 function Button({ link, variant = "primary", dark }: { link?: { label?: string; href?: string }; variant?: "primary" | "outline"; dark?: boolean }) {
   if (!link?.label || !link?.href) return null;
@@ -194,18 +204,26 @@ function Hero({ data, ctx }: BlockProps) {
          shrinking or centering the photo (Illustration size) never drags the badge along with it. */}
       <div className={`relative ${imageOnLeft ? "order-1" : ""}`}>
         <div style={{ width: `${imageSizePct}%`, marginLeft: imageSizePct < 100 ? "auto" : undefined, marginRight: imageSizePct < 100 ? "auto" : undefined }}>
-          <div className={data.image_bg === "mist" ? "rounded-3xl bg-[linear-gradient(135deg,#e8eef4_0%,#f4f6f8_100%)]" : undefined}>
+          {data.image_bg_color || data.image_bg === "mist" ? (
+            <div
+              className={`rounded-3xl ${data.image_bg_color ? "" : "bg-[linear-gradient(135deg,#e8eef4_0%,#f4f6f8_100%)]"}`}
+              style={data.image_bg_color ? { background: data.image_bg_color } : undefined}
+            >
+              <Svg asset={art} label={art?.name} className="aspect-[600/520] overflow-hidden rounded-3xl" />
+            </div>
+          ) : (
             <Svg asset={art} label={art?.name} className="aspect-[600/520] overflow-hidden rounded-3xl" />
-          </div>
+          )}
         </div>
         {data.badge?.value ? (() => {
           const style = data.badge_style || "solid";
-          const darkBadge = style === "dark";
+          const customBg = (data.badge_bg as string) || "";
+          const badgeDark = customBg ? isDarkHex(customBg) : style === "dark";
           const styleCls = {
             solid: "bg-white shadow-[var(--shadow-card)]",
             bordered: "bg-white border-2 border-ink",
             glass: "bg-white/70 backdrop-blur-md shadow-[var(--shadow-card)]",
-            dark: "bg-ink text-white shadow-[var(--shadow-card)]",
+            dark: "bg-ink shadow-[var(--shadow-card)]",
           }[style as "solid" | "bordered" | "glass" | "dark"];
           // Explicit left/center/right when set; otherwise the original
           // behavior (opposite side from the image) for existing content
@@ -222,18 +240,18 @@ function Hero({ data, ctx }: BlockProps) {
           const ribbonHorizCls = { left: "left-0", right: "right-0", center: "left-1/2 -translate-x-1/2" }[position as "left" | "right" | "center"];
           const flatSideCls = position === "right" ? "rounded-l-full" : "rounded-r-full";
           return (
-            <Wrap {...(wrapProps as any)} className={`absolute top-0 z-10 flex max-w-[calc(100%-1rem)] items-center gap-1.5 py-1 pl-1 pr-1.5 ${flatSideCls} ${styleCls} ${ribbonHorizCls}`}>
+            <Wrap {...(wrapProps as any)} style={customBg ? { background: customBg } : undefined} className={`absolute top-0 z-10 flex max-w-[calc(100%-1rem)] items-center gap-1.5 py-1 pl-1 pr-1.5 ${flatSideCls} ${styleCls} ${ribbonHorizCls} ${badgeDark ? "text-white" : ""}`}>
               {icon ? (
                 <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary">
                   <Svg asset={icon} className="h-3 w-3" colorOverride="#FFFFFF" />
                 </span>
               ) : null}
               <span className="flex min-w-0 flex-col">
-                {data.badge.label ? <span className={`truncate text-[9px] leading-tight ${darkBadge ? "text-white/60" : "text-muted"}`}>{data.badge.label}</span> : null}
+                {data.badge.label ? <span className={`truncate text-[9px] leading-tight ${badgeDark ? "text-white/60" : "text-muted"}`}>{data.badge.label}</span> : null}
                 <span className="truncate text-xs font-bold leading-tight">{data.badge.value}</span>
               </span>
               {data.badge_href ? (
-                <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${darkBadge ? "bg-white text-ink" : "bg-primary text-white"}`}>
+                <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${badgeDark ? "bg-white text-ink" : "bg-primary text-white"}`}>
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
                 </span>
               ) : null}
