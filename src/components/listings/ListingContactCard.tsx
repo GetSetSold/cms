@@ -43,7 +43,7 @@ function ListingSummaryCompact({ listing }: { listing: PropertyListing }) {
   return (
     <div className="min-w-0">
       <div className="flex items-center gap-1.5">
-        <span className={`rounded px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-white ${sale ? "bg-ink" : "bg-accent"}`}>
+        <span className={`rounded-[var(--radius-label)] px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-white ${sale ? "bg-ink" : "bg-accent"}`}>
           {sale ? "For Sale" : "For Rent"}
         </span>
         <span className="truncate text-[13px] font-semibold">{priceDisplay(listing)}</span>
@@ -62,7 +62,7 @@ function ListingSummary({ listing }: { listing: PropertyListing }) {
   const hood = ((listing.CityRegion || listing.SubdivisionName) ?? "").trim();
   return (
     <div className="flex flex-col gap-1.5">
-      <span className={`w-fit rounded px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white ${sale ? "bg-ink" : "bg-accent"}`}>
+      <span className={`w-fit rounded-[var(--radius-label)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white ${sale ? "bg-ink" : "bg-accent"}`}>
         {sale ? "For Sale" : "For Rent"}
       </span>
       <div className="text-xl font-semibold leading-tight">{priceDisplay(listing)}</div>

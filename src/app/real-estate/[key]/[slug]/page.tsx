@@ -165,7 +165,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
         <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
           <div className="flex min-w-0 flex-col gap-6">
             <div className="rounded-[var(--radius-lg)] bg-white p-6">
-              <span className={`mb-3 inline-block rounded px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-white ${sale ? "bg-ink" : "bg-accent"}`}>
+              <span className={`mb-3 inline-block rounded-[var(--radius-label)] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-white ${sale ? "bg-ink" : "bg-accent"}`}>
                 {sale ? "For Sale" : "For Rent"}
               </span>
               <div className="font-display text-3xl md:text-4xl">{priceDisplay(listing)}</div>
