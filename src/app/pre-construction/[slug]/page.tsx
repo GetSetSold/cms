@@ -75,7 +75,7 @@ export default async function BuilderOrCityPage({ params }: { params: Promise<{ 
                 {builder.description ? <p className="text-sm leading-relaxed md:text-base">{builder.description}</p> : null}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                   {[[IconHome, projects.length, "Active Projects"], [IconBuilding, cities.size, "Communities"], [IconCheckBadge, "Ontario", "Coverage Area"]].map(([Icon, value, label]: any) => (
-                    <div key={label} className="flex items-center gap-3 rounded-lg bg-soft p-4">
+                    <div key={label} className="flex items-center gap-3 rounded-[var(--radius-md)] bg-soft p-4">
                       <Icon className="h-6 w-6 shrink-0" />
                       <div><div className="text-sm font-bold">{value}</div><div className="text-xs text-muted">{label}</div></div>
                     </div>
@@ -84,14 +84,14 @@ export default async function BuilderOrCityPage({ params }: { params: Promise<{ 
               </div>
               <div className="flex flex-col gap-5 self-start rounded-[var(--radius-lg)] bg-ink p-7 text-white">
                 {builder.logo_url ? (
-                  <span className="flex h-14 items-center justify-center rounded-lg bg-white/95 p-2.5">
+                  <span className="flex h-14 items-center justify-center rounded-[var(--radius-md)] bg-white/95 p-2.5">
                     <img src={builder.logo_url} alt={builder.builder_name} className="max-h-full max-w-full object-contain" />
                   </span>
                 ) : null}
                 <div><h3 className="font-display text-lg font-bold">{builder.builder_name}</h3><p className="text-xs text-white/60">Pre-Construction Specialist · Ontario</p></div>
                 <div><div className="font-display text-2xl font-bold text-primary">{projects.length}</div><div className="text-[11px] uppercase tracking-wide text-white/40">Active Projects</div></div>
-                <a href="#projects" className="flex h-12 items-center justify-center rounded-lg bg-primary text-sm font-bold">Browse Projects</a>
-                <a href="#lead" className="flex h-12 items-center justify-center rounded-lg border border-white/30 text-sm font-bold">Request Info Package</a>
+                <a href="#projects" className="flex h-12 items-center justify-center rounded-[var(--radius-md)] bg-primary text-sm font-bold">Browse Projects</a>
+                <a href="#lead" className="flex h-12 items-center justify-center rounded-[var(--radius-md)] border border-white/30 text-sm font-bold">Request Info Package</a>
               </div>
             </div>
           </section>
@@ -141,7 +141,7 @@ export default async function BuilderOrCityPage({ params }: { params: Promise<{ 
                             {p.baths ? <span className="rounded-md bg-soft px-2 py-1 text-xs font-semibold">{p.baths} Baths</span> : null}
                             {p.sqft ? <span className="rounded-md bg-soft px-2 py-1 text-xs font-semibold">{p.sqft} Sqft</span> : null}
                           </div>
-                          <span className="mt-1 flex h-11 items-center justify-center rounded-lg bg-primary text-sm font-bold text-white">View Project →</span>
+                          <span className="mt-1 flex h-11 items-center justify-center rounded-[var(--radius-md)] bg-primary text-sm font-bold text-white">View Project →</span>
                         </div>
                       </Link>
                     );
@@ -164,7 +164,7 @@ export default async function BuilderOrCityPage({ params }: { params: Promise<{ 
                       <div className="py-3"><div className="font-display text-xl font-bold text-primary">{projects.length}</div><div className="text-[10px] uppercase tracking-wide text-white/40">Projects on Map</div></div>
                       <div className="py-3"><div className="font-display text-xl font-bold text-primary">{cities.size}</div><div className="text-[10px] uppercase tracking-wide text-white/40">Cities</div></div>
                     </div>
-                    <a href="#lead" className="flex h-11 items-center justify-center gap-2 rounded-lg bg-primary text-sm font-bold">Find My Community</a>
+                    <a href="#lead" className="flex h-11 items-center justify-center gap-2 rounded-[var(--radius-md)] bg-primary text-sm font-bold">Find My Community</a>
                   </div>
                 </div>
               </div>

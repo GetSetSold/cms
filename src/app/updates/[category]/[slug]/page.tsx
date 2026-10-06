@@ -94,12 +94,12 @@ export default async function PostPage({ params, searchParams }: { params: Promi
           {/* MAIN: each block — and the article — is its own separate box, not one shared card */}
           <div className="flex flex-col gap-6">
             {post.blocks_before.map((b, i) => (
-              <div key={`before-${i}`} className="overflow-hidden rounded-3xl bg-white">
+              <div key={`before-${i}`} className="overflow-hidden rounded-[var(--radius-lg)] bg-white">
                 <RenderSections sections={toSections([b], `before-${i}`)} ctx={ctx} />
               </div>
             ))}
 
-            <article className="overflow-hidden rounded-3xl bg-white px-6 py-10 md:px-14 md:py-14">
+            <article className="overflow-hidden rounded-[var(--radius-lg)] bg-white px-6 py-10 md:px-14 md:py-14">
               <span className="mb-4 inline-block w-fit rounded-full bg-primary-soft px-3 py-1 text-xs font-bold uppercase tracking-wide text-primary">{cat.name}</span>
               <h1 className="mb-4 font-display text-2xl font-extrabold leading-tight md:text-5xl">{post.title}</h1>
               {post.excerpt ? <p className="mb-6 text-lg text-muted">{post.excerpt}</p> : null}
@@ -112,7 +112,7 @@ export default async function PostPage({ params, searchParams }: { params: Promi
                 </div>
               </div>
 
-              {post.cover_svg_id ? <Svg asset={svgs[post.cover_svg_id]} fill className="mb-8 aspect-[16/9] overflow-hidden rounded-2xl" /> : null}
+              {post.cover_svg_id ? <Svg asset={svgs[post.cover_svg_id]} fill className="mb-8 aspect-[16/9] overflow-hidden rounded-[var(--radius-lg)]" /> : null}
 
               <div className="prose-post" dangerouslySetInnerHTML={{ __html: html }} />
 
@@ -136,7 +136,7 @@ export default async function PostPage({ params, searchParams }: { params: Promi
             </article>
 
             {post.blocks_after.map((b, i) => (
-              <div key={`after-${i}`} className="overflow-hidden rounded-3xl bg-white">
+              <div key={`after-${i}`} className="overflow-hidden rounded-[var(--radius-lg)] bg-white">
                 <RenderSections sections={toSections([b], `after-${i}`)} ctx={ctx} />
               </div>
             ))}
@@ -145,7 +145,7 @@ export default async function PostPage({ params, searchParams }: { params: Promi
           {/* SIDEBAR: TOC (auto from headings), CTA (set once in Settings), related reading — none of this needs per-post setup */}
           <aside className="flex flex-col gap-4 lg:sticky lg:top-24">
             {toc.length ? (
-              <div className="flex flex-col gap-2.5 rounded-2xl bg-white p-5">
+              <div className="flex flex-col gap-2.5 rounded-[var(--radius-lg)] bg-white p-5">
                 <span className="text-xs font-bold uppercase tracking-wide text-muted">On this page</span>
                 {toc.map((item) => (
                   <a key={item.id} href={`#${item.id}`} className={`text-sm hover:text-primary ${item.level === 3 ? "pl-4 text-muted" : "font-medium"}`}>{item.text}</a>
@@ -154,7 +154,7 @@ export default async function PostPage({ params, searchParams }: { params: Promi
             ) : null}
 
             {settings.blog_cta?.heading ? (
-              <div className="flex flex-col gap-3 rounded-2xl bg-gradient-to-br from-ink to-primary p-6 text-white">
+              <div className="flex flex-col gap-3 rounded-[var(--radius-lg)] bg-gradient-to-br from-ink to-primary p-6 text-white">
                 <strong className="text-lg">{settings.blog_cta.heading}</strong>
                 {settings.blog_cta.text ? <span className="text-sm text-white/75">{settings.blog_cta.text}</span> : null}
                 {settings.blog_cta.button_label && settings.blog_cta.button_href ? (
@@ -167,8 +167,8 @@ export default async function PostPage({ params, searchParams }: { params: Promi
               <div className="flex flex-col gap-4">
                 <h2 className="text-lg font-extrabold">Related reading</h2>
                 {related.map((p: any) => (
-                  <Link key={p.id} href={`/updates/${cat.slug}/${p.slug}`} prefetch={false} className="flex flex-col gap-3 overflow-hidden rounded-2xl bg-white p-3 shadow-[0_4px_16px_rgba(20,20,43,0.05)]">
-                    <Svg asset={p.cover_svg_id ? relatedSvgs[p.cover_svg_id] : undefined} fill className="aspect-[16/10] overflow-hidden rounded-xl" />
+                  <Link key={p.id} href={`/updates/${cat.slug}/${p.slug}`} prefetch={false} className="flex flex-col gap-3 overflow-hidden rounded-[var(--radius-lg)] bg-white p-3 shadow-[var(--shadow-card)]">
+                    <Svg asset={p.cover_svg_id ? relatedSvgs[p.cover_svg_id] : undefined} fill className="aspect-[16/10] overflow-hidden rounded-[var(--radius-md)]" />
                     <span className="px-1 pb-1 text-[13px] md:text-[15px] font-bold leading-snug">{p.title}</span>
                   </Link>
                 ))}

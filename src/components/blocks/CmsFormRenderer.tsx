@@ -85,7 +85,7 @@ function sectionErrors(sec: FormSection, values: Values, r: Resolved): Errors {
  *  but colored from the theme (var(--fq-accent)) instead of a hardcoded blue. */
 function BoxChoice({ kind, label, checked, onClick, inputProps }: { kind: "radio" | "check"; label: React.ReactNode; checked: boolean; onClick: () => void; inputProps: Record<string, unknown> }) {
   return (
-    <label className={`flex min-h-[52px] cursor-pointer items-start gap-3 rounded-xl border px-4 py-3.5 text-[15px] leading-relaxed transition-colors ${checked ? "border-[var(--fq-accent)] bg-[var(--fq-accent-soft)]" : "border-[var(--fq-line)] bg-[var(--fq-surface)] hover:border-[var(--fq-accent)]"}`}>
+    <label className={`flex min-h-[52px] cursor-pointer items-start gap-3 rounded-[var(--radius-md)] border px-4 py-3.5 text-[15px] leading-relaxed transition-colors ${checked ? "border-[var(--fq-accent)] bg-[var(--fq-accent-soft)]" : "border-[var(--fq-line)] bg-[var(--fq-surface)] hover:border-[var(--fq-accent)]"}`}>
       <input type={kind === "radio" ? "radio" : "checkbox"} checked={checked} onChange={onClick} className="sr-only" {...inputProps} />
       <span aria-hidden className={`mt-0.5 flex h-[18px] w-[18px] shrink-0 items-center justify-center border-[1.5px] ${kind === "radio" ? "rounded-full" : "rounded-[5px]"} ${checked ? "border-0 bg-[var(--fq-accent)]" : "border-[var(--fq-choice-border)]"}`}>
         {checked && kind === "radio" ? <span className="h-[9px] w-[9px] rounded-full bg-white" /> : null}
@@ -200,7 +200,7 @@ function Question({ field, id, label, error, className = "", boxed, pills, child
   const grouped = GROUP_TYPES.includes(field.type);
   const soloCheckbox = field.type === "checkbox"; // its own clickable row already states the question — see BasicField, every style
   return (
-    <div className={`flex flex-col gap-2.5 text-[15px] ${boxed ? "rounded-2xl border border-[var(--fq-line)] bg-[var(--fq-surface)] p-5 shadow-[var(--fq-shadow)] md:p-6" : "gap-1.5"} ${className}`}>
+    <div className={`flex flex-col gap-2.5 text-[15px] ${boxed ? "rounded-[var(--radius-lg)] border border-[var(--fq-line)] bg-[var(--fq-surface)] p-5 shadow-[var(--fq-shadow)] md:p-6" : "gap-1.5"} ${className}`}>
       {soloCheckbox ? null : grouped
         ? <span id={`${id}-label`} className={`${boxed ? "text-base font-bold" : "font-medium"} text-[var(--fq-ink)]`}>{label ?? field.label}{star}</span>
         : <label htmlFor={id} className={`${boxed ? "text-base font-bold" : "font-medium"} text-[var(--fq-ink)]`}>{label ?? field.label}{star}</label>}
@@ -241,7 +241,7 @@ function Subform({ field, id, rows, errors, count, values, resolved, boxed, pill
         const row = rows[i] ?? {};
         const isTrailingSlot = onlyIndex !== undefined && !fixed && i >= rows.length;
         const entry = (
-          <div key={i} className={(boxed || pills) ? "flex flex-col gap-4" : "flex flex-col gap-3 rounded-xl border border-[var(--fq-line)] p-4"}>
+          <div key={i} className={(boxed || pills) ? "flex flex-col gap-4" : "flex flex-col gap-3 rounded-[var(--radius-md)] border border-[var(--fq-line)] p-4"}>
             {fixed && !boxed ? <div className="text-base font-semibold text-[var(--fq-ink)]">{title(i)}</div> : null}
             {isTrailingSlot ? <p className="text-sm text-muted">Fill this in to add another — or leave it blank and continue.</p> : null}
             <div className={`grid gap-3 sm:grid-cols-2 ${(boxed || pills) ? "gap-4" : ""}`}>
@@ -261,7 +261,7 @@ function Subform({ field, id, rows, errors, count, values, resolved, boxed, pill
           </div>
         );
         return (boxed || pills)
-          ? <div key={i} className="rounded-2xl border border-l-4 border-[var(--fq-line)] bg-[var(--fq-surface)] p-5 shadow-[var(--fq-shadow)] md:p-6" style={{ borderLeftColor: "var(--fq-accent)" }}>
+          ? <div key={i} className="rounded-[var(--radius-lg)] border border-l-4 border-[var(--fq-line)] bg-[var(--fq-surface)] p-5 shadow-[var(--fq-shadow)] md:p-6" style={{ borderLeftColor: "var(--fq-accent)" }}>
               {fixed ? <div className="mb-4 text-base font-bold text-[var(--fq-ink)]">{title(i)}</div> : null}
               {entry}
             </div>
@@ -295,7 +295,7 @@ function SectionBlock({ section, active, values, errors, resolved, boxed, pills,
   // `hidden` (not unmounting) keeps entered values intact when navigating back in a paginated form.
   // Validation is our own (see fieldError), so hidden steps can never block Next or Submit.
   return (
-    <div hidden={!active} role="group" aria-label={section.heading} className={`flex flex-col gap-4 ${section.background && !boxed ? "rounded-2xl p-6" : ""}`} style={section.background && !boxed ? { background: section.background } : undefined}>
+    <div hidden={!active} role="group" aria-label={section.heading} className={`flex flex-col gap-4 ${section.background && !boxed ? "rounded-[var(--radius-lg)] p-6" : ""}`} style={section.background && !boxed ? { background: section.background } : undefined}>
       {section.heading && !onlyEntry ? (
         headingSize === "large"
           ? <h2 className="text-3xl font-bold leading-tight text-[var(--fq-ink)]">{section.heading}</h2>
@@ -562,7 +562,7 @@ export function CmsFormRenderer({ form, pageId, extraFields, secondaryAction }: 
   }
 
   if (state === "done") {
-    return <div className="rounded-2xl bg-white p-8 text-center" role="status"><p className="font-display text-2xl font-bold">{form.success_message}</p></div>;
+    return <div className="rounded-[var(--radius-lg)] bg-white p-8 text-center" role="status"><p className="font-display text-2xl font-bold">{form.success_message}</p></div>;
   }
 
   // Errors on the questions currently on screen (for the summary line).
@@ -661,7 +661,7 @@ export function CmsFormRenderer({ form, pageId, extraFields, secondaryAction }: 
   if (!sidebar) return formBody;
 
   return (
-    <div className="flex flex-col overflow-hidden rounded-2xl border border-[var(--fq-line,var(--color-line))] sm:flex-row" style={themeVars}>
+    <div className="flex flex-col overflow-hidden rounded-[var(--radius-lg)] border border-[var(--fq-line,var(--color-line))] sm:flex-row" style={themeVars}>
       <aside className="flex shrink-0 flex-col gap-6 p-6 sm:w-[30%] sm:p-7" style={{ background: dark ? "#0E1015" : "var(--fq-ink)", color: dark ? "#F6F7FA" : "#fff" }}>
         {!form.hide_header ? (
           <div className="flex flex-col gap-3">

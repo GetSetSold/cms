@@ -38,7 +38,7 @@ export function ContentAdSlot({ adCode, className = "" }: { adCode: string; clas
   if (!client || !slot) return null;
 
   return (
-    <div className={`rounded-2xl bg-white p-4 ${className}`}>
+    <div className={`rounded-[var(--radius-lg)] bg-white p-4 ${className}`}>
       <div className="mb-2 text-center">
         <span className="text-[10px] uppercase tracking-wider text-muted">Advertisement</span>
       </div>

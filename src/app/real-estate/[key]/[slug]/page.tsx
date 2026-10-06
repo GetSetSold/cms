@@ -164,7 +164,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
 
         <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
           <div className="flex min-w-0 flex-col gap-6">
-            <div className="rounded-2xl bg-white p-6">
+            <div className="rounded-[var(--radius-lg)] bg-white p-6">
               <span className={`mb-3 inline-block rounded px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-white ${sale ? "bg-ink" : "bg-accent"}`}>
                 {sale ? "For Sale" : "For Rent"}
               </span>
@@ -179,7 +179,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
               </div>
             </div>
 
-            <div className="overflow-hidden rounded-2xl bg-white">
+            <div className="overflow-hidden rounded-[var(--radius-lg)] bg-white">
               <FieldTable mobileCols={4} variant="stats" fields={statFields(listing, dom)} />
             </div>
 
@@ -187,7 +187,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
             {showTenantPromo ? <PromoBanner variant="tenant" listing={listing} /> : null}
             {showListingAd ? <ContentAdSlot adCode={adCode} /> : null}
             {/* Mobile: flush accordion (no gaps). Desktop: spaced cards. */}
-            <div className="flex min-w-0 flex-col overflow-hidden rounded-2xl bg-white lg:gap-6 lg:overflow-visible lg:rounded-none lg:bg-transparent">
+            <div className="flex min-w-0 flex-col overflow-hidden rounded-[var(--radius-lg)] bg-white lg:gap-6 lg:overflow-visible lg:rounded-none lg:bg-transparent">
             {listing.PublicRemarks ? (
               <CollapsibleCard title="About this property">
                 <p className="whitespace-pre-line px-6 py-5 text-justify text-[0.85rem] leading-relaxed text-muted">{listing.PublicRemarks}</p>

@@ -25,7 +25,7 @@ function Icon({ it, ctx, t, boxed }: { it: Item; ctx: BlockCtx; t: Tone; boxed?:
     ? <Svg asset={art} className="h-7 w-7 md:h-8 md:w-8" colorOverride={it.icon_color || t.icon} />
     : <span aria-hidden className={`block h-6 w-6 rounded-full border-2 border-current ${t.accent}`} />;
   return boxed
-    ? <span className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border ${t.iconBox}`}>{glyph}</span>
+    ? <span className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-[var(--radius-lg)] border ${t.iconBox}`}>{glyph}</span>
     : <span className="shrink-0">{glyph}</span>;
 }
 
