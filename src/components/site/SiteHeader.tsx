@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { SiteSettings, SvgAsset } from "@/lib/types";
 import { Svg } from "./Svg";
 
@@ -17,6 +17,17 @@ export function SiteHeader({ settings, logo }: { settings: SiteSettings; logo?: 
   const [open, setOpen] = useState(false);
   const [openMega, setOpenMega] = useState<string | null>(null);
   const [openMobileGroup, setOpenMobileGroup] = useState<string | null>(null);
+  // Close delay: the full-width panel sits below the header with a dead gap
+  // between button and panel — without this the menu snaps shut mid-travel.
+  const closeTimer = useRef<number | null>(null);
+  const openMenu = (href: string) => {
+    if (closeTimer.current) { clearTimeout(closeTimer.current); closeTimer.current = null; }
+    setOpenMega(href);
+  };
+  const scheduleClose = () => {
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+    closeTimer.current = window.setTimeout(() => setOpenMega(null), 200);
+  };
   const h = settings.header ?? {};
   const showLogoMobile = h.show_logo_mobile !== false;
   const showLogoDesktop = h.show_logo_desktop !== false;
@@ -58,11 +69,11 @@ export function SiteHeader({ settings, logo }: { settings: SiteSettings; logo?: 
         <nav className={`hidden gap-9 md:flex ${compact ? "text-[13px]" : "text-[15px]"}`} aria-label="Main">
           {settings.navigation.map((n) =>
             n.columns?.length ? (
-              <div key={n.href} onMouseEnter={() => setOpenMega(n.href)} onMouseLeave={() => setOpenMega(null)}>
+              <div key={n.href} onMouseEnter={() => openMenu(n.href)} onMouseLeave={scheduleClose}>
                 <button
                   className={`border-b-2 pb-1 hover:text-[#0066CC] ${openMega === n.href ? "border-[#0066CC] text-[#0066CC]" : "border-transparent"}`}
                   aria-expanded={openMega === n.href}
-                  onClick={() => setOpenMega(openMega === n.href ? null : n.href)}
+                  onClick={() => { if (closeTimer.current) { clearTimeout(closeTimer.current); closeTimer.current = null; } setOpenMega(openMega === n.href ? null : n.href); }}
                 >
                   {n.label}
                 </button>
