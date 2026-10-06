@@ -92,9 +92,9 @@ export default async function ProvincePage({ params }: { params: Promise<{ provi
       {themeIconOverrideCSS(settings) ? <style dangerouslySetInnerHTML={{ __html: themeIconOverrideCSS(settings) }} /> : null}
       <SiteHeader settings={settings} logo={logo} />
       <main className="mx-auto w-full max-w-7xl px-5 py-10 md:px-10 md:py-14">
-        <div className="mb-4 text-sm text-muted">
-          <a href="/" className="hover:text-ink">Home</a> / {info.name} Real Estate
-        </div>
+        <nav className="mb-4 text-sm text-muted" aria-label="Breadcrumb">
+          <a href="/">Home</a> / {info.name} Real Estate
+        </nav>
                 <ProvinceCityExplorer cities={cities} totalListings={totalListings} />
       </main>
       <SiteFooter settings={settings} />

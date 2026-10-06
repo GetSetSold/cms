@@ -86,9 +86,9 @@ export default async function PostPage({ params, searchParams }: { params: Promi
       <SiteHeader settings={settings} logo={logo} />
 
       <main className="mx-auto w-full max-w-7xl px-5 py-10 md:px-10">
-        <div className="mb-6 text-sm text-muted">
-          <Link href="/" className="hover:text-ink">Home</Link> / <Link href="/updates" className="hover:text-ink">Updates</Link> / <Link href={`/updates/${cat.slug}`} className="hover:text-ink">{cat.name}</Link>
-        </div>
+        <nav className="mb-6 text-sm text-muted" aria-label="Breadcrumb">
+          <Link href="/">Home</Link> / <Link href="/updates">Updates</Link> / <Link href={`/updates/${cat.slug}`}>{cat.name}</Link>
+        </nav>
 
         <div className="grid gap-10 lg:grid-cols-[1fr_320px] lg:items-start">
           {/* MAIN: each block — and the article — is its own separate box, not one shared card */}

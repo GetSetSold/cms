@@ -34,7 +34,7 @@ export default async function UpdatesLanding() {
       <SiteHeader settings={settings} logo={logo} />
       <main className="mx-auto w-full max-w-7xl px-5 py-14 md:px-10">
         <div className="mb-8 flex flex-col gap-3">
-          <div className="text-sm text-muted"><Link href="/" className="hover:text-ink">Home</Link> / Updates</div>
+          <nav className="text-sm text-muted" aria-label="Breadcrumb"><Link href="/">Home</Link> / Updates</nav>
           <h1 className="font-display text-4xl font-extrabold md:text-5xl">Insights &amp; Updates</h1>
           <p className="max-w-xl text-lg text-muted">Practical advice on buying, selling, and everything in between.</p>
         </div>

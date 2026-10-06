@@ -124,15 +124,15 @@ export default async function NeighbourhoodPage({
       {themeIconOverrideCSS(settings) ? <style dangerouslySetInnerHTML={{ __html: themeIconOverrideCSS(settings) }} /> : null}
       <SiteHeader settings={settings} logo={logo} />
       <main className="mx-auto w-full max-w-7xl px-5 py-10 md:px-10 md:py-14">
-        <div className="mb-4 text-sm text-muted">
-          <a href="/" className="hover:text-ink">Home</a>
+        <nav className="mb-4 text-sm text-muted" aria-label="Breadcrumb">
+          <a href="/">Home</a>
           {" / "}
-          <a href="/ontario-real-estate" className="hover:text-ink">Ontario Real Estate</a>
+          <a href="/ontario-real-estate">Ontario Real Estate</a>
           {" / "}
-          <a href={cityUrl} className="hover:text-ink">{hood.city} Real Estate</a>
+          <a href={cityUrl}>{hood.city} Real Estate</a>
           {" / "}
           <span>{hood.hood}</span>
-        </div>
+        </nav>
 
         <h1 className="font-display text-3xl md:text-4xl">
           Homes for sale in {hood.hood}, {hood.city}
