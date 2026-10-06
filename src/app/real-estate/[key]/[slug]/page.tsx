@@ -19,6 +19,7 @@ import { PromoBanner } from "@/components/listings/PromoBanner";
 import { PaymentEstimate } from "@/components/listings/PaymentEstimate";
 import { ShareButton } from "@/components/listings/ShareButton";
 import { ListingMarketPulse } from "@/components/listings/ListingMarketPulse";
+import { RealtorAttribution } from "@/components/listings/RealtorAttribution";
 import { LocationDescription, PropertySummary, LandAndLot, ConstructionExterior, SystemsUtilities, Financials, FieldTable, RoomsBlock, MapDirections } from "@/components/listings/ListingDetailBlocks";
 import { createClient } from "@/lib/supabase/server";
 import type { CmsForm } from "@/lib/types";
@@ -217,6 +218,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
             <ListingContactCard listing={listing} form={inquiryForm} agent={settings.agent} photoSvg={agentPhotoSvg} />
             {sale ? <AffordabilityBanner listing={listing} /> : null}
             {showListingAd ? <ContentAdSlot adCode={adCode} /> : null}
+            <RealtorAttribution listing={listing} />
           </div>
         </div>
 
