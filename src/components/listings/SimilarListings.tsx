@@ -59,11 +59,11 @@ export function SimilarListings({ listings }: { listings: GridListing[] }) {
       {/* Desktop: horizontal scroll */}
       <div
         ref={scrollRef}
-        className="hidden gap-5 overflow-x-auto pb-2 lg:flex lg:snap-x"
-        style={{ scrollbarWidth: "none" }}
+        className="hidden overflow-x-auto pb-2 lg:flex lg:snap-x"
+        style={{ scrollbarWidth: "none", gap: "max(20px, calc((100% - 1120px) / 3))" }}
       >
         {listings.map((l) => (
-          <div key={l.ListingKey} className="w-[280px] shrink-0 grow snap-start">
+          <div key={l.ListingKey} className="w-[280px] shrink-0 snap-start">
             <ListingCard listing={l} />
           </div>
         ))}
