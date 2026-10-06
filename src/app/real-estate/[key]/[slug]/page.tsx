@@ -218,7 +218,6 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
             <ListingContactCard listing={listing} form={inquiryForm} agent={settings.agent} photoSvg={agentPhotoSvg} />
             {sale ? <AffordabilityBanner listing={listing} /> : null}
             {showListingAd ? <ContentAdSlot adCode={adCode} /> : null}
-            <RealtorAttribution listing={listing} />
           </div>
         </div>
 
@@ -244,6 +243,10 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
         })()}
 
         {similar.length ? <SimilarListings listings={similar} /> : null}
+
+        <div className="mt-10">
+          <RealtorAttribution listing={listing} />
+        </div>
       </main>
       <SiteFooter settings={settings} />
       <MobileCtaBar settings={settings} />
