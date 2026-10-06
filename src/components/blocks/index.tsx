@@ -61,7 +61,7 @@ function Button({ link, variant = "primary", dark }: { link?: { label?: string; 
     ? dark ? "bg-white text-ink" : "bg-primary text-white"
     : dark ? "border border-ground text-ground" : "border border-ink text-ink";
   return (
-    <Link href={link.href} className={`inline-flex h-13 items-center justify-center rounded-full px-7 py-3.5 font-medium ${cls}`}>
+    <Link href={link.href} className={`inline-flex h-13 items-center justify-center rounded-[var(--radius-btn)] px-7 py-3.5 font-medium ${cls}`}>
       {link.label}
     </Link>
   );
@@ -152,7 +152,7 @@ function Hero({ data, ctx }: BlockProps) {
           </label>
           <button className="btn-primary h-13 shrink-0 px-7 text-[15px]">{data.primary_cta?.label || "Browse Properties"}</button>
         </form>
-        {art ? <Svg asset={art} label={art?.name} className="mt-4 aspect-[16/7] overflow-hidden rounded-3xl" /> : null}
+        {art ? <Svg asset={art} label={art?.name} className="mt-4 aspect-[16/7] overflow-hidden rounded-[var(--radius-lg)]" /> : null}
       </div>
     );
   }
@@ -206,13 +206,13 @@ function Hero({ data, ctx }: BlockProps) {
         <div style={{ width: `${imageSizePct}%`, marginLeft: imageSizePct < 100 ? "auto" : undefined, marginRight: imageSizePct < 100 ? "auto" : undefined }}>
           {data.image_bg_color || data.image_bg === "mist" ? (
             <div
-              className={`rounded-3xl ${data.image_bg_color ? "" : "bg-[linear-gradient(135deg,#e8eef4_0%,#f4f6f8_100%)]"}`}
+              className={`rounded-[var(--radius-lg)] ${data.image_bg_color ? "" : "bg-[linear-gradient(135deg,#e8eef4_0%,#f4f6f8_100%)]"}`}
               style={data.image_bg_color ? { background: data.image_bg_color } : undefined}
             >
-              <Svg asset={art} label={art?.name} className="aspect-[600/520] overflow-hidden rounded-3xl" />
+              <Svg asset={art} label={art?.name} className="aspect-[600/520] overflow-hidden rounded-[var(--radius-lg)]" />
             </div>
           ) : (
-            <Svg asset={art} label={art?.name} className="aspect-[600/520] overflow-hidden rounded-3xl" />
+            <Svg asset={art} label={art?.name} className="aspect-[600/520] overflow-hidden rounded-[var(--radius-lg)]" />
           )}
         </div>
         {data.badge?.value ? (() => {
@@ -524,7 +524,7 @@ function TextSvg({ data, ctx }: BlockProps) {
         {data.heading ? <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2> : null}
         {paragraphs(data.body)}
       </div>
-      <Svg asset={ctx.svgs[data.svg_id]} label={ctx.svgs[data.svg_id]?.name} className="overflow-hidden rounded-3xl" />
+      <Svg asset={ctx.svgs[data.svg_id]} label={ctx.svgs[data.svg_id]?.name} className="overflow-hidden rounded-[var(--radius-lg)]" />
     </div>
   );
 }
@@ -601,9 +601,9 @@ function TeamProfile({ data, ctx }: BlockProps) {
   const stack = ctx.embedded === "side";
   const radiusCls = {
     none: "rounded-none",
-    sm: "rounded-lg",
-    md: "rounded-2xl",
-    lg: "rounded-3xl",
+    sm: "rounded-[var(--radius-sm)]",
+    md: "rounded-[var(--radius-md)]",
+    lg: "rounded-[var(--radius-lg)]",
     full: "rounded-full",
   }[(data.photo_radius as string) || "lg"];
   const alignCls = {
@@ -1144,7 +1144,7 @@ function PhasedReasons({ data, ctx }: BlockProps) {
           : <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2>) : null}
         {data.subline ? <p className={compact ? `text-sm leading-relaxed ${muted(ctx)}` : `text-lg font-semibold ${heading(ctx)}`}>{data.subline}</p> : null}
       </div>
-      <div className={`flex flex-col overflow-hidden ${compact ? "" : "rounded-2xl"} border ${ctx.dark ? "border-white/15" : "border-line"}`}>
+      <div className={`flex flex-col overflow-hidden ${compact ? "" : "rounded-[var(--radius-lg)]"} border ${ctx.dark ? "border-white/15" : "border-line"}`}>
         {phases.map((phase, pi) => (
           <div key={pi} className={`flex flex-col sm:flex-row ${pi > 0 ? `border-t ${ctx.dark ? "border-white/15" : "border-line"}` : ""}`}>
             <div className={`flex shrink-0 flex-col gap-2 ${compact ? "p-5" : "p-6"} sm:w-64 sm:border-r ${ctx.dark ? "bg-white/5 border-white/15" : compact ? "border-line" : "bg-soft border-line"}`}>
