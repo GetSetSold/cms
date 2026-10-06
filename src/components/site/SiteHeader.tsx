@@ -78,7 +78,7 @@ export function SiteHeader({ settings, logo }: { settings: SiteSettings; logo?: 
                   {n.label}
                 </button>
                 {openMega === n.href ? (
-                  <div className="absolute inset-x-0 top-full z-50 border-b border-line bg-white/95 backdrop-blur">
+                  <div className="absolute inset-x-0 top-full z-50 border-b border-line bg-white">
                     <div className="mx-auto grid max-w-7xl grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-10 px-5 py-8 text-ink md:px-10">
                       {n.columns.map((col, i) => (
                         <div key={i} className="flex flex-col">
