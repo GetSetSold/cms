@@ -194,7 +194,9 @@ function Hero({ data, ctx }: BlockProps) {
          shrinking or centering the photo (Illustration size) never drags the badge along with it. */}
       <div className={`relative ${imageOnLeft ? "order-1" : ""}`}>
         <div style={{ width: `${imageSizePct}%`, marginLeft: imageSizePct < 100 ? "auto" : undefined, marginRight: imageSizePct < 100 ? "auto" : undefined }}>
-          <Svg asset={art} label={art?.name} className="aspect-[600/520] overflow-hidden rounded-3xl" />
+          <div className={data.image_bg === "mist" ? "rounded-3xl bg-[linear-gradient(135deg,#e8eef4_0%,#f4f6f8_100%)]" : undefined}>
+            <Svg asset={art} label={art?.name} className="aspect-[600/520] overflow-hidden rounded-3xl" />
+          </div>
         </div>
         {data.badge?.value ? (() => {
           const style = data.badge_style || "solid";
