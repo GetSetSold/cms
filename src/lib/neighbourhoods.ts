@@ -176,23 +176,25 @@ export const getHoodStats = cache(async (city: string, hood: string): Promise<Ci
   const variants = await rawCitiesFor(city);
   const unknownVariants = await unknownCityVariants();
   const cities = [...new Set([...variants, ...unknownVariants])];
+  const hoodFilter = `CityRegion.eq.${hood},SubdivisionName.eq.${hood}`;
 
   const prices: number[] = [];
   const rents: number[] = [];
   const typeCounts = new Map<string, number>();
   let total = 0;
 
+  // Count first, then fetch all pages in PARALLEL (was sequential).
   const PAGE = 1000;
-  let from = 0;
-  while (true) {
-    const { data, error } = await mls
-      .from("property")
-      .select("ListPrice,TotalActualRent,StructureType")
-      .in("City", cities)
-      .or(`CityRegion.eq.${hood},SubdivisionName.eq.${hood}`)
-      .range(from, from + PAGE - 1);
+  const { count } = await mls.from("property").select("ListingKey", { count: "exact", head: true }).in("City", cities).or(hoodFilter);
+  const pages = Math.max(1, Math.ceil((count ?? 0) / PAGE));
+  const results = await Promise.all(
+    Array.from({ length: pages }, (_, i) =>
+      mls.from("property").select("ListPrice,TotalActualRent,StructureType").in("City", cities).or(hoodFilter).range(i * PAGE, i * PAGE + PAGE - 1)
+    )
+  );
+  for (const { data, error } of results) {
     if (error) throw new Error(`getHoodStats: ${error.message}`);
-    if (!data || !data.length) break;
+    if (!data) continue;
     for (const r of data as {
       ListPrice: number | null;
       TotalActualRent: number | null;
@@ -204,8 +206,6 @@ export const getHoodStats = cache(async (city: string, hood: string): Promise<Ci
       const t = structureTypeText(r.StructureType) || "Other";
       typeCounts.set(t, (typeCounts.get(t) ?? 0) + 1);
     }
-    if (data.length < PAGE) break;
-    from += PAGE;
   }
 
   const median = (vals: number[]): number | null => {

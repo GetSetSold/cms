@@ -59,8 +59,10 @@ export async function CityPageContent({
     getCityStats(city),
     getHoodsForCity(city),
   ]);
-  const logo = await getLogo(settings);
-  const agentSvgs = settings.agent?.photo_svg_id ? await getSvgs([settings.agent.photo_svg_id]) : {};
+  const [logo, agentSvgs] = await Promise.all([
+    getLogo(settings),
+    settings.agent?.photo_svg_id ? getSvgs([settings.agent.photo_svg_id]) : Promise.resolve({} as Record<string, any>),
+  ]);
   const agentPhoto = settings.agent?.photo_svg_id ? agentSvgs[settings.agent.photo_svg_id] ?? null : null;
 
   const themeVars_ = themeVars(settings);
@@ -71,7 +73,7 @@ export async function CityPageContent({
       {themeIconOverrideCSS(settings) ? <style dangerouslySetInnerHTML={{ __html: themeIconOverrideCSS(settings) }} /> : null}
       <SiteHeader settings={settings} logo={logo} />
       <main className="mx-auto w-full max-w-7xl px-5 py-10 md:px-10 md:py-14">
-        <ListingsBrowser sp={sp} basePath={cityUrl} fixedCity={city} heading={`Homes for sale in ${city}`} />
+        <ListingsBrowser sp={sp} basePath={cityUrl} fixedCity={city} heading={`Homes for sale in ${city}`} typeBreakdown={stats.typeBreakdown} />
         <CityStatsSection stats={stats} />
         {hoods.length > 0 ? (
           <section className="mt-12">

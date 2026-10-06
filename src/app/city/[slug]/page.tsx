@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { cityPageMetadata, CityPageContent } from "@/components/listings/CityPage";
 import type { ListingsSearchParams } from "@/components/listings/ListingsBrowser";
 
-export const dynamic = "force-dynamic";
+// ISR: cache the base hub at the edge for 1h; requests with search params
+// (filters/pagination) still render dynamically.
+export const revalidate = 3600;
 
 export async function generateMetadata({
   params,

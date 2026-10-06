@@ -9,7 +9,8 @@ import { SiteFooter, MobileCtaBar } from "@/components/site/SiteFooter";
 import { ProvinceCityExplorer } from "@/components/listings/ProvinceCityExplorer";
 import { citySlug, createMlsClient, normalizeCity } from "@/lib/mls";
 
-export const dynamic = "force-dynamic";
+// ISR: cache the base hub at the edge for 1h; filtered requests still render dynamically.
+export const revalidate = 3600;
 
 const PROVINCES: Record<string, { name: string; url: string }> = {
   ontario: { name: "Ontario", url: "/ontario-real-estate" },

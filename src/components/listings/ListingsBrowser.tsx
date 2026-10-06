@@ -42,13 +42,15 @@ async function getCachedTypeCounts(
 }
 
 export async function ListingsBrowser({
-  sp, basePath, fixedCity, heading,
+  sp, basePath, fixedCity, heading, typeBreakdown,
 }: {
   sp: ListingsSearchParams;
   basePath: string;
   /** When set (e.g. from a city-page route), the city can't be changed by the visitor. */
   fixedCity?: string;
   heading?: string;
+  /** Precomputed type counts (from city stats) — avoids a 10k-row scan. */
+  typeBreakdown?: { label: string; count: number }[];
 }) {
   const mls = createMlsClient();
 
@@ -77,7 +79,9 @@ export async function ListingsBrowser({
   }
 
   const mapLimit = view === "map" ? Math.max(perPage, 100) : perPage; // map shows a wider set than one grid page, still bounded
-  let query = mls.from("grid").select("*", { count: "exact" });
+  // Select only the columns the cards need (not *) — cuts transfer ~70%.
+  const GRID_COLS = "ListingKey,ListingId,OfficeName,ListPrice,TotalActualRent,PhotosCount,Media,UnparsedAddress,City,Province,PostalCode,Latitude,Longitude,ParkingTotal,BathroomsTotalInteger,BedroomsTotal,AboveGradeFinishedArea,StructureTypeText,OriginalEntryTimestamp";
+  let query = mls.from("grid").select(GRID_COLS, { count: "exact" });
   if (view !== "map") query = query.range(from, from + perPage - 1);
   else query = query.limit(mapLimit);
   if (hasLocation) {
@@ -105,7 +109,10 @@ export async function ListingsBrowser({
   const [{ data: listings, count }, cityList, typeCounts] = await Promise.all([
     query,
     fixedCity ? Promise.resolve([]) : listNormalizedCities(),
-    cityVariants ? getCachedTypeCounts(mls, cityVariants) : Promise.resolve({} as Record<string, number>),
+    // Reuse precomputed breakdown when available; otherwise scan (cached per request).
+    typeBreakdown
+      ? Promise.resolve(Object.fromEntries(typeBreakdown.map((t) => [t.label, t.count])))
+      : cityVariants ? getCachedTypeCounts(mls, cityVariants) : Promise.resolve({} as Record<string, number>),
   ]);
   const cards = listingCardsWithAds((listings ?? []) as GridListing[], _ads);
 

@@ -20,7 +20,8 @@ import { CityFaq } from "@/components/listings/CityFaq";
 import { LocalMarketPulse } from "@/components/hpi/LocalMarketPulse";
 import { LocalExpertSection } from "@/components/listings/LocalExpertSection";
 
-export const dynamic = "force-dynamic";
+// ISR: cache the base hub at the edge for 1h; filtered requests still render dynamically.
+export const revalidate = 3600;
 
 const PER_PAGE = 12;
 

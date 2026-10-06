@@ -41,20 +41,19 @@ export const getCityStats = cache(async (city: string): Promise<CityStats> => {
 
   const mls = createMlsClient();
   const variants = await rawCitiesFor(city);
-  const rows: GridRow[] = [];
+  // Get count first, then fetch all pages in PARALLEL (was sequential).
+  const { count } = await mls.from("grid").select("ListingKey", { count: "exact", head: true }).in("City", variants);
   const PAGE = 1000;
-  let from = 0;
-  while (true) {
-    const { data, error } = await mls
-      .from("grid")
-      .select("ListPrice, TotalActualRent, StructureTypeText")
-      .in("City", variants)
-      .range(from, from + PAGE - 1);
-    if (error) throw new Error(`cityStats: ${error.message}`);
-    if (!data || !data.length) break;
-    rows.push(...(data as GridRow[]));
-    if (data.length < PAGE) break;
-    from += PAGE;
+  const pages = Math.max(1, Math.ceil((count ?? 0) / PAGE));
+  const results = await Promise.all(
+    Array.from({ length: pages }, (_, i) =>
+      mls.from("grid").select("ListPrice, TotalActualRent, StructureTypeText").in("City", variants).range(i * PAGE, i * PAGE + PAGE - 1)
+    )
+  );
+  const rows: GridRow[] = [];
+  for (const r of results) {
+    if (r.error) throw new Error(`cityStats: ${r.error.message}`);
+    if (r.data) rows.push(...(r.data as GridRow[]));
   }
 
   const salePrices: number[] = [];
