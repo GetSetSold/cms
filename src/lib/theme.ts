@@ -21,8 +21,14 @@ const RADIUS_PRESETS = {
 
 const SHADOW_PRESETS = {
   none: { shadow: "none", borderWidth: "1px" },
-  soft: { shadow: "0 4px 16px rgba(20,20,43,0.06)", borderWidth: "0px" }, // matches the original look
+  soft: { shadow: "0 8px 24px rgba(20,20,43,0.10)", borderWidth: "0px" },
   crisp: { shadow: "0 1px 3px rgba(20,20,43,0.12)", borderWidth: "0px" },
+} as const;
+
+const BUTTON_RADIUS_PRESETS = {
+  pill: "999px",
+  soft: "12px",
+  sharp: "4px",
 } as const;
 
 /** CSS var overrides for a page's root element, driven by Settings > Branding.
@@ -33,6 +39,7 @@ export function themeVars(settings: SiteSettings): React.CSSProperties {
   const t = settings.theme ?? ({} as SiteSettings["theme"]);
   const radius = RADIUS_PRESETS[t.radius ?? "soft"];
   const shadow = SHADOW_PRESETS[t.shadow ?? "soft"];
+  const btnRadius = BUTTON_RADIUS_PRESETS[t.button_radius ?? "pill"];
   const vars: Record<string, string> = {
     "--c-primary": t.primary,
     "--c-accent": t.accent,
@@ -58,6 +65,7 @@ export function themeVars(settings: SiteSettings): React.CSSProperties {
     "--radius-sm": radius.sm,
     "--radius-md": radius.md,
     "--radius-lg": radius.lg,
+    "--radius-btn": btnRadius,
     "--shadow-card": shadow.shadow,
     "--border-card-width": shadow.borderWidth,
   };
