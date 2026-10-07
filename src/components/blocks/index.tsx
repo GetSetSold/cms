@@ -210,11 +210,11 @@ function Hero({ data, ctx }: BlockProps) {
         <div style={{ width: `${bgSizePct}%`, marginLeft: bgSizePct < 100 ? "auto" : undefined, marginRight: bgSizePct < 100 ? "auto" : undefined }}>
           {data.image_bg_color || data.image_bg === "mist" ? (
             <div
-              className={`flex items-center justify-center rounded-[var(--radius-lg)] p-6 ${data.image_bg_color ? "" : "bg-[linear-gradient(135deg,#e8eef4_0%,#f4f6f8_100%)]"}`}
+              className={`flex aspect-[600/520] items-center justify-center rounded-[var(--radius-lg)] p-6 ${data.image_bg_color ? "" : "bg-[linear-gradient(135deg,#e8eef4_0%,#f4f6f8_100%)]"}`}
               style={data.image_bg_color ? { background: data.image_bg_color } : undefined}
             >
               <div style={{ width: `${imageSizePct}%` }}>
-                <Svg asset={art} label={art?.name} className="aspect-[600/520] w-full overflow-hidden rounded-[var(--radius-lg)]" />
+                <Svg asset={art} label={art?.name} className="w-full overflow-hidden rounded-[var(--radius-lg)]" />
               </div>
             </div>
           ) : (
