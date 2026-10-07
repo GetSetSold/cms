@@ -14,15 +14,14 @@ const BRAND_ROW_TEMPLATE: Record<number, string> = {
   4: "md:[grid-template-columns:1.4fr_repeat(4,1fr)]",
 };
 
-/** Aligned-rules divider (desktop): a light vertical rule at half the column height,
- *  vertically centered so it never touches either end, sitting in the middle of
- *  the grid track gap. */
+/** Aligned-rules divider (desktop): vertically centered hairline positioned at the
+ *  exact midpoint of the grid gap (gap-8 = 32px, so -16px from column edge). */
 function VRule({ color }: { color: string }) {
   return (
     <span
       aria-hidden
-      className="pointer-events-none absolute -left-4 bottom-1/4 top-1/4 w-px"
-      style={{ background: color }}
+      className="pointer-events-none absolute bottom-1/4 top-1/4 w-px"
+      style={{ background: color, left: "calc(-1 * var(--footer-gap, 32px) / 2)" }}
     />
   );
 }
@@ -99,6 +98,9 @@ export async function SiteFooter({ settings, logo }: { settings: SiteSettings; l
   const brokerageLogo = settings.brokerage?.logo_svg_id
     ? (await getSvgs([settings.brokerage.logo_svg_id]))[settings.brokerage.logo_svg_id]
     : null;
+  const localOfficeLogo = settings.contact?.logo_svg_id
+    ? (await getSvgs([settings.contact.logo_svg_id]))[settings.contact.logo_svg_id]
+    : null;
   const socialSize = { xs: "h-7 w-7", sm: "h-9 w-9", md: "h-11 w-11", lg: "h-14 w-14" }[settings.social_links?.size ?? "md"];
   const c = settings.contact ?? {};
   const f = settings.footer ?? { rows: [] };
@@ -128,9 +130,14 @@ export async function SiteFooter({ settings, logo }: { settings: SiteSettings; l
         </span>
       </Link>
       {f.tagline ? <p className="opacity-75">{f.tagline}</p> : null}
-      {/* My Office */}
+      {/* Local Office */}
       <div className="border-l-2 pl-4" style={{ borderColor: ACCENT }}>
-        <div className="mb-1.5 text-[11px] font-bold uppercase tracking-[1.5px]" style={{ color: ACCENT }}>My Office</div>
+        <div className="mb-1.5 flex items-center gap-2">
+          {localOfficeLogo ? (
+            <Svg asset={localOfficeLogo} label="Local office logo" style={{ width: 24, height: 24 }} />
+          ) : null}
+          <span className="text-[11px] font-bold uppercase tracking-[1.5px]" style={{ color: ACCENT }}>Local Office</span>
+        </div>
         <div className="flex flex-col gap-1.5">
           {c.address ? <p className="opacity-75">{c.address}</p> : null}
           {c.phone ? <a href={`tel:${c.phone}`} className="opacity-75 hover:opacity-100">{c.phone}</a> : null}
@@ -141,13 +148,13 @@ export async function SiteFooter({ settings, logo }: { settings: SiteSettings; l
       {/* Brokerage */}
       {settings.brokerage?.name ? (
         <div className="border-l-2 pl-4" style={{ borderColor: ACCENT }}>
-          <div className="mb-1.5 text-[11px] font-bold uppercase tracking-[1.5px]" style={{ color: ACCENT }}>Brokerage</div>
-          <div className="flex items-center gap-2.5">
+          <div className="mb-1.5 flex items-center gap-2">
             {brokerageLogo ? (
-              <Svg asset={brokerageLogo} label={`${settings.brokerage.name} logo`} style={{ width: 32, height: 32 }} />
+              <Svg asset={brokerageLogo} label={`${settings.brokerage.name} logo`} style={{ width: 24, height: 24 }} />
             ) : null}
-            <span className="font-semibold">{settings.brokerage.name}</span>
+            <span className="text-[11px] font-bold uppercase tracking-[1.5px]" style={{ color: ACCENT }}>Brokerage</span>
           </div>
+          <span className="font-semibold">{settings.brokerage.name}</span>
           <div className="mt-1.5 flex flex-col gap-1.5">
             {settings.brokerage.address ? <p className="opacity-75">{settings.brokerage.address}</p> : null}
             {settings.brokerage.phone ? <a href={`tel:${settings.brokerage.phone}`} className="opacity-75 hover:opacity-100">{settings.brokerage.phone}</a> : null}

@@ -389,6 +389,9 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
                         <label key={k} className="label capitalize">{k}<input className="input" value={s.brokerage?.[k] ?? ""} onChange={(e) => set("brokerage", { ...s.brokerage, [k]: e.target.value })} placeholder={k === "name" ? "Lombard Group Real Estate Inc., Brokerage" : ""} /></label>
                       ))}
                     </div>
+                    <div className="label">Brokerage logo (SVG)<SvgPicker value={s.brokerage?.logo_svg_id} svgs={svgs} onChange={(id) => set("brokerage", { ...s.brokerage, logo_svg_id: id })} /></div>
+                    <h3 className="mt-2 text-sm font-semibold">Local Office logo</h3>
+                    <div className="label">Local Office logo (SVG)<SvgPicker value={s.contact?.logo_svg_id} svgs={svgs} onChange={(id) => set("contact", { ...s.contact, logo_svg_id: id })} /></div>
                     <h3 className="mt-2 text-sm font-semibold">Agent contact card</h3>
                     <p className="text-xs text-muted">Shown on listing detail pages beside the contact form.</p>
                     <div className="grid gap-3 sm:grid-cols-2">
