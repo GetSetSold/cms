@@ -19,6 +19,7 @@ const TABS = [
   { id: "seo", label: "SEO" },
   { id: "ads", label: "Ads" },
   { id: "code", label: "Custom code" },
+  { id: "docs", label: "Documents" },
 ] as const;
 type TabId = (typeof TABS)[number]["id"];
 
@@ -39,6 +40,7 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
       email_provider: s.email_provider ?? "zeptomail", sms_provider: s.sms_provider ?? "vonage",
       ads: s.ads ?? {}, promo: s.promo ?? {}, local_expert: s.local_expert ?? {}, brokerage: s.brokerage ?? {}, home_evaluation: s.home_evaluation ?? {},
       custom_code: s.custom_code ?? "",
+      doc_branding: s.doc_branding ?? {},
     }).eq("id", 1);
     setMsg(error ? error.message : "Saved");
   }
@@ -571,6 +573,32 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
               <textarea className="input font-mono text-xs" rows={10} placeholder='<script>...</script>' value={s.custom_code ?? ""} onChange={(e) => set("custom_code", e.target.value)} spellCheck={false} />
             </label>
             <p className="text-xs text-muted">Pasted as-is on every public page (not in the admin). Only paste code you trust; it runs with full page access.</p>
+          </section>
+        )}
+        {tab === "docs" && (
+          <section className="flex flex-col gap-3 border border-line bg-white p-4 md:p-5">
+            <h2 className="text-base font-semibold">Document branding</h2>
+            <p className="text-xs text-muted">Header and footer printed on shared rental applications. Change these if your brokerage changes — past shares keep the branding from when they were created.</p>
+            <label className="label">Header name (brokerage / team)
+              <input className="input" value={s.doc_branding?.header_name ?? ""} onChange={(e) => set("doc_branding", { ...s.doc_branding, header_name: e.target.value })} placeholder="Lombard Group Real Estate Inc., Brokerage" />
+            </label>
+            <label className="label">Header tagline
+              <input className="input" value={s.doc_branding?.header_tagline ?? ""} onChange={(e) => set("doc_branding", { ...s.doc_branding, header_tagline: e.target.value })} placeholder="Rohit Sharma, REALTOR®" />
+            </label>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="label">Header phone
+                <input className="input" value={s.doc_branding?.header_phone ?? ""} onChange={(e) => set("doc_branding", { ...s.doc_branding, header_phone: e.target.value })} />
+              </label>
+              <label className="label">Header email
+                <input className="input" value={s.doc_branding?.header_email ?? ""} onChange={(e) => set("doc_branding", { ...s.doc_branding, header_email: e.target.value })} />
+              </label>
+            </div>
+            <label className="label">Header address
+              <input className="input" value={s.doc_branding?.header_address ?? ""} onChange={(e) => set("doc_branding", { ...s.doc_branding, header_address: e.target.value })} />
+            </label>
+            <label className="label">Footer text (confidentiality notice)
+              <textarea className="textarea" rows={3} value={s.doc_branding?.footer_text ?? ""} onChange={(e) => set("doc_branding", { ...s.doc_branding, footer_text: e.target.value })} placeholder="Confidential — for the named recipient only. Do not distribute." />
+            </label>
           </section>
         )}
       </div>

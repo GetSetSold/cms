@@ -110,6 +110,16 @@ export interface SiteSettings {
   scripts: { ga4_id?: string };
   /** Sitewide custom code (chat widgets, pixels): injected on every page. Admin → Settings → Custom code. */
   custom_code: string;
+  /** Document branding for shared rental applications: pickable header/footer so it survives a brokerage change. */
+  doc_branding?: {
+    header_name?: string;
+    header_tagline?: string;
+    header_phone?: string;
+    header_email?: string;
+    header_address?: string;
+    logo_svg_id?: string | null;
+    footer_text?: string;
+  };
   ads?: {
     grid_ad_enabled?: boolean;
     grid_ad_code?: string;
