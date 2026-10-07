@@ -390,7 +390,13 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
                       ))}
                     </div>
                     <div className="label">Brokerage logo (SVG)<SvgPicker value={s.brokerage?.logo_svg_id} svgs={svgs} onChange={(id) => set("brokerage", { ...s.brokerage, logo_svg_id: id })} /></div>
-                    <h3 className="mt-2 text-sm font-semibold">Local Office logo</h3>
+                    <h3 className="mt-2 text-sm font-semibold">Local Office</h3>
+                    <p className="text-xs text-muted">Shown in the footer as the Local Office block.</p>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      {(["office_name", "office_title", "office_tagline"] as const).map((k) => (
+                        <label key={k} className="label capitalize">{k.replace("office_", "")}<input className="input" value={s.contact?.[k] ?? ""} onChange={(e) => set("contact", { ...s.contact, [k]: e.target.value })} placeholder={k === "office_name" ? "Rohit Sharma" : k === "office_title" ? "Real Estate Services" : "Local Roots. Global Reach..."} /></label>
+                      ))}
+                    </div>
                     <div className="label">Local Office logo (SVG)<SvgPicker value={s.contact?.logo_svg_id} svgs={svgs} onChange={(id) => set("contact", { ...s.contact, logo_svg_id: id })} /></div>
                     <h3 className="mt-2 text-sm font-semibold">Agent contact card</h3>
                     <p className="text-xs text-muted">Shown on listing detail pages beside the contact form.</p>

@@ -114,22 +114,30 @@ export async function SiteFooter({ settings, logo }: { settings: SiteSettings; l
   const footerDark = !f.bg || isDarkColor(f.bg);
   const footerLogo = logo && footerDark ? { ...logo, markup: liftLogoForDark(logo.markup) } : logo;
 
-  // Brand block: My Office + Brokerage, headers/lines in brand blue (#0066CC).
+  // Brand block: Local Office + Brokerage, headers/lines in brand blue (#0066CC).
+  // Local Office pulls name/title/tagline from Contact settings (not hardcoded).
   const ACCENT = "#0066CC";
+  const localName = c.office_name || settings.site_name;
+  const localTitle = c.office_title || settings.header?.subline;
+  const localTagline = c.office_tagline || f.tagline;
+  // Brokerage falls back to agent settings until the brokerage column is populated.
+  const brokerageName = settings.brokerage?.name || settings.agent?.brokerage;
   const brandBlock = (
     <div className="flex flex-col gap-5">
-      <Link href="/" className="flex items-center gap-3" aria-label={`${settings.site_name} home`}>
-        {footerLogo ? (
+      <Link href="/" className="flex items-center gap-3" aria-label={`${localName} home`}>
+        {localOfficeLogo ? (
+          <Svg asset={localOfficeLogo} label={`${localName} logo`} style={{ width: compact ? 40 : 48, height: compact ? 40 : 48 }} />
+        ) : footerLogo ? (
           <Svg asset={footerLogo} label={`${settings.site_name} logo`} style={{ width: compact ? 40 : 48, height: compact ? 40 : 48 }} />
         ) : null}
         <span className="flex flex-col leading-tight">
-          <span className={`font-display ${compact ? "text-xl" : "text-3xl"}`}>{settings.site_name}</span>
-          {settings.header?.subline ? (
-            <span className="text-xs opacity-70 md:text-[13px]">{settings.header.subline}</span>
+          <span className={`font-display ${compact ? "text-xl" : "text-3xl"}`}>{localName}</span>
+          {localTitle ? (
+            <span className="text-xs opacity-70 md:text-[13px]">{localTitle}</span>
           ) : null}
         </span>
       </Link>
-      {f.tagline ? <p className="opacity-75">{f.tagline}</p> : null}
+      {localTagline ? <p className="opacity-75">{localTagline}</p> : null}
       {/* Local Office */}
       <div className="border-l-2 pl-4" style={{ borderColor: ACCENT }}>
         <div className="mb-1.5 flex items-center gap-2">
@@ -146,19 +154,19 @@ export async function SiteFooter({ settings, logo }: { settings: SiteSettings; l
         </div>
       </div>
       {/* Brokerage */}
-      {settings.brokerage?.name ? (
+      {brokerageName ? (
         <div className="border-l-2 pl-4" style={{ borderColor: ACCENT }}>
           <div className="mb-1.5 flex items-center gap-2">
             {brokerageLogo ? (
-              <Svg asset={brokerageLogo} label={`${settings.brokerage.name} logo`} style={{ width: 24, height: 24 }} />
+              <Svg asset={brokerageLogo} label={`${brokerageName} logo`} style={{ width: 24, height: 24 }} />
             ) : null}
             <span className="text-[11px] font-bold uppercase tracking-[1.5px]" style={{ color: ACCENT }}>Brokerage</span>
           </div>
-          <span className="font-semibold">{settings.brokerage.name}</span>
+          <span className="font-semibold">{brokerageName}</span>
           <div className="mt-1.5 flex flex-col gap-1.5">
-            {settings.brokerage.address ? <p className="opacity-75">{settings.brokerage.address}</p> : null}
-            {settings.brokerage.phone ? <a href={`tel:${settings.brokerage.phone}`} className="opacity-75 hover:opacity-100">{settings.brokerage.phone}</a> : null}
-            {settings.brokerage.email ? <a href={`mailto:${settings.brokerage.email}`} className="opacity-75 hover:opacity-100">{settings.brokerage.email}</a> : null}
+            {settings.brokerage?.address ? <p className="opacity-75">{settings.brokerage.address}</p> : null}
+            {settings.brokerage?.phone ? <a href={`tel:${settings.brokerage.phone}`} className="opacity-75 hover:opacity-100">{settings.brokerage.phone}</a> : null}
+            {settings.brokerage?.email ? <a href={`mailto:${settings.brokerage.email}`} className="opacity-75 hover:opacity-100">{settings.brokerage.email}</a> : null}
           </div>
         </div>
       ) : null}
