@@ -3,8 +3,10 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { Lead, LeadFlow, LeadFlowEnrollment } from "@/lib/types";
-import { LEAD_FLOW_CATEGORIES } from "@/lib/types";
+import { LEAD_FLOW_CATEGORIES, LEAD_STATUSES } from "@/lib/types";
 import { AttachedForms } from "./AttachedForms";
+import { AttachFormButton } from "./AttachFormButton";
+import { ShareApplicationButton } from "./ShareApplicationButton";
 
 type Activity = { id: string; type: string; body: string | null; meta: any; created_at: string };
 type QueueItem = { id: string; channel: string; run_at: string; sequence_id: string };
@@ -268,10 +270,29 @@ function FlowsPanel({ leadId, enrollments, available }: { leadId: string; enroll
   );
 }
 
-function ActivityPanel({ activities, queue }: { activities: Activity[]; queue: QueueItem[] }) {
+function ActivityPanel({ leadId, activities, queue }: { leadId: string; activities: Activity[]; queue: QueueItem[] }) {
+  const [note, setNote] = useState("");
+  const [msg, setMsg] = useState("");
+
+  async function addNote() {
+    if (!note.trim()) return;
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    const { error } = await supabase.from("lead_activities").insert({ lead_id: leadId, type: "note", body: note.trim(), created_by: user?.id });
+    if (!error) setNote("");
+    setMsg(error ? error.message : "Note added");
+  }
+
   return (
-    <div className="card flex flex-col gap-4">
-      <strong>Activity</strong>
+    <div className="flex flex-col gap-4">
+      <div className="card flex flex-col gap-3">
+        <strong>Add a note</strong>
+        <textarea className="textarea" rows={3} value={note} onChange={(e) => setNote(e.target.value)} placeholder="Note about this lead…" />
+        <button className="btn-primary w-fit" disabled={!note.trim()} onClick={addNote}>Add note</button>
+        {msg ? <p className="text-sm text-muted" role="status">{msg}</p> : null}
+      </div>
+      <div className="card flex flex-col gap-4">
+        <strong>Activity</strong>
       {queue.map((q) => (
         <div key={q.id} className="flex gap-3">
           <div className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full border-2 border-dashed border-[#B5AFA2]" />
@@ -289,29 +310,95 @@ function ActivityPanel({ activities, queue }: { activities: Activity[]; queue: Q
         </div>
       ))}
       {!activities.length && !queue.length ? <p className="text-[13px] text-muted">Nothing yet.</p> : null}
+      </div>
     </div>
   );
 }
 
 function OverviewPanel({ lead, activities }: { lead: Lead; activities: Activity[] }) {
   const name = [lead.first_name, lead.last_name].filter(Boolean).join(" ") || "Unnamed lead";
+  const [editing, setEditing] = useState(false);
+  const [firstName, setFirstName] = useState(lead.first_name ?? "");
+  const [lastName, setLastName] = useState(lead.last_name ?? "");
+  const [email, setEmail] = useState(lead.email ?? "");
+  const [phone, setPhone] = useState(lead.phone ?? "");
+  const [status, setStatus] = useState(lead.status);
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState("");
+
+  async function save() {
+    setSaving(true); setMsg("");
+    const { error } = await createClient().from("leads").update({
+      first_name: firstName.trim() || null,
+      last_name: lastName.trim() || null,
+      email: email.trim() || null,
+      phone: phone.trim() || null,
+      status,
+    }).eq("id", lead.id);
+    setSaving(false);
+    if (error) { setMsg(error.message); return; }
+    setEditing(false); setMsg("Saved");
+  }
+
+  async function deleteLead() {
+    const label = [lead.first_name, lead.last_name].filter(Boolean).join(" ") || lead.email || lead.phone || "this lead";
+    if (!confirm(`Delete ${label}? This removes the lead and its history from the database. This cannot be undone.`)) return;
+    const supabase = createClient();
+    await supabase.from("lead_activities").delete().eq("lead_id", lead.id);
+    await supabase.from("follow_up_queue").delete().eq("lead_id", lead.id);
+    await supabase.from("lead_flow_enrollments").delete().eq("lead_id", lead.id);
+    await supabase.from("lead_form_attachments").delete().eq("lead_id", lead.id);
+    const { error } = await supabase.from("leads").delete().eq("id", lead.id);
+    if (error) { setMsg(error.message); return; }
+    window.location.href = "/admin/leads";
+  }
+
   return (
     <div className="flex flex-col gap-5">
       <div className="card flex flex-col gap-4">
-        <h1 className="text-2xl font-semibold">{name}</h1>
-        <dl className="grid gap-4 text-[13px] sm:grid-cols-2">
-          {[
-            ["Phone", lead.phone && <a href={`tel:${lead.phone}`}>{lead.phone}</a>],
-            ["Email", lead.email && <a href={`mailto:${lead.email}`}>{lead.email}</a>],
-            ["Company", lead.company], ["Service", lead.service], ["Form", lead.form_key], ["Page", lead.source_path],
-            ["SMS consent", lead.sms_opted_out ? "Opted out (STOP)" : lead.sms_opt_in ? "Opted in" : "No"],
-            ["Received", new Date(lead.created_at).toLocaleString()],
-            ["Source", Object.entries((lead.utm as Record<string, unknown>) ?? {}).map(([k, v]) => `${k}=${v}`).join(" · ") || "Direct"],
-          ].map(([k, v]) => (
-            <div key={k as string}><dt className="text-muted">{k}</dt><dd className="text-[15px]">{v || "—"}</dd></div>
-          ))}
-        </dl>
-        {lead.message ? <div className="rounded-lg bg-ground p-4 text-[15px] leading-relaxed">{lead.message}</div> : null}
+        <div className="flex items-start justify-between gap-3">
+          <h1 className="text-2xl font-semibold">{name}</h1>
+          {!editing ? (
+            <button className="btn h-9 shrink-0 px-4 text-[13px]" onClick={() => setEditing(true)}>Edit</button>
+          ) : null}
+        </div>
+        {msg ? <p className="text-sm text-muted" role="status">{msg}</p> : null}
+        {editing ? (
+          <div className="flex flex-col gap-3">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="label">First name<input className="input" value={firstName} onChange={(e) => setFirstName(e.target.value)} /></label>
+              <label className="label">Last name<input className="input" value={lastName} onChange={(e) => setLastName(e.target.value)} /></label>
+              <label className="label">Email<input className="input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} /></label>
+              <label className="label">Phone<input className="input" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} /></label>
+              <label className="label">Status
+                <select className="input capitalize" value={status} onChange={(e) => setStatus(e.target.value as Lead["status"])}>
+                  {LEAD_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </label>
+            </div>
+            <div className="flex gap-2">
+              <button className="btn-primary" disabled={saving} onClick={save}>{saving ? "Saving…" : "Save"}</button>
+              <button className="btn" onClick={() => { setEditing(false); setMsg(""); }}>Cancel</button>
+            </div>
+          </div>
+        ) : (
+          <>
+            <dl className="grid gap-4 text-[13px] sm:grid-cols-2">
+              {[
+                ["Phone", lead.phone && <a href={`tel:${lead.phone}`}>{lead.phone}</a>],
+                ["Email", lead.email && <a href={`mailto:${lead.email}`}>{lead.email}</a>],
+                ["Status", <span className="capitalize">{lead.status}</span>],
+                ["Company", lead.company], ["Service", lead.service], ["Form", lead.form_key], ["Page", lead.source_path],
+                ["SMS consent", lead.sms_opted_out ? "Opted out (STOP)" : lead.sms_opt_in ? "Opted in" : "No"],
+                ["Received", new Date(lead.created_at).toLocaleString()],
+                ["Source", Object.entries((lead.utm as Record<string, unknown>) ?? {}).map(([k, v]) => `${k}=${v}`).join(" · ") || "Direct"],
+              ].map(([k, v]) => (
+                <div key={k as string}><dt className="text-muted">{k}</dt><dd className="text-[15px]">{v || "—"}</dd></div>
+              ))}
+            </dl>
+            {lead.message ? <div className="rounded-lg bg-ground p-4 text-[15px] leading-relaxed">{lead.message}</div> : null}
+          </>
+        )}
       </div>
       <div className="card flex flex-col gap-3">
         <strong>Recent activity</strong>
@@ -326,6 +413,11 @@ function OverviewPanel({ lead, activities }: { lead: Lead; activities: Activity[
         ))}
         {!activities.length ? <p className="text-[13px] text-muted">Nothing yet.</p> : null}
       </div>
+      <div className="card">
+        <button className="btn w-full border-red-200 text-red-600 hover:bg-red-50" onClick={deleteLead}>
+          Delete lead
+        </button>
+      </div>
     </div>
   );
 }
@@ -339,7 +431,53 @@ function MatchesPanel() {
   );
 }
 
-const TABS = ["overview", "form", "activity", "flows", "matches"] as const;
+function CommunicationPanel({ lead }: { lead: Lead }) {
+  const supabase = useMemo(() => createClient(), []);
+  const [sms, setSms] = useState("");
+  const [msg, setMsg] = useState("");
+  const canSms = !!lead.phone && lead.sms_opt_in && !lead.sms_opted_out;
+  const leadName = [lead.first_name, lead.last_name].filter(Boolean).join(" ") || "this lead";
+
+  async function sendSms() {
+    const { data, error } = await supabase.functions.invoke("send-sms", { body: { lead_id: lead.id, body: sms } });
+    if (error || (data as { error?: string })?.error) {
+      setMsg((data as { error?: string })?.error ?? error?.message ?? "Failed");
+      return;
+    }
+    setSms(""); setMsg("SMS sent");
+  }
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="card flex flex-col gap-3">
+        <strong>Send SMS</strong>
+        {canSms ? (
+          <>
+            <textarea className="textarea" rows={3} maxLength={1200} value={sms} onChange={(e) => setSms(e.target.value)} placeholder={`Message ${leadName}…`} />
+            <button className="btn-primary w-fit" disabled={!sms.trim()} onClick={sendSms}>Send SMS</button>
+          </>
+        ) : (
+          <p className="text-[13px] text-muted">{lead.sms_opted_out ? "This lead replied STOP." : !lead.phone ? "No phone number on file." : "No SMS consent — call or email instead."}</p>
+        )}
+        <div className="flex flex-wrap gap-2">
+          {lead.phone ? <a className="btn" href={`tel:${lead.phone}`}>Call {lead.phone}</a> : null}
+          {lead.email ? <a className="btn" href={`mailto:${lead.email}`}>Email {lead.email}</a> : null}
+        </div>
+        {msg ? <p className="text-sm text-muted" role="status">{msg}</p> : null}
+      </div>
+      <div className="card flex flex-col gap-3">
+        <strong>Send a form</strong>
+        <p className="text-[13px] text-muted">Pick a form and send {leadName} a link to fill it — answers attach to this lead.</p>
+        <AttachFormButton leadId={lead.id} leadName={leadName} sendOnly />
+      </div>
+      {lead.form_key === "rental_application" ? (
+        <ShareApplicationButton leadId={lead.id} />
+      ) : null}
+    </div>
+  );
+}
+
+const TABS = ["overview", "form", "communication", "activity", "flows", "matches"] as const;
 type Tab = (typeof TABS)[number];
 
 export function LeadTabs({ lead, activities, queue, enrollments, availableFlows }: {
@@ -348,9 +486,10 @@ export function LeadTabs({ lead, activities, queue, enrollments, availableFlows 
   const [tab, setTab] = useState<Tab>("overview");
   const counts: Record<Tab, number | null> = {
     overview: null, form: Object.keys(lead.custom_fields ?? {}).length || null,
+    communication: null,
     activity: activities.length || null, flows: enrollments.filter((e) => e.status === "active").length || null, matches: null,
   };
-  const titles: Record<Tab, string> = { overview: "Overview", form: "Form submission", activity: "Activity", flows: "Flows & automations", matches: "Matches" };
+  const titles: Record<Tab, string> = { overview: "Overview", form: "Forms", communication: "Communication", activity: "Activity", flows: "Flows & automations", matches: "Matches" };
 
   return (
     <div className="flex flex-col gap-5">
@@ -365,7 +504,8 @@ export function LeadTabs({ lead, activities, queue, enrollments, availableFlows 
       </nav>
       {tab === "overview" ? <OverviewPanel lead={lead} activities={activities} /> : null}
       {tab === "form" ? <FormSubmissionPanel lead={lead} /> : null}
-      {tab === "activity" ? <ActivityPanel activities={activities} queue={queue} /> : null}
+      {tab === "communication" ? <CommunicationPanel lead={lead} /> : null}
+      {tab === "activity" ? <ActivityPanel leadId={lead.id} activities={activities} queue={queue} /> : null}
       {tab === "flows" ? <FlowsPanel leadId={lead.id} enrollments={enrollments} available={availableFlows} /> : null}
       {tab === "matches" ? <MatchesPanel /> : null}
     </div>

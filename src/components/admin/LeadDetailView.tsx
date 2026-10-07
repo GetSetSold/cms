@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { requireStaff } from "@/lib/auth";
-import { LeadActions } from "@/components/admin/LeadActions";
 import { LeadTabs } from "@/components/admin/LeadTabs";
 import type { Lead, LeadFlow, LeadFlowEnrollment } from "@/lib/types";
 
@@ -23,22 +22,19 @@ export async function LeadDetailView({ id, showBackLink }: { id: string; showBac
   const l = lead as Lead;
 
   return (
-    <div className="grid gap-6 p-6 lg:grid-cols-[1fr_380px]">
-      <div className="flex min-w-0 flex-col gap-5">
-        {showBackLink ? (
-          <Link href="/admin/leads" className="text-muted">
-            ← Leads
-          </Link>
-        ) : null}
-        <LeadTabs
-          lead={l}
-          activities={activities ?? []}
-          queue={queue ?? []}
-          enrollments={(enrollments ?? []) as LeadFlowEnrollment[]}
-          availableFlows={(availableFlows ?? []) as LeadFlow[]}
-        />
-      </div>
-      <LeadActions lead={l} pendingCount={queue?.length ?? 0} />
+    <div className="mx-auto flex w-full max-w-5xl flex-col gap-5 p-4 sm:p-6">
+      {showBackLink ? (
+        <Link href="/admin/leads" className="text-muted">
+          ← Leads
+        </Link>
+      ) : null}
+      <LeadTabs
+        lead={l}
+        activities={activities ?? []}
+        queue={queue ?? []}
+        enrollments={(enrollments ?? []) as LeadFlowEnrollment[]}
+        availableFlows={(availableFlows ?? []) as LeadFlow[]}
+      />
     </div>
   );
 }

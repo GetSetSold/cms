@@ -7,7 +7,7 @@ import type { CmsForm } from "@/lib/types";
 type FormOption = { id: string; name: string; slug: string };
 
 /** Attach a form to a lead: staff fills it now, or copy a send-to-fill link. */
-export function AttachFormButton({ leadId, leadName }: { leadId: string; leadName: string }) {
+export function AttachFormButton({ leadId, leadName, sendOnly }: { leadId: string; leadName: string; sendOnly?: boolean }) {
   const [open, setOpen] = useState(false);
   const [forms, setForms] = useState<FormOption[]>([]);
   const [formId, setFormId] = useState("");
@@ -105,6 +105,12 @@ export function AttachFormButton({ leadId, leadName }: { leadId: string; leadNam
                   catch { setMsg("Copy failed — select the link manually."); }
                 }}>Copy link</button>
                 <p className="text-xs text-muted">They fill it, answers attach to this lead. Link expires in 7 days.</p>
+              </div>
+            ) : sendOnly ? (
+              <div className="mt-4">
+                <button className="btn-primary w-full" disabled={!formId || busy} onClick={createLink}>
+                  {busy ? "Creating…" : "Create send-to-fill link"}
+                </button>
               </div>
             ) : (
               <div className="mt-4 flex gap-2">
