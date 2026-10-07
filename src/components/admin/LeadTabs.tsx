@@ -104,8 +104,39 @@ function SubmissionModal({ lead, onClose }: { lead: Lead; onClose: () => void })
 
 function FormSubmissionPanel({ lead }: { lead: Lead }) {
   const [showAll, setShowAll] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState("");
   const entries = Object.entries(lead.custom_fields ?? {});
   const preview = entries.slice(0, 5);
+
+  function startEdit() {
+    const d: Record<string, string> = {};
+    for (const [k, v] of entries) {
+      d[k] = typeof v === "string" ? v : JSON.stringify(v ?? "");
+    }
+    setDraft(d); setEditing(true); setMsg("");
+  }
+
+  async function saveAnswers() {
+    setSaving(true); setMsg("");
+    const out: Record<string, unknown> = {};
+    for (const [k, raw] of Object.entries(draft)) {
+      const orig = (lead.custom_fields ?? {})[k];
+      if (typeof orig === "string" || orig == null) {
+        out[k] = raw;
+      } else {
+        try { out[k] = JSON.parse(raw); }
+        catch { out[k] = raw; }
+      }
+    }
+    const { error } = await createClient().from("leads").update({ custom_fields: out }).eq("id", lead.id);
+    setSaving(false);
+    if (error) { setMsg(error.message); return; }
+    setEditing(false); setMsg("Answers updated");
+  }
+
   return (
     <div className="flex flex-col gap-4">
     <div className="card flex flex-col gap-4">
@@ -114,13 +145,41 @@ function FormSubmissionPanel({ lead }: { lead: Lead }) {
           <strong>Form submission</strong>
           <p className="text-[13px] text-muted">Answers from the “{lead.form_key ?? "unknown"}” form.</p>
         </div>
-        {entries.length > 0 ? (
-          <button onClick={() => setShowAll(true)} className="btn h-9 shrink-0 px-4 text-[13px]">
-            View
-          </button>
-        ) : null}
+        <div className="flex gap-2">
+          {entries.length > 0 && !editing ? (
+            <button onClick={() => setEditing(true)} className="btn h-9 shrink-0 px-4 text-[13px]">
+              Edit
+            </button>
+          ) : null}
+          {entries.length > 0 && !editing ? (
+            <button onClick={() => setShowAll(true)} className="btn h-9 shrink-0 px-4 text-[13px]">
+              View
+            </button>
+          ) : null}
+        </div>
       </div>
-      {entries.length ? (
+      {msg ? <p className="text-sm text-muted" role="status">{msg}</p> : null}
+      {editing ? (
+        <div className="flex flex-col gap-3">
+          {entries.map(([key]) => {
+            const orig = (lead.custom_fields ?? {})[key];
+            const isComplex = orig != null && typeof orig !== "string";
+            return (
+              <label key={key} className="label">{key.replace(/_/g, " ")}
+                {isComplex ? (
+                  <textarea className="textarea font-mono text-xs" rows={3} value={draft[key] ?? ""} onChange={(e) => setDraft({ ...draft, [key]: e.target.value })} />
+                ) : (
+                  <input className="input" value={draft[key] ?? ""} onChange={(e) => setDraft({ ...draft, [key]: e.target.value })} />
+                )}
+              </label>
+            );
+          })}
+          <div className="flex gap-2">
+            <button className="btn-primary" disabled={saving} onClick={saveAnswers}>{saving ? "Saving…" : "Save answers"}</button>
+            <button className="btn" onClick={() => { setEditing(false); setMsg(""); }}>Cancel</button>
+          </div>
+        </div>
+      ) : entries.length ? (
         <dl className="flex flex-col">
           {preview.map(([key, v]) => (
             <div key={key} className="flex items-baseline justify-between gap-4 border-b border-line/60 py-2 last:border-0">
