@@ -1,36 +1,135 @@
 import { NextRequest, NextResponse } from "next/server";
 
+export const runtime = "edge";
+
 /**
- * POST /api/webhooks/salesiq?secret=...
- * Receives Zoho SalesIQ events (e.g. chat ended) and forwards them as leads
- * into the CRM via the submit-lead edge function (form_key: "salesiq_chat").
- *
- * Setup in Zoho SalesIQ: Automation → Webhooks → POST to
- *   https://<site>/api/webhooks/salesiq?secret=<SALESIQ_WEBHOOK_SECRET>
- * with SALESIQ_WEBHOOK_SECRET set as a Cloudflare secret on the worker.
+ * Zoho SalesIQ → CRM lead webhook.
+ * GET/HEAD 200 for Zoho's URL validation; POST requires ?secret=<SALESIQ_WEBHOOK_SECRET>.
+ * Forwards identified chats into the CRM via the shared submit-lead edge function
+ * as form_key "salesiq_chat". Skips anonymous visitors (no email/phone).
  */
 
-const clip = (v: unknown, n: number) =>
-  (typeof v === "string" ? v.trim().slice(0, n) : "") || null;
+const EMAIL_RE = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i;
+const PHONE_RE = /^\+?[\d\s().-]{7,20}$/;
 
-function pick(obj: any, ...keys: string[]): string | null {
-  for (const k of keys) {
-    const v = k.split(".").reduce((o, p) => (o != null ? o[p] : undefined), obj);
-    if (typeof v === "string" && v.trim()) return v.trim();
-  }
-  return null;
+function isEmail(v: unknown): v is string {
+  return typeof v === "string" && EMAIL_RE.test(v.trim());
+}
+function isPhone(v: unknown): v is string {
+  if (typeof v !== "string") return false;
+  const t = v.trim();
+  return PHONE_RE.test(t) && (t.replace(/\D/g, "").length >= 7);
 }
 
-export async function GET() {
-  return NextResponse.json({ ok: true, service: "salesiq-webhook" });
+/** Deep-scan any JSON value for email/phone/name-like strings, regardless of
+ *  Zoho's field naming or nesting. Prefers keys that hint at the field. */
+function deepScan(node: unknown, out: { email?: string; phone?: string; name?: string }, depth = 0): void {
+  if (depth > 6 || !node) return;
+  if (typeof node === "string") {
+    const t = node.trim();
+    if (!out.email && isEmail(t)) out.email = t.match(EMAIL_RE)![0];
+    else if (!out.phone && isPhone(t)) out.phone = t;
+    return;
+  }
+  if (Array.isArray(node)) {
+    for (const item of node) deepScan(item, out, depth + 1);
+    return;
+  }
+  if (typeof node === "object") {
+    for (const [k, v] of Object.entries(node as Record<string, unknown>)) {
+      const key = k.toLowerCase();
+      if (typeof v === "string") {
+        const t = v.trim();
+        if (!t) continue;
+        if (!out.email && (key.includes("email") || isEmail(t))) {
+          const m = t.match(EMAIL_RE);
+          if (m) { out.email = m[0]; continue; }
+        }
+        if (!out.phone && (key.includes("phone") || key.includes("mobile") || key.includes("contact") || isPhone(t))) {
+          if (isPhone(t)) { out.phone = t; continue; }
+        }
+        if (!out.name && key.includes("name") && t.length >= 2 && t.length <= 80 && !isEmail(t)) {
+          out.name = t;
+          continue;
+        }
+      }
+      deepScan(v, out, depth + 1);
+    }
+  }
+}
+
+function pick(...vals: unknown[]): string {
+  for (const v of vals) if (typeof v === "string" && v.trim()) return v.trim();
+  return "";
+}
+
+/** Best-effort transcript from common chat payload shapes. */
+function transcriptOf(d: Record<string, unknown>): string {
+  const buckets: unknown[] = [d.messages, d.transcript, d.chat?.messages, d.conversation];
+  const chat = d.chat as Record<string, unknown> | undefined;
+  if (chat) buckets.push(chat.transcript, chat.messages);
+  for (const b of buckets) {
+    if (!Array.isArray(b)) continue;
+    const lines = b
+      .map((m) => {
+        if (typeof m === "string") return m;
+        if (m && typeof m === "object") {
+          const o = m as Record<string, unknown>;
+          const who = pick(o.sender, o.by, o.author, o.from, (o.visitor as boolean) ? "visitor" : "", "them");
+          const text = pick(o.text, o.message, o.body, o.content);
+          return text ? `${who}: ${text}` : "";
+        }
+        return "";
+      })
+      .filter(Boolean);
+    if (lines.length) return lines.join("\n");
+  }
+  const raw = pick(d.chat_transcript, d.conversation_text);
+  return raw;
+}
+
+async function readBody(req: NextRequest): Promise<Record<string, unknown>> {
+  const ct = req.headers.get("content-type") ?? "";
+  try {
+    if (ct.includes("application/json")) {
+      const j = await req.json();
+      return j && typeof j === "object" ? (j as Record<string, unknown>) : {};
+    }
+    if (ct.includes("application/x-www-form-urlencoded")) {
+      const text = await req.text();
+      const out: Record<string, unknown> = {};
+      for (const [k, v] of new URLSearchParams(text)) {
+        // Zoho sometimes nests JSON inside a form field.
+        try {
+          const parsed = JSON.parse(v);
+          if (parsed && typeof parsed === "object") { out[k] = parsed; continue; }
+        } catch { /* plain string */ }
+        out[k] = v;
+      }
+      return out;
+    }
+    // Unknown content type: try JSON, fall back to text scan.
+    try {
+      const j = await req.json();
+      if (j && typeof j === "object") return j as Record<string, unknown>;
+    } catch { /* fall through */ }
+    const text = await req.text();
+    return text ? { _raw: text } : {};
+  } catch {
+    return {};
+  }
 }
 
 export async function HEAD() {
   return new NextResponse(null, { status: 200 });
 }
 
+export async function GET() {
+  return NextResponse.json({ ok: true, service: "salesiq-webhook" });
+}
+
 export async function POST(req: NextRequest) {
-  const secret = process.env.SALESIQ_WEBHOOK_SECRET || "";
+  const secret = process.env.SALESIQ_WEBHOOK_SECRET;
   if (!secret) {
     return NextResponse.json({ error: "SalesIQ webhook not configured." }, { status: 503 });
   }
@@ -38,64 +137,72 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Forbidden." }, { status: 403 });
   }
 
-  let body: any = {};
-  const ct = req.headers.get("content-type") ?? "";
-  try {
-    body = ct.includes("application/x-www-form-urlencoded")
-      ? Object.fromEntries(new URLSearchParams(await req.text()))
-      : await req.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid payload." }, { status: 400 });
-  }
-  // Zoho sometimes nests the event under `data` or sends a JSON string.
-  if (typeof body.data === "string") {
-    try { body = JSON.parse(body.data); } catch { /* keep as-is */ }
-  }
-  const d = body.data && typeof body.data === "object" ? body.data : body;
+  const d = await readBody(req);
+  const found: { email?: string; phone?: string; name?: string } = {};
+  deepScan(d, found);
 
-  const name = pick(d, "visitor.name", "visitorname", "name", "attender.name");
-  const email = pick(d, "visitor.email", "visitoremail", "email");
-  const phone = pick(d, "visitor.phone", "visitorphone", "phone", "visitor.mobile");
-  const pageUrl = pick(d, "visitor.currentPage", "page.url", "url", "chat.department");
-  const transcript =
-    pick(d, "chat.transcript", "transcript") ??
-    (Array.isArray(d.messages) ? d.messages.map((m: any) => `${m.by ?? ""}: ${m.text ?? ""}`.trim()).join("\n").slice(0, 4000) : null);
+  const email = found.email ?? "";
+  const phone = found.phone ?? "";
+  const name = found.name ?? "";
 
   if (!email && !phone) {
-    // Nothing to identify the visitor by — nothing to save.
-    // saw_keys helps diagnose Zoho payload shape changes (keys only, no PII).
-    const keys = d && typeof d === "object" ? Object.keys(d).slice(0, 25) : [];
+    const keys = Object.keys(d).slice(0, 25);
     console.error("[salesiq] skipped: no contact info. top-level keys:", keys.join(","));
     return NextResponse.json({ ok: true, skipped: "no contact info", saw_keys: keys });
   }
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  if (!supabaseUrl) return NextResponse.json({ error: "Supabase not configured." }, { status: 500 });
+  const transcript = transcriptOf(d);
+  const pageUrl = pick(
+    d.page_url, d.url, d.website,
+    (d.visitor as Record<string, unknown> | undefined)?.page_url,
+    (d.chat as Record<string, unknown> | undefined)?.page_url,
+  );
+  const chatId = pick(
+    (d.chat as Record<string, unknown> | undefined)?.id,
+    d.chat_id, d.conversation_id,
+  );
+  const visitorId = pick(
+    (d.visitor as Record<string, unknown> | undefined)?.id,
+    d.visitor_id,
+  );
 
-  const [first, ...rest] = (name ?? "").split(/\s+/).filter(Boolean);
-  const res = await fetch(`${supabaseUrl}/functions/v1/submit-lead`, {
+  const [firstName, ...rest] = name.split(/\s+/).filter(Boolean);
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!supabaseUrl || !supabaseAnon) {
+    return NextResponse.json({ error: "CRM not configured." }, { status: 503 });
+  }
+
+  const leadRes = await fetch(`${supabaseUrl}/functions/v1/submit-lead`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      apikey: supabaseAnon,
+      Authorization: `Bearer ${supabaseAnon}`,
+    },
     body: JSON.stringify({
-      first_name: first || null,
-      last_name: rest.join(" ") || null,
-      email: email?.toLowerCase() ?? null,
-      phone,
-      message: transcript,
       form_key: "salesiq_chat",
-      path: pageUrl,
-      elapsed_ms: 60000, // server-to-server: bypass the "filled too fast" spam check
+      first_name: firstName || "Website",
+      last_name: rest.join(" ") || "Visitor",
+      email: email || undefined,
+      phone: phone || undefined,
+      message: transcript ? `SalesIQ chat transcript:\n${transcript}` : "SalesIQ chat — no transcript captured.",
+      page_url: pageUrl || undefined,
       custom_fields: {
-        salesiq_visitor_id: pick(d, "visitor.id", "visitorid"),
-        salesiq_chat_id: pick(d, "chat.id", "chatid"),
-        page_url: pageUrl,
+        source: "salesiq_chat",
+        salesiq_chat_id: chatId || undefined,
+        salesiq_visitor_id: visitorId || undefined,
+        salesiq_page: pageUrl || undefined,
       },
     }),
   });
-  if (!res.ok) {
-    const err = await res.text().catch(() => "");
-    console.error("[salesiq webhook] submit-lead failed:", res.status, err.slice(0, 200));
-    return NextResponse.json({ error: "Lead not saved." }, { status: 502 });
+
+  if (!leadRes.ok) {
+    const errText = await leadRes.text().catch(() => "");
+    console.error("[salesiq] submit-lead failed:", leadRes.status, errText.slice(0, 300));
+    return NextResponse.json({ error: "Lead capture failed.", detail: errText.slice(0, 300) }, { status: 502 });
   }
+
   return NextResponse.json({ ok: true });
 }
