@@ -3,14 +3,22 @@ import { NextRequest, NextResponse } from "next/server";
 /**
  * tawk.to → CRM lead webhook.
  * tawk.to dashboard: Administration > Settings > Webhooks → add webhook for the
- * "Chat End" event, POST to /api/webhooks/tawkto?secret=<TAWKTO_WEBHOOK_SECRET>.
- * Forwards identified chats into the CRM via the shared submit-lead edge function
- * as form_key "tawkto_chat". Skips anonymous visitors (no email/phone).
+ * "Chat End" AND "Chat Transcript Created" events,
+ * POST to /api/webhooks/tawkto?secret=<TAWKTO_WEBHOOK_SECRET>.
+ *
+ * - chat:end: creates the lead immediately (visitor.name/email, page from referrer).
+ * - chat:transcript_created (~3 min later): enriches the lead with the full
+ *   transcript + pre-chat form answers (name/phone/email parsed from the form message).
+ *
+ * Lead key: form_key "tawkto_chat". Skips anonymous visitors (no email/phone).
+ *
+ * Field paths follow https://developer.tawk.to/webhooks/ :
+ *   chat:end:            { event, chatId, domain, referrer, visitor{name,email}, property{name} }
+ *   transcript_created:  { event, chat, chat.messages[{msg, sender{t,n}}], visitor{name,email}, referrer }
  */
 
 const EMAIL_RE = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i;
 const PHONE_RE = /^\+?[\d\s().-]{7,20}$/;
-/** tawk.to anonymous visitor IDs look like V1791405680723906 — never a real name. */
 const ANON_ID_RE = /^V\d{6,}$/i;
 
 function isEmail(v: unknown): boolean {
@@ -21,111 +29,39 @@ function isPhone(v: unknown): boolean {
   const t = v.trim();
   return PHONE_RE.test(t) && t.replace(/\D/g, "").length >= 7;
 }
-
-interface Candidates {
-  emails: { key: string; value: string }[];
-  phones: { key: string; value: string }[];
-  names: { key: string; value: string }[];
-  pages: { key: string; value: string }[];
-  messageArrays: unknown[][];
-}
-
-/** Walk the whole payload and collect every candidate value with its key path,
- *  so we can pick the best one instead of the first one. */
-function collect(node: unknown, out: Candidates, path = "", depth = 0): void {
-  if (depth > 7 || node == null) return;
-  if (typeof node === "string") {
-    const t = node.trim();
-    if (!t) return;
-    const key = path.toLowerCase();
-    if (isEmail(t)) out.emails.push({ key, value: t.match(EMAIL_RE)![0] });
-    else if (isPhone(t)) out.phones.push({ key, value: t });
-    else if (
-      t.length >= 2 && t.length <= 80 &&
-      !ANON_ID_RE.test(t) &&
-      (key.includes("name") || key.includes("first") || key.includes("last"))
-    ) {
-      out.names.push({ key, value: t });
-    }
-    if (key.includes("page") || key.includes("url")) {
-      if (/^https?:\/\//i.test(t)) out.pages.push({ key, value: t });
-    }
-    return;
-  }
-  if (Array.isArray(node)) {
-    // Message-like array? Items with text/message/body fields.
-    if (
-      node.length > 0 &&
-      node.every(
-        (m) =>
-          m && typeof m === "object" &&
-          typeof (m as Record<string, unknown>).text === "string" ||
-          (m && typeof m === "object" && typeof (m as Record<string, unknown>).message === "string") ||
-          (m && typeof m === "object" && typeof (m as Record<string, unknown>).body === "string"),
-      )
-    ) {
-      out.messageArrays.push(node);
-    }
-    node.forEach((item, i) => collect(item, out, `${path}[${i}]`, depth + 1));
-    return;
-  }
-  if (typeof node === "object") {
-    for (const [k, v] of Object.entries(node as Record<string, unknown>)) {
-      collect(v, out, path ? `${path}.${k}` : k, depth + 1);
-    }
-  }
-}
-
 function pick(...vals: unknown[]): string {
   for (const v of vals) if (typeof v === "string" && v.trim()) return v.trim();
   return "";
 }
-
-/** Score a name candidate: explicit first/last-name keys win over generic ones. */
-function nameScore(key: string): number {
-  const k = key.toLowerCase();
-  if (k.includes("first") || k.includes("last") || k.includes("fullname") || k.includes("full-name")) return 3;
-  if (k.includes("nick") || k.includes("display")) return 2;
-  if (k.includes("name")) return 1;
-  return 0;
+function cleanName(v: string): string {
+  const t = v.trim();
+  return ANON_ID_RE.test(t) ? "" : t;
 }
 
-function bestName(cands: Candidates): string {
-  const sorted = [...cands.names].sort((a, b) => nameScore(b.key) - nameScore(a.key));
-  // Prefer a two-word (or longer) name — single tokens are often IDs/handles.
-  const full = sorted.find((c) => c.value.split(/\s+/).length >= 2);
-  return (full ?? sorted[0])?.value ?? "";
+/** Extract "Email : x / Phone : y / First Name : a / Last Name : b" from the
+ *  pre-chat form system message tawk.to injects into the transcript. */
+function parsePrechatForm(text: string): { email: string; phone: string; firstName: string; lastName: string } {
+  const out = { email: "", phone: "", firstName: "", lastName: "" };
+  const grab = (label: string): string => {
+    const m = text.match(new RegExp(label + "\\s*:\\s*([^\\n]+)", "i"));
+    return m ? m[1].trim() : "";
+  };
+  const email = grab("email");
+  if (isEmail(email)) out.email = email.match(EMAIL_RE)![0];
+  const phone = grab("phone");
+  if (isPhone(phone)) out.phone = phone;
+  out.firstName = grab("first[ -]?name");
+  out.lastName = grab("last[ -]?name");
+  return out;
 }
 
-function bestPhone(cands: Candidates): string {
-  const sorted = [...cands.phones].sort((a, b) => {
-    const ka = a.key.toLowerCase(), kb = b.key.toLowerCase();
-    const sa = ka.includes("phone") || ka.includes("mobile") ? 1 : 0;
-    const sb = kb.includes("phone") || kb.includes("mobile") ? 1 : 0;
-    return sb - sa;
-  });
-  return sorted[0]?.value ?? "";
-}
-
-function transcriptOf(cands: Candidates): string {
-  for (const arr of cands.messageArrays) {
-    const lines = arr
-      .map((m) => {
-        const o = m as Record<string, unknown>;
-        const sender = o.sender as Record<string, unknown> | undefined;
-        const who = pick(
-          o.senderName, o.nickname,
-          sender?.name, sender?.type,
-          typeof o.type === "string" && o.type === "visitor" ? "visitor" : "",
-          "them",
-        );
-        const text = pick(o.text, o.message, o.body, o.msg);
-        return text ? `${who}: ${text}` : "";
-      })
-      .filter(Boolean);
-    if (lines.length >= 1) return lines.join("\n");
-  }
-  return "";
+function senderName(sender: unknown): string {
+  if (!sender || typeof sender !== "object") return "them";
+  const s = sender as Record<string, unknown>;
+  // t: a = agent, v = visitor, s = system
+  if (s.t === "v") return "visitor";
+  if (s.t === "a") return pick(s.n, "agent");
+  return pick(s.n, "system");
 }
 
 export async function GET() {
@@ -149,25 +85,52 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, skipped: "unreadable body" });
   }
 
-  const event = pick(d.event, d.type).toLowerCase();
-  if (event && !event.includes("end") && !event.includes("transcript")) {
-    return NextResponse.json({ ok: true, skipped: `event ${event}` });
+  const event = pick(d.event).toLowerCase();
+  const isTranscript = event.includes("transcript");
+  // Only the transcript event creates the lead: it carries the full messages,
+  // the pre-chat form answers (name/phone/email), and avoids duplicates that
+  // would come from also handling chat:end.
+  if (event && !isTranscript) {
+    return NextResponse.json({ ok: true, skipped: `event ${event} (transcript only)` });
   }
 
-  const cands: Candidates = { emails: [], phones: [], names: [], pages: [], messageArrays: [] };
-  collect(d, cands);
+  const visitor = (d.visitor ?? {}) as Record<string, unknown>;
+  const chat = (d.chat ?? {}) as Record<string, unknown>;
+  const chatId = pick(d.chatId, chat.id);
+  const pageUrl = pick(d.referrer, d.domain);
 
-  const email = cands.emails[0]?.value ?? "";
-  const phone = bestPhone(cands);
-  const name = bestName(cands);
-  const pageUrl = cands.pages[0]?.value ?? "";
+  // Base contact info from the documented visitor object.
+  let email = isEmail(visitor.email) ? (visitor.email as string).trim().match(EMAIL_RE)![0] : "";
+  let fullName = cleanName(pick(visitor.name));
+  let phone = "";
+
+  // Transcript path: parse messages + pre-chat form answers.
+  let transcript = "";
+  const messages = chat.messages;
+  if (Array.isArray(messages) && messages.length > 0) {
+    const lines: string[] = [];
+    for (const m of messages) {
+      if (!m || typeof m !== "object") continue;
+      const o = m as Record<string, unknown>;
+      const text = pick(o.msg, o.text, o.message);
+      if (!text) continue;
+      // Pre-chat form answers live in a system message — parse fields out of it.
+      const form = parsePrechatForm(text);
+      if (form.email && !email) email = form.email;
+      if (form.phone && !phone) phone = form.phone;
+      if ((form.firstName || form.lastName) && !fullName) {
+        fullName = [form.firstName, form.lastName].filter(Boolean).join(" ");
+      }
+      lines.push(`${senderName(o.sender)}: ${text}`);
+    }
+    transcript = lines.join("\n");
+  }
 
   if (!email && !phone) {
     return NextResponse.json({ ok: true, skipped: "no contact info" });
   }
 
-  const transcript = transcriptOf(cands);
-  const [firstName, ...rest] = name.split(/\s+/).filter(Boolean);
+  const [firstName, ...rest] = fullName.split(/\s+/).filter(Boolean);
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -188,9 +151,13 @@ export async function POST(req: NextRequest) {
       last_name: rest.join(" ") || "Visitor",
       email: email || undefined,
       phone: phone || undefined,
-      message: transcript ? `tawk.to chat transcript:\n${transcript}` : "tawk.to chat — no transcript captured.",
+      message: transcript ? `tawk.to chat transcript:\n${transcript}` : "tawk.to chat.",
       page_url: pageUrl || undefined,
-      custom_fields: { source: "tawkto_chat" },
+      custom_fields: {
+        source: "tawkto_chat",
+        tawkto_chat_id: chatId || undefined,
+        tawkto_event: event || undefined,
+      },
     }),
   });
 
