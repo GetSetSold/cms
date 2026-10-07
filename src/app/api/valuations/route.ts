@@ -57,7 +57,11 @@ export async function POST(req: NextRequest) {
     }
     // Retry only on public_id collision; anything else is a real failure.
     if (!/duplicate|unique/i.test(error.message)) {
-      return NextResponse.json({ error: "Could not save valuation." }, { status: 500 });
+      console.error("[valuations] insert failed:", error.message);
+      return NextResponse.json(
+        { error: "Could not save valuation.", detail: error.message.slice(0, 200) },
+        { status: 500 },
+      );
     }
   }
   return NextResponse.json({ error: "Could not save valuation." }, { status: 500 });
