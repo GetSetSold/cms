@@ -59,6 +59,7 @@ export function EvaluationFlow({ config }: { config: EvaluationConfig }) {
   const [refining, setRefining] = useState(false);
   const [refineError, setRefineError] = useState("");
   const [locating, setLocating] = useState(false);
+  const [geoProvider, setGeoProvider] = useState<"maptiler" | "google">("maptiler");
   const debounce = useRef<number | null>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
 
@@ -98,7 +99,7 @@ export function EvaluationFlow({ config }: { config: EvaluationConfig }) {
         const res = await fetch(`/api/geocode?q=${encodeURIComponent(v.trim())}`);
         const body = await res.json();
         if (!res.ok) { setGeoError(body.error ?? "Address search failed."); setSuggestions([]); }
-        else setSuggestions(body.features ?? []);
+        else { setSuggestions(body.features ?? []); setGeoProvider(body.provider === "google" ? "google" : "maptiler"); }
         setDropOpen(true);
       } catch { setGeoError("Address search failed. Please try again."); }
       setSearching(false);
@@ -374,7 +375,7 @@ export function EvaluationFlow({ config }: { config: EvaluationConfig }) {
                       </button>
                     ))}
                     <div className="bg-[#f7f7f7] px-4 py-2 text-right text-[11px] text-[#333333]/60">
-                      Address search by <b className="text-[var(--hev-accent)]">MapTiler</b>
+                      Address search by <b className="text-[var(--hev-accent)]">{geoProvider === "google" ? "Google" : "MapTiler"}</b>
                     </div>
                   </div>
                 )}
