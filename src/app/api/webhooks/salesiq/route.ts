@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 
-export const runtime = "edge";
-
 /**
  * Zoho SalesIQ → CRM lead webhook.
  * GET/HEAD 200 for Zoho's URL validation; POST requires ?secret=<SALESIQ_WEBHOOK_SECRET>.
