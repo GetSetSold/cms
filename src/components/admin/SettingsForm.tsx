@@ -14,6 +14,7 @@ const TABS = [
   { id: "footer", label: "Footer" },
   { id: "mobile", label: "Mobile bar" },
   { id: "contact", label: "Contact & leads" },
+  { id: "evaluation", label: "Home evaluation" },
   { id: "content", label: "Blog & social" },
   { id: "seo", label: "SEO" },
   { id: "ads", label: "Ads" },
@@ -35,7 +36,7 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
       contact: s.contact, scripts: s.scripts, lead_settings: s.lead_settings, mobile_cta: s.mobile_cta, blog_cta: s.blog_cta, social_links: s.social_links, precon_cashback: s.precon_cashback,
       agent: s.agent ?? {},
       email_provider: s.email_provider ?? "zeptomail", sms_provider: s.sms_provider ?? "vonage",
-      ads: s.ads ?? {}, promo: s.promo ?? {}, local_expert: s.local_expert ?? {}, brokerage: s.brokerage ?? {},
+      ads: s.ads ?? {}, promo: s.promo ?? {}, local_expert: s.local_expert ?? {}, brokerage: s.brokerage ?? {}, home_evaluation: s.home_evaluation ?? {},
     }).eq("id", 1);
     setMsg(error ? error.message : "Saved");
   }
@@ -423,6 +424,27 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
                       <label className="label flex flex-row items-center gap-2">Show on city pages<input type="checkbox" checked={s.local_expert?.show_on_cities !== false} onChange={(e) => set("local_expert", { ...s.local_expert, show_on_cities: e.target.checked })} className="h-4 w-4" /></label>
                       <label className="label flex flex-row items-center gap-2">Show on neighbourhood pages<input type="checkbox" checked={s.local_expert?.show_on_neighbourhoods !== false} onChange={(e) => set("local_expert", { ...s.local_expert, show_on_neighbourhoods: e.target.checked })} className="h-4 w-4" /></label>
                     </div>
+          </section>
+        )}
+        {tab === "evaluation" && (
+          <section className="flex flex-col gap-3 border border-line bg-white p-4 md:p-5">
+            <h2 className="text-base font-semibold">Home evaluation <span className="font-normal text-muted">— /free-online-home-valuation</span></h2>
+            <p className="text-xs text-muted">Address search uses the MapTiler geocoding API — add the <code>MAPTILER_API_KEY</code> Cloudflare secret for the picker to work. The estimate combines similar active listings near the address with HPI market direction.</p>
+            <div className="flex flex-wrap gap-4">
+              <label className="label flex flex-row items-center gap-2">Page enabled<input type="checkbox" checked={s.home_evaluation?.enabled !== false} onChange={(e) => set("home_evaluation", { ...s.home_evaluation, enabled: e.target.checked })} className="h-4 w-4" /></label>
+            </div>
+            <label className="label">Heading<input className="input" value={s.home_evaluation?.heading ?? ""} onChange={(e) => set("home_evaluation", { ...s.home_evaluation, heading: e.target.value })} placeholder="What's your home really worth?" /></label>
+            <label className="label">Subheading<textarea className="textarea" rows={2} value={s.home_evaluation?.subheading ?? ""} onChange={(e) => set("home_evaluation", { ...s.home_evaluation, subheading: e.target.value })} placeholder="A preliminary estimate from what's happening around you right now…" /></label>
+            <div className="grid gap-3 sm:grid-cols-3">
+              <label className="label">Search radius (km)<input type="number" min={1} max={50} className="input" value={s.home_evaluation?.search_radius_km ?? 10} onChange={(e) => set("home_evaluation", { ...s.home_evaluation, search_radius_km: Math.min(50, Math.max(1, Number(e.target.value) || 10)) })} /></label>
+              <label className="label">Similar listings shown<input type="number" min={3} max={20} className="input" value={s.home_evaluation?.max_listings ?? 8} onChange={(e) => set("home_evaluation", { ...s.home_evaluation, max_listings: Math.min(20, Math.max(3, Number(e.target.value) || 8)) })} /></label>
+              <label className="label">Range ± (%)<input type="number" min={1} max={15} className="input" value={s.home_evaluation?.range_pct ?? 5} onChange={(e) => set("home_evaluation", { ...s.home_evaluation, range_pct: Math.min(15, Math.max(1, Number(e.target.value) || 5)) })} /></label>
+            </div>
+            <label className="label">Disclaimer<textarea className="textarea" rows={3} value={s.home_evaluation?.disclaimer ?? ""} onChange={(e) => set("home_evaluation", { ...s.home_evaluation, disclaimer: e.target.value })} placeholder="This is an automated preliminary estimate…" /></label>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="label">In-person evaluation booking URL<input className="input" value={s.home_evaluation?.booking_url ?? ""} onChange={(e) => set("home_evaluation", { ...s.home_evaluation, booking_url: e.target.value })} placeholder="https://booking.getsetsold.ca" /></label>
+              <label className="label">Virtual CMA URL <span className="font-normal text-muted">(blank hides the button)</span><input className="input" value={s.home_evaluation?.virtual_cma_url ?? ""} onChange={(e) => set("home_evaluation", { ...s.home_evaluation, virtual_cma_url: e.target.value })} placeholder="https://…" /></label>
+            </div>
           </section>
         )}
         {tab === "content" && (<>

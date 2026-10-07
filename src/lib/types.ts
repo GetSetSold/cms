@@ -91,6 +91,11 @@ export interface SiteSettings {
   blog_cta: { heading?: string; text?: string; button_label?: string; button_href?: string };
   contact: { phone?: string; email?: string; address?: string; hours?: string; logo_svg_id?: string | null; office_name?: string; office_title?: string; office_tagline?: string };
   brokerage: { name?: string; logo_svg_id?: string | null; address?: string; phone?: string; email?: string };
+  home_evaluation: {
+    enabled?: boolean; heading?: string; subheading?: string;
+    search_radius_km?: number; max_listings?: number; range_pct?: number;
+    disclaimer?: string; booking_url?: string; virtual_cma_url?: string;
+  };
   agent?: { name?: string; title?: string; photo_svg_id?: string | null; phone?: string; email?: string; brokerage?: string };
   local_expert?: {
     enabled?: boolean; show_on_cities?: boolean; show_on_neighbourhoods?: boolean;
