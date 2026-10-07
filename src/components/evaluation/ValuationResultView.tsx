@@ -90,7 +90,7 @@ export function ValuationResultView({ snapshot: s }: { snapshot: ValuationSnapsh
       {s.estimate ? (
         <>
           <div className="mt-7 rounded-[var(--radius-lg)] bg-[#111111] px-6 py-11 text-center text-white sm:px-8">
-            <div className="mb-4 text-[14px] text-white/60">{s.addressLabel}</div>
+            <div className="mb-5 px-2 text-[19px] font-bold leading-snug text-white sm:text-[23px]">{s.addressLabel}</div>
             <div className="mb-2.5 text-[12px] font-bold uppercase tracking-[0.14em] text-white/50">Estimated market value</div>
             <div className="text-[36px] font-extrabold tracking-tight sm:text-[44px] md:text-[54px]">
               {fmt(s.estimate.low)} <span className="font-medium text-white/40">–</span> {fmt(s.estimate.high)}
