@@ -67,16 +67,18 @@ export function AttachFormButton({ leadId, leadName }: { leadId: string; leadNam
 
   if (filling) {
     return (
-      <div className="fixed inset-0 z-[120] overflow-y-auto bg-black/50 p-4" onClick={() => setFilling(null)}>
-        <div className="mx-auto max-w-3xl rounded-2xl bg-white p-6" onClick={(e) => e.stopPropagation()}>
-          <div className="mb-4 flex items-center justify-between">
+      <div className="fixed inset-0 z-[120] overflow-y-auto bg-black/50" onClick={() => setFilling(null)}>
+        <div className="mx-auto min-h-full w-full max-w-6xl bg-white shadow-2xl" onClick={(e) => e.stopPropagation()}>
+          <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-line bg-white px-5 py-4 sm:px-8">
             <div>
               <strong className="text-lg">{filling.name}</strong>
               <p className="text-sm text-muted">Filling for {leadName} — answers attach to their lead record.</p>
             </div>
-            <button className="btn" onClick={() => setFilling(null)}>Close</button>
+            <button className="btn shrink-0" onClick={() => setFilling(null)}>Close</button>
           </div>
-          <CmsFormRenderer form={filling} onSubmitAnswers={submitAnswers} />
+          <div className="px-5 py-6 sm:px-8">
+            <CmsFormRenderer form={filling} onSubmitAnswers={submitAnswers} />
+          </div>
         </div>
       </div>
     );
