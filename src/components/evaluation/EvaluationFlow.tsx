@@ -54,6 +54,10 @@ export function EvaluationFlow({ config }: { config: EvaluationConfig }) {
   const [searching, setSearching] = useState(false);
   const [picked, setPicked] = useState<GeoFeature | null>(null);
   const [geoError, setGeoError] = useState("");
+  // house-number refinement for street-level picks
+  const [houseNum, setHouseNum] = useState("");
+  const [refining, setRefining] = useState(false);
+  const [refineError, setRefineError] = useState("");
   const debounce = useRef<number | null>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
 
@@ -102,6 +106,32 @@ export function EvaluationFlow({ config }: { config: EvaluationConfig }) {
 
   const pick = (f: GeoFeature) => {
     setPicked(f); setQuery(f.label); setDropOpen(false); setSuggestions([]);
+    setRefineError("");
+    if (!f.isAddress) {
+      const m = query.match(/^\s*(\d+[a-zA-Z]?)/);
+      setHouseNum(m ? m[1] : "");
+    }
+  };
+
+  /** Re-geocode with the house number + full street name to get rooftop accuracy. */
+  const refineAddress = async () => {
+    if (!picked || !houseNum.trim()) return;
+    setRefining(true);
+    setRefineError("");
+    try {
+      const res = await fetch(`/api/geocode?q=${encodeURIComponent(`${houseNum.trim()} ${picked.label}`)}`);
+      const body = await res.json();
+      const best = (body.features ?? []).find((f: GeoFeature) => f.isAddress);
+      if (best) {
+        setPicked(best);
+        setQuery(best.label);
+      } else {
+        setRefineError("Couldn't pinpoint that house number — we'll use the street location, which still works.");
+      }
+    } catch {
+      setRefineError("Couldn't pinpoint that house number — we'll use the street location, which still works.");
+    }
+    setRefining(false);
   };
 
   const toggleReno = (r: string) =>
@@ -315,6 +345,33 @@ export function EvaluationFlow({ config }: { config: EvaluationConfig }) {
               </div>
               {geoError && <p className="mt-2 text-[13px] font-medium text-[#ffe1e1]">{geoError}</p>}
               {picked && <p className="mt-2 text-[13px] font-medium text-white">✓ {picked.label}</p>}
+
+              {picked && !picked.isAddress && (
+                <div className="mt-3 rounded-[var(--radius-btn)] bg-white/10 p-4">
+                  <p className="text-[13.5px] font-semibold text-white">Add your house number for an accurate pinpoint</p>
+                  <p className="mt-0.5 text-[12.5px] leading-relaxed text-white/70">
+                    We found {picked.detail ?? picked.label} — a street-level match. Your house number gets us to your door.
+                  </p>
+                  <div className="mt-3 flex gap-2">
+                    <input
+                      value={houseNum}
+                      onChange={(e) => setHouseNum(e.target.value)}
+                      inputMode="numeric"
+                      placeholder="e.g. 11"
+                      aria-label="House number"
+                      className="h-11 w-28 min-w-0 shrink-0 rounded-[var(--radius-btn)] border border-white/25 bg-white px-4 text-[15px] text-[#111418] outline-none"
+                    />
+                    <button
+                      onClick={refineAddress}
+                      disabled={refining || !houseNum.trim()}
+                      className="inline-flex h-11 min-w-0 flex-1 items-center justify-center rounded-[var(--radius-btn)] bg-white px-4 text-[14.5px] font-semibold text-[var(--hev-accent)] transition hover:bg-white/90 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {refining ? "Finding…" : "Pinpoint my address"}
+                    </button>
+                  </div>
+                  {refineError && <p className="mt-2 text-[12.5px] text-[#ffe1e1]">{refineError}</p>}
+                </div>
+              )}
 
               <button
                 onClick={() => { setFormStep(2); document.getElementById("hev-form-card")?.scrollIntoView({ behavior: "smooth", block: "start" }); }}
