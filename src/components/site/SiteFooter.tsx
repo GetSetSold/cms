@@ -44,7 +44,7 @@ function VSlot({ color }: { color: string }) {
 function FooterCol({ col }: { col: NavColumn }) {
   return (
     <div className="flex min-w-0 flex-col gap-2.5">
-      {col.heading ? <strong>{col.heading}</strong> : null}
+      {col.heading ? <strong className="text-[#0066CC]">{col.heading}</strong> : null}
       {col.links.map((l) => <Link key={l.href} href={l.href} className="opacity-75 hover:opacity-100">{l.label}</Link>)}
     </div>
   );
@@ -96,6 +96,9 @@ function liftLogoForDark(markup: string): string {
 export async function SiteFooter({ settings, logo }: { settings: SiteSettings; logo?: SvgAsset | null }) {
   const socialItems = (settings.social_links?.items ?? []).filter((it) => it.svg_id && it.href);
   const socialSvgs = await getSvgs(socialItems.map((it) => it.svg_id));
+  const brokerageLogo = settings.brokerage?.logo_svg_id
+    ? (await getSvgs([settings.brokerage.logo_svg_id]))[settings.brokerage.logo_svg_id]
+    : null;
   const socialSize = { xs: "h-7 w-7", sm: "h-9 w-9", md: "h-11 w-11", lg: "h-14 w-14" }[settings.social_links?.size ?? "md"];
   const c = settings.contact ?? {};
   const f = settings.footer ?? { rows: [] };
@@ -104,14 +107,15 @@ export async function SiteFooter({ settings, logo }: { settings: SiteSettings; l
   const compact = settings.theme.density === "compact";
   const dcols = f.columns_per_row ?? 4;
   const mcols = f.mobile_columns_per_row ?? 2;
-  const divider = f.text ? `${f.text}33` : "rgba(255,255,255,0.18)";
+  const divider = f.text ? `${f.text}33` : "rgba(0,102,204,0.25)";
   const rowPad = compact ? "pt-6" : "pt-8";
   const footerDark = !f.bg || isDarkColor(f.bg);
   const footerLogo = logo && footerDark ? { ...logo, markup: liftLogoForDark(logo.markup) } : logo;
 
-  // Brand block shared by the desktop grid and the mobile stack.
+  // Brand block: My Office + Brokerage, headers/lines in brand blue (#0066CC).
+  const ACCENT = "#0066CC";
   const brandBlock = (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-5">
       <Link href="/" className="flex items-center gap-3" aria-label={`${settings.site_name} home`}>
         {footerLogo ? (
           <Svg asset={footerLogo} label={`${settings.site_name} logo`} style={{ width: compact ? 40 : 48, height: compact ? 40 : 48 }} />
@@ -124,12 +128,33 @@ export async function SiteFooter({ settings, logo }: { settings: SiteSettings; l
         </span>
       </Link>
       {f.tagline ? <p className="opacity-75">{f.tagline}</p> : null}
-      {c.address ? <p className="opacity-75">{c.address}</p> : null}
-      <div className="mt-1 flex flex-col gap-1.5">
-        {c.phone ? <a href={`tel:${c.phone}`} className="opacity-75 hover:opacity-100">{c.phone}</a> : null}
-        {c.email ? <a href={`mailto:${c.email}`} className="opacity-75 hover:opacity-100">{c.email}</a> : null}
-        {c.hours ? <span className="opacity-75">{c.hours}</span> : null}
+      {/* My Office */}
+      <div className="border-l-2 pl-4" style={{ borderColor: ACCENT }}>
+        <div className="mb-1.5 text-[11px] font-bold uppercase tracking-[1.5px]" style={{ color: ACCENT }}>My Office</div>
+        <div className="flex flex-col gap-1.5">
+          {c.address ? <p className="opacity-75">{c.address}</p> : null}
+          {c.phone ? <a href={`tel:${c.phone}`} className="opacity-75 hover:opacity-100">{c.phone}</a> : null}
+          {c.email ? <a href={`mailto:${c.email}`} className="opacity-75 hover:opacity-100">{c.email}</a> : null}
+          {c.hours ? <span className="opacity-75">{c.hours}</span> : null}
+        </div>
       </div>
+      {/* Brokerage */}
+      {settings.brokerage?.name ? (
+        <div className="border-l-2 pl-4" style={{ borderColor: ACCENT }}>
+          <div className="mb-1.5 text-[11px] font-bold uppercase tracking-[1.5px]" style={{ color: ACCENT }}>Brokerage</div>
+          <div className="flex items-center gap-2.5">
+            {brokerageLogo ? (
+              <Svg asset={brokerageLogo} label={`${settings.brokerage.name} logo`} style={{ width: 32, height: 32 }} />
+            ) : null}
+            <span className="font-semibold">{settings.brokerage.name}</span>
+          </div>
+          <div className="mt-1.5 flex flex-col gap-1.5">
+            {settings.brokerage.address ? <p className="opacity-75">{settings.brokerage.address}</p> : null}
+            {settings.brokerage.phone ? <a href={`tel:${settings.brokerage.phone}`} className="opacity-75 hover:opacity-100">{settings.brokerage.phone}</a> : null}
+            {settings.brokerage.email ? <a href={`mailto:${settings.brokerage.email}`} className="opacity-75 hover:opacity-100">{settings.brokerage.email}</a> : null}
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 

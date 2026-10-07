@@ -382,6 +382,13 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
                       </label>
                     </div>
                     <p className="text-xs text-muted">Switching here takes effect on the next message sent — no redeploy needed. Each provider's own API key is a Supabase secret and is never stored here; make sure the secret for whichever provider you pick is set, or sending will fail.</p>
+                    <h3 className="mt-2 text-sm font-semibold">Brokerage</h3>
+                    <p className="text-xs text-muted">Shown in the footer as the Brokerage block, with logo.</p>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      {(["name", "address", "phone", "email"] as const).map((k) => (
+                        <label key={k} className="label capitalize">{k}<input className="input" value={s.brokerage?.[k] ?? ""} onChange={(e) => set("brokerage", { ...s.brokerage, [k]: e.target.value })} placeholder={k === "name" ? "Lombard Group Real Estate Inc., Brokerage" : ""} /></label>
+                      ))}
+                    </div>
                     <h3 className="mt-2 text-sm font-semibold">Agent contact card</h3>
                     <p className="text-xs text-muted">Shown on listing detail pages beside the contact form.</p>
                     <div className="grid gap-3 sm:grid-cols-2">
