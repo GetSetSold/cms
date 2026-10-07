@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS public.lead_form_attachments (
 CREATE INDEX IF NOT EXISTS idx_lead_form_attachments_lead ON public.lead_form_attachments(lead_id);
 
 ALTER TABLE public.lead_form_attachments ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "staff manage attachments" ON public.lead_form_attachments;
 CREATE POLICY "staff manage attachments" ON public.lead_form_attachments FOR ALL
   USING (public.has_role(array['admin','editor','sales']::public.app_role[]))
   WITH CHECK (public.has_role(array['admin','editor','sales']::public.app_role[]));
@@ -34,10 +35,12 @@ CREATE TABLE IF NOT EXISTS public.lead_form_tokens (
 CREATE INDEX IF NOT EXISTS idx_lead_form_tokens_lead ON public.lead_form_tokens(lead_id);
 
 ALTER TABLE public.lead_form_tokens ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "staff manage form tokens" ON public.lead_form_tokens;
 CREATE POLICY "staff manage form tokens" ON public.lead_form_tokens FOR ALL
   USING (public.has_role(array['admin','editor','sales']::public.app_role[]))
   WITH CHECK (public.has_role(array['admin','editor','sales']::public.app_role[]));
 -- Public can validate a token (to show the form); submission goes through the API.
+DROP POLICY IF EXISTS "public read valid form tokens" ON public.lead_form_tokens;
 CREATE POLICY "public read valid form tokens" ON public.lead_form_tokens FOR SELECT
   USING (expires_at > now() AND used_at IS NULL);
 
