@@ -33,6 +33,7 @@ export default async function HomeValuationPage() {
           "--hev-bg": "#f7f7f7",
           background: "#f7f7f7",
           color: "#333333",
+          overflowX: "clip",
         } as CSSProperties
       }
     >

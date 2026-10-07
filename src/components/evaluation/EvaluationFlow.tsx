@@ -368,7 +368,7 @@ export function EvaluationFlow({ config }: { config: EvaluationConfig }) {
 
           {result.estimate ? (
             <>
-              <div className="mt-7 rounded-[var(--radius-lg)] bg-[#111111] px-8 py-11 text-center text-white">
+              <div className="mt-7 rounded-[var(--radius-lg)] bg-[#111111] px-6 py-11 text-center text-white sm:px-8">
                 <div className="mb-4 text-[14px] text-white/60">{picked?.label}</div>
                 <div className="mb-2.5 text-[12px] font-bold uppercase tracking-[0.14em] text-white/50">Estimated market value</div>
                 <div className="text-[36px] font-extrabold tracking-tight sm:text-[44px] md:text-[54px]">
@@ -539,9 +539,9 @@ export function EvaluationFlow({ config }: { config: EvaluationConfig }) {
                   ["Last month", hpi.momChange != null ? signedPct(hpi.momChange) : "—", "month over month", hpi.momChange],
                   ["Market read", hpi.change12m != null ? (hpi.change12m >= 0 ? "Rising" : "Softening") : "—", "12-month direction"],
                 ].map(([label, value, sub, tone]) => (
-                  <div key={label as string} className="rounded-[var(--radius-lg)] bg-[#f7f7f7] px-4 py-3.5">
+                  <div key={label as string} className="min-w-0 rounded-[var(--radius-lg)] bg-[#f7f7f7] px-4 py-3.5">
                     <div className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#333333]/55">{label}</div>
-                    <div className={`mt-1 text-[20px] font-extrabold ${
+                    <div className={`mt-1 text-[17px] font-extrabold leading-tight sm:text-[20px] ${
                       typeof tone === "number" ? (tone >= 0 ? "text-[var(--hev-accent)]" : "text-[#b3402e]") : "text-[#111111]"
                     }`}>{value}</div>
                     <div className="text-[12px] text-[#333333]/60">{sub}</div>
