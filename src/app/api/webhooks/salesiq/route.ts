@@ -63,7 +63,10 @@ export async function POST(req: NextRequest) {
 
   if (!email && !phone) {
     // Nothing to identify the visitor by — nothing to save.
-    return NextResponse.json({ ok: true, skipped: "no contact info" });
+    // saw_keys helps diagnose Zoho payload shape changes (keys only, no PII).
+    const keys = d && typeof d === "object" ? Object.keys(d).slice(0, 25) : [];
+    console.error("[salesiq] skipped: no contact info. top-level keys:", keys.join(","));
+    return NextResponse.json({ ok: true, skipped: "no contact info", saw_keys: keys });
   }
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
