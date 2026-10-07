@@ -10,49 +10,68 @@ import { NextRequest, NextResponse } from "next/server";
 
 const EMAIL_RE = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i;
 const PHONE_RE = /^\+?[\d\s().-]{7,20}$/;
+/** tawk.to anonymous visitor IDs look like V1791405680723906 — never a real name. */
+const ANON_ID_RE = /^V\d{6,}$/i;
 
-function isEmail(v: unknown): v is string {
+function isEmail(v: unknown): boolean {
   return typeof v === "string" && EMAIL_RE.test(v.trim());
 }
-function isPhone(v: unknown): v is string {
+function isPhone(v: unknown): boolean {
   if (typeof v !== "string") return false;
   const t = v.trim();
   return PHONE_RE.test(t) && t.replace(/\D/g, "").length >= 7;
 }
 
-/** Deep-scan any JSON value for email/phone/name-like strings, regardless of
- *  tawk.to's field naming or nesting. Prefers keys that hint at the field. */
-function deepScan(node: unknown, out: { email?: string; phone?: string; name?: string }, depth = 0): void {
-  if (depth > 6 || !node) return;
+interface Candidates {
+  emails: { key: string; value: string }[];
+  phones: { key: string; value: string }[];
+  names: { key: string; value: string }[];
+  pages: { key: string; value: string }[];
+  messageArrays: unknown[][];
+}
+
+/** Walk the whole payload and collect every candidate value with its key path,
+ *  so we can pick the best one instead of the first one. */
+function collect(node: unknown, out: Candidates, path = "", depth = 0): void {
+  if (depth > 7 || node == null) return;
   if (typeof node === "string") {
     const t = node.trim();
-    if (!out.email && isEmail(t)) out.email = t.match(EMAIL_RE)![0];
-    else if (!out.phone && isPhone(t)) out.phone = t;
+    if (!t) return;
+    const key = path.toLowerCase();
+    if (isEmail(t)) out.emails.push({ key, value: t.match(EMAIL_RE)![0] });
+    else if (isPhone(t)) out.phones.push({ key, value: t });
+    else if (
+      t.length >= 2 && t.length <= 80 &&
+      !ANON_ID_RE.test(t) &&
+      (key.includes("name") || key.includes("first") || key.includes("last"))
+    ) {
+      out.names.push({ key, value: t });
+    }
+    if (key.includes("page") || key.includes("url")) {
+      if (/^https?:\/\//i.test(t)) out.pages.push({ key, value: t });
+    }
     return;
   }
   if (Array.isArray(node)) {
-    for (const item of node) deepScan(item, out, depth + 1);
+    // Message-like array? Items with text/message/body fields.
+    if (
+      node.length > 0 &&
+      node.every(
+        (m) =>
+          m && typeof m === "object" &&
+          typeof (m as Record<string, unknown>).text === "string" ||
+          (m && typeof m === "object" && typeof (m as Record<string, unknown>).message === "string") ||
+          (m && typeof m === "object" && typeof (m as Record<string, unknown>).body === "string"),
+      )
+    ) {
+      out.messageArrays.push(node);
+    }
+    node.forEach((item, i) => collect(item, out, `${path}[${i}]`, depth + 1));
     return;
   }
   if (typeof node === "object") {
     for (const [k, v] of Object.entries(node as Record<string, unknown>)) {
-      const key = k.toLowerCase();
-      if (typeof v === "string") {
-        const t = v.trim();
-        if (!t) continue;
-        if (!out.email && (key.includes("email") || isEmail(t))) {
-          const m = t.match(EMAIL_RE);
-          if (m) { out.email = m[0]; continue; }
-        }
-        if (!out.phone && (key.includes("phone") || key.includes("mobile") || key.includes("contact") || isPhone(t))) {
-          if (isPhone(t)) { out.phone = t; continue; }
-        }
-        if (!out.name && key.includes("name") && t.length >= 2 && t.length <= 80 && !isEmail(t)) {
-          out.name = t;
-          continue;
-        }
-      }
-      deepScan(v, out, depth + 1);
+      collect(v, out, path ? `${path}.${k}` : k, depth + 1);
     }
   }
 }
@@ -62,31 +81,49 @@ function pick(...vals: unknown[]): string {
   return "";
 }
 
-/** Best-effort transcript from tawk.to chat payload shapes. */
-function transcriptOf(d: Record<string, unknown>): string {
-  const chat = d.chat as Record<string, unknown> | undefined;
-  const buckets: unknown[] = [d.messages, chat?.messages, d.transcript];
-  for (const b of buckets) {
-    if (!Array.isArray(b)) continue;
-    const lines = b
+/** Score a name candidate: explicit first/last-name keys win over generic ones. */
+function nameScore(key: string): number {
+  const k = key.toLowerCase();
+  if (k.includes("first") || k.includes("last") || k.includes("fullname") || k.includes("full-name")) return 3;
+  if (k.includes("nick") || k.includes("display")) return 2;
+  if (k.includes("name")) return 1;
+  return 0;
+}
+
+function bestName(cands: Candidates): string {
+  const sorted = [...cands.names].sort((a, b) => nameScore(b.key) - nameScore(a.key));
+  // Prefer a two-word (or longer) name — single tokens are often IDs/handles.
+  const full = sorted.find((c) => c.value.split(/\s+/).length >= 2);
+  return (full ?? sorted[0])?.value ?? "";
+}
+
+function bestPhone(cands: Candidates): string {
+  const sorted = [...cands.phones].sort((a, b) => {
+    const ka = a.key.toLowerCase(), kb = b.key.toLowerCase();
+    const sa = ka.includes("phone") || ka.includes("mobile") ? 1 : 0;
+    const sb = kb.includes("phone") || kb.includes("mobile") ? 1 : 0;
+    return sb - sa;
+  });
+  return sorted[0]?.value ?? "";
+}
+
+function transcriptOf(cands: Candidates): string {
+  for (const arr of cands.messageArrays) {
+    const lines = arr
       .map((m) => {
-        if (typeof m === "string") return m;
-        if (m && typeof m === "object") {
-          const o = m as Record<string, unknown>;
-          const sender = o.sender as Record<string, unknown> | undefined;
-          const who = pick(
-            o.senderName, o.nickname,
-            sender?.name, sender?.type,
-            pick(o.type) === "visitor" ? "visitor" : "",
-            "them",
-          );
-          const text = pick(o.text, o.message, o.body, o.msg);
-          return text ? `${who}: ${text}` : "";
-        }
-        return "";
+        const o = m as Record<string, unknown>;
+        const sender = o.sender as Record<string, unknown> | undefined;
+        const who = pick(
+          o.senderName, o.nickname,
+          sender?.name, sender?.type,
+          typeof o.type === "string" && o.type === "visitor" ? "visitor" : "",
+          "them",
+        );
+        const text = pick(o.text, o.message, o.body, o.msg);
+        return text ? `${who}: ${text}` : "";
       })
       .filter(Boolean);
-    if (lines.length) return lines.join("\n");
+    if (lines.length >= 1) return lines.join("\n");
   }
   return "";
 }
@@ -112,23 +149,24 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, skipped: "unreadable body" });
   }
 
-  // Only capture ended chats — not chat:start (avoids leads from chats that go nowhere).
   const event = pick(d.event, d.type).toLowerCase();
   if (event && !event.includes("end") && !event.includes("transcript")) {
     return NextResponse.json({ ok: true, skipped: `event ${event}` });
   }
 
-  const found: { email?: string; phone?: string; name?: string } = {};
-  deepScan(d, found);
-  const email = found.email ?? "";
-  const phone = found.phone ?? "";
-  const name = found.name ?? "";
+  const cands: Candidates = { emails: [], phones: [], names: [], pages: [], messageArrays: [] };
+  collect(d, cands);
+
+  const email = cands.emails[0]?.value ?? "";
+  const phone = bestPhone(cands);
+  const name = bestName(cands);
+  const pageUrl = cands.pages[0]?.value ?? "";
 
   if (!email && !phone) {
     return NextResponse.json({ ok: true, skipped: "no contact info" });
   }
 
-  const transcript = transcriptOf(d);
+  const transcript = transcriptOf(cands);
   const [firstName, ...rest] = name.split(/\s+/).filter(Boolean);
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -151,6 +189,7 @@ export async function POST(req: NextRequest) {
       email: email || undefined,
       phone: phone || undefined,
       message: transcript ? `tawk.to chat transcript:\n${transcript}` : "tawk.to chat — no transcript captured.",
+      page_url: pageUrl || undefined,
       custom_fields: { source: "tawkto_chat" },
     }),
   });
