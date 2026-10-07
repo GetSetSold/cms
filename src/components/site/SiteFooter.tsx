@@ -6,11 +6,11 @@ import { MobileCtaBarInner } from "./MobileCtaBarInner";
 import { Svg } from "./Svg";
 import { getSvgs } from "@/lib/cms";
 
-/** Divider: fills its grid track, line centered via flexbox. The track is 1fr so it
- *  absorbs free space; flexbox guarantees the 1px line is at the exact center. */
+/** Divider spacer: flex-1 fills all free space equally; the 1px line is centered
+ *  via justify-center. Bulletproof centering in the visual gap. */
 function VSlot({ color }: { color: string }) {
   return (
-    <div aria-hidden className="flex w-full items-stretch justify-center justify-self-stretch">
+    <div aria-hidden className="flex min-w-6 flex-1 items-stretch justify-center">
       <span className="h-1/2 w-px self-center" style={{ background: color }} />
     </div>
   );
@@ -31,17 +31,17 @@ function pairs<T>(arr: T[]): T[][] {
   return out;
 }
 
-/** Mobile: columns flow in pairs, content-width with dividers filling gaps.
+/** Mobile: columns flow in pairs, flexbox with spacers centering dividers.
  *  Text wraps within max-width. */
 function MobilePairs({ cols, divider }: { cols: NavColumn[]; divider: string }) {
   return (
     <>
       {pairs(cols).map((pair, pi) => (
-        <div key={pi} className="grid" style={{ gridTemplateColumns: pair.map(() => "auto").join(" 1fr ") }}>
+        <div key={pi} className="flex items-stretch">
           {pair.map((col, i) => (
             <Fragment key={i}>
               {i > 0 ? <VSlot color={divider} /> : null}
-              <FooterCol col={col} />
+              <div className="flex-none"><FooterCol col={col} /></div>
             </Fragment>
           ))}
         </div>
@@ -160,12 +160,12 @@ export async function SiteFooter({ settings, logo }: { settings: SiteSettings; l
 
         {/* Menus: full-width row below the offices */}
         <div className={`border-t ${rowPad}`} style={{ borderColor: divider }}>
-          {/* Desktop: content-width columns (auto), dividers (1fr) fill gaps with line centered */}
-          <div className="hidden md:grid" style={{ gridTemplateColumns: (firstRow ?? []).map(() => "auto").join(" 1fr ") }}>
+          {/* Desktop: flexbox — columns shrink to content, spacers (flex-1) center dividers */}
+          <div className="hidden md:flex md:items-stretch">
             {(firstRow ?? []).map((col, i) => (
               <Fragment key={i}>
                 {i > 0 ? <VSlot color={divider} /> : null}
-                <FooterCol col={col} />
+                <div className="flex-none"><FooterCol col={col} /></div>
               </Fragment>
             ))}
           </div>
@@ -184,12 +184,12 @@ export async function SiteFooter({ settings, logo }: { settings: SiteSettings; l
             distort neighbouring content the way one shared grid did. */}
         {restRows.map((row, ri) => (
           <div key={ri} className={`border-t ${rowPad}`} style={{ borderColor: divider }}>
-            {/* Desktop: content-width columns (auto), dividers (1fr) fill gaps with line centered */}
-            <div className="hidden md:grid" style={{ gridTemplateColumns: row.map(() => "auto").join(" 1fr ") }}>
+            {/* Desktop: flexbox — columns shrink to content, spacers (flex-1) center dividers */}
+            <div className="hidden md:flex md:items-stretch">
               {row.map((col, i) => (
                 <Fragment key={i}>
                   {i > 0 ? <VSlot color={divider} /> : null}
-                  <FooterCol col={col} />
+                  <div className="flex-none"><FooterCol col={col} /></div>
                 </Fragment>
               ))}
             </div>
