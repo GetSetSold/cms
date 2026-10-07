@@ -6,25 +6,21 @@ import { MobileCtaBarInner } from "./MobileCtaBarInner";
 import { Svg } from "./Svg";
 import { getSvgs } from "@/lib/cms";
 
-/** Divider slot: fills its 1fr grid track, hairline centered. Because content columns
- *  are auto-width, the 1fr divider tracks absorb all free space equally — the line
- *  lands at the exact visual midpoint between the two adjacent text blocks. */
+/** Divider: fills its grid track, line centered via flexbox. The track is 1fr so it
+ *  absorbs free space; flexbox guarantees the 1px line is at the exact center. */
 function VSlot({ color }: { color: string }) {
   return (
-    <div aria-hidden className="relative min-w-8 self-stretch">
-      <span
-        className="absolute bottom-1/4 left-1/2 top-1/4 w-px -translate-x-1/2"
-        style={{ background: color }}
-      />
+    <div aria-hidden className="flex w-full items-stretch justify-center justify-self-stretch">
+      <span className="h-1/2 w-px self-center" style={{ background: color }} />
     </div>
   );
 }
 
 function FooterCol({ col }: { col: NavColumn }) {
   return (
-    <div className="flex min-w-0 max-w-[280px] flex-col gap-2.5">
+    <div className="flex min-w-0 max-w-[280px] flex-col items-start gap-2.5 text-left">
       {col.heading ? <strong className="text-white leading-[1.15]">{col.heading}</strong> : null}
-      {col.links.map((l) => <Link key={l.href} href={l.href} className="opacity-75 hover:opacity-100 leading-[1.35]">{l.label}</Link>)}
+      {col.links.map((l) => <Link key={l.href} href={l.href} className="opacity-75 hover:opacity-100 leading-[1.35] text-left">{l.label}</Link>)}
     </div>
   );
 }
