@@ -184,6 +184,7 @@ export function EvaluationFlow({ config }: { config: EvaluationConfig }) {
   const inputCls =
     "h-11 w-full min-w-0 rounded-[var(--radius-btn)] border border-[#E4E4E7] bg-white px-4 text-[15px] text-[#111418] outline-none focus:border-[#111111]";
   const labelCls = "mb-1.5 block text-[13px] font-semibold text-[#333333]";
+  const darkLabelCls = "mb-1.5 block text-[13px] font-semibold text-white";
   const cardCls = "rounded-[var(--radius-lg)] border border-[#E4E4E7] bg-white p-6 shadow-[var(--shadow-card)]";
   const btnPrimary = "inline-flex h-12 items-center justify-center rounded-[var(--radius-btn)] bg-[#111111] px-6 text-[16px] font-semibold text-white transition hover:brightness-[1.25] disabled:cursor-not-allowed disabled:opacity-40";
   const hpi = result?.hpi ?? null;
@@ -579,74 +580,69 @@ export function EvaluationFlow({ config }: { config: EvaluationConfig }) {
             <b className="text-[#111111]">Please note:</b> {config.disclaimer}
           </div>
 
-          {/* STEP 3 — convert */}
-          <span className="mb-3 mt-12 inline-block rounded-[var(--radius-btn)] bg-[#e8f1fb] px-3.5 py-1.5 text-[12px] font-bold text-[var(--hev-accent)]">
-            Next step
-          </span>
-          <h2 className="text-[28px] font-extrabold tracking-tight text-[#111111]">Take it further</h2>
-          <p className="mt-1.5 text-[15px] text-[#333333]/75">Your property details are ready — choose how you'd like the full picture.</p>
-
-          <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2">
-            <div className="rounded-[var(--radius-lg)] border border-[#E4E4E7] bg-white p-8 shadow-[var(--shadow-card)]">
+          {/* STEP 3 — convert (combined block, Option A) */}
+          <div className="mt-12 rounded-[var(--radius-lg)] bg-[#111111] p-7 text-white shadow-[var(--shadow-card)] md:p-11">
+            <div className="grid grid-cols-1 gap-10 md:grid-cols-2 md:gap-0">
+              <div className="flex flex-col justify-center md:pr-10">
+                <span className="mb-3 text-[12px] font-bold uppercase tracking-[0.14em] text-white/50">Next step</span>
+                <h3 className="text-[24px] font-extrabold tracking-tight">Want the real number?</h3>
+                <p className="mt-2.5 text-[14.5px] leading-relaxed text-white/65">
+                  An estimate can't see your kitchen. A 20-minute walkthrough gives you a valuation you can actually price from.
+                </p>
+                <a href={config.bookingUrl} target="_blank" rel="noreferrer"
+                  className="mt-6 inline-flex h-12 w-full items-center justify-center rounded-[var(--radius-btn)] bg-white px-6 text-[16px] font-semibold text-[#111111] transition hover:bg-white/90">
+                  Book a free in-person valuation
+                </a>
+                {config.virtualCmaUrl && (
+                  <a href={config.virtualCmaUrl} target="_blank" rel="noreferrer"
+                    className="mt-3 inline-flex h-12 w-full items-center justify-center rounded-[var(--radius-btn)] border border-white/25 px-6 text-[15px] font-semibold text-white transition hover:bg-white/10">
+                    Request a virtual CMA instead
+                  </a>
+                )}
+                <p className="mt-3.5 text-center text-[12.5px] text-white/45">Typically scheduled within 48 hours · Caledonia &amp; area</p>
+              </div>
+              <div className="border-t border-white/15 pt-10 md:border-l md:border-t-0 md:pl-10 md:pt-0">
               {leadState === "done" ? (
-                <div className="py-8 text-center" role="status">
-                  <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[#111111] text-xl font-bold text-white">✓</div>
-                  <h3 className="text-[20px] font-bold text-[#111111]">You're on the list</h3>
-                  <p className="mt-2 text-[14.5px] text-[#333333]/75">Your detailed breakdown is on its way. Rohit will follow up personally.</p>
+                <div className="flex h-full flex-col items-center justify-center py-8 text-center" role="status">
+                  <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--hev-accent)] text-xl font-bold text-white">✓</div>
+                  <h3 className="text-[20px] font-bold">You're on the list</h3>
+                  <p className="mt-2 max-w-sm text-[14.5px] text-white/65">Your detailed breakdown is on its way. Rohit will follow up personally.</p>
                 </div>
               ) : (
                 <form onSubmit={submitLead}>
-                  <h3 className="text-[22px] font-extrabold tracking-tight text-[#111111]">Get the full breakdown</h3>
-                  <p className="mb-4 mt-2 text-[14.5px] text-[#333333]/75">
+                  <h3 className="text-[24px] font-extrabold tracking-tight">Get the full breakdown</h3>
+                  <p className="mb-4 mt-2 text-[14.5px] text-white/65">
                     We'll email your detailed estimate — the similar listings, the market notes, and where your
                     home sits among them — and keep your property details on file.
                   </p>
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 [&>*]:min-w-0">
                     <div>
-                      <label className={labelCls} htmlFor="hev-fname">First name</label>
+                      <label className={darkLabelCls} htmlFor="hev-fname">First name</label>
                       <input id="hev-fname" name="first_name" type="text" required placeholder="First name" className={inputCls} />
                     </div>
                     <div>
-                      <label className={labelCls} htmlFor="hev-lname">Last name</label>
+                      <label className={darkLabelCls} htmlFor="hev-lname">Last name</label>
                       <input id="hev-lname" name="last_name" type="text" required placeholder="Last name" className={inputCls} />
                     </div>
                   </div>
                   <div className="mt-4">
-                    <label className={labelCls} htmlFor="hev-email">Email</label>
+                    <label className={darkLabelCls} htmlFor="hev-email">Email</label>
                     <input id="hev-email" name="email" type="email" required placeholder="Email address" className={inputCls} />
                   </div>
                   <div className="mt-4">
-                    <label className={labelCls} htmlFor="hev-phone">Phone <span className="font-normal text-[#333333]/60">(optional)</span></label>
+                    <label className={darkLabelCls} htmlFor="hev-phone">Phone <span className="font-normal text-white/50">(optional)</span></label>
                     <input id="hev-phone" name="phone" type="tel" placeholder="Phone number" className={inputCls} />
                   </div>
-                  {leadState === "error" && <p className="mt-3 text-[13px] text-red-700">{leadError}</p>}
+                  {leadState === "error" && <p className="mt-3 text-[13px] font-medium text-[#ffe1e1]">{leadError}</p>}
                   <button type="submit" disabled={leadState === "sending"}
                     className="mt-5 inline-flex h-12 w-full items-center justify-center rounded-[var(--radius-btn)] bg-[var(--hev-accent)] px-6 text-[16px] font-semibold text-white transition hover:brightness-110 disabled:opacity-60">
                     {leadState === "sending" ? "Sending…" : "Send my report"}
                   </button>
-                  <p className="mt-3.5 text-center text-[12.5px] text-[#333333]/60">Free · No spam — just your report and one follow-up.</p>
+                  <p className="mt-3.5 text-center text-[12.5px] text-white/45">Free · No spam — just your report and one follow-up.</p>
                 </form>
               )}
             </div>
 
-            <div className="rounded-[var(--radius-lg)] bg-[#111111] p-8 text-white">
-              <h3 className="text-[22px] font-extrabold tracking-tight">Want the real number?</h3>
-              <p className="mb-2 mt-2 text-[14.5px] text-white/65">
-                An estimate can't see your kitchen. A 20-minute walkthrough gives you a valuation you can actually price from.
-              </p>
-              <div className="mt-5 grid gap-3">
-                <a href={config.bookingUrl} target="_blank" rel="noreferrer"
-                  className="inline-flex h-12 items-center justify-center rounded-[var(--radius-btn)] bg-white px-6 text-[15px] font-semibold text-[#111111] transition hover:bg-white/90">
-                  Book a free in-person valuation
-                </a>
-                {config.virtualCmaUrl && (
-                  <a href={config.virtualCmaUrl} target="_blank" rel="noreferrer"
-                    className="inline-flex h-12 items-center justify-center rounded-[var(--radius-btn)] border border-white/25 px-6 text-[15px] font-semibold text-white transition hover:bg-white/10">
-                    Request a virtual CMA instead
-                  </a>
-                )}
-              </div>
-              <p className="mt-4 text-center text-[12.5px] text-white/45">Typically scheduled within 48 hours · Caledonia &amp; area</p>
             </div>
           </div>
         </section>
