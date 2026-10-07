@@ -14,7 +14,7 @@ const TABS = [
   { id: "footer", label: "Footer" },
   { id: "mobile", label: "Mobile bar" },
   { id: "contact", label: "Contact & leads" },
-  { id: "evaluation", label: "Home evaluation" },
+  { id: "evaluation", label: "Home valuation" },
   { id: "content", label: "Blog & social" },
   { id: "seo", label: "SEO" },
   { id: "ads", label: "Ads" },
@@ -53,15 +53,17 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Slim tab bar — scrolls away with the page */}
-      <div className="-mx-4 border-b border-line bg-white px-4 md:-mx-6 md:px-6">
-        <div className="mx-auto flex w-full max-w-3xl items-center gap-1 overflow-x-auto py-1.5">
-          {TABS.map((t) => (
-            <button key={t.id} type="button" onClick={() => goTab(t.id)}
-              className={`shrink-0 whitespace-nowrap rounded-full px-2.5 py-1 text-[13px] font-medium transition ${tab === t.id ? "bg-ink text-white" : "text-muted hover:bg-soft hover:text-ink"}`}>
-              {t.label}
-            </button>
-          ))}
+      {/* Slim tab bar — scrolls away with the page. Black segmented bar, no visible scrollbar, dividers between tabs. */}
+      <div className="-mx-4 px-4 md:-mx-6 md:px-6">
+        <div className="mx-auto w-full max-w-3xl overflow-x-auto rounded-[var(--radius-btn)] bg-ink [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="flex w-max min-w-full items-stretch divide-x divide-white/15">
+            {TABS.map((t) => (
+              <button key={t.id} type="button" onClick={() => goTab(t.id)}
+                className={`shrink-0 whitespace-nowrap px-4 py-2.5 text-[13px] font-medium transition ${tab === t.id ? "bg-[#0066cc] text-white" : "text-white/70 hover:bg-white/10 hover:text-white"}`}>
+                {t.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -428,7 +430,7 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
         )}
         {tab === "evaluation" && (
           <section className="flex flex-col gap-3 border border-line bg-white p-4 md:p-5">
-            <h2 className="text-base font-semibold">Home evaluation <span className="font-normal text-muted">— /free-online-home-valuation</span></h2>
+            <h2 className="text-base font-semibold">Home valuation <span className="font-normal text-muted">— /free-online-home-valuation</span></h2>
             <p className="text-xs text-muted">Address search uses the MapTiler geocoding API — add the <code>MAPTILER_API_KEY</code> Cloudflare secret for the picker to work. The estimate combines similar active listings near the address with HPI market direction.</p>
             <div className="flex flex-wrap gap-4">
               <label className="label flex flex-row items-center gap-2">Page enabled<input type="checkbox" checked={s.home_evaluation?.enabled !== false} onChange={(e) => set("home_evaluation", { ...s.home_evaluation, enabled: e.target.checked })} className="h-4 w-4" /></label>

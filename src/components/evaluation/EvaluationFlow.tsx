@@ -125,7 +125,7 @@ export function EvaluationFlow({ config }: { config: EvaluationConfig }) {
         }),
       });
       const body = await res.json();
-      if (!res.ok) throw new Error(body.error ?? "Evaluation failed.");
+      if (!res.ok) throw new Error(body.error ?? "Valuation failed.");
       setResult(body);
       setStep("result");
       window.setTimeout(() => document.getElementById("hev-result")?.scrollIntoView({ behavior: "smooth" }), 60);
@@ -147,10 +147,10 @@ export function EvaluationFlow({ config }: { config: EvaluationConfig }) {
       email: String(form.get("email") ?? ""),
       phone: String(form.get("phone") ?? ""),
       form_key: "home_evaluation",
-      service: "Home Evaluation",
+      service: "Home Valuation",
       message: picked
-        ? `Home evaluation request for ${picked.label} (${propertyType}, ${beds} bed / ${baths} bath${sqft ? `, ${sqft} sq ft` : ""}, ${condition}).`
-        : "Home evaluation request.",
+        ? `Home valuation request for ${picked.label} (${propertyType}, ${beds} bed / ${baths} bath${sqft ? `, ${sqft} sq ft` : ""}, ${condition}).`
+        : "Home valuation request.",
       custom_fields: {
         address: picked?.label ?? null, lat: picked?.lat ?? null, lng: picked?.lng ?? null,
         property_type: propertyType, beds, baths, sqft: sqft || null, condition, renovations: renos,
@@ -193,9 +193,9 @@ export function EvaluationFlow({ config }: { config: EvaluationConfig }) {
       {step === "form" && (
         <section className="mx-auto max-w-6xl px-5 py-14 md:py-20">
           <div className="grid grid-cols-1 items-start gap-10 md:grid-cols-2 md:gap-14">
-            <div>
+            <div className="order-2 md:order-1">
               <div className="mb-3 text-[12px] font-bold uppercase tracking-[0.14em] text-[var(--hev-accent)]">
-                Free Home Evaluation
+                Free Home Valuation
               </div>
               <h1 className="text-4xl font-extrabold tracking-tight text-[#111111] md:text-[44px] md:leading-[1.12]">
                 {config.heading}
@@ -215,11 +215,16 @@ export function EvaluationFlow({ config }: { config: EvaluationConfig }) {
               </ul>
             </div>
 
-            <div className="rounded-[var(--radius-lg)] border border-[#E4E4E7] bg-white p-7 shadow-[var(--shadow-card)] md:p-8">
-              <h2 className="text-[21px] font-bold text-[#111111]">Get your evaluation</h2>
-              <p className="mb-5 mt-1 text-[14px] text-[#333333]/70">Start by finding your address.</p>
+            <div className="order-1 rounded-[var(--radius-lg)] bg-[var(--hev-accent)] p-7 shadow-[var(--shadow-card)] md:order-2 md:p-8">
+              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-white/15">
+                <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M3 11l9-8 9 8" /><path d="M5 10v10h5v-6h4v6h5V10" />
+                </svg>
+              </div>
+              <h2 className="text-[21px] font-bold text-white">Get your valuation</h2>
+              <p className="mb-5 mt-1 text-[14px] text-white/75">Start by finding your address.</p>
 
-              <label className={labelCls} htmlFor="hev-addr">Street address</label>
+              <label className="mb-1.5 block text-[13px] font-semibold text-white" htmlFor="hev-addr">Street address</label>
               <div className="relative" ref={wrapRef}>
                 <input
                   id="hev-addr" type="text" autoComplete="off" placeholder="Type your address…"
@@ -245,30 +250,30 @@ export function EvaluationFlow({ config }: { config: EvaluationConfig }) {
                   </div>
                 )}
               </div>
-              {geoError && <p className="mt-2 text-[13px] text-red-700">{geoError}</p>}
-              {picked && <p className="mt-2 text-[13px] font-medium text-[var(--hev-accent)]">✓ {picked.label}</p>}
+              {geoError && <p className="mt-2 text-[13px] font-medium text-[#ffe1e1]">{geoError}</p>}
+              {picked && <p className="mt-2 text-[13px] font-medium text-white">✓ {picked.label}</p>}
 
-              <div className="mt-4 grid grid-cols-2 gap-3">
+              <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
-                  <label className={labelCls}>Property type</label>
+                  <label className="mb-1.5 block text-[13px] font-semibold text-white">Property type</label>
                   <select className={inputCls} value={propertyType} onChange={(e) => setPropertyType(e.target.value)}>
                     {PROPERTY_TYPES.map((t) => <option key={t}>{t}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className={labelCls}>Condition</label>
+                  <label className="mb-1.5 block text-[13px] font-semibold text-white">Condition</label>
                   <select className={inputCls} value={condition} onChange={(e) => setCondition(e.target.value)}>
                     {CONDITIONS.map((t) => <option key={t}>{t}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className={labelCls}>Bedrooms</label>
+                  <label className="mb-1.5 block text-[13px] font-semibold text-white">Bedrooms</label>
                   <select className={inputCls} value={beds} onChange={(e) => setBeds(e.target.value)}>
                     {["1", "2", "3", "4", "5", "6+"].map((t) => <option key={t}>{t}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className={labelCls}>Bathrooms</label>
+                  <label className="mb-1.5 block text-[13px] font-semibold text-white">Bathrooms</label>
                   <select className={inputCls} value={baths} onChange={(e) => setBaths(e.target.value)}>
                     {["1", "2", "3", "4", "5+"].map((t) => <option key={t}>{t}</option>)}
                   </select>
@@ -276,30 +281,31 @@ export function EvaluationFlow({ config }: { config: EvaluationConfig }) {
               </div>
 
               <div className="mt-4">
-                <label className={labelCls} htmlFor="hev-sqft">Approx. finished living area (sq ft)</label>
+                <label className="mb-1.5 block text-[13px] font-semibold text-white" htmlFor="hev-sqft">Approx. finished living area (sq ft)</label>
                 <input id="hev-sqft" type="text" inputMode="numeric" placeholder="e.g. 2,150" className={inputCls}
                   value={sqft} onChange={(e) => setSqft(e.target.value.replace(/[^0-9,]/g, ""))} />
               </div>
 
               <div className="mt-4">
-                <span className={labelCls}>Major renovations in the last 10 years</span>
+                <span className="mb-1.5 block text-[13px] font-semibold text-white">Major renovations in the last 10 years</span>
                 <div className="flex flex-wrap gap-2">
                   {RENOVATIONS.map((r) => (
                     <button key={r} type="button" onClick={() => toggleReno(r)}
                       className={`rounded-[var(--radius-btn)] border px-4 py-2 text-[13.5px] font-medium transition ${renos.includes(r)
-                        ? "border-[#111111] bg-[#111111] text-white"
-                        : "border-[#E4E4E7] bg-white text-[#333333] hover:border-[#111111]"}`}>
+                        ? "border-white bg-white text-[var(--hev-accent)]"
+                        : "border-white/40 bg-white/10 text-white hover:bg-white/20"}`}>
                       {r}
                     </button>
                   ))}
                 </div>
               </div>
 
-              {evalError && <p className="mt-4 text-[13px] text-red-700">{evalError}</p>}
-              <button onClick={runEvaluation} disabled={!picked} className={`${btnPrimary} mt-6 w-full`}>
-                Get my home evaluation
+              {evalError && <p className="mt-4 text-[13px] font-medium text-[#ffe1e1]">{evalError}</p>}
+              <button onClick={runEvaluation} disabled={!picked}
+                className="mt-6 inline-flex h-12 w-full items-center justify-center rounded-[var(--radius-btn)] bg-white px-6 text-[16px] font-semibold text-[var(--hev-accent)] transition hover:bg-white/90 disabled:cursor-not-allowed disabled:opacity-40">
+                Get my valuation
               </button>
-              <p className="mt-3.5 text-center text-[12.5px] text-[#333333]/60">
+              <p className="mt-3.5 text-center text-[12.5px] text-white/70">
                 {picked ? "Takes under a minute · Free · No obligation" : "Pick your address above to continue · Free · No obligation"}
               </p>
             </div>
@@ -434,11 +440,11 @@ export function EvaluationFlow({ config }: { config: EvaluationConfig }) {
               <h3 className="text-[22px] font-bold text-[#111111]">Not enough nearby listings for an estimate</h3>
               <p className="mx-auto mt-3 max-w-lg text-[15px] text-[#333333]/75">
                 We couldn't find enough similar homes currently listed near {picked?.label} to build a
-                reliable range. This is exactly where an in-person evaluation earns its keep.
+                reliable range. This is exactly where an in-person valuation earns its keep.
               </p>
               <a href={config.bookingUrl} target="_blank" rel="noreferrer"
                 className={`${btnPrimary} mt-6 px-8 text-[15px]`}>
-                Book a free in-person evaluation
+                Book a free in-person valuation
               </a>
             </div>
           )}
@@ -493,7 +499,7 @@ export function EvaluationFlow({ config }: { config: EvaluationConfig }) {
               <p className="mt-1.5 text-[13.5px] leading-relaxed text-[#333333]/75">
                 List prices are asking prices, not sold prices — and no estimate has walked through your home.
                 Finish quality, layout, lot and upgrades move a property within its band. The in-person
-                evaluation is where the real number gets set.
+                valuation is where the real number gets set.
               </p>
             </div>
           </div>
@@ -524,7 +530,7 @@ export function EvaluationFlow({ config }: { config: EvaluationConfig }) {
                     We'll email your detailed estimate — the similar listings, the market notes, and where your
                     home sits among them — and keep your property details on file.
                   </p>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <div>
                       <label className={labelCls} htmlFor="hev-fname">First name</label>
                       <input id="hev-fname" name="first_name" type="text" required placeholder="First name" className={inputCls} />
@@ -560,7 +566,7 @@ export function EvaluationFlow({ config }: { config: EvaluationConfig }) {
               <div className="mt-5 grid gap-3">
                 <a href={config.bookingUrl} target="_blank" rel="noreferrer"
                   className="inline-flex h-12 items-center justify-center rounded-[var(--radius-btn)] bg-white px-6 text-[15px] font-semibold text-[#111111] transition hover:bg-white/90">
-                  Book a free in-person evaluation
+                  Book a free in-person valuation
                 </a>
                 {config.virtualCmaUrl && (
                   <a href={config.virtualCmaUrl} target="_blank" rel="noreferrer"

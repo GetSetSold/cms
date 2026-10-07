@@ -8,13 +8,13 @@ import { EvaluationFlow } from "@/components/evaluation/EvaluationFlow";
 import { notFound } from "next/navigation";
 
 export const metadata: Metadata = {
-  title: "Free Home Evaluation — What's Your Home Worth? | GetSetSold.ca",
+  title: "Free Home Valuation — What's Your Home Worth? | GetSetSold.ca",
   description:
-    "Get a free preliminary home evaluation based on similar active listings near you and current market direction. No obligation — the real number comes from an in-person walkthrough.",
+    "Get a free preliminary home valuation based on similar active listings near you and current market direction. No obligation — the real number comes from an in-person walkthrough.",
   alternates: { canonical: "https://www.getsetsold.ca/free-online-home-valuation" },
 };
 
-export default async function HomeEvaluationPage() {
+export default async function HomeValuationPage() {
   const settings = await getSettings();
   const logo = await getLogo(settings);
   const cfg = settings.home_evaluation ?? {};
