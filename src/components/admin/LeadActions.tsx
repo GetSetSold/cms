@@ -33,6 +33,19 @@ export function LeadActions({ lead, pendingCount }: { lead: Lead; pendingCount: 
     await supabase.from("follow_up_queue").update({ status: "skipped" }).eq("lead_id", lead.id).eq("status", "pending");
     setMsg("Automation stopped"); router.refresh();
   }
+  async function deleteLead() {
+    const label = [lead.first_name, lead.last_name].filter(Boolean).join(" ") || lead.email || lead.phone || "this lead";
+    if (!confirm(`Delete ${label}? This removes the lead and its history from the database. This cannot be undone.`)) return;
+    setMsg("Deleting…");
+    // Clean up child records first (in case FKs lack CASCADE).
+    await supabase.from("lead_activities").delete().eq("lead_id", lead.id);
+    await supabase.from("follow_up_queue").delete().eq("lead_id", lead.id);
+    await supabase.from("lead_flow_enrollments").delete().eq("lead_id", lead.id);
+    const { error } = await supabase.from("leads").delete().eq("id", lead.id);
+    if (error) { setMsg(error.message); return; }
+    router.push("/admin/leads");
+    router.refresh();
+  }
 
   return (
     <aside className="flex flex-col gap-4 lg:sticky lg:top-6 lg:self-start">
@@ -66,6 +79,12 @@ export function LeadActions({ lead, pendingCount }: { lead: Lead; pendingCount: 
         <textarea className="textarea" rows={3} value={note} onChange={(e) => setNote(e.target.value)} />
         <button className="btn" disabled={!note.trim()} onClick={addNote}>Save note</button>
       </div>
+      <button
+        className="btn border-red-200 text-red-600 hover:bg-red-50"
+        onClick={deleteLead}
+      >
+        Delete lead
+      </button>
       {msg ? <p className="text-sm text-muted" role="status">{msg}</p> : null}
     </aside>
   );
