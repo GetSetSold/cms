@@ -212,7 +212,7 @@ export async function SiteFooter({ settings, logo }: { settings: SiteSettings; l
 
         <div className="flex flex-col gap-2.5 border-t pt-6 text-sm" style={{ borderColor: divider }}>
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <span className="opacity-75">© {new Date().getFullYear()} {settings.site_name}</span>
+            <span className="opacity-75">© {new Date().getFullYear()} {localName}{localTitle ? ` — ${localTitle}` : ""}</span>
             <nav className="flex flex-wrap items-center gap-5" aria-label="Legal">
               <Link href="/disclaimer" className="opacity-75 hover:opacity-100">Disclaimer</Link>
               <Link href="/privacy-policy" className="opacity-75 hover:opacity-100">Privacy Policy</Link>
