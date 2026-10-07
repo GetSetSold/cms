@@ -156,51 +156,48 @@ export async function SiteFooter({ settings, logo }: { settings: SiteSettings; l
           {officesBlock}
         </div>
 
-        {/* Menus: full-width row below the offices */}
+        {/* Unified menu grid: all rows share the same 4 columns so dividers align vertically.
+            Horizontal rules are full-width grid items between rows. */}
         <div className={`border-t ${rowPad}`} style={{ borderColor: divider }}>
-          {/* Desktop: equal 1fr columns, 32px gaps, dividers at gap center */}
-          <div className="hidden gap-8 md:grid" style={{ gridTemplateColumns: `repeat(${(firstRow ?? []).length || 1}, 1fr)` }}>
+          {/* Desktop: one grid, all rows */}
+          <div className="hidden gap-8 md:grid" style={{ gridTemplateColumns: "repeat(4, 1fr)" }}>
             {(firstRow ?? []).map((col, i) => (
-              <div key={i} className="relative">
+              <div key={`r0-${i}`} className="relative">
                 {i > 0 ? <VSlot color={divider} /> : null}
                 <FooterCol col={col} />
               </div>
             ))}
+            {restRows.map((row, ri) => (
+              <Fragment key={`row-${ri}`}>
+                <div className="col-span-4 border-t" style={{ borderColor: divider }} aria-hidden />
+                {row.map((col, i) => (
+                  <div key={`r${ri + 1}-${i}`} className="relative">
+                    {i > 0 ? <VSlot color={divider} /> : null}
+                    <FooterCol col={col} />
+                  </div>
+                ))}
+              </Fragment>
+            ))}
           </div>
-          {/* Mobile: pairs with truly centered dividers */}
+          {/* Mobile: stacked rows, pairs with centered dividers */}
           <div className="flex flex-col gap-8 md:hidden">
             {mcols === 2 ? (
               <MobilePairs cols={firstRow ?? []} divider={divider} />
             ) : (
               (firstRow ?? []).map((col, i) => <FooterCol key={i} col={col} />)
             )}
+            {restRows.map((row, ri) => (
+              <Fragment key={`mrow-${ri}`}>
+                <div className="border-t" style={{ borderColor: divider }} aria-hidden />
+                {mcols === 2 ? (
+                  <MobilePairs cols={row} divider={divider} />
+                ) : (
+                  row.map((col, i) => <FooterCol key={i} col={col} />)
+                )}
+              </Fragment>
+            ))}
           </div>
         </div>
-
-        {/* Additional rows: full-width, clean grid of their own — never shares
-            a track with the brand block, so column count changes never
-            distort neighbouring content the way one shared grid did. */}
-        {restRows.map((row, ri) => (
-          <div key={ri} className={`border-t ${rowPad}`} style={{ borderColor: divider }}>
-            {/* Desktop: equal 1fr columns, 32px gaps, dividers at gap center */}
-            <div className="hidden gap-8 md:grid" style={{ gridTemplateColumns: `repeat(${row.length || 1}, 1fr)` }}>
-              {row.map((col, i) => (
-                <div key={i} className="relative">
-                  {i > 0 ? <VSlot color={divider} /> : null}
-                  <FooterCol col={col} />
-                </div>
-              ))}
-            </div>
-            {/* Mobile: pairs with truly centered dividers */}
-            <div className="flex flex-col gap-8 md:hidden">
-              {mcols === 2 ? (
-                <MobilePairs cols={row} divider={divider} />
-              ) : (
-                row.map((col, i) => <FooterCol key={i} col={col} />)
-              )}
-            </div>
-          </div>
-        ))}
 
         {socialItems.length ? (
           <div className="flex flex-wrap items-center justify-center gap-3 border-t pt-6" style={{ borderColor: divider }}>
