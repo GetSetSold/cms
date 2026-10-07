@@ -6,6 +6,7 @@ import { themeFontHref, themeVars, themeIconOverrideCSS } from "@/lib/theme";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { CmsFormRenderer } from "@/components/blocks/CmsFormRenderer";
+import { TokenFormWrapper } from "@/components/forms/TokenFormWrapper";
 import type { CmsForm } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -23,8 +24,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return { title: form.name, description: form.description ?? undefined, alternates: { canonical: `/forms/${slug}` } };
 }
 
-export default async function FormPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function FormPage({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams: Promise<{ t?: string }> }) {
   const { slug } = await params;
+  const { t } = await searchParams;
   const [form, settings] = await Promise.all([getForm(slug), getSettings()]);
   if (!form) notFound();
   const logo = await getLogo(settings);
@@ -43,7 +45,7 @@ export default async function FormPage({ params }: { params: Promise<{ slug: str
             {form.description ? <p className="text-muted">{form.description}</p> : null}
           </div>
         ) : null}
-        <CmsFormRenderer form={form} />
+        {t ? <TokenFormWrapper form={form} token={t} /> : <CmsFormRenderer form={form} />}
       </main>
       <SiteFooter settings={settings} />
     </div>

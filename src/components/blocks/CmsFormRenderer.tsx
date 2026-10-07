@@ -327,7 +327,7 @@ function SectionBlock({ section, active, values, errors, resolved, boxed, pills,
   );
 }
 
-export function CmsFormRenderer({ form, pageId, extraFields, secondaryAction }: { form: CmsForm; pageId?: string;
+export function CmsFormRenderer({ form, pageId, extraFields, secondaryAction, onSubmitAnswers }: { form: CmsForm; pageId?: string;
   /** Fixed context to attach to the submission without asking the person a question for it — e.g.
    *  which listing an inquiry form was opened from. Merged into custom_fields, added after the
    *  form's own answers so a real question with the same key always wins. */
@@ -336,6 +336,9 @@ export function CmsFormRenderer({ form, pageId, extraFields, secondaryAction }: 
    *  now" next to a listing inquiry's "Request info") — not shown on a paginated form's steps,
    *  where the row already has Back/Next. */
   secondaryAction?: { label: string; href: string };
+  /** Staff mode: called with the flattened answers instead of POSTing to submit-lead.
+   *  Return true on success (shows the done state), or a string error message. */
+  onSubmitAnswers?: (answers: Record<string, unknown>) => Promise<true | string>;
 }) {
   const [values, setValues] = useState<Values>({});
   const [errors, setErrors] = useState<Errors>({});
@@ -514,6 +517,16 @@ export function CmsFormRenderer({ form, pageId, extraFields, secondaryAction }: 
     for (const [k, v] of Object.entries(flat)) if (!contactKeys.has(k)) customFields[k] = v;
     // The spam-trap field. The server drops the submission if a bot filled it in.
     const honeypot = (formRef.current?.elements.namedItem("contact_extra") as HTMLInputElement | null)?.value ?? "";
+
+    // Staff mode: hand the flattened answers to the caller instead of submit-lead.
+    if (onSubmitAnswers) {
+      const customFields: Record<string, unknown> = { ...extraFields };
+      for (const [k, v] of Object.entries(flat)) customFields[k] = v;
+      const result = await onSubmitAnswers(customFields);
+      if (result === true) { setState("done"); return; }
+      setState("error"); setError(typeof result === "string" ? result : "Something went wrong. Please try again.");
+      return;
+    }
 
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
     if (!url || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {

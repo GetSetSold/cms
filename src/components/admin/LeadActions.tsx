@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { LEAD_STATUSES, type Lead, type LeadStatus } from "@/lib/types";
 import { ShareApplicationButton } from "./ShareApplicationButton";
+import { AttachFormButton } from "./AttachFormButton";
 
 export function LeadActions({ lead, pendingCount }: { lead: Lead; pendingCount: number }) {
   const router = useRouter();
@@ -87,6 +88,7 @@ export function LeadActions({ lead, pendingCount }: { lead: Lead; pendingCount: 
         Delete lead
       </button>
       {lead.form_key === "rental_application" ? <ShareApplicationButton leadId={lead.id} /> : null}
+      <AttachFormButton leadId={lead.id} leadName={`${lead.first_name ?? ""} ${lead.last_name ?? ""}`.trim() || "this lead"} />
       {msg ? <p className="text-sm text-muted" role="status">{msg}</p> : null}
     </aside>
   );

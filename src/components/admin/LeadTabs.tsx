@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { Lead, LeadFlow, LeadFlowEnrollment } from "@/lib/types";
 import { LEAD_FLOW_CATEGORIES } from "@/lib/types";
+import { AttachedForms } from "./AttachedForms";
 
 type Activity = { id: string; type: string; body: string | null; meta: any; created_at: string };
 type QueueItem = { id: string; channel: string; run_at: string; sequence_id: string };
@@ -106,6 +107,7 @@ function FormSubmissionPanel({ lead }: { lead: Lead }) {
   const entries = Object.entries(lead.custom_fields ?? {});
   const preview = entries.slice(0, 5);
   return (
+    <div className="flex flex-col gap-4">
     <div className="card flex flex-col gap-4">
       <div className="flex items-start justify-between gap-3">
         <div>
@@ -134,6 +136,8 @@ function FormSubmissionPanel({ lead }: { lead: Lead }) {
         <p className="text-[13px] text-muted">This form had no additional questions beyond name, email and phone.</p>
       )}
       {showAll ? <SubmissionModal lead={lead} onClose={() => setShowAll(false)} /> : null}
+    </div>
+    <AttachedForms leadId={lead.id} />
     </div>
   );
 }
