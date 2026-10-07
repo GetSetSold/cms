@@ -6,12 +6,12 @@ import { MobileCtaBarInner } from "./MobileCtaBarInner";
 import { Svg } from "./Svg";
 import { getSvgs } from "@/lib/cms";
 
-/** Divider slot: a flow item instead of an absolutely positioned rule, so the
- *  hairline lands exactly midway between the two columns' content no matter
- *  how wide each column's text is. Used on desktop and mobile. */
+/** Divider slot: a flexible flow item that grows to fill the space between columns,
+ *  with the hairline centered in it. This centers the line in the *visual* gap
+ *  between content, not just the geometric grid gap. Used on desktop and mobile. */
 function VSlot({ color }: { color: string }) {
   return (
-    <div aria-hidden className="relative w-8 shrink-0 self-stretch">
+    <div aria-hidden className="relative min-w-8 flex-1 self-stretch">
       <span
         className="absolute bottom-1/4 left-1/2 top-1/4 w-px -translate-x-1/2"
         style={{ background: color }}
@@ -35,13 +35,13 @@ function pairs<T>(arr: T[]): T[][] {
   return out;
 }
 
-/** Mobile: columns flow in pairs, each pair justified edge-to-edge with the
- *  divider slot between — the hairline is exactly centered on the content. */
+/** Mobile: columns flow in pairs, dividers grow to fill the gap so the hairline
+ *  is centered in the visual space between content. */
 function MobilePairs({ cols, divider }: { cols: NavColumn[]; divider: string }) {
   return (
     <>
       {pairs(cols).map((pair, pi) => (
-        <div key={pi} className="flex items-stretch justify-between gap-6">
+        <div key={pi} className="flex items-stretch gap-6">
           {pair.map((col, i) => (
             <Fragment key={i}>
               {i > 0 ? <VSlot color={divider} /> : null}
@@ -165,11 +165,11 @@ export async function SiteFooter({ settings, logo }: { settings: SiteSettings; l
         {/* Menus: full-width row below the offices */}
         <div className={`border-t ${rowPad}`} style={{ borderColor: divider }}>
           {/* Desktop: flex with dividers as flow items, centered between content */}
-          <div className="hidden md:flex md:items-stretch md:justify-between md:gap-6">
+          <div className="hidden md:flex md:items-stretch md:gap-6">
             {(firstRow ?? []).map((col, i) => (
               <Fragment key={i}>
                 {i > 0 ? <VSlot color={divider} /> : null}
-                <div className="min-w-0 flex-1"><FooterCol col={col} /></div>
+                <div className="min-w-0"><FooterCol col={col} /></div>
               </Fragment>
             ))}
           </div>
@@ -189,11 +189,11 @@ export async function SiteFooter({ settings, logo }: { settings: SiteSettings; l
         {restRows.map((row, ri) => (
           <div key={ri} className={`border-t ${rowPad}`} style={{ borderColor: divider }}>
             {/* Desktop: flex with dividers as flow items, centered between content */}
-            <div className="hidden md:flex md:items-stretch md:justify-between md:gap-6">
+            <div className="hidden md:flex md:items-stretch md:gap-6">
               {row.map((col, i) => (
                 <Fragment key={i}>
                   {i > 0 ? <VSlot color={divider} /> : null}
-                  <div className="min-w-0 flex-1"><FooterCol col={col} /></div>
+                  <div className="min-w-0"><FooterCol col={col} /></div>
                 </Fragment>
               ))}
             </div>
