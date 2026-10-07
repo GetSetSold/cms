@@ -68,35 +68,41 @@ function SubmissionModal({ lead, onClose }: { lead: Lead; onClose: () => void })
   const entries = Object.entries(lead.custom_fields ?? {});
   return (
     <div
-      className="fixed inset-0 z-[110] flex items-start justify-center overflow-y-auto p-3 sm:items-center sm:p-6"
+      className="fixed inset-0 z-[110] flex items-end justify-center sm:items-center sm:p-6"
       role="dialog"
       aria-modal="true"
     >
       <div className="fixed inset-0 bg-black/70" onClick={onClose} aria-hidden />
-      <div className="relative my-6 w-full max-w-2xl rounded-2xl bg-white p-6 shadow-2xl">
-        <button
-          onClick={onClose}
-          aria-label="Close submission details"
-          className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-soft text-[16px] text-ink hover:bg-line"
-        >
-          ✕
-        </button>
-        <strong className="text-[16px]">Form submission</strong>
-        <p className="mb-5 text-[13px] text-muted">
-          All answers from the “{lead.form_key ?? "unknown"}” form, exactly as submitted.
-        </p>
-        {entries.length ? (
-          <dl className="flex flex-col gap-4">
-            {entries.map(([key, v]) => (
-              <div key={key} className="flex flex-col gap-1 border-b border-line/60 pb-4 last:border-0 last:pb-0">
-                <dt className="text-xs font-medium uppercase tracking-wide text-muted">{key.replace(/_/g, " ")}</dt>
-                <dd className="text-[15px]"><FieldValue v={v} /></dd>
-              </div>
-            ))}
-          </dl>
-        ) : (
-          <p className="text-[13px] text-muted">This form had no additional questions beyond name, email and phone.</p>
-        )}
+      <div className="relative flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-2xl bg-white shadow-2xl sm:max-w-2xl sm:rounded-2xl">
+        <div className="flex shrink-0 items-start justify-between gap-3 border-b border-line p-5 sm:p-6">
+          <div>
+            <strong className="text-[16px]">Form submission</strong>
+            <p className="text-[13px] text-muted">
+              All answers from the “{lead.form_key ?? "unknown"}” form, exactly as submitted.
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            aria-label="Close submission details"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-soft text-[16px] text-ink hover:bg-line"
+          >
+            ✕
+          </button>
+        </div>
+        <div className="overflow-y-auto p-5 sm:p-6">
+          {entries.length ? (
+            <dl className="flex flex-col gap-4">
+              {entries.map(([key, v]) => (
+                <div key={key} className="flex flex-col gap-1 border-b border-line/60 pb-4 last:border-0 last:pb-0">
+                  <dt className="text-xs font-medium uppercase tracking-wide text-muted">{key.replace(/_/g, " ")}</dt>
+                  <dd className="text-[15px]"><FieldValue v={v} /></dd>
+                </div>
+              ))}
+            </dl>
+          ) : (
+            <p className="text-[13px] text-muted">This form had no additional questions beyond name, email and phone.</p>
+          )}
+        </div>
       </div>
     </div>
   );
