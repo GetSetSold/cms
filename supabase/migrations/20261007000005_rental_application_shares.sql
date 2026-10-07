@@ -23,8 +23,10 @@ CREATE INDEX IF NOT EXISTS idx_rental_shares_lead ON public.rental_application_s
 ALTER TABLE public.rental_application_shares ENABLE ROW LEVEL SECURITY;
 
 -- Public read for valid (unexpired) tokens; staff manage.
+DROP POLICY IF EXISTS "public read valid shares" ON public.rental_application_shares;
 CREATE POLICY "public read valid shares" ON public.rental_application_shares FOR SELECT
   USING (expires_at > now());
+DROP POLICY IF EXISTS "staff manage shares" ON public.rental_application_shares;
 CREATE POLICY "staff manage shares" ON public.rental_application_shares FOR ALL
   USING (public.has_role(array['admin','editor','sales']::public.app_role[]))
   WITH CHECK (public.has_role(array['admin','editor','sales']::public.app_role[]));
