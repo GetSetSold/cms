@@ -6,29 +6,9 @@ import { MobileCtaBarInner } from "./MobileCtaBarInner";
 import { Svg } from "./Svg";
 import { getSvgs } from "@/lib/cms";
 
-const DESKTOP_COLS: Record<number, string> = { 1: "md:grid-cols-1", 2: "md:grid-cols-2", 3: "md:grid-cols-3", 4: "md:grid-cols-4" };
-const BRAND_ROW_TEMPLATE: Record<number, string> = {
-  1: "md:[grid-template-columns:1.4fr_repeat(1,1fr)]",
-  2: "md:[grid-template-columns:1.4fr_repeat(2,1fr)]",
-  3: "md:[grid-template-columns:1.4fr_repeat(3,1fr)]",
-  4: "md:[grid-template-columns:1.4fr_repeat(4,1fr)]",
-};
-
-/** Aligned-rules divider (desktop): vertically centered hairline positioned at the
- *  exact midpoint of the grid gap (gap-8 = 32px, so -16px from column edge). */
-function VRule({ color }: { color: string }) {
-  return (
-    <span
-      aria-hidden
-      className="pointer-events-none absolute bottom-1/4 top-1/4 w-px"
-      style={{ background: color, left: "calc(-1 * var(--footer-gap, 32px) / 2)" }}
-    />
-  );
-}
-
-/** Divider slot (mobile pairs): a flow item instead of an absolutely positioned
- *  rule, so the hairline lands exactly midway between the two columns' content
- *  no matter how wide each column's text is. */
+/** Divider slot: a flow item instead of an absolutely positioned rule, so the
+ *  hairline lands exactly midway between the two columns' content no matter
+ *  how wide each column's text is. Used on desktop and mobile. */
 function VSlot({ color }: { color: string }) {
   return (
     <div aria-hidden className="relative w-8 shrink-0 self-stretch">
@@ -186,13 +166,13 @@ export async function SiteFooter({ settings, logo }: { settings: SiteSettings; l
 
         {/* Menus: full-width row below the offices */}
         <div className={`border-t ${rowPad}`} style={{ borderColor: divider }}>
-          {/* Desktop: aligned grid */}
-          <div className={`hidden gap-8 md:grid ${DESKTOP_COLS[dcols]}`}>
+          {/* Desktop: flex with dividers as flow items, centered between content */}
+          <div className="hidden md:flex md:items-stretch md:justify-between md:gap-6">
             {(firstRow ?? []).map((col, i) => (
-              <div key={i} className="relative">
-                {i % dcols !== 0 ? <VRule color={divider} /> : null}
-                <FooterCol col={col} />
-              </div>
+              <Fragment key={i}>
+                {i > 0 ? <VSlot color={divider} /> : null}
+                <div className="min-w-0 flex-1"><FooterCol col={col} /></div>
+              </Fragment>
             ))}
           </div>
           {/* Mobile: pairs with truly centered dividers */}
@@ -210,13 +190,13 @@ export async function SiteFooter({ settings, logo }: { settings: SiteSettings; l
             distort neighbouring content the way one shared grid did. */}
         {restRows.map((row, ri) => (
           <div key={ri} className={`border-t ${rowPad}`} style={{ borderColor: divider }}>
-            {/* Desktop: aligned grid */}
-            <div className={`hidden gap-8 md:grid ${DESKTOP_COLS[dcols]}`}>
+            {/* Desktop: flex with dividers as flow items, centered between content */}
+            <div className="hidden md:flex md:items-stretch md:justify-between md:gap-6">
               {row.map((col, i) => (
-                <div key={i} className="relative">
-                  {i % dcols !== 0 ? <VRule color={divider} /> : null}
-                  <FooterCol col={col} />
-                </div>
+                <Fragment key={i}>
+                  {i > 0 ? <VSlot color={divider} /> : null}
+                  <div className="min-w-0 flex-1"><FooterCol col={col} /></div>
+                </Fragment>
               ))}
             </div>
             {/* Mobile: pairs with truly centered dividers */}
