@@ -18,9 +18,11 @@ export async function GET(req: NextRequest) {
   if (q.length < 3) return NextResponse.json({ features: [] });
 
   // Ontario bounding box: lng -95.2..-74.3, lat 41.6..56.9
+  // No `types` restriction: MapTiler's address index misses some house numbers,
+  // so we accept all result types and rank true numbered addresses first.
   const url =
     `https://api.maptiler.com/geocoding/${encodeURIComponent(q)}.json` +
-    `?key=${encodeURIComponent(key)}&country=ca&bbox=-95.2%2C41.6%2C-74.3%2C56.9&limit=6&types=address`;
+    `?key=${encodeURIComponent(key)}&country=ca&bbox=-95.2%2C41.6%2C-74.3%2C56.9&limit=8&autocomplete=true&fuzzyMatch=true`;
 
   const res = await fetch(url);
   if (!res.ok) {
@@ -36,14 +38,20 @@ export async function GET(req: NextRequest) {
       ctx.find((c) => c.id?.startsWith("locality"))?.text ??
       f.place_name?.split(",").slice(-3, -2)[0]?.trim() ??
       "";
+    const placeTypes: string[] = Array.isArray(f.place_type) ? f.place_type : [];
     return {
       label: f.place_name ?? f.text ?? "",
       detail: [f.text, city].filter(Boolean).join(" — ") || undefined,
       lat: typeof lat === "number" ? lat : null,
       lng: typeof lng === "number" ? lng : null,
       city,
+      isAddress: placeTypes.includes("address"),
     };
-  }).filter((f: any) => typeof f.lat === "number" && typeof f.lng === "number");
+  })
+    .filter((f: any) => typeof f.lat === "number" && typeof f.lng === "number")
+    // Numbered addresses first, then streets/places
+    .sort((a: any, b: any) => Number(b.isAddress) - Number(a.isAddress))
+    .slice(0, 6);
 
   return NextResponse.json({ features });
 }

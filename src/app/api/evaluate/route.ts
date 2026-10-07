@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createMlsClient } from "@/lib/mls";
+import { createMlsClient, listingSlug } from "@/lib/mls";
 import { getSettings } from "@/lib/cms";
-import { getHpiMarket, hpiMarketForCity } from "@/lib/hpi";
+import { getHpiMarket, hpiMarketForCity, HPI_MARKET_COVERAGE } from "@/lib/hpi";
 
 /**
  * POST /api/evaluate
@@ -12,7 +12,7 @@ import { getHpiMarket, hpiMarketForCity } from "@/lib/hpi";
 
 const COLS =
   "ListingKey,ListPrice,UnparsedAddress,City,Latitude,Longitude,BedroomsTotal," +
-  "BathroomsTotalInteger,AboveGradeFinishedArea,StructureTypeText,OriginalEntryTimestamp,TotalActualRent";
+  "BathroomsTotalInteger,AboveGradeFinishedArea,StructureTypeText,OriginalEntryTimestamp,TotalActualRent,Media";
 
 const TYPE_KEYWORDS: Record<string, string[]> = {
   Detached: ["single family", "detached"],
@@ -107,11 +107,19 @@ export async function POST(req: NextRequest) {
       daysOnMarket: dom,
       distanceKm: Math.round(haversineKm(lat, lng, r.Latitude, r.Longitude) * 10) / 10,
       key: r.ListingKey ?? null,
+      image: typeof r.Media === "string" && r.Media ? r.Media : null,
+      url:
+        r.ListingKey
+          ? `/real-estate/${encodeURIComponent(r.ListingKey)}/${listingSlug({ UnparsedAddress: r.UnparsedAddress, City: r.City })}`
+          : null,
     };
   });
 
   // --- 2. HPI market direction for the city ---
-  let hpi: { label: string; change12m: number | null; benchmark: number | null; lastUpdated: string } | null = null;
+  let hpi: {
+    label: string; covers: string | null; change12m: number | null; momChange: number | null;
+    benchmark: number | null; lastUpdated: string; propertyType: string;
+  } | null = null;
   const slug = citySlug(String(body.city ?? ""));
   const marketSlug = slug ? hpiMarketForCity(slug) : null;
   if (marketSlug) {
@@ -126,9 +134,12 @@ export async function POST(req: NextRequest) {
           : null;
       hpi = {
         label: market.name,
+        covers: HPI_MARKET_COVERAGE[marketSlug] ?? null,
         change12m: typeof pt?.yoyChange === "number" ? Math.round(pt.yoyChange * 10) / 10 : composite12m,
+        momChange: typeof pt?.momChange === "number" ? Math.round(pt.momChange * 10) / 10 : null,
         benchmark: pt?.benchmark ?? market.latest.compositeBenchmark ?? null,
         lastUpdated: market.lastUpdated,
+        propertyType,
       };
     }
   }

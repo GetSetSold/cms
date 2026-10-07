@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { CSSProperties } from "react";
 import { getSettings, getLogo } from "@/lib/cms";
+import { themeVars } from "@/lib/theme";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { EvaluationFlow } from "@/components/evaluation/EvaluationFlow";
@@ -24,6 +25,8 @@ export default async function HomeEvaluationPage() {
       className="min-h-screen"
       style={
         {
+          // Runtime branding (Shape tokens, header/footer theme) + this page's fixed palette
+          ...themeVars(settings),
           "--hev-primary": "#111111",
           "--hev-accent": "#0066cc",
           "--hev-text": "#333333",

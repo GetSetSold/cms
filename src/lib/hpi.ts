@@ -107,6 +107,43 @@ export function hpiMarketForCity(citySlug: string): string | null {
   return CITY_TO_HPI[citySlug.toLowerCase()] ?? null;
 }
 
+/**
+ * Human coverage label per HPI market slug — which cities/areas the benchmark
+ * actually covers. Used so an address in Brampton honestly reads as
+ * "Mississauga market — covers Brampton · Caledon · Mississauga" instead of
+ * a bare label that looks like the wrong city.
+ */
+export const HPI_MARKET_COVERAGE: Record<string, string> = {
+  "greater-toronto": "Toronto · Vaughan · Markham · Richmond Hill · Pickering · Ajax · Whitby · Oshawa · Newmarket · Aurora",
+  mississauga: "Brampton · Caledon · Mississauga",
+  "oakville-milton": "Oakville · Milton · Halton Hills",
+  "hamilton-burlington": "Hamilton · Burlington · Ancaster · Dundas · Waterdown · Flamborough · Stoney Creek · Caledonia · Haldimand County",
+  guelph: "Guelph",
+  barrie: "Barrie",
+  cambridge: "Cambridge",
+  "kitchener-waterloo": "Kitchener · Waterloo",
+  brantford: "Brantford · Paris",
+  ottawa: "Ottawa · Kanata · Orléans · Nepean",
+  "windsor-essex": "Windsor · Essex County",
+  "woodstock-ingersoll-tillsonburg": "Woodstock · Ingersoll · Tillsonburg",
+  "london-st-thomas": "London · St. Thomas",
+  "niagara-region": "Niagara Falls · St. Catharines · Welland · Niagara-on-the-Lake · Fort Erie",
+  peterborough: "Peterborough",
+  "kawartha-lakes": "Kawartha Lakes · Lindsay",
+  simcoe: "Simcoe County · Orillia · Collingwood",
+  "grey-bruce-owen-sound": "Grey-Bruce · Owen Sound",
+  "huron-perth": "Huron · Perth · Stratford · Goderich",
+  kingston: "Kingston",
+  quinte: "Belleville · Trenton",
+  "rideau-st-lawrence": "Brockville · Cornwall",
+  "northumberland-hills": "Cobourg · Port Hope",
+  bancroft: "Bancroft",
+  sudbury: "Sudbury",
+  "north-bay": "North Bay",
+  "sault-ste-marie": "Sault Ste. Marie",
+  lakelands: "Bracebridge · Huntsville · Gravenhurst",
+};
+
 /* ------------------------------------------------------------------ */
 /* Insights computed from full history                                 */
 /* ------------------------------------------------------------------ */
