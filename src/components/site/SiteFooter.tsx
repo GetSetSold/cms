@@ -128,9 +128,6 @@ export async function SiteFooter({ settings, logo }: { settings: SiteSettings; l
       {/* Local Office */}
       <div className="border-l-2 pl-4" style={{ borderColor: ACCENT }}>
         <div className="mb-1.5 text-[11px] font-bold uppercase tracking-[1.5px]" style={{ color: ACCENT }}>Local Office</div>
-        {localOfficeLogo ? (
-          <div className="mb-2"><Svg asset={localOfficeLogo} label="Local office logo" style={{ width: 120, height: 48 }} /></div>
-        ) : null}
         <div className="flex flex-col gap-1.5">
           {c.address ? <p className="opacity-75">{c.address}</p> : null}
           {c.phone ? <a href={`tel:${c.phone}`} className="opacity-75 hover:opacity-100">{c.phone}</a> : null}
