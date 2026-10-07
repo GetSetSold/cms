@@ -21,6 +21,14 @@ function pick(obj: any, ...keys: string[]): string | null {
   return null;
 }
 
+export async function GET() {
+  return NextResponse.json({ ok: true, service: "salesiq-webhook" });
+}
+
+export async function HEAD() {
+  return new NextResponse(null, { status: 200 });
+}
+
 export async function POST(req: NextRequest) {
   const secret = process.env.SALESIQ_WEBHOOK_SECRET || "";
   if (!secret) {
