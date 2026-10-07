@@ -13,7 +13,26 @@ export function LeadActions({ lead, pendingCount }: { lead: Lead; pendingCount: 
   const [note, setNote] = useState("");
   const [sms, setSms] = useState("");
   const [msg, setMsg] = useState("");
+  const [editing, setEditing] = useState(false);
+  const [firstName, setFirstName] = useState(lead.first_name ?? "");
+  const [lastName, setLastName] = useState(lead.last_name ?? "");
+  const [email, setEmail] = useState(lead.email ?? "");
+  const [phone, setPhone] = useState(lead.phone ?? "");
+  const [saving, setSaving] = useState(false);
   const canSms = !!lead.phone && lead.sms_opt_in && !lead.sms_opted_out;
+
+  async function saveContact() {
+    setSaving(true);
+    const { error } = await supabase.from("leads").update({
+      first_name: firstName.trim() || null,
+      last_name: lastName.trim() || null,
+      email: email.trim() || null,
+      phone: phone.trim() || null,
+    }).eq("id", lead.id);
+    setSaving(false);
+    if (error) { setMsg(error.message); return; }
+    setEditing(false); setMsg("Contact updated"); router.refresh();
+  }
 
   async function changeStatus(s: LeadStatus) {
     setStatus(s);
@@ -51,6 +70,34 @@ export function LeadActions({ lead, pendingCount }: { lead: Lead; pendingCount: 
 
   return (
     <aside className="flex flex-col gap-4 lg:sticky lg:top-6 lg:self-start">
+      <div className="card flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <strong>Contact</strong>
+          {!editing ? (
+            <button className="btn h-8 px-3 text-[12px]" onClick={() => setEditing(true)}>Edit</button>
+          ) : null}
+        </div>
+        {!editing ? (
+          <dl className="flex flex-col gap-1.5 text-[14px]">
+            <div><dt className="text-xs uppercase tracking-wide text-muted">Name</dt><dd>{[lead.first_name, lead.last_name].filter(Boolean).join(" ") || "—"}</dd></div>
+            <div><dt className="text-xs uppercase tracking-wide text-muted">Email</dt><dd className="break-all">{lead.email || "—"}</dd></div>
+            <div><dt className="text-xs uppercase tracking-wide text-muted">Phone</dt><dd>{lead.phone || "—"}</dd></div>
+          </dl>
+        ) : (
+          <div className="flex flex-col gap-2">
+            <div className="grid grid-cols-2 gap-2">
+              <label className="label">First name<input className="input" value={firstName} onChange={(e) => setFirstName(e.target.value)} /></label>
+              <label className="label">Last name<input className="input" value={lastName} onChange={(e) => setLastName(e.target.value)} /></label>
+            </div>
+            <label className="label">Email<input className="input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} /></label>
+            <label className="label">Phone<input className="input" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} /></label>
+            <div className="flex gap-2">
+              <button className="btn-primary flex-1" disabled={saving} onClick={saveContact}>{saving ? "Saving…" : "Save"}</button>
+              <button className="btn" onClick={() => { setEditing(false); setFirstName(lead.first_name ?? ""); setLastName(lead.last_name ?? ""); setEmail(lead.email ?? ""); setPhone(lead.phone ?? ""); }}>Cancel</button>
+            </div>
+          </div>
+        )}
+      </div>
       <div className="card flex flex-col gap-3">
         <label className="label">Status
           <select className="input capitalize" value={status} onChange={(e) => changeStatus(e.target.value as LeadStatus)}>
