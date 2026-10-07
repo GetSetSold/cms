@@ -1,16 +1,8 @@
-import { requireStaff } from "@/lib/auth";
-import { LeadModal } from "@/components/admin/LeadModal";
-import { LeadDetailView } from "@/components/admin/LeadDetailView";
+import { redirect } from "next/navigation";
 
-/** Intercepted lead detail: renders the same content inside a modal popup
- *  over the leads list. Direct visits / refreshes still get the full page. */
+/** Lead detail now always renders as a full page, not a modal.
+ *  This intercepting route redirects client-side list clicks to the real page. */
 export default async function LeadModalPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  await requireStaff(["admin", "sales"]);
-
-  return (
-    <LeadModal>
-      <LeadDetailView id={id} />
-    </LeadModal>
-  );
+  redirect(`/admin/leads/${id}`);
 }
