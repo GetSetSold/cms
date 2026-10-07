@@ -193,7 +193,7 @@ export function EvaluationFlow({ config }: { config: EvaluationConfig }) {
     <div>
       {/* STEP 1 — form */}
       {step === "form" && (
-        <section className="mx-auto max-w-6xl px-5 py-14 md:py-20">
+        <section className="mx-auto max-w-7xl px-5 py-14 md:py-20">
           <div className="grid grid-cols-1 items-start gap-8 md:grid-cols-2 md:gap-14">
             <div className="order-1 md:col-start-1 md:row-start-1">
               <div className="mb-3 text-[12px] font-bold uppercase tracking-[0.14em] text-[var(--hev-accent)]">
@@ -205,7 +205,7 @@ export function EvaluationFlow({ config }: { config: EvaluationConfig }) {
               <p className="mt-4 max-w-md text-[16px] leading-relaxed text-[#333333]/80">{config.subheading}</p>
             </div>
 
-            <div id="hev-form-card" className="order-2 min-w-0 scroll-mt-24 rounded-[var(--radius-lg)] bg-[var(--hev-accent)] p-7 shadow-[var(--shadow-card)] md:order-2 md:col-start-2 md:row-span-2 md:row-start-1 md:p-8">
+            <div id="hev-form-card" className="order-2 min-w-0 scroll-mt-24 self-center rounded-[var(--radius-lg)] bg-[var(--hev-accent)] p-7 shadow-[var(--shadow-card)] md:order-2 md:col-start-2 md:row-span-2 md:row-start-1 md:self-center md:p-8">
               {/* Wizard progress */}
               <div className="mb-6">
                 <div className="mb-2 flex items-center justify-between text-[12px] font-semibold text-white/80">
@@ -351,7 +351,7 @@ export function EvaluationFlow({ config }: { config: EvaluationConfig }) {
 
       {/* ANALYZING */}
       {step === "analyzing" && (
-        <section className="mx-auto max-w-6xl px-5 py-24 text-center">
+        <section className="mx-auto max-w-7xl px-5 py-24 text-center">
           <div className="mx-auto mb-5 h-11 w-11 animate-spin rounded-full border-4 border-[#E4E4E7] border-t-[#111111]" />
           <b className="block text-[19px] font-bold text-[#111111]">Putting your estimate together…</b>
           <p className="mt-2 text-[14px] text-[#333333]/70">{analyzeMsg}</p>
@@ -360,7 +360,7 @@ export function EvaluationFlow({ config }: { config: EvaluationConfig }) {
 
       {/* STEP 2+3 — result */}
       {step === "result" && result && (
-        <section id="hev-result" className="mx-auto max-w-6xl scroll-mt-24 px-5 py-14">
+        <section id="hev-result" className="mx-auto max-w-7xl scroll-mt-24 px-5 py-14">
           <span className="mb-3 inline-block rounded-[var(--radius-btn)] bg-[#e8f1fb] px-3.5 py-1.5 text-[12px] font-bold text-[var(--hev-accent)]">
             Your estimate
           </span>
