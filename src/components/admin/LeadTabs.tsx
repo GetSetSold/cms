@@ -17,10 +17,15 @@ const LABEL: Record<string, string> = {
 const catLabel = (c: string) => LEAD_FLOW_CATEGORIES.find((x) => x.value === c)?.label ?? c;
 
 /** Turns a saved form answer into readable text. Subform answers arrive as an array of objects
- *  (one per entry) — shown as a small table of its own rather than a raw JSON dump. */
+ *  (one per entry) — shown as a small table of its own rather than a raw JSON dump.
+ *  Arrays of plain strings (e.g. a renovations checklist) render as a clean
+ *  comma list — never character-split via Object.entries. */
 function FieldValue({ v }: { v: unknown }) {
   if (Array.isArray(v)) {
     if (!v.length) return <span className="text-muted">—</span>;
+    if (v.every((x) => x == null || typeof x !== "object")) {
+      return <span>{v.map((x) => String(x ?? "").trim()).filter(Boolean).join(", ") || "—"}</span>;
+    }
     // Stacked, not a wide table — a subform entry with several fields would otherwise force
     // horizontal scrolling, especially on the narrow admin layout or a phone.
     return (
@@ -32,7 +37,7 @@ function FieldValue({ v }: { v: unknown }) {
               {Object.entries(row ?? {}).map(([k, val]) => (
                 <div key={k} className="flex flex-col gap-0.5">
                   <dt className="text-xs text-muted">{k.replace(/_/g, " ")}</dt>
-                  <dd className="text-[14px]">{String(val ?? "") || "—"}</dd>
+                  <dd className="text-[14px]"><FieldValue v={val} /></dd>
                 </div>
               ))}
             </dl>
@@ -45,26 +50,90 @@ function FieldValue({ v }: { v: unknown }) {
   return <span>{String(v ?? "") || "—"}</span>;
 }
 
-function FormSubmissionPanel({ lead }: { lead: Lead }) {
+/** Compact one-line preview of a field value for the summary list. */
+function fieldPreview(v: unknown): string {
+  if (Array.isArray(v)) {
+    if (!v.length) return "—";
+    if (v.every((x) => x == null || typeof x !== "object"))
+      return v.map((x) => String(x ?? "").trim()).filter(Boolean).join(", ") || "—";
+    return `${v.length} ${v.length === 1 ? "entry" : "entries"}`;
+  }
+  if (v && typeof v === "object") return "View details";
+  const s = String(v ?? "").trim();
+  return s.length > 60 ? `${s.slice(0, 60)}…` : s || "—";
+}
+
+function SubmissionModal({ lead, onClose }: { lead: Lead; onClose: () => void }) {
   const entries = Object.entries(lead.custom_fields ?? {});
   return (
+    <div
+      className="fixed inset-0 z-[110] flex items-start justify-center overflow-y-auto p-3 sm:items-center sm:p-6"
+      role="dialog"
+      aria-modal="true"
+    >
+      <div className="fixed inset-0 bg-black/70" onClick={onClose} aria-hidden />
+      <div className="relative my-6 w-full max-w-2xl rounded-2xl bg-white p-6 shadow-2xl">
+        <button
+          onClick={onClose}
+          aria-label="Close submission details"
+          className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-soft text-[16px] text-ink hover:bg-line"
+        >
+          ✕
+        </button>
+        <strong className="text-[16px]">Form submission</strong>
+        <p className="mb-5 text-[13px] text-muted">
+          All answers from the “{lead.form_key ?? "unknown"}” form, exactly as submitted.
+        </p>
+        {entries.length ? (
+          <dl className="flex flex-col gap-4">
+            {entries.map(([key, v]) => (
+              <div key={key} className="flex flex-col gap-1 border-b border-line/60 pb-4 last:border-0 last:pb-0">
+                <dt className="text-xs font-medium uppercase tracking-wide text-muted">{key.replace(/_/g, " ")}</dt>
+                <dd className="text-[15px]"><FieldValue v={v} /></dd>
+              </div>
+            ))}
+          </dl>
+        ) : (
+          <p className="text-[13px] text-muted">This form had no additional questions beyond name, email and phone.</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function FormSubmissionPanel({ lead }: { lead: Lead }) {
+  const [showAll, setShowAll] = useState(false);
+  const entries = Object.entries(lead.custom_fields ?? {});
+  const preview = entries.slice(0, 5);
+  return (
     <div className="card flex flex-col gap-4">
-      <div>
-        <strong>Form submission</strong>
-        <p className="text-[13px] text-muted">Answers from the “{lead.form_key ?? "unknown"}” form, exactly as submitted.</p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <strong>Form submission</strong>
+          <p className="text-[13px] text-muted">Answers from the “{lead.form_key ?? "unknown"}” form.</p>
+        </div>
+        {entries.length > 0 ? (
+          <button onClick={() => setShowAll(true)} className="btn h-9 shrink-0 px-4 text-[13px]">
+            View
+          </button>
+        ) : null}
       </div>
       {entries.length ? (
-        <dl className="flex flex-col gap-3">
-          {entries.map(([key, v]) => (
-            <div key={key} className="flex flex-col gap-1 border-b border-line/60 pb-3 last:border-0 last:pb-0">
-              <dt className="text-xs font-medium uppercase tracking-wide text-muted">{key.replace(/_/g, " ")}</dt>
-              <dd className="text-[15px]"><FieldValue v={v} /></dd>
+        <dl className="flex flex-col">
+          {preview.map(([key, v]) => (
+            <div key={key} className="flex items-baseline justify-between gap-4 border-b border-line/60 py-2 last:border-0">
+              <dt className="shrink-0 text-xs font-medium uppercase tracking-wide text-muted">{key.replace(/_/g, " ")}</dt>
+              <dd className="truncate text-right text-[14px]">{fieldPreview(v)}</dd>
             </div>
           ))}
+          {entries.length > preview.length ? (
+            <p className="pt-2 text-[12px] text-muted">+ {entries.length - preview.length} more — click View for all.</p>
+          ) : null}
         </dl>
       ) : (
         <p className="text-[13px] text-muted">This form had no additional questions beyond name, email and phone.</p>
       )}
+      {showAll ? <SubmissionModal lead={lead} onClose={() => setShowAll(false)} /> : null}
     </div>
   );
 }
