@@ -51,6 +51,7 @@ function ArrowIcon({ className }: { className?: string }) {
 
 export function EvaluationFlow({ config }: { config: EvaluationConfig }) {
   const [step, setStep] = useState<"form" | "analyzing" | "result">("form");
+  const [formStep, setFormStep] = useState<1 | 2>(1);
   const [analyzeMsg, setAnalyzeMsg] = useState(ANALYZE_MSGS[0]);
 
   // address picker
@@ -215,16 +216,29 @@ export function EvaluationFlow({ config }: { config: EvaluationConfig }) {
               </ul>
             </div>
 
-            <div className="order-1 rounded-[var(--radius-lg)] bg-[var(--hev-accent)] p-7 shadow-[var(--shadow-card)] md:order-2 md:p-8">
-              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-white/15">
-                <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M3 11l9-8 9 8" /><path d="M5 10v10h5v-6h4v6h5V10" />
-                </svg>
+            <div id="hev-form-card" className="order-1 scroll-mt-24 rounded-[var(--radius-lg)] bg-[var(--hev-accent)] p-7 shadow-[var(--shadow-card)] md:order-2 md:p-8">
+              {/* Wizard progress */}
+              <div className="mb-6">
+                <div className="mb-2 flex items-center justify-between text-[12px] font-semibold text-white/80">
+                  <span>Step {formStep} of 2</span>
+                  <span>{formStep === 1 ? "Your address" : "Property details"}</span>
+                </div>
+                <div className="h-1.5 overflow-hidden rounded-full bg-white/20">
+                  <div className="h-full rounded-full bg-white transition-all duration-300" style={{ width: formStep === 1 ? "50%" : "100%" }} />
+                </div>
               </div>
-              <h2 className="text-[21px] font-bold text-white">Get your valuation</h2>
-              <p className="mb-5 mt-1 text-[14px] text-white/75">Start by finding your address.</p>
 
-              <label className="mb-1.5 block text-[13px] font-semibold text-white" htmlFor="hev-addr">Street address</label>
+              {formStep === 1 ? (
+                <>
+                  <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-white/15">
+                    <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="M3 11l9-8 9 8" /><path d="M5 10v10h5v-6h4v6h5V10" />
+                    </svg>
+                  </div>
+                  <h2 className="text-[21px] font-bold text-white">Where's your home?</h2>
+                  <p className="mb-5 mt-1 text-[14px] text-white/75">Type your address and pick it from the list.</p>
+
+                  <label className="mb-1.5 block text-[13px] font-semibold text-white" htmlFor="hev-addr">Street address</label>
               <div className="relative" ref={wrapRef}>
                 <input
                   id="hev-addr" type="text" autoComplete="off" placeholder="Type your address…"
@@ -253,7 +267,24 @@ export function EvaluationFlow({ config }: { config: EvaluationConfig }) {
               {geoError && <p className="mt-2 text-[13px] font-medium text-[#ffe1e1]">{geoError}</p>}
               {picked && <p className="mt-2 text-[13px] font-medium text-white">✓ {picked.label}</p>}
 
-              <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <button
+                onClick={() => { setFormStep(2); document.getElementById("hev-form-card")?.scrollIntoView({ behavior: "smooth", block: "start" }); }}
+                disabled={!picked}
+                className="mt-6 inline-flex h-12 w-full items-center justify-center rounded-[var(--radius-btn)] bg-white px-6 text-[16px] font-semibold text-[var(--hev-accent)] transition hover:bg-white/90 disabled:cursor-not-allowed disabled:opacity-40">
+                Continue
+              </button>
+              <p className="mt-3.5 text-center text-[12.5px] text-white/70">Free · No obligation</p>
+                </>
+              ) : (
+                <>
+                  <button onClick={() => setFormStep(1)}
+                    className="mb-4 inline-flex items-center gap-1.5 text-[13.5px] font-semibold text-white/85 transition hover:text-white">
+                    ← Back
+                  </button>
+                  <h2 className="text-[21px] font-bold text-white">Tell us about your home</h2>
+                  <p className="mb-5 mt-1 text-[14px] text-white/75">A few details sharpen your valuation.</p>
+
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
                   <label className="mb-1.5 block text-[13px] font-semibold text-white">Property type</label>
                   <select className={inputCls} value={propertyType} onChange={(e) => setPropertyType(e.target.value)}>
@@ -301,13 +332,15 @@ export function EvaluationFlow({ config }: { config: EvaluationConfig }) {
               </div>
 
               {evalError && <p className="mt-4 text-[13px] font-medium text-[#ffe1e1]">{evalError}</p>}
-              <button onClick={runEvaluation} disabled={!picked}
+              <button onClick={runEvaluation}
                 className="mt-6 inline-flex h-12 w-full items-center justify-center rounded-[var(--radius-btn)] bg-white px-6 text-[16px] font-semibold text-[var(--hev-accent)] transition hover:bg-white/90 disabled:cursor-not-allowed disabled:opacity-40">
                 Get my valuation
               </button>
               <p className="mt-3.5 text-center text-[12.5px] text-white/70">
-                {picked ? "Takes under a minute · Free · No obligation" : "Pick your address above to continue · Free · No obligation"}
+                Takes under a minute · Free · No obligation
               </p>
+                </>
+              )}
             </div>
           </div>
         </section>
@@ -336,7 +369,7 @@ export function EvaluationFlow({ config }: { config: EvaluationConfig }) {
               <div className="mt-7 rounded-[var(--radius-lg)] bg-[#111111] px-8 py-11 text-center text-white">
                 <div className="mb-4 text-[14px] text-white/60">{picked?.label}</div>
                 <div className="mb-2.5 text-[12px] font-bold uppercase tracking-[0.14em] text-white/50">Estimated market value</div>
-                <div className="text-[44px] font-extrabold tracking-tight md:text-[54px]">
+                <div className="text-[36px] font-extrabold tracking-tight sm:text-[44px] md:text-[54px]">
                   {fmt(result.estimate.low)} <span className="font-medium text-white/40">–</span> {fmt(result.estimate.high)}
                 </div>
                 <div className="mt-3 text-[15px] text-white/70">Most likely around <b className="text-white">{fmt(result.estimate.mid)}</b></div>
@@ -379,7 +412,47 @@ export function EvaluationFlow({ config }: { config: EvaluationConfig }) {
               </div>
 
               <h3 className="mb-3.5 mt-10 text-[20px] font-bold text-[#111111]">Similar homes currently listed near you</h3>
-              <div className="overflow-x-auto rounded-[var(--radius-lg)] border border-[#E4E4E7] bg-white shadow-[var(--shadow-card)]">
+
+              {/* Mobile: stacked compact cards */}
+              <div className="grid gap-3 md:hidden">
+                {result.listings.map((l, i) => {
+                  const inner = (
+                    <>
+                      {l.image ? (
+                        <img src={l.image} alt="" loading="lazy" className="h-14 w-14 shrink-0 rounded-full object-cover" />
+                      ) : (
+                        <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#f7f7f7] text-lg text-[#333333]/40">⌂</span>
+                      )}
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-[14px] font-semibold text-[#111111]">{l.address}</span>
+                        <span className="mt-0.5 block text-[12.5px] text-[#333333]/65">
+                          {l.beds ?? "—"} bd · {l.baths ?? "—"} ba{l.sqft ? ` · ${l.sqft.toLocaleString("en-CA")} sqft` : ""}
+                        </span>
+                        <span className="block text-[12.5px] text-[#333333]/65">
+                          {l.daysOnMarket != null ? `${l.daysOnMarket} days listed · ` : ""}{l.distanceKm} km
+                        </span>
+                      </span>
+                      <span className="flex shrink-0 flex-col items-end gap-2">
+                        <span className="text-[15px] font-extrabold text-[#111111]">{fmt(l.price)}</span>
+                        {l.url ? (
+                          <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#111111] text-white">
+                            <ArrowIcon className="h-3 w-3" />
+                          </span>
+                        ) : null}
+                      </span>
+                    </>
+                  );
+                  const cls = "flex items-center gap-3.5 rounded-[var(--radius-lg)] border border-[#E4E4E7] bg-white p-3.5 shadow-[var(--shadow-card)]";
+                  return l.url ? (
+                    <a key={i} href={l.url} target="_blank" rel="noreferrer" className={cls}>{inner}</a>
+                  ) : (
+                    <div key={i} className={cls}>{inner}</div>
+                  );
+                })}
+              </div>
+
+              {/* Desktop: table */}
+              <div className="hidden overflow-x-auto rounded-[var(--radius-lg)] border border-[#E4E4E7] bg-white shadow-[var(--shadow-card)] md:block">
                 <table className="w-full min-w-[820px] border-collapse text-[14px]">
                   <thead>
                     <tr className="bg-[#f7f7f7] text-left text-[11.5px] font-semibold uppercase tracking-[0.07em] text-[#333333]/60">
