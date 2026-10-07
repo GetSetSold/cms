@@ -122,8 +122,9 @@ export async function SiteFooter({ settings, logo }: { settings: SiteSettings; l
   const localTagline = c.office_tagline || f.tagline;
   // Brokerage falls back to agent settings until the brokerage column is populated.
   const brokerageName = settings.brokerage?.name || settings.agent?.brokerage;
+  // Brand: logo + name + tagline (slim, left column)
   const brandBlock = (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-4">
       <Link href="/" className="flex items-center gap-3" aria-label={`${localName} home`}>
         {localOfficeLogo ? (
           <Svg asset={localOfficeLogo} label={`${localName} logo`} style={{ width: compact ? 40 : 48, height: compact ? 40 : 48 }} />
@@ -138,14 +139,15 @@ export async function SiteFooter({ settings, logo }: { settings: SiteSettings; l
         </span>
       </Link>
       {localTagline ? <p className="opacity-75">{localTagline}</p> : null}
+    </div>
+  );
+
+  // Offices: Local Office + Brokerage side-by-side (wide, right of brand)
+  const officesBlock = (
+    <div className="grid gap-6 sm:grid-cols-2">
       {/* Local Office */}
       <div className="border-l-2 pl-4" style={{ borderColor: ACCENT }}>
-        <div className="mb-1.5 flex items-center gap-2">
-          {localOfficeLogo ? (
-            <Svg asset={localOfficeLogo} label="Local office logo" style={{ width: 24, height: 24 }} />
-          ) : null}
-          <span className="text-[11px] font-bold uppercase tracking-[1.5px]" style={{ color: ACCENT }}>Local Office</span>
-        </div>
+        <div className="mb-1.5 text-[11px] font-bold uppercase tracking-[1.5px]" style={{ color: ACCENT }}>Local Office</div>
         <div className="flex flex-col gap-1.5">
           {c.address ? <p className="opacity-75">{c.address}</p> : null}
           {c.phone ? <a href={`tel:${c.phone}`} className="opacity-75 hover:opacity-100">{c.phone}</a> : null}
@@ -176,21 +178,25 @@ export async function SiteFooter({ settings, logo }: { settings: SiteSettings; l
   return (
     <footer style={{ background: f.bg || undefined, color: f.text || undefined }}>
       <div className={`mx-auto flex max-w-7xl flex-col px-5 md:px-10 ${compact ? "gap-6 pb-20 pt-10 text-[13px] md:pb-8" : "gap-10 pb-28 pt-16 text-[15px] md:pb-12"}`}>
-        {/* Row 1: brand block (wider) + this row's columns */}
-        <div>
-          {/* Desktop: aligned grid, divider centered in the track gap */}
-          <div className={`hidden gap-8 md:grid ${BRAND_ROW_TEMPLATE[dcols]}`}>
-            {brandBlock}
+        {/* Top: brand (slim) + offices (wide, two columns) — Option 3 split layout */}
+        <div className="grid gap-8 md:grid-cols-[1fr_2fr] md:gap-12">
+          {brandBlock}
+          {officesBlock}
+        </div>
+
+        {/* Menus: full-width row below the offices */}
+        <div className={`border-t ${rowPad}`} style={{ borderColor: divider }}>
+          {/* Desktop: aligned grid */}
+          <div className={`hidden gap-8 md:grid ${DESKTOP_COLS[dcols]}`}>
             {(firstRow ?? []).map((col, i) => (
               <div key={i} className="relative">
-                <VRule color={divider} />
+                {i % dcols !== 0 ? <VRule color={divider} /> : null}
                 <FooterCol col={col} />
               </div>
             ))}
           </div>
-          {/* Mobile: brand full-width, then pairs with truly centered dividers */}
+          {/* Mobile: pairs with truly centered dividers */}
           <div className="flex flex-col gap-8 md:hidden">
-            {brandBlock}
             {mcols === 2 ? (
               <MobilePairs cols={firstRow ?? []} divider={divider} />
             ) : (
