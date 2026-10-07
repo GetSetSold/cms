@@ -65,8 +65,8 @@ function pick(...vals: unknown[]): string {
 
 /** Best-effort transcript from common chat payload shapes. */
 function transcriptOf(d: Record<string, unknown>): string {
-  const buckets: unknown[] = [d.messages, d.transcript, d.chat?.messages, d.conversation];
   const chat = d.chat as Record<string, unknown> | undefined;
+  const buckets: unknown[] = [d.messages, d.transcript, chat?.messages, d.conversation];
   if (chat) buckets.push(chat.transcript, chat.messages);
   for (const b of buckets) {
     if (!Array.isArray(b)) continue;
