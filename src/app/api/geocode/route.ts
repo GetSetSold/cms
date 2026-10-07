@@ -1,1 +1,190 @@
-aW1wb3J0IHsgTmV4dFJlcXVlc3QsIE5leHRSZXNwb25zZSB9IGZyb20gIm5leHQvc2VydmVyIjsKaW1wb3J0IHsgZ2V0U2V0dGluZ3MgfSBmcm9tICJAL2xpYi9jbXMiOwoKLyoqCiAqIEdFVCAvYXBpL2dlb2NvZGU/cT0uLi4gICAgICAgICAgICDihpIgYWRkcmVzcyBhdXRvY29tcGxldGUgc3VnZ2VzdGlvbnMKICogR0VUIC9hcGkvZ2VvY29kZT9wbGFjZUlkPS4uLiAgICAgIOKGkiBHb29nbGUgUGxhY2UgRGV0YWlscyDihpIgZnVsbCBmZWF0dXJlCiAqCiAqIFByb3hpZXMgZ2VvY29kaW5nIHNvIEFQSSBrZXlzIChDbG91ZGZsYXJlIFNlY3JldHMgTUFQVElMRVJfQVBJX0tFWSAvCiAqIEdPT0dMRV9QTEFDRVNfQVBJX0tFWSkgbmV2ZXIgcmVhY2ggdGhlIGJyb3dzZXIuIFRoZSBwcm92aWRlciBpcyBjaG9zZW4gaW4KICogQWRtaW4g4oaSIFNldHRpbmdzIOKGkiBIb21lIHZhbHVhdGlvbiAoIkFkZHJlc3MgcHJvdmlkZXIiKTsgYSBtaXNzaW5nIGtleSBmb3IKICogdGhlIHNlbGVjdGVkIHByb3ZpZGVyIGZhbGxzIGJhY2sgdG8gdGhlIG90aGVyIG9uZSBhdXRvbWF0aWNhbGx5LgogKi8KCmludGVyZmFjZSBGZWF0dXJlIHsKICBsYWJlbDogc3RyaW5nOwogIGRldGFpbD86IHN0cmluZzsKICBsYXQ6IG51bWJlciB8IG51bGw7CiAgbG5nOiBudW1iZXIgfCBudWxsOwogIGNpdHk6IHN0cmluZzsKICBpc0FkZHJlc3M6IGJvb2xlYW47CiAgcGxhY2VJZD86IHN0cmluZzsKfQoKLy8gU2hvcnQtbGl2ZWQgcHJvdmlkZXIgY2FjaGU6IG9uZSBzZXR0aW5ncyByZWFkIHBlciBtaW51dGUsIG5vdCBwZXIga2V5c3Ryb2tlLgpsZXQgcHJvdmlkZXJDYWNoZTogeyBhdDogbnVtYmVyOyBwcm92aWRlcjogIm1hcHRpbGVyIiB8ICJnb29nbGUiIH0gfCBudWxsID0gbnVsbDsKYXN5bmMgZnVuY3Rpb24gZ2V0UHJvdmlkZXIoKTogUHJvbWlzZTwibWFwdGlsZXIiIHwgImdvb2dsZSI+IHsKICBpZiAocHJvdmlkZXJDYWNoZSAmJiBEYXRlLm5vdygpIC0gcHJvdmlkZXJDYWNoZS5hdCA8IDYwXzAwMCkgcmV0dXJuIHByb3ZpZGVyQ2FjaGUucHJvdmlkZXI7CiAgdHJ5IHsKICAgIGNvbnN0IHMgPSBhd2FpdCBnZXRTZXR0aW5ncygpOwogICAgY29uc3QgcCA9IChzIGFzIGFueSkuaG9tZV9ldmFsdWF0aW9uPy5nZW9jb2RlX3Byb3ZpZGVyID09PSAiZ29vZ2xlIiA/ICJnb29nbGUiIDogIm1hcHRpbGVyIjsKICAgIHByb3ZpZGVyQ2FjaGUgPSB7IGF0OiBEYXRlLm5vdygpLCBwcm92aWRlcjogcCB9OwogICAgcmV0dXJuIHA7CiAgfSBjYXRjaCB7CiAgICByZXR1cm4gIm1hcHRpbGVyIjsKICB9Cn0KCmFzeW5jIGZ1bmN0aW9uIG1hcHRpbGVyU2VhcmNoKHE6IHN0cmluZywga2V5OiBzdHJpbmcpOiBQcm9taXNlPEZlYXR1cmVbXT4gewogIC8vIE9udGFyaW8gYm91bmRpbmcgYm94OiBsbmcgLTk1LjIuLi03NC4zLCBsYXQgNDEuNi4uNTYuOQogIC8vIE5vIGB0eXBlc2AgcmVzdHJpY3Rpb246IE1hcFRpbGVyJ3MgYWRkcmVzcyBpbmRleCBtaXNzZXMgc29tZSBob3VzZSBudW1iZXJzLAogIC8vIHNvIHdlIGFjY2VwdCBhbGwgcmVzdWx0IHR5cGVzIGFuZCByYW5rIHRydWUgbnVtYmVyZWQgYWRkcmVzc2VzIGZpcnN0LgogIGNvbnN0IHVybCA9CiAgICBgaHR0cHM6Ly9hcGkubWFwdGlsZXIuY29tL2dlb2NvZGluZy8ke2VuY29kZVVSSUNvbXBvbmVudChxKX0uanNvbmAgKwogICAgYD9rZXk9JHtlbmNvZGVVUklDb21wb25lbnQoa2V5KX0mY291bnRyeT1jYSZiYm94PS05NS4yJTJDNDEuNiUyQy03NC4zJTJDNTYuOSZsaW1pdD04JmF1dG9jb21wbGV0ZT10cnVlJmZ1enp5TWF0Y2g9dHJ1ZWA7CiAgY29uc3QgcmVzID0gYXdhaXQgZmV0Y2godXJsKTsKICBpZiAoIXJlcy5vaykgdGhyb3cgbmV3IEVycm9yKCJBZGRyZXNzIHNlYXJjaCBmYWlsZWQuIik7CiAgY29uc3QgZGF0YSA9IGF3YWl0IHJlcy5qc29uKCk7CiAgcmV0dXJuIChkYXRhLmZlYXR1cmVzID8/IFtdKQogICAgLm1hcCgoZjogYW55KSA9PiB7CiAgICAgIGNvbnN0IFtsbmcsIGxhdF0gPSBmLmdlb21ldHJ5Py5jb29yZGluYXRlcyA/PyBbXTsKICAgICAgY29uc3QgY3R4OiBhbnlbXSA9IEFycmF5LmlzQXJyYXkoZi5jb250ZXh0KSA/IGYuY29udGV4dCA6IFtdOwogICAgICBjb25zdCBjaXR5ID0KICAgICAgICBjdHguZmluZCgoYykgPT4gYy5pZD8uc3RhcnRzV2l0aCgibXVuaWNpcGFsaXR5IikpPy50ZXh0ID8/CiAgICAgICAgY3R4LmZpbmQoKGMpID0+IGMuaWQ/LnN0YXJ0c1dpdGgoImxvY2FsaXR5IikpPy50ZXh0ID8/CiAgICAgICAgZi5wbGFjZV9uYW1lPy5zcGxpdCgiLCIpLnNsaWNlKC0zLCAtMilbMF0/LnRyaW0oKSA/PwogICAgICAgICIiOwogICAgICBjb25zdCBwbGFjZVR5cGVzOiBzdHJpbmdbXSA9IEFycmF5LmlzQXJyYXkoZi5wbGFjZV90eXBlKSA/IGYucGxhY2VfdHlwZSA6IFtdOwogICAgICByZXR1cm4gewogICAgICAgIGxhYmVsOiBmLnBsYWNlX25hbWUgPz8gZi50ZXh0ID8/ICIiLAogICAgICAgIGRldGFpbDogW2YudGV4dCwgY2l0eV0uZmlsdGVyKEJvb2xlYW4pLmpvaW4oIiDigJQgIikgfHwgdW5kZWZpbmVkLAogICAgICAgIGxhdDogdHlwZW9mIGxhdCA9PT0gIm51bWJlciIgPyBsYXQgOiBudWxsLAogICAgICAgIGxuZzogdHlwZW9mIGxuZyA9PT0gIm51bWJlciIgPyBsbmcgOiBudWxsLAogICAgICAgIGNpdHksCiAgICAgICAgaXNBZGRyZXNzOiBwbGFjZVR5cGVzLmluY2x1ZGVzKCJhZGRyZXNzIiksCiAgICAgIH0gYXMgRmVhdHVyZTsKICAgIH0pCiAgICAuZmlsdGVyKChmOiBGZWF0dXJlKSA9PiB0eXBlb2YgZi5sYXQgPT09ICJudW1iZXIiICYmIHR5cGVvZiBmLmxuZyA9PT0gIm51bWJlciIpCiAgICAuc29ydCgoYTogRmVhdHVyZSwgYjogRmVhdHVyZSkgPT4gTnVtYmVyKGIuaXNBZGRyZXNzKSAtIE51bWJlcihhLmlzQWRkcmVzcykpCiAgICAuc2xpY2UoMCwgNik7Cn0KCmFzeW5jIGZ1bmN0aW9uIGdvb2dsZUF1dG9jb21wbGV0ZShxOiBzdHJpbmcsIGtleTogc3RyaW5nKTogUHJvbWlzZTxGZWF0dXJlW10+IHsKICBjb25zdCByZXMgPSBhd2FpdCBmZXRjaCgiaHR0cHM6Ly9wbGFjZXMuZ29vZ2xlYXBpcy5jb20vdjEvcGxhY2VzOmF1dG9jb21wbGV0ZSIsIHsKICAgIG1ldGhvZDogIlBPU1QiLAogICAgaGVhZGVyczogeyAiQ29udGVudC1UeXBlIjogImFwcGxpY2F0aW9uL2pzb24iLCAiWC1Hb29nLUFwaS1LZXkiOiBrZXkgfSwKICAgIGJvZHk6IEpTT04uc3RyaW5naWZ5KHsKICAgICAgaW5wdXQ6IHEsCiAgICAgIGluY2x1ZGVkUmVnaW9uQ29kZXM6IFsiQ0EiXSwKICAgICAgbGFuZ3VhZ2VDb2RlOiAiZW4iLAogICAgICBsb2NhdGlvbkJpYXM6IHsKICAgICAgICByZWN0YW5nbGU6IHsKICAgICAgICAgIGxvdzogeyBsYXRpdHVkZTogNDEuNiwgbG9uZ2l0dWRlOiAtOTUuMiB9LAogICAgICAgICAgaGlnaDogeyBsYXRpdHVkZTogNTYuOSwgbG9uZ2l0dWRlOiAtNzQuMyB9LAogICAgICAgIH0sCiAgICAgIH0sCiAgICB9KSwKICB9KTsKICBpZiAoIXJlcy5vaykgdGhyb3cgbmV3IEVycm9yKCJBZGRyZXNzIHNlYXJjaCBmYWlsZWQuIik7CiAgY29uc3QgZGF0YSA9IGF3YWl0IHJlcy5qc29uKCk7CiAgcmV0dXJuICgoZGF0YS5zdWdnZXN0aW9ucyA/PyBbXSkgYXMgYW55W10pCiAgICAubWFwKChzOiBhbnkpID0+IHMucGxhY2VQcmVkaWN0aW9uKQogICAgLmZpbHRlcihCb29sZWFuKQogICAgLm1hcCgocDogYW55KSA9PiAoewogICAgICBsYWJlbDogcC50ZXh0Py50ZXh0ID8/ICIiLAogICAgICBkZXRhaWw6IHAuc3RydWN0dXJlZEZvcm1hdD8uc2Vjb25kYXJ5VGV4dD8udGV4dCB8fCB1bmRlZmluZWQsCiAgICAgIGxhdDogbnVsbCwKICAgICAgbG5nOiBudWxsLAogICAgICBjaXR5OiAiIiwKICAgICAgLy8gVHJ1ZSBhZGRyZXNzLW5lc3MgaXMgcmVzb2x2ZWQgYXQgUGxhY2UgRGV0YWlscyB0aW1lIChzdHJlZXRfbnVtYmVyIGNoZWNrKS4KICAgICAgaXNBZGRyZXNzOiBmYWxzZSwKICAgICAgcGxhY2VJZDogcC5wbGFjZUlkID8/IFN0cmluZyhwLnBsYWNlID8/ICIiKS5yZXBsYWNlKC9ecGxhY2VzXC8vLCAiIiksCiAgICB9KSBhcyBGZWF0dXJlKQogICAgLmZpbHRlcigoZjogRmVhdHVyZSkgPT4gZi5sYWJlbCAmJiBmLnBsYWNlSWQpCiAgICAuc2xpY2UoMCwgNik7Cn0KCmFzeW5jIGZ1bmN0aW9uIGdvb2dsZURldGFpbHMocGxhY2VJZDogc3RyaW5nLCBrZXk6IHN0cmluZyk6IFByb21pc2U8RmVhdHVyZT4gewogIGNvbnN0IHJlcyA9IGF3YWl0IGZldGNoKAogICAgYGh0dHBzOi8vcGxhY2VzLmdvb2dsZWFwaXMuY29tL3YxL3BsYWNlcy8ke2VuY29kZVVSSUNvbXBvbmVudChwbGFjZUlkKX0/ZmllbGRzPWZvcm1hdHRlZEFkZHJlc3MsYWRkcmVzc0NvbXBvbmVudHMsbG9jYXRpb24sdHlwZXNgLAogICAgeyBoZWFkZXJzOiB7ICJYLUdvb2ctQXBpLUtleSI6IGtleSB9IH0KICApOwogIGlmICghcmVzLm9rKSB0aHJvdyBuZXcgRXJyb3IoIkNvdWxkIG5vdCBsb2NhdGUgdGhhdCBhZGRyZXNzLiIpOwogIGNvbnN0IHAgPSBhd2FpdCByZXMuanNvbigpOwogIGNvbnN0IGNvbXBzOiBhbnlbXSA9IEFycmF5LmlzQXJyYXkocC5hZGRyZXNzQ29tcG9uZW50cykgPyBwLmFkZHJlc3NDb21wb25lbnRzIDogW107CiAgY29uc3QgaGFzVHlwZSA9ICh0OiBzdHJpbmcpID0+IGNvbXBzLnNvbWUoKGMpID0+IChjLnR5cGVzID8/IFtdKS5pbmNsdWRlcyh0KSk7CiAgY29uc3QgY2l0eSA9CiAgICBjb21wcy5maW5kKChjKSA9PiAoYy50eXBlcyA/PyBbXSkuaW5jbHVkZXMoImxvY2FsaXR5IikpPy5sb25nVGV4dCA/PwogICAgY29tcHMuZmluZCgoYykgPT4gKGMudHlwZXMgPz8gW10pLmluY2x1ZGVzKCJhZG1pbmlzdHJhdGl2ZV9hcmVhX2xldmVsXzMiKSk/LmxvbmdUZXh0ID8/CiAgICAiIjsKICBjb25zdCBtYWluID0gcC5zdHJ1Y3R1cmVkRm9ybWF0Py5tYWluVGV4dD8udGV4dCA/PyBwLmZvcm1hdHRlZEFkZHJlc3M/LnNwbGl0KCIsIilbMF0gPz8gIiI7CiAgcmV0dXJuIHsKICAgIGxhYmVsOiBwLmZvcm1hdHRlZEFkZHJlc3MgPz8gIiIsCiAgICBkZXRhaWw6IFttYWluLCBjaXR5XS5maWx0ZXIoQm9vbGVhbikuam9pbigiIOKAlCAiKSB8fCB1bmRlZmluZWQsCiAgICBsYXQ6IHR5cGVvZiBwLmxvY2F0aW9uPy5sYXRpdHVkZSA9PT0gIm51bWJlciIgPyBwLmxvY2F0aW9uLmxhdGl0dWRlIDogbnVsbCwKICAgIGxuZzogdHlwZW9mIHAubG9jYXRpb24/LmxvbmdpdHVkZSA9PT0gIm51bWJlciIgPyBwLmxvY2F0aW9uLmxvbmdpdHVkZSA6IG51bGwsCiAgICBjaXR5LAogICAgaXNBZGRyZXNzOiBoYXNUeXBlKCJzdHJlZXRfbnVtYmVyIiksCiAgICBwbGFjZUlkLAogIH07Cn0KCmV4cG9ydCBhc3luYyBmdW5jdGlvbiBHRVQocmVxOiBOZXh0UmVxdWVzdCkgewogIGNvbnN0IGdvb2dsZUtleSA9IHByb2Nlc3MuZW52LkdPT0dMRV9QTEFDRVNfQVBJX0tFWTsKICBjb25zdCBtYXB0aWxlcktleSA9IHByb2Nlc3MuZW52Lk1BUFRJTEVSX0FQSV9LRVk7CgogIC8vIFBsYWNlIERldGFpbHMgKEdvb2dsZSBvbmx5IOKAlCBNYXBUaWxlciBzdWdnZXN0aW9ucyBhbHJlYWR5IGNhcnJ5IGdlb21ldHJ5KS4KICBjb25zdCBwbGFjZUlkID0gKHJlcS5uZXh0VXJsLnNlYXJjaFBhcmFtcy5nZXQoInBsYWNlSWQiKSA/PyAiIikudHJpbSgpOwogIGlmIChwbGFjZUlkKSB7CiAgICBpZiAoIWdvb2dsZUtleSkgewogICAgICByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24oeyBlcnJvcjogIkFkZHJlc3MgZGV0YWlscyBhcmUgbm90IGNvbmZpZ3VyZWQuIiB9LCB7IHN0YXR1czogNTAzIH0pOwogICAgfQogICAgdHJ5IHsKICAgICAgY29uc3QgZmVhdHVyZSA9IGF3YWl0IGdvb2dsZURldGFpbHMocGxhY2VJZCwgZ29vZ2xlS2V5KTsKICAgICAgaWYgKGZlYXR1cmUubGF0ID09IG51bGwgfHwgZmVhdHVyZS5sbmcgPT0gbnVsbCkgewogICAgICAgIHJldHVybiBOZXh0UmVzcG9uc2UuanNvbih7IGVycm9yOiAiQ291bGQgbm90IGxvY2F0ZSB0aGF0IGFkZHJlc3MuIiB9LCB7IHN0YXR1czogNTAyIH0pOwogICAgICB9CiAgICAgIHJldHVybiBOZXh0UmVzcG9uc2UuanNvbih7IGZlYXR1cmUgfSk7CiAgICB9IGNhdGNoIChlOiBhbnkpIHsKICAgICAgcmV0dXJuIE5leHRSZXNwb25zZS5qc29uKHsgZXJyb3I6IGUubWVzc2FnZSA/PyAiQWRkcmVzcyBzZWFyY2ggZmFpbGVkLiIgfSwgeyBzdGF0dXM6IDUwMiB9KTsKICAgIH0KICB9CgogIGNvbnN0IHEgPSAocmVxLm5leHRVcmwuc2VhcmNoUGFyYW1zLmdldCgicSIpID8/ICIiKS50cmltKCk7CiAgaWYgKHEubGVuZ3RoIDwgMykgcmV0dXJuIE5leHRSZXNwb25zZS5qc29uKHsgZmVhdHVyZXM6IFtdIH0pOwoKICBjb25zdCBwcm92aWRlciA9IGF3YWl0IGdldFByb3ZpZGVyKCk7CiAgY29uc3QgdXNlR29vZ2xlID0gcHJvdmlkZXIgPT09ICJnb29nbGUiICYmICEhZ29vZ2xlS2V5OwogIC8vIG5vdGUgZXhwbGFpbnMgYSBzaWxlbnQgZmFsbGJhY2sgdG8gTWFwVGlsZXIgKG5ldmVyIGluY2x1ZGVzIHNlY3JldHMpCiAgbGV0IG5vdGU6IHN0cmluZyB8IHVuZGVmaW5lZDsKICBpZiAocHJvdmlkZXIgPT09ICJnb29nbGUiICYmICFnb29nbGVLZXkpIG5vdGUgPSAiZ29vZ2xlX3NlbGVjdGVkX2J1dF9rZXlfbWlzc2luZyI7CgogIHRyeSB7CiAgICBpZiAodXNlR29vZ2xlKSB7CiAgICAgIHRyeSB7CiAgICAgICAgY29uc3QgZmVhdHVyZXMgPSBhd2FpdCBnb29nbGVBdXRvY29tcGxldGUocSwgZ29vZ2xlS2V5ISk7CiAgICAgICAgcmV0dXJuIE5leHRSZXNwb25zZS5qc29uKHsgZmVhdHVyZXMsIHByb3ZpZGVyOiAiZ29vZ2xlIiB9KTsKICAgICAgfSBjYXRjaCAoZTogYW55KSB7CiAgICAgICAgbm90ZSA9IGBnb29nbGVfZXJyb3I6ICR7ZT8ubWVzc2FnZSA/PyAidW5rbm93biJ9YC5zbGljZSgwLCAxNjApOwogICAgICAgIGNvbnNvbGUuZXJyb3IoIltnZW9jb2RlXSBHb29nbGUgZmFpbGVkLCBmYWxsaW5nIGJhY2sgdG8gTWFwVGlsZXI6Iiwgbm90ZSk7CiAgICAgIH0KICAgIH0KICAgIGNvbnN0IGZlYXR1cmVzID0gbWFwdGlsZXJLZXkgPyBhd2FpdCBtYXB0aWxlclNlYXJjaChxLCBtYXB0aWxlcktleSkgOiBbXTsKICAgIGlmICghZmVhdHVyZXMubGVuZ3RoICYmICFtYXB0aWxlcktleSAmJiAhZ29vZ2xlS2V5KSB7CiAgICAgIHJldHVybiBOZXh0UmVzcG9uc2UuanNvbigKICAgICAgICB7IGVycm9yOiAiQWRkcmVzcyBzZWFyY2ggaXMgbm90IGNvbmZpZ3VyZWQgeWV0LiBBZGQgdGhlIE1BUFRJTEVSX0FQSV9LRVkgb3IgR09PR0xFX1BMQUNFU19BUElfS0VZIHNlY3JldC4iIH0sCiAgICAgICAgeyBzdGF0dXM6IDUwMyB9CiAgICAgICk7CiAgICB9CiAgICByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24oeyBmZWF0dXJlcywgcHJvdmlkZXI6ICJtYXB0aWxlciIsIC4uLihub3RlID8geyBub3RlIH0gOiB7fSkgfSk7CiAgfSBjYXRjaCB7CiAgICAvLyBJZiBHb29nbGUgZmFpbHMsIGZhbGwgYmFjayB0byBNYXBUaWxlciByYXRoZXIgdGhhbiBicmVha2luZyB0aGUgcGlja2VyLgogICAgaWYgKHVzZUdvb2dsZSAmJiBtYXB0aWxlcktleSkgewogICAgICB0cnkgewogICAgICAgIGNvbnN0IGZlYXR1cmVzID0gYXdhaXQgbWFwdGlsZXJTZWFyY2gocSwgbWFwdGlsZXJLZXkpOwogICAgICAgIHJldHVybiBOZXh0UmVzcG9uc2UuanNvbih7IGZlYXR1cmVzLCBwcm92aWRlcjogIm1hcHRpbGVyIiwgLi4uKG5vdGUgPyB7IG5vdGUgfSA6IHt9KSB9KTsKICAgICAgfSBjYXRjaCB7IC8qIGZhbGwgdGhyb3VnaCAqLyB9CiAgICB9CiAgICByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24oeyBlcnJvcjogIkFkZHJlc3Mgc2VhcmNoIGZhaWxlZC4gUGxlYXNlIHRyeSBhZ2Fpbi4iIH0sIHsgc3RhdHVzOiA1MDIgfSk7CiAgfQp9Cg==
+import { NextRequest, NextResponse } from "next/server";
+import { getSettings } from "@/lib/cms";
+
+/**
+ * GET /api/geocode?q=...            → address autocomplete suggestions
+ * GET /api/geocode?placeId=...      → Google Place Details → full feature
+ *
+ * Proxies geocoding so API keys (Cloudflare Secrets MAPTILER_API_KEY /
+ * GOOGLE_PLACES_API_KEY) never reach the browser. The provider is chosen in
+ * Admin → Settings → Home valuation ("Address provider"); a missing key for
+ * the selected provider falls back to the other one automatically.
+ */
+
+interface Feature {
+  label: string;
+  detail?: string;
+  lat: number | null;
+  lng: number | null;
+  city: string;
+  isAddress: boolean;
+  placeId?: string;
+}
+
+// Short-lived provider cache: one settings read per minute, not per keystroke.
+let providerCache: { at: number; provider: "maptiler" | "google" } | null = null;
+async function getProvider(): Promise<"maptiler" | "google"> {
+  if (providerCache && Date.now() - providerCache.at < 60_000) return providerCache.provider;
+  try {
+    const s = await getSettings();
+    const p = (s as any).home_evaluation?.geocode_provider === "google" ? "google" : "maptiler";
+    providerCache = { at: Date.now(), provider: p };
+    return p;
+  } catch {
+    return "maptiler";
+  }
+}
+
+async function maptilerSearch(q: string, key: string): Promise<Feature[]> {
+  // Ontario bounding box: lng -95.2..-74.3, lat 41.6..56.9
+  // No `types` restriction: MapTiler's address index misses some house numbers,
+  // so we accept all result types and rank true numbered addresses first.
+  const url =
+    `https://api.maptiler.com/geocoding/${encodeURIComponent(q)}.json` +
+    `?key=${encodeURIComponent(key)}&country=ca&bbox=-95.2%2C41.6%2C-74.3%2C56.9&limit=8&autocomplete=true&fuzzyMatch=true`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("Address search failed.");
+  const data = await res.json();
+  return (data.features ?? [])
+    .map((f: any) => {
+      const [lng, lat] = f.geometry?.coordinates ?? [];
+      const ctx: any[] = Array.isArray(f.context) ? f.context : [];
+      const city =
+        ctx.find((c) => c.id?.startsWith("municipality"))?.text ??
+        ctx.find((c) => c.id?.startsWith("locality"))?.text ??
+        f.place_name?.split(",").slice(-3, -2)[0]?.trim() ??
+        "";
+      const placeTypes: string[] = Array.isArray(f.place_type) ? f.place_type : [];
+      return {
+        label: f.place_name ?? f.text ?? "",
+        detail: [f.text, city].filter(Boolean).join(" — ") || undefined,
+        lat: typeof lat === "number" ? lat : null,
+        lng: typeof lng === "number" ? lng : null,
+        city,
+        isAddress: placeTypes.includes("address"),
+      } as Feature;
+    })
+    .filter((f: Feature) => typeof f.lat === "number" && typeof f.lng === "number")
+    .sort((a: Feature, b: Feature) => Number(b.isAddress) - Number(a.isAddress))
+    .slice(0, 6);
+}
+
+async function googleAutocomplete(q: string, key: string): Promise<Feature[]> {
+  const res = await fetch("https://places.googleapis.com/v1/places:autocomplete", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Goog-Api-Key": key },
+    body: JSON.stringify({
+      input: q,
+      includedRegionCodes: ["CA"],
+      languageCode: "en",
+      locationBias: {
+        rectangle: {
+          low: { latitude: 41.6, longitude: -95.2 },
+          high: { latitude: 56.9, longitude: -74.3 },
+        },
+      },
+    }),
+  });
+  if (!res.ok) throw new Error("Address search failed.");
+  const data = await res.json();
+  return ((data.suggestions ?? []) as any[])
+    .map((s: any) => s.placePrediction)
+    .filter(Boolean)
+    .map((p: any) => ({
+      label: p.text?.text ?? "",
+      detail: p.structuredFormat?.secondaryText?.text || undefined,
+      lat: null,
+      lng: null,
+      city: "",
+      // True address-ness is resolved at Place Details time (street_number check).
+      isAddress: false,
+      placeId: p.placeId ?? String(p.place ?? "").replace(/^places\//, ""),
+    }) as Feature)
+    .filter((f: Feature) => f.label && f.placeId)
+    .slice(0, 6);
+}
+
+async function googleDetails(placeId: string, key: string): Promise<Feature> {
+  const res = await fetch(
+    `https://places.googleapis.com/v1/places/${encodeURIComponent(placeId)}?fields=formattedAddress,addressComponents,location,types`,
+    { headers: { "X-Goog-Api-Key": key } }
+  );
+  if (!res.ok) throw new Error("Could not locate that address.");
+  const p = await res.json();
+  const comps: any[] = Array.isArray(p.addressComponents) ? p.addressComponents : [];
+  const hasType = (t: string) => comps.some((c) => (c.types ?? []).includes(t));
+  const city =
+    comps.find((c) => (c.types ?? []).includes("locality"))?.longText ??
+    comps.find((c) => (c.types ?? []).includes("administrative_area_level_3"))?.longText ??
+    "";
+  const main = p.structuredFormat?.mainText?.text ?? p.formattedAddress?.split(",")[0] ?? "";
+  return {
+    label: p.formattedAddress ?? "",
+    detail: [main, city].filter(Boolean).join(" — ") || undefined,
+    lat: typeof p.location?.latitude === "number" ? p.location.latitude : null,
+    lng: typeof p.location?.longitude === "number" ? p.location.longitude : null,
+    city,
+    isAddress: hasType("street_number"),
+    placeId,
+  };
+}
+
+export async function GET(req: NextRequest) {
+  const googleKey = process.env.GOOGLE_PLACES_API_KEY;
+  const maptilerKey = process.env.MAPTILER_API_KEY;
+
+  // Place Details (Google only — MapTiler suggestions already carry geometry).
+  const placeId = (req.nextUrl.searchParams.get("placeId") ?? "").trim();
+  if (placeId) {
+    if (!googleKey) {
+      return NextResponse.json({ error: "Address details are not configured." }, { status: 503 });
+    }
+    try {
+      const feature = await googleDetails(placeId, googleKey);
+      if (feature.lat == null || feature.lng == null) {
+        return NextResponse.json({ error: "Could not locate that address." }, { status: 502 });
+      }
+      return NextResponse.json({ feature });
+    } catch (e: any) {
+      return NextResponse.json({ error: e.message ?? "Address search failed." }, { status: 502 });
+    }
+  }
+
+  const q = (req.nextUrl.searchParams.get("q") ?? "").trim();
+  if (q.length < 3) return NextResponse.json({ features: [] });
+
+  const provider = await getProvider();
+  const useGoogle = provider === "google" && !!googleKey;
+  // note explains a silent fallback to MapTiler (never includes secrets)
+  let note: string | undefined;
+  if (provider === "google" && !googleKey) note = "google_selected_but_key_missing";
+
+  try {
+    if (useGoogle) {
+      try {
+        const features = await googleAutocomplete(q, googleKey!);
+        return NextResponse.json({ features, provider: "google" });
+      } catch (e: any) {
+        note = `google_error: ${e?.message ?? "unknown"}`.slice(0, 160);
+        console.error("[geocode] Google failed, falling back to MapTiler:", note);
+      }
+    }
+    const features = maptilerKey ? await maptilerSearch(q, maptilerKey) : [];
+    if (!features.length && !maptilerKey && !googleKey) {
+      return NextResponse.json(
+        { error: "Address search is not configured yet. Add the MAPTILER_API_KEY or GOOGLE_PLACES_API_KEY secret." },
+        { status: 503 }
+      );
+    }
+    return NextResponse.json({ features, provider: "maptiler", ...(note ? { note } : {}) });
+  } catch {
+    // If Google fails, fall back to MapTiler rather than breaking the picker.
+    if (useGoogle && maptilerKey) {
+      try {
+        const features = await maptilerSearch(q, maptilerKey);
+        return NextResponse.json({ features, provider: "maptiler", ...(note ? { note } : {}) });
+      } catch { /* fall through */ }
+    }
+    return NextResponse.json({ error: "Address search failed. Please try again." }, { status: 502 });
+  }
+}
