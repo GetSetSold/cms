@@ -18,6 +18,7 @@ const TABS = [
   { id: "content", label: "Blog & social" },
   { id: "seo", label: "SEO" },
   { id: "ads", label: "Ads" },
+  { id: "code", label: "Custom code" },
 ] as const;
 type TabId = (typeof TABS)[number]["id"];
 
@@ -37,6 +38,7 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
       agent: s.agent ?? {},
       email_provider: s.email_provider ?? "zeptomail", sms_provider: s.sms_provider ?? "vonage",
       ads: s.ads ?? {}, promo: s.promo ?? {}, local_expert: s.local_expert ?? {}, brokerage: s.brokerage ?? {}, home_evaluation: s.home_evaluation ?? {},
+      custom_code: s.custom_code ?? "",
     }).eq("id", 1);
     setMsg(error ? error.message : "Saved");
   }
@@ -560,6 +562,15 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
               </label>
               <p className="text-xs text-muted">Banners appear in the left panel before the ad slot, only on listings in these cities. Buyer banner shows the 0.25% cashback on the list price.</p>
             </div>
+          </section>
+        )}
+        {tab === "code" && (
+          <section className="flex flex-col gap-3 border border-line bg-white p-4 md:p-5">
+            <h2 className="text-base font-semibold">Custom code</h2>
+            <label className="label">Sitewide code (chat widgets, pixels, verification tags)
+              <textarea className="input font-mono text-xs" rows={10} placeholder='<script>...</script>' value={s.custom_code ?? ""} onChange={(e) => set("custom_code", e.target.value)} spellCheck={false} />
+            </label>
+            <p className="text-xs text-muted">Pasted as-is on every public page (not in the admin). Only paste code you trust; it runs with full page access.</p>
           </section>
         )}
       </div>
