@@ -11,6 +11,8 @@ import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter, MobileCtaBar } from "@/components/site/SiteFooter";
 import { CardArrowButton } from "@/components/site/CardArrowButton";
 import { ListingsBrowser, type ListingsSearchParams } from "@/components/listings/ListingsBrowser";
+import { Suspense } from "react";
+import { SkeletonGrid, SkeletonBlock } from "@/components/site/Skeleton";
 import { CityStatsSection } from "@/components/listings/CityStatsSection";
 import { CityEditorial } from "@/components/listings/CityEditorial";
 import { CityFaq } from "@/components/listings/CityFaq";
@@ -73,8 +75,12 @@ export async function CityPageContent({
       {themeIconOverrideCSS(settings) ? <style dangerouslySetInnerHTML={{ __html: themeIconOverrideCSS(settings) }} /> : null}
       <SiteHeader settings={settings} logo={logo} />
       <main className="mx-auto w-full max-w-7xl px-5 py-10 md:px-10 md:py-14">
-        <ListingsBrowser sp={sp} basePath={cityUrl} fixedCity={city} heading={`Homes for sale in ${city}`} typeBreakdown={stats.typeBreakdown} />
-        <CityStatsSection stats={stats} />
+        <Suspense fallback={<SkeletonGrid count={12} />}>
+          <ListingsBrowser sp={sp} basePath={cityUrl} fixedCity={city} heading={`Homes for sale in ${city}`} typeBreakdown={stats.typeBreakdown} />
+        </Suspense>
+        <Suspense fallback={<SkeletonBlock className="mt-12" />}>
+          <CityStatsSection stats={stats} />
+        </Suspense>
         {hoods.length > 0 ? (
           <section className="mt-12">
             <h2 className="mb-5 font-display text-2xl">Neighbourhoods in {city}</h2>
