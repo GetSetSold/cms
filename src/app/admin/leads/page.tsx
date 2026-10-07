@@ -35,7 +35,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
   const leads = (data ?? []) as Lead[];
   const forms = [...new Set(leads.map((l) => l.form_key).filter(Boolean))] as string[];
   const name = (l: Lead) => [l.first_name, l.last_name].filter(Boolean).join(" ") || l.email || l.phone || "Unnamed";
-  const board = view !== "table";
+  const board = view === "board";
 
   return (
     <div className="flex flex-col gap-5 p-6">
@@ -44,8 +44,8 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
         <div className="ml-auto flex items-center gap-2">
           <AddLeadButton />
           <div className="flex rounded-[10px] bg-soft/70 p-1">
-          <Link href={{ query: { q, form } }} className={`flex h-8 items-center rounded-[7px] px-3 ${board ? "bg-white shadow-sm" : "text-muted"}`}>Board</Link>
-          <Link href={{ query: { q, form, view: "table" } }} className={`flex h-8 items-center rounded-[7px] px-3 ${!board ? "bg-white shadow-sm" : "text-muted"}`}>Table</Link>
+          <Link href={{ query: { q, form, view: "board" } }} className={`flex h-8 items-center rounded-[7px] px-3 ${board ? "bg-white shadow-sm" : "text-muted"}`}>Board</Link>
+          <Link href={{ query: { q, form } }} className={`flex h-8 items-center rounded-[7px] px-3 ${!board ? "bg-white shadow-sm" : "text-muted"}`}>List</Link>
           </div>
         </div>
       </div>
