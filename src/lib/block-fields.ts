@@ -23,6 +23,7 @@ export const BLOCK_FIELDS: Record<string, Field[]> = {
     t("image_size", "Illustration size, % of its column (split layout) — e.g. 100 = fills it, 60 = smaller, max 150"),
     { key: "image_bg", label: "Illustration backdrop", type: "select", options: ["none", "mist"] },
     { key: "image_bg_color", label: "Illustration backdrop custom color (overrides preset)", type: "color" },
+    t("image_bg_size", "Backdrop size, % of its column — e.g. 100 = fills it (independent of illustration size)"),
     { key: "centered_icon_svg_id", label: "Icon above eyebrow (shows in every layout)", type: "svg" },
     t("centered_icon_radius", "Icon circle radius, 50–100px (used by Centered, Form and Search; Split has its own size below)"),
     t("split_icon_radius", "Icon circle radius for Split layout only (optional — defaults to the size above if left blank)"),

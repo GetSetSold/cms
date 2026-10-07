@@ -183,6 +183,10 @@ function Hero({ data, ctx }: BlockProps) {
   // fields control a separate, small decorative badge above the eyebrow, not this image).
   const imageSizeRaw = Number(data.image_size);
   const imageSizePct = Number.isFinite(imageSizeRaw) && imageSizeRaw > 0 ? Math.min(imageSizeRaw, 150) : 100;
+  // Backdrop has its own size control, independent of the illustration.
+  // e.g. backdrop 100% + illustration 30% = full-bleed backdrop, small centered art.
+  const bgSizeRaw = Number(data.image_bg_size);
+  const bgSizePct = Number.isFinite(bgSizeRaw) && bgSizeRaw > 0 ? Math.min(bgSizeRaw, 150) : 100;
   return (
     <div className={`${wrap} grid items-center gap-10 md:grid-cols-2 md:gap-16 ${compact ? "py-8 md:py-12" : "py-10 md:py-20"}`}>
       <div className={`flex flex-col gap-4 md:gap-6 ${imageOnLeft ? "order-2" : ""}`}>
@@ -203,16 +207,20 @@ function Hero({ data, ctx }: BlockProps) {
          stays fixed to the actual page edge. The resizable image lives in its own inner div, so
          shrinking or centering the photo (Illustration size) never drags the badge along with it. */}
       <div className={`relative ${imageOnLeft ? "order-1" : ""}`}>
-        <div style={{ width: `${imageSizePct}%`, marginLeft: imageSizePct < 100 ? "auto" : undefined, marginRight: imageSizePct < 100 ? "auto" : undefined }}>
+        <div style={{ width: `${bgSizePct}%`, marginLeft: bgSizePct < 100 ? "auto" : undefined, marginRight: bgSizePct < 100 ? "auto" : undefined }}>
           {data.image_bg_color || data.image_bg === "mist" ? (
             <div
-              className={`rounded-[var(--radius-lg)] ${data.image_bg_color ? "" : "bg-[linear-gradient(135deg,#e8eef4_0%,#f4f6f8_100%)]"}`}
+              className={`flex items-center justify-center rounded-[var(--radius-lg)] p-6 ${data.image_bg_color ? "" : "bg-[linear-gradient(135deg,#e8eef4_0%,#f4f6f8_100%)]"}`}
               style={data.image_bg_color ? { background: data.image_bg_color } : undefined}
             >
-              <Svg asset={art} label={art?.name} className="aspect-[600/520] overflow-hidden rounded-[var(--radius-lg)]" />
+              <div style={{ width: `${imageSizePct}%` }}>
+                <Svg asset={art} label={art?.name} className="aspect-[600/520] w-full overflow-hidden rounded-[var(--radius-lg)]" />
+              </div>
             </div>
           ) : (
-            <Svg asset={art} label={art?.name} className="aspect-[600/520] overflow-hidden rounded-[var(--radius-lg)]" />
+            <div style={{ width: `${imageSizePct}%`, marginLeft: "auto", marginRight: "auto" }}>
+              <Svg asset={art} label={art?.name} className="aspect-[600/520] w-full overflow-hidden rounded-[var(--radius-lg)]" />
+            </div>
           )}
         </div>
         {data.badge?.value ? (() => {
