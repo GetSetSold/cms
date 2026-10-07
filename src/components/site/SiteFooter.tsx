@@ -6,21 +6,20 @@ import { MobileCtaBarInner } from "./MobileCtaBarInner";
 import { Svg } from "./Svg";
 import { getSvgs } from "@/lib/cms";
 
-/** Divider spacer: flex-1 fills all free space equally; the 1px line is centered
- *  via justify-center. Bulletproof centering in the visual gap. */
-function VSlot({ color }: { color: string }) {
+/** Divider: absolute-positioned at the exact center of the grid gap.
+ *  With equal 1fr columns and wrapping headers, this is the perfect middle.
+ *  offset: half the gap (16px for gap-8, 12px for gap-6). */
+function VSlot({ color, offset = 16 }: { color: string; offset?: number }) {
   return (
-    <div aria-hidden className="flex min-w-6 flex-1 items-stretch justify-center">
-      <span className="h-1/2 w-px self-center" style={{ background: color }} />
-    </div>
+    <span aria-hidden className="pointer-events-none absolute bottom-1/4 top-1/4 w-px" style={{ background: color, left: -offset }} />
   );
 }
 
 function FooterCol({ col }: { col: NavColumn }) {
   return (
-    <div className="flex min-w-0 max-w-[280px] flex-col items-start gap-2.5 text-left">
-      {col.heading ? <strong className="text-white leading-[1.15]">{col.heading}</strong> : null}
-      {col.links.map((l) => <Link key={l.href} href={l.href} className="opacity-75 hover:opacity-100 leading-[1.35] text-left">{l.label}</Link>)}
+    <div className="flex min-w-0 flex-col items-start gap-2.5 text-left">
+      {col.heading ? <strong className="block w-full text-white leading-[1.15] break-words">{col.heading}</strong> : null}
+      {col.links.map((l) => <Link key={l.href} href={l.href} className="opacity-75 hover:opacity-100 leading-[1.35] text-left break-words">{l.label}</Link>)}
     </div>
   );
 }
@@ -31,18 +30,17 @@ function pairs<T>(arr: T[]): T[][] {
   return out;
 }
 
-/** Mobile: columns flow in pairs, flexbox with spacers centering dividers.
- *  Text wraps within max-width. */
+/** Mobile: pairs in equal columns, dividers at gap center. Headers wrap. */
 function MobilePairs({ cols, divider }: { cols: NavColumn[]; divider: string }) {
   return (
     <>
       {pairs(cols).map((pair, pi) => (
-        <div key={pi} className="flex items-stretch">
+        <div key={pi} className="grid grid-cols-2 gap-6">
           {pair.map((col, i) => (
-            <Fragment key={i}>
-              {i > 0 ? <VSlot color={divider} /> : null}
-              <div className="flex-none"><FooterCol col={col} /></div>
-            </Fragment>
+            <div key={i} className="relative">
+              {i > 0 ? <VSlot color={divider} offset={12} /> : null}
+              <FooterCol col={col} />
+            </div>
           ))}
         </div>
       ))}
@@ -160,13 +158,13 @@ export async function SiteFooter({ settings, logo }: { settings: SiteSettings; l
 
         {/* Menus: full-width row below the offices */}
         <div className={`border-t ${rowPad}`} style={{ borderColor: divider }}>
-          {/* Desktop: flexbox — columns shrink to content, spacers (flex-1) center dividers */}
-          <div className="hidden md:flex md:items-stretch">
+          {/* Desktop: equal 1fr columns, 32px gaps, dividers at gap center */}
+          <div className="hidden gap-8 md:grid" style={{ gridTemplateColumns: `repeat(${(firstRow ?? []).length || 1}, 1fr)` }}>
             {(firstRow ?? []).map((col, i) => (
-              <Fragment key={i}>
+              <div key={i} className="relative">
                 {i > 0 ? <VSlot color={divider} /> : null}
-                <div className="flex-none"><FooterCol col={col} /></div>
-              </Fragment>
+                <FooterCol col={col} />
+              </div>
             ))}
           </div>
           {/* Mobile: pairs with truly centered dividers */}
@@ -184,13 +182,13 @@ export async function SiteFooter({ settings, logo }: { settings: SiteSettings; l
             distort neighbouring content the way one shared grid did. */}
         {restRows.map((row, ri) => (
           <div key={ri} className={`border-t ${rowPad}`} style={{ borderColor: divider }}>
-            {/* Desktop: flexbox — columns shrink to content, spacers (flex-1) center dividers */}
-            <div className="hidden md:flex md:items-stretch">
+            {/* Desktop: equal 1fr columns, 32px gaps, dividers at gap center */}
+            <div className="hidden gap-8 md:grid" style={{ gridTemplateColumns: `repeat(${row.length || 1}, 1fr)` }}>
               {row.map((col, i) => (
-                <Fragment key={i}>
+                <div key={i} className="relative">
                   {i > 0 ? <VSlot color={divider} /> : null}
-                  <div className="flex-none"><FooterCol col={col} /></div>
-                </Fragment>
+                  <FooterCol col={col} />
+                </div>
               ))}
             </div>
             {/* Mobile: pairs with truly centered dividers */}
