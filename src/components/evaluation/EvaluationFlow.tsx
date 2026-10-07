@@ -182,7 +182,7 @@ export function EvaluationFlow({ config }: { config: EvaluationConfig }) {
 
   // Shape follows the site's Branding → Shape tokens; colours follow this page's palette
   const inputCls =
-    "h-11 w-full rounded-[var(--radius-btn)] border border-[#E4E4E7] bg-white px-4 text-[15px] text-[#111418] outline-none focus:border-[#111111]";
+    "h-11 w-full min-w-0 rounded-[var(--radius-btn)] border border-[#E4E4E7] bg-white px-4 text-[15px] text-[#111418] outline-none focus:border-[#111111]";
   const labelCls = "mb-1.5 block text-[13px] font-semibold text-[#333333]";
   const cardCls = "rounded-[var(--radius-lg)] border border-[#E4E4E7] bg-white p-6 shadow-[var(--shadow-card)]";
   const btnPrimary = "inline-flex h-12 items-center justify-center rounded-[var(--radius-btn)] bg-[#111111] px-6 text-[16px] font-semibold text-white transition hover:brightness-[1.25] disabled:cursor-not-allowed disabled:opacity-40";
@@ -193,8 +193,8 @@ export function EvaluationFlow({ config }: { config: EvaluationConfig }) {
       {/* STEP 1 — form */}
       {step === "form" && (
         <section className="mx-auto max-w-6xl px-5 py-14 md:py-20">
-          <div className="grid grid-cols-1 items-start gap-10 md:grid-cols-2 md:gap-14">
-            <div className="order-2 md:order-1">
+          <div className="grid grid-cols-1 items-start gap-8 md:grid-cols-2 md:gap-14">
+            <div className="order-1 md:col-start-1 md:row-start-1">
               <div className="mb-3 text-[12px] font-bold uppercase tracking-[0.14em] text-[var(--hev-accent)]">
                 Free Home Valuation
               </div>
@@ -202,21 +202,9 @@ export function EvaluationFlow({ config }: { config: EvaluationConfig }) {
                 {config.heading}
               </h1>
               <p className="mt-4 max-w-md text-[16px] leading-relaxed text-[#333333]/80">{config.subheading}</p>
-              <ul className="mt-8 space-y-5">
-                {[
-                  ["What similar homes are listed for", "Live listings near you — what other agents are asking for comparable properties."],
-                  ["Where the market's been heading", "HPI benchmark data shows the recent direction for your area and home type."],
-                  ["Free, under a minute, no obligation", "An estimate to start the conversation — the real number comes from the walkthrough."],
-                ].map(([b, s]) => (
-                  <li key={b} className="flex items-start gap-3.5">
-                    <span className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-full bg-[#111111] text-[13px] font-bold text-white">✓</span>
-                    <span><b className="block text-[15px] text-[#111111]">{b}</b><small className="text-[13.5px] text-[#333333]/70">{s}</small></span>
-                  </li>
-                ))}
-              </ul>
             </div>
 
-            <div id="hev-form-card" className="order-1 scroll-mt-24 rounded-[var(--radius-lg)] bg-[var(--hev-accent)] p-7 shadow-[var(--shadow-card)] md:order-2 md:p-8">
+            <div id="hev-form-card" className="order-2 min-w-0 scroll-mt-24 rounded-[var(--radius-lg)] bg-[var(--hev-accent)] p-7 shadow-[var(--shadow-card)] md:order-2 md:col-start-2 md:row-span-2 md:row-start-1 md:p-8">
               {/* Wizard progress */}
               <div className="mb-6">
                 <div className="mb-2 flex items-center justify-between text-[12px] font-semibold text-white/80">
@@ -284,7 +272,7 @@ export function EvaluationFlow({ config }: { config: EvaluationConfig }) {
                   <h2 className="text-[21px] font-bold text-white">Tell us about your home</h2>
                   <p className="mb-5 mt-1 text-[14px] text-white/75">A few details sharpen your valuation.</p>
 
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 [&>*]:min-w-0">
                 <div>
                   <label className="mb-1.5 block text-[13px] font-semibold text-white">Property type</label>
                   <select className={inputCls} value={propertyType} onChange={(e) => setPropertyType(e.target.value)}>
@@ -341,6 +329,20 @@ export function EvaluationFlow({ config }: { config: EvaluationConfig }) {
               </p>
                 </>
               )}
+            </div>
+            <div className="order-3 md:col-start-1 md:row-start-2">
+              <ul className="space-y-5">
+                {[
+                  ["What similar homes are listed for", "Live listings near you — what other agents are asking for comparable properties."],
+                  ["Where the market's been heading", "HPI benchmark data shows the recent direction for your area and home type."],
+                  ["Free, under a minute, no obligation", "An estimate to start the conversation — the real number comes from the walkthrough."],
+                ].map(([b, s]) => (
+                  <li key={b} className="flex items-start gap-3.5">
+                    <span className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-full bg-[#111111] text-[13px] font-bold text-white">✓</span>
+                    <span className="min-w-0"><b className="block text-[15px] text-[#111111]">{b}</b><small className="text-[13.5px] text-[#333333]/70">{s}</small></span>
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
         </section>
@@ -424,22 +426,18 @@ export function EvaluationFlow({ config }: { config: EvaluationConfig }) {
                         <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#f7f7f7] text-lg text-[#333333]/40">⌂</span>
                       )}
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate text-[14px] font-semibold text-[#111111]">{l.address}</span>
+                        <span className="block text-[16px] font-extrabold text-[#111111]">{fmt(l.price)}</span>
+                        <span className="mt-0.5 block truncate text-[13.5px] font-medium text-[#333333]">{l.address}</span>
                         <span className="mt-0.5 block text-[12.5px] text-[#333333]/65">
                           {l.beds ?? "—"} bd · {l.baths ?? "—"} ba{l.sqft ? ` · ${l.sqft.toLocaleString("en-CA")} sqft` : ""}
-                        </span>
-                        <span className="block text-[12.5px] text-[#333333]/65">
-                          {l.daysOnMarket != null ? `${l.daysOnMarket} days listed · ` : ""}{l.distanceKm} km
+                          {l.daysOnMarket != null ? ` · ${l.daysOnMarket}d listed` : ""} · {l.distanceKm} km
                         </span>
                       </span>
-                      <span className="flex shrink-0 flex-col items-end gap-2">
-                        <span className="text-[15px] font-extrabold text-[#111111]">{fmt(l.price)}</span>
-                        {l.url ? (
-                          <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#111111] text-white">
-                            <ArrowIcon className="h-3 w-3" />
-                          </span>
-                        ) : null}
-                      </span>
+                      {l.url ? (
+                        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#111111] text-white">
+                          <ArrowIcon className="h-3.5 w-3.5" />
+                        </span>
+                      ) : null}
                     </>
                   );
                   const cls = "flex items-center gap-3.5 rounded-[var(--radius-lg)] border border-[#E4E4E7] bg-white p-3.5 shadow-[var(--shadow-card)]";
@@ -603,7 +601,7 @@ export function EvaluationFlow({ config }: { config: EvaluationConfig }) {
                     We'll email your detailed estimate — the similar listings, the market notes, and where your
                     home sits among them — and keep your property details on file.
                   </p>
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 [&>*]:min-w-0">
                     <div>
                       <label className={labelCls} htmlFor="hev-fname">First name</label>
                       <input id="hev-fname" name="first_name" type="text" required placeholder="First name" className={inputCls} />
