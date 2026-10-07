@@ -95,6 +95,7 @@ export interface SiteSettings {
     enabled?: boolean; heading?: string; subheading?: string;
     search_radius_km?: number; max_listings?: number; range_pct?: number;
     disclaimer?: string; booking_url?: string; virtual_cma_url?: string;
+    geocode_provider?: "maptiler" | "google";
   };
   agent?: { name?: string; title?: string; photo_svg_id?: string | null; phone?: string; email?: string; brokerage?: string };
   local_expert?: {

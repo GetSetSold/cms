@@ -431,7 +431,15 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
         {tab === "evaluation" && (
           <section className="flex flex-col gap-3 border border-line bg-white p-4 md:p-5">
             <h2 className="text-base font-semibold">Home valuation <span className="font-normal text-muted">— /free-online-home-valuation</span></h2>
-            <p className="text-xs text-muted">Address search uses the MapTiler geocoding API — add the <code>MAPTILER_API_KEY</code> Cloudflare secret for the picker to work. The estimate combines similar active listings near the address with HPI market direction.</p>
+            <p className="text-xs text-muted">Address search powers the picker — choose a provider below. MapTiler needs the <code>MAPTILER_API_KEY</code> Cloudflare secret; Google Places needs <code>GOOGLE_PLACES_API_KEY</code>. If the selected provider's key is missing, it falls back to the other automatically.</p>
+            <div className="flex flex-wrap gap-4">
+              <label className="label">Address provider
+                <select className="input" value={s.home_evaluation?.geocode_provider ?? "maptiler"} onChange={(e) => set("home_evaluation", { ...s.home_evaluation, geocode_provider: e.target.value as "maptiler" | "google" })}>
+                  <option value="maptiler">MapTiler</option>
+                  <option value="google">Google Places</option>
+                </select>
+              </label>
+            </div>
             <div className="flex flex-wrap gap-4">
               <label className="label flex flex-row items-center gap-2">Page enabled<input type="checkbox" checked={s.home_evaluation?.enabled !== false} onChange={(e) => set("home_evaluation", { ...s.home_evaluation, enabled: e.target.checked })} className="h-4 w-4" /></label>
             </div>

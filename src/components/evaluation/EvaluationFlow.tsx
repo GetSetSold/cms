@@ -14,7 +14,7 @@ export interface EvaluationConfig {
   virtualCmaUrl: string;
 }
 
-interface GeoFeature { label: string; detail?: string; lat: number; lng: number; city: string; isAddress: boolean }
+interface GeoFeature { label: string; detail?: string; lat: number | null; lng: number | null; city: string; isAddress: boolean; placeId?: string }
 interface SimilarListing {
   address: string; price: number; beds: number | null; baths: number | null;
   sqft: number | null; daysOnMarket: number | null; distanceKm: number;
@@ -58,6 +58,7 @@ export function EvaluationFlow({ config }: { config: EvaluationConfig }) {
   const [houseNum, setHouseNum] = useState("");
   const [refining, setRefining] = useState(false);
   const [refineError, setRefineError] = useState("");
+  const [locating, setLocating] = useState(false);
   const debounce = useRef<number | null>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
 
@@ -104,9 +105,35 @@ export function EvaluationFlow({ config }: { config: EvaluationConfig }) {
     }, 350);
   };
 
-  const pick = (f: GeoFeature) => {
-    setPicked(f); setQuery(f.label); setDropOpen(false); setSuggestions([]);
+  const pick = async (f: GeoFeature) => {
+    setDropOpen(false);
+    setSuggestions([]);
     setRefineError("");
+    // Google predictions carry no geometry — resolve via Place Details first.
+    if (f.placeId && (f.lat == null || f.lng == null)) {
+      setLocating(true);
+      try {
+        const res = await fetch(`/api/geocode?placeId=${encodeURIComponent(f.placeId)}`);
+        const body = await res.json();
+        const d = body.feature as GeoFeature | undefined;
+        if (res.ok && d && d.lat != null && d.lng != null) {
+          setPicked(d);
+          setQuery(d.label);
+          if (!d.isAddress) {
+            const m = query.match(/^\s*(\d+[a-zA-Z]?)/);
+            setHouseNum(m ? m[1] : "");
+          }
+        } else {
+          setGeoError(body.error ?? "Couldn't locate that address. Try another.");
+        }
+      } catch {
+        setGeoError("Couldn't locate that address. Try another.");
+      }
+      setLocating(false);
+      return;
+    }
+    setPicked(f);
+    setQuery(f.label);
     if (!f.isAddress) {
       const m = query.match(/^\s*(\d+[a-zA-Z]?)/);
       setHouseNum(m ? m[1] : "");
@@ -121,7 +148,16 @@ export function EvaluationFlow({ config }: { config: EvaluationConfig }) {
     try {
       const res = await fetch(`/api/geocode?q=${encodeURIComponent(`${houseNum.trim()} ${picked.label}`)}`);
       const body = await res.json();
-      const best = (body.features ?? []).find((f: GeoFeature) => f.isAddress);
+      let best = (body.features ?? []).find((f: GeoFeature) => f.isAddress) as GeoFeature | undefined;
+      if (!best) {
+        // Google suggestions resolve geometry via Place Details.
+        const withId = (body.features ?? []).find((f: GeoFeature) => f.placeId) as GeoFeature | undefined;
+        if (withId?.placeId) {
+          const dres = await fetch(`/api/geocode?placeId=${encodeURIComponent(withId.placeId)}`);
+          const dbody = await dres.json();
+          if (dres.ok && dbody.feature?.lat != null) best = dbody.feature as GeoFeature;
+        }
+      }
       if (best) {
         setPicked(best);
         setQuery(best.label);
@@ -200,7 +236,7 @@ export function EvaluationFlow({ config }: { config: EvaluationConfig }) {
     : config.bookingUrl;
 
   const runEvaluation = async () => {
-    if (!picked) return;
+    if (!picked || picked.lat == null || picked.lng == null) return;
     setStep("analyzing"); setEvalError("");
     let i = 0;
     setAnalyzeMsg(ANALYZE_MSGS[0]);
@@ -344,7 +380,8 @@ export function EvaluationFlow({ config }: { config: EvaluationConfig }) {
                 )}
               </div>
               {geoError && <p className="mt-2 text-[13px] font-medium text-[#ffe1e1]">{geoError}</p>}
-              {picked && <p className="mt-2 text-[13px] font-medium text-white">✓ {picked.label}</p>}
+              {locating && <p className="mt-2 text-[13px] font-medium text-white/80">Locating address…</p>}
+              {picked && !locating && <p className="mt-2 text-[13px] font-medium text-white">✓ {picked.label}</p>}
 
               {picked && !picked.isAddress && (
                 <div className="mt-3 rounded-[var(--radius-btn)] bg-white/10 p-4">
@@ -375,7 +412,7 @@ export function EvaluationFlow({ config }: { config: EvaluationConfig }) {
 
               <button
                 onClick={() => { setFormStep(2); document.getElementById("hev-form-card")?.scrollIntoView({ behavior: "smooth", block: "start" }); }}
-                disabled={!picked}
+                disabled={!picked || locating}
                 className="mt-6 inline-flex h-12 w-full items-center justify-center rounded-[var(--radius-btn)] bg-white px-6 text-[16px] font-semibold text-[var(--hev-accent)] transition hover:bg-white/90 disabled:cursor-not-allowed disabled:opacity-40">
                 Continue
               </button>
