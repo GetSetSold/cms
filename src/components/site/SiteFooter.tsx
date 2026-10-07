@@ -6,12 +6,11 @@ import { MobileCtaBarInner } from "./MobileCtaBarInner";
 import { Svg } from "./Svg";
 import { getSvgs } from "@/lib/cms";
 
-/** Divider slot: a flexible flow item that grows to fill the space between columns,
- *  with the hairline centered in it. This centers the line in the *visual* gap
- *  between content, not just the geometric grid gap. Used on desktop and mobile. */
+/** Divider slot: fixed-width grid item (32px) with the hairline centered.
+ *  Sits between equal-width content columns as a true grid track. */
 function VSlot({ color }: { color: string }) {
   return (
-    <div aria-hidden className="relative min-w-8 flex-1 self-stretch">
+    <div aria-hidden className="relative w-8 self-stretch">
       <span
         className="absolute bottom-1/4 left-1/2 top-1/4 w-px -translate-x-1/2"
         style={{ background: color }}
@@ -23,8 +22,8 @@ function VSlot({ color }: { color: string }) {
 function FooterCol({ col }: { col: NavColumn }) {
   return (
     <div className="flex min-w-0 flex-col gap-2.5">
-      {col.heading ? <strong className="text-white">{col.heading}</strong> : null}
-      {col.links.map((l) => <Link key={l.href} href={l.href} className="opacity-75 hover:opacity-100">{l.label}</Link>)}
+      {col.heading ? <strong className="text-white leading-[1.15]">{col.heading}</strong> : null}
+      {col.links.map((l) => <Link key={l.href} href={l.href} className="opacity-75 hover:opacity-100 leading-[1.35]">{l.label}</Link>)}
     </div>
   );
 }
@@ -35,13 +34,13 @@ function pairs<T>(arr: T[]): T[][] {
   return out;
 }
 
-/** Mobile: columns flow in pairs, dividers grow to fill the gap so the hairline
- *  is centered in the visual space between content. */
+/** Mobile: columns flow in pairs, equal widths with dividers as fixed tracks.
+ *  Text wraps within each column. */
 function MobilePairs({ cols, divider }: { cols: NavColumn[]; divider: string }) {
   return (
     <>
       {pairs(cols).map((pair, pi) => (
-        <div key={pi} className="flex items-stretch gap-6">
+        <div key={pi} className="grid" style={{ gridTemplateColumns: pair.map(() => "1fr").join(" 24px ") }}>
           {pair.map((col, i) => (
             <Fragment key={i}>
               {i > 0 ? <VSlot color={divider} /> : null}
@@ -164,12 +163,12 @@ export async function SiteFooter({ settings, logo }: { settings: SiteSettings; l
 
         {/* Menus: full-width row below the offices */}
         <div className={`border-t ${rowPad}`} style={{ borderColor: divider }}>
-          {/* Desktop: flex with dividers as flow items, centered between content */}
-          <div className="hidden md:flex md:items-stretch md:gap-6">
+          {/* Desktop: equal columns (1fr) with dividers as fixed grid tracks, centered in gaps */}
+          <div className="hidden md:grid" style={{ gridTemplateColumns: (firstRow ?? []).map(() => "1fr").join(" 32px ") }}>
             {(firstRow ?? []).map((col, i) => (
               <Fragment key={i}>
                 {i > 0 ? <VSlot color={divider} /> : null}
-                <div className="min-w-0"><FooterCol col={col} /></div>
+                <FooterCol col={col} />
               </Fragment>
             ))}
           </div>
@@ -188,12 +187,12 @@ export async function SiteFooter({ settings, logo }: { settings: SiteSettings; l
             distort neighbouring content the way one shared grid did. */}
         {restRows.map((row, ri) => (
           <div key={ri} className={`border-t ${rowPad}`} style={{ borderColor: divider }}>
-            {/* Desktop: flex with dividers as flow items, centered between content */}
-            <div className="hidden md:flex md:items-stretch md:gap-6">
+            {/* Desktop: equal columns (1fr) with dividers as fixed grid tracks, centered in gaps */}
+            <div className="hidden md:grid" style={{ gridTemplateColumns: row.map(() => "1fr").join(" 32px ") }}>
               {row.map((col, i) => (
                 <Fragment key={i}>
                   {i > 0 ? <VSlot color={divider} /> : null}
-                  <div className="min-w-0"><FooterCol col={col} /></div>
+                  <FooterCol col={col} />
                 </Fragment>
               ))}
             </div>
