@@ -109,7 +109,7 @@ export async function SiteFooter({ settings, logo }: { settings: SiteSettings; l
   const compact = settings.theme.density === "compact";
   const dcols = f.columns_per_row ?? 4;
   const mcols = f.mobile_columns_per_row ?? 2;
-  const divider = f.text ? `${f.text}33` : "rgba(0,102,204,0.25)";
+  const divider = "#0066CC";
   const rowPad = compact ? "pt-6" : "pt-8";
   const footerDark = !f.bg || isDarkColor(f.bg);
   const footerLogo = logo && footerDark ? { ...logo, markup: liftLogoForDark(logo.markup) } : logo;
@@ -241,9 +241,16 @@ export async function SiteFooter({ settings, logo }: { settings: SiteSettings; l
           </div>
         ) : null}
 
-        <div className="flex flex-col gap-2.5 border-t pt-6 text-sm opacity-75" style={{ borderColor: divider }}>
-          <span>© {new Date().getFullYear()} {settings.site_name}</span>
-          <Link href="/login" className="hover:opacity-100">Staff login</Link>
+        <div className="flex flex-col gap-2.5 border-t pt-6 text-sm" style={{ borderColor: divider }}>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <span className="opacity-75">© {new Date().getFullYear()} {settings.site_name}</span>
+            <nav className="flex flex-wrap items-center gap-5" aria-label="Legal">
+              <Link href="/disclaimer" className="opacity-75 hover:opacity-100">Disclaimer</Link>
+              <Link href="/privacy-policy" className="opacity-75 hover:opacity-100">Privacy Policy</Link>
+              <Link href="/terms-and-conditions" className="opacity-75 hover:opacity-100">Terms & Conditions</Link>
+            </nav>
+          </div>
+          <Link href="/login" className="opacity-75 hover:opacity-100">Staff login</Link>
         </div>
       </div>
     </footer>
