@@ -30,6 +30,8 @@ const heading = (ctx: BlockCtx) => (ctx.dark ? "text-ground" : "text-ink");
 type BlockProps = { data: any; ctx: BlockCtx };
 
 const wrap = "mx-auto w-full max-w-7xl px-5 md:px-10";
+/** Page-width wrapper — empty when embedded in a merged card (the card provides the width). */
+const bw = (ctx: BlockCtx) => (ctx as any).embedded ? "" : wrap;
 const h2 = "font-display font-bold tracking-tight text-[26px] leading-tight md:text-[56px] md:leading-none";
 // Shared compact heading size, used everywhere `h2` is — one definition instead of repeating a
 // smaller scale at every call site. Site-wide Density (Settings → Branding) drives this.
@@ -138,7 +140,7 @@ function Hero({ data, ctx }: BlockProps) {
 
   if (data.layout === "search") {
     return (
-      <div className={`${wrap} flex flex-col gap-4 md:gap-6 ${compact ? "py-6 md:py-10" : "py-6 md:py-16"}`}>
+      <div className={`${bw(ctx)} flex flex-col gap-4 md:gap-6 ${compact ? "py-6 md:py-10" : "py-6 md:py-16"}`}>
         {copy}
         <div className="inline-flex w-fit gap-6 border-b border-line text-[15px]">
           {(data.tabs?.length ? data.tabs : ["Rent", "Buy", "Sell"]).map((t: string, i: number) => (
@@ -159,7 +161,7 @@ function Hero({ data, ctx }: BlockProps) {
 
   if (data.layout === "centered" || (!art && data.layout !== "form")) {
     return (
-      <div className={`${wrap} flex flex-col items-center gap-4 text-center md:gap-6 ${compact ? "py-10 md:py-14" : "py-16 md:py-24"}`}>
+      <div className={`${bw(ctx)} flex flex-col items-center gap-4 text-center md:gap-6 ${compact ? "py-10 md:py-14" : "py-16 md:py-24"}`}>
         {copy}
         <div className="flex flex-wrap justify-center gap-3"><Button link={data.primary_cta} dark={dark} /><Button link={data.secondary_cta} variant="outline" dark={dark} /></div>
       </div>
@@ -168,7 +170,7 @@ function Hero({ data, ctx }: BlockProps) {
 
   if (data.layout === "form") {
     return (
-      <div className={`${wrap} grid items-center gap-10 md:grid-cols-2 md:gap-16 ${compact ? "py-8 md:py-12" : "py-12 md:py-20"}`}>
+      <div className={`${bw(ctx)} grid items-center gap-10 md:grid-cols-2 md:gap-16 ${compact ? "py-8 md:py-12" : "py-12 md:py-20"}`}>
         <div className="flex flex-col gap-4 md:gap-6">{copy}</div>
         <div className={`bg-white p-6 md:p-8 ${cardLg}`}>
           <LeadForm data={{ form_key: "landing", submit_label: data.primary_cta?.label || "Get my quote", show_message: false }} pageId={ctx.page?.id} siteName={ctx.settings.site_name} />
@@ -188,7 +190,7 @@ function Hero({ data, ctx }: BlockProps) {
   const bgSizeRaw = Number(data.image_bg_size);
   const bgSizePct = Number.isFinite(bgSizeRaw) && bgSizeRaw > 0 ? Math.min(bgSizeRaw, 150) : 100;
   return (
-    <div className={`${wrap} grid items-center gap-10 md:grid-cols-2 md:gap-16 ${compact ? "py-8 md:py-12" : "py-10 md:py-20"}`}>
+    <div className={`${bw(ctx)} grid items-center gap-10 md:grid-cols-2 md:gap-16 ${compact ? "py-8 md:py-12" : "py-10 md:py-20"}`}>
       <div className={`flex flex-col gap-4 md:gap-6 ${imageOnLeft ? "order-2" : ""}`}>
         {copy}
         <div className="flex flex-col gap-3 sm:flex-row"><Button link={data.primary_cta} dark={dark} /><Button link={data.secondary_cta} variant="outline" dark={dark} /></div>
@@ -279,7 +281,7 @@ function Hero({ data, ctx }: BlockProps) {
 
 function Logos({ data, ctx }: BlockProps) {
   return (
-    <div className={`${wrap} flex flex-col gap-4 border-y border-line py-8 md:flex-row md:items-center md:justify-between`}>
+    <div className={`${bw(ctx)} flex flex-col gap-4 border-y border-line py-8 md:flex-row md:items-center md:justify-between`}>
       {data.heading ? <div className={`text-sm ${muted(ctx)}`}>{data.heading}</div> : null}
       <div className={`flex flex-wrap gap-x-12 gap-y-3 text-lg font-semibold md:text-xl ${ctx.dark ? "text-ground/60" : "text-[#6B7079]"}`}>
         {(data.items ?? []).map((l: string, i: number) => <span key={i}>{l}</span>)}
@@ -294,7 +296,7 @@ function Services({ data, ctx }: BlockProps) {
   const cardStyle: ServiceCardStyle | null = SERVICE_CARD_STYLES.includes(data.card_style) ? data.card_style : null;
   const align = ["left", "center", "right"].includes(data.icon_align) ? data.icon_align : "left";
   return (
-    <div className={`${wrap} flex flex-col gap-8 py-16 md:gap-12 md:py-24`}>
+    <div className={`${bw(ctx)} flex flex-col gap-8 py-16 md:gap-12 md:py-24`}>
       {data.heading || data.link?.label ? (
         <div className="flex items-end justify-between gap-4">
           {data.heading ? <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2> : <span />}
@@ -330,7 +332,7 @@ function Services({ data, ctx }: BlockProps) {
 
 function Features({ data, ctx }: BlockProps) {
   return (
-    <div className={`${wrap} flex flex-col gap-10 py-7 md:py-24`}>
+    <div className={`${bw(ctx)} flex flex-col gap-10 py-7 md:py-24`}>
       <div className="flex max-w-2xl flex-col gap-4">
         {data.heading ? <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2> : null}
         {data.intro ? <p className={`text-lg ${muted(ctx)}`}>{data.intro}</p> : null}
@@ -369,9 +371,9 @@ function Features({ data, ctx }: BlockProps) {
   );
 }
 
-function Stats({ data }: BlockProps) {
+function Stats({ data, ctx }: BlockProps) {
   return (
-    <div className={`${wrap} grid grid-cols-2 gap-6 py-10 md:grid-cols-4 md:py-16`}>
+    <div className={`${bw(ctx)} grid grid-cols-2 gap-6 py-10 md:grid-cols-4 md:py-16`}>
       {(data.items ?? []).map((s: any, i: number) => (
         <div key={i} className="flex flex-col gap-1.5">
           <div className="font-display font-bold text-[28px] leading-none md:text-[56px]">{s.value}</div>
@@ -382,9 +384,9 @@ function Stats({ data }: BlockProps) {
   );
 }
 
-function Testimonials({ data }: BlockProps) {
+function Testimonials({ data, ctx }: BlockProps) {
   return (
-    <div className={`${wrap} flex flex-col gap-8 py-7 md:py-24`}>
+    <div className={`${bw(ctx)} flex flex-col gap-8 py-7 md:py-24`}>
       {data.heading ? <h2 className={h2}>{data.heading}</h2> : null}
       <div className="grid gap-4 md:grid-cols-2 md:gap-6">
         {(data.items ?? []).map((t: any, i: number) => (
@@ -418,14 +420,14 @@ function Faq({ data, ctx }: BlockProps) {
     if (!shown.length) return null;
     const columns = Math.min(Math.max(Number(data.columns) || 1, 1), 3);
     return (
-      <div className={`${wrap} flex flex-col gap-8 py-10 md:gap-12 md:py-20`}>
+      <div className={`${bw(ctx)} flex flex-col gap-8 py-10 md:gap-12 md:py-20`}>
         {data.heading ? <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2> : null}
         <FaqList items={shown} style={style} columns={columns} ctx={ctx} />
       </div>
     );
   }
   return (
-    <div className={`${wrap} grid gap-8 py-16 md:grid-cols-3 md:gap-16 md:py-20`}>
+    <div className={`${bw(ctx)} grid gap-8 py-16 md:grid-cols-3 md:gap-16 md:py-20`}>
       <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2>
       <div className="md:col-span-2">
         {items.map((f: any, i: number) => (
@@ -445,7 +447,7 @@ function FaqBoxed({ data, ctx }: BlockProps) {
   const items = data.items ?? [];
   if (!items.length) return null;
   return (
-    <div className={`${wrap} flex flex-col gap-6 py-7 md:py-20`}>
+    <div className={`${bw(ctx)} flex flex-col gap-6 py-7 md:py-20`}>
       {data.heading ? <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2> : null}
       <div className="flex flex-col gap-3">
         {items.map((f: any, i: number) => (
@@ -468,7 +470,7 @@ function QaBlock({ data, ctx }: BlockProps) {
   const items = data.items ?? [];
   if (!items.length) return null;
   return (
-    <div className={`${wrap} flex flex-col gap-10 py-7 md:py-20`}>
+    <div className={`${bw(ctx)} flex flex-col gap-10 py-7 md:py-20`}>
       {data.heading ? <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2> : null}
       <div className="flex flex-col gap-8">
         {items.map((f: any, i: number) => (
@@ -489,7 +491,7 @@ function QaBlock({ data, ctx }: BlockProps) {
 function Cta({ data, ctx }: BlockProps) {
   const dark = ctx.dark;
   return (
-    <div className={`${wrap} py-7 md:py-16`}>
+    <div className={`${bw(ctx)} py-7 md:py-16`}>
       <div className={`flex flex-col items-start gap-6 rounded-[28px] p-8 md:flex-row md:items-center md:justify-between md:p-14 ${dark ? "bg-white/10 border border-white/20" : "bg-soft"}`}>
         <div className="flex flex-col gap-3">
           <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2>
@@ -510,7 +512,7 @@ async function LeadFormBlock({ data, ctx }: BlockProps) {
   const supabase = await createClient();
   const { data: form } = await supabase.from("forms").select("*").eq("slug", "general-contact").eq("is_active", true).maybeSingle();
   return (
-    <div className={`${wrap} grid gap-8 py-16 md:grid-cols-2 md:gap-12 md:py-20`}>
+    <div className={`${bw(ctx)} grid gap-8 py-16 md:grid-cols-2 md:gap-12 md:py-20`}>
       <div className="flex flex-col gap-4">
         <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2>
         {data.text ? <p className={`text-lg ${muted(ctx)}`}>{data.text}</p> : null}
@@ -520,9 +522,9 @@ async function LeadFormBlock({ data, ctx }: BlockProps) {
   );
 }
 
-function RichText({ data }: BlockProps) {
+function RichText({ data, ctx }: BlockProps) {
   return (
-    <div className={`${wrap} flex max-w-3xl flex-col gap-5 py-12 text-lg leading-relaxed md:py-16`}>
+    <div className={`${bw(ctx)} flex max-w-3xl flex-col gap-5 py-12 text-lg leading-relaxed md:py-16`}>
       {data.heading ? <h2 className={h2}>{data.heading}</h2> : null}
       {paragraphs(data.body)}
     </div>
@@ -532,7 +534,7 @@ function RichText({ data }: BlockProps) {
 function TextSvg({ data, ctx }: BlockProps) {
   const right = data.side !== "left";
   return (
-    <div className={`${wrap} grid items-center gap-10 py-16 md:grid-cols-2 md:gap-16 md:py-24`}>
+    <div className={`${bw(ctx)} grid items-center gap-10 py-16 md:grid-cols-2 md:gap-16 md:py-24`}>
       <div className={`flex flex-col gap-5 text-lg leading-relaxed ${muted(ctx)} ${right ? "" : "md:order-2"}`}>
         {data.heading ? <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2> : null}
         {paragraphs(data.body)}
@@ -544,7 +546,7 @@ function TextSvg({ data, ctx }: BlockProps) {
 
 function Pricing({ data, ctx }: BlockProps) {
   return (
-    <div className={`${wrap} flex flex-col gap-10 py-7 md:py-24`}>
+    <div className={`${bw(ctx)} flex flex-col gap-10 py-7 md:py-24`}>
       {data.heading ? <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2> : null}
       <div className="grid gap-4 md:grid-cols-3 md:gap-6">
         {(data.plans ?? []).map((p: any, i: number) => (
@@ -571,7 +573,7 @@ function ContactInfo({ data, ctx }: BlockProps) {
   const rows = [["Phone", c.phone, c.phone && `tel:${c.phone}`], ["Email", c.email, c.email && `mailto:${c.email}`], ["Address", c.address], ["Hours", c.hours]]
     .filter((r) => r[1]);
   return (
-    <div className={`${wrap} flex flex-col gap-8 py-16`}>
+    <div className={`${bw(ctx)} flex flex-col gap-8 py-16`}>
       {data.heading ? <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2> : null}
       <dl className="grid gap-6 md:grid-cols-4">
         {rows.map(([k, v, href]) => (
@@ -585,11 +587,11 @@ function ContactInfo({ data, ctx }: BlockProps) {
   );
 }
 
-function Timeline({ data }: BlockProps) {
+function Timeline({ data, ctx }: BlockProps) {
   const items = data.items ?? [];
   if (!items.length) return null;
   return (
-    <div className={`${wrap} flex flex-col gap-11 py-7 md:py-20`}>
+    <div className={`${bw(ctx)} flex flex-col gap-11 py-7 md:py-20`}>
       {data.heading ? <h2 className="font-display text-[24px] md:text-[32px] font-bold">{data.heading}</h2> : null}
       <div className="relative flex flex-col gap-8 md:flex-row md:justify-between">
         <div className="absolute left-[9px] top-2.5 hidden h-0.5 w-full bg-line md:block" />
@@ -626,7 +628,7 @@ function TeamProfile({ data, ctx }: BlockProps) {
   }[(data.photo_align as string) || "left"];
   const credentials = [data.credential_1, data.credential_2].filter(Boolean);
   return (
-    <div className={`${wrap} grid items-center ${stack ? "gap-8" : "gap-14 py-16 md:grid-cols-[320px_1fr] md:py-20"}`}>
+    <div className={`${bw(ctx)} grid items-center ${stack ? "gap-8" : "gap-14 py-16 md:grid-cols-[320px_1fr] md:py-20"}`}>
       <Svg asset={art} label={art?.name} className={`aspect-[8/9] overflow-hidden ${radiusCls} ${alignCls} ${stack ? "w-full max-w-[280px]" : ""}`} />
       <div className="flex flex-col gap-3.5">
         {data.eyebrow ? <div className="text-xs font-bold uppercase tracking-[0.08em] text-primary">{data.eyebrow}</div> : null}
@@ -650,7 +652,7 @@ function ServiceAreas({ data, ctx }: BlockProps) {
   const items = data.items ?? [];
   if (!items.length) return null;
   return (
-    <div className={`${wrap} flex flex-col gap-6 py-7 md:py-16`}>
+    <div className={`${bw(ctx)} flex flex-col gap-6 py-7 md:py-16`}>
       {data.heading ? <h2 className={`font-display text-2xl font-bold ${heading(ctx)}`}>{data.heading}</h2> : null}
       <div className="flex flex-wrap gap-2.5">
         {items.map((it: any, i: number) => (
@@ -663,7 +665,7 @@ function ServiceAreas({ data, ctx }: BlockProps) {
   );
 }
 
-async function ListingGrid({ data }: BlockProps) {
+async function ListingGrid({ data, ctx }: BlockProps) {
   const city: string | undefined = data.city || undefined;
   const perRow = [2, 3, 4].includes(Number(data.per_row)) ? Number(data.per_row) : 4;
   const perPage = Number(data.per_page) || 4;
@@ -677,7 +679,7 @@ async function ListingGrid({ data }: BlockProps) {
   if (!listings.length) return null;
 
   return (
-    <div className={`${wrap} flex flex-col gap-8 py-7 md:py-24`}>
+    <div className={`${bw(ctx)} flex flex-col gap-8 py-7 md:py-24`}>
       {data.heading || data.link_label ? (
         <div className="flex items-end justify-between gap-4">
           {data.heading ? <h2 className={h2}>{data.heading}</h2> : <span />}
@@ -700,7 +702,7 @@ async function CustomForm({ data, ctx }: BlockProps) {
   if (!form) return null;
 
   return (
-    <div className={`${wrap} flex flex-col gap-6 py-7 md:py-20`}>
+    <div className={`${bw(ctx)} flex flex-col gap-6 py-7 md:py-20`}>
       {data.heading ? <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2> : null}
       {data.text ? <p className={`max-w-xl text-lg ${muted(ctx)}`}>{data.text}</p> : null}
       <div className={form.layout === "sidebar" ? "w-full" : "max-w-2xl"}>
@@ -777,7 +779,7 @@ function ProcessSteps({ data, ctx }: BlockProps) {
 
   if (compact) {
     return (
-      <div className={`${wrap} flex flex-col gap-6 py-10 md:py-16`}>
+      <div className={`${bw(ctx)} flex flex-col gap-6 py-10 md:py-16`}>
         <div className="flex flex-col gap-2">
           {data.eyebrow ? <div className="text-[11px] font-semibold uppercase tracking-wide text-accent">{data.eyebrow}</div> : null}
           {data.heading ? <h2 className={`text-[22px] font-semibold leading-snug tracking-tight md:text-[28px] ${heading(ctx)}`}>{data.heading}</h2> : null}
@@ -797,7 +799,7 @@ function ProcessSteps({ data, ctx }: BlockProps) {
   }
 
   return (
-    <div className={`${wrap} flex flex-col gap-8 py-10 md:gap-12 md:py-20`}>
+    <div className={`${bw(ctx)} flex flex-col gap-8 py-10 md:gap-12 md:py-20`}>
       <div className="flex flex-col gap-3">
         {data.eyebrow ? <div className="text-sm font-semibold uppercase tracking-wide text-primary">{data.eyebrow}</div> : null}
         {data.heading ? <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2> : null}
@@ -832,7 +834,7 @@ function Checklist({ data, ctx }: BlockProps) {
   const desktopColsN = [2, 3].includes(Number(data.desktop_columns)) ? Number(data.desktop_columns) : 1;
   const desktopCols = DESKTOP_COLS[desktopColsN];
   return (
-    <div className={`${wrap} flex flex-col gap-5 py-10 md:gap-6 md:py-16`}>
+    <div className={`${bw(ctx)} flex flex-col gap-5 py-10 md:gap-6 md:py-16`}>
       {data.heading ? <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2> : null}
       <ul className={`grid gap-3 ${mobileCols} ${desktopCols} ${desktopColsN === 1 ? "max-w-xl" : ""}`}>
         {items.map((it: any, i: number) => (
@@ -856,7 +858,7 @@ function Spacer({ data }: BlockProps) {
   return <div style={{ height: 0, marginTop: h }} aria-hidden="true" />;
 }
 
-function Divider({ data }: BlockProps) {
+function Divider({ data, ctx }: BlockProps) {
   const color = data.color || "#e5e5e5";
   const thickness = Number(data.thickness) || 1;
   const width = data.width || "100%";
@@ -880,13 +882,13 @@ function Divider({ data }: BlockProps) {
   );
 }
 
-async function FeaturedListing({ data }: BlockProps) {
+async function FeaturedListing({ data, ctx }: BlockProps) {
   if (!data.listing_key) return null;
   const mls = createMlsClient();
   const { data: listing } = await mls.from("grid").select("*").eq("ListingKey", data.listing_key).maybeSingle();
   if (!listing) return null;
   return (
-    <div className={`${wrap} flex flex-col gap-6 py-7 md:py-16`}>
+    <div className={`${bw(ctx)} flex flex-col gap-6 py-7 md:py-16`}>
       {data.heading ? <h2 className={h2}>{data.heading}</h2> : null}
       <div className="max-w-sm"><ListingCard listing={listing as GridListing} /></div>
     </div>
@@ -899,13 +901,13 @@ const SOLD_STATUS_MAP: Record<string, { label: string; tone: "green" | "blue" | 
   purchased: { label: "Purchased", tone: "purple" },
 };
 
-async function SoldHistoryGrid({ data }: BlockProps) {
+async function SoldHistoryGrid({ data, ctx }: BlockProps) {
   const count = Number(data.count) || 6;
   const rows = (await getSoldHistory(data.status_filter || undefined)).slice(0, count);
   if (!rows.length) return null;
 
   return (
-    <div className={`${wrap} flex flex-col gap-6 py-7 md:py-16`}>
+    <div className={`${bw(ctx)} flex flex-col gap-6 py-7 md:py-16`}>
       <div className="flex items-end justify-between gap-4">
         {data.heading ? <h2 className={h2}>{data.heading}</h2> : <span />}
         <Link href="/sold-history" prefetch={false} className="font-medium text-primary">{data.link_label || "View all"} →</Link>
@@ -941,7 +943,7 @@ async function PreconProjectsGrid({ data, ctx }: BlockProps) {
     getProjects(), getCities(), getBuilders(), getPreconStats(),
   ]);
   return (
-    <div className={`${wrap} flex flex-col gap-6 py-12 md:py-16`}>
+    <div className={`${bw(ctx)} flex flex-col gap-6 py-12 md:py-16`}>
       {data.heading ? <h2 className={h2}>{data.heading}</h2> : null}
       <PreconGridClient
         projects={projects as any} cities={cities} builders={builders} stats={stats}
@@ -952,14 +954,14 @@ async function PreconProjectsGrid({ data, ctx }: BlockProps) {
   );
 }
 
-async function FeaturedListingsGrid({ data }: BlockProps) {
+async function FeaturedListingsGrid({ data, ctx }: BlockProps) {
   const { order, mlsListings, privateListings } = await getFeaturedListings();
   const count = Number(data.count) || 6;
   const visible = order.slice(0, count);
   if (!visible.length) return null;
 
   return (
-    <div className={`${wrap} flex flex-col gap-6 py-7 md:py-16`}>
+    <div className={`${bw(ctx)} flex flex-col gap-6 py-7 md:py-16`}>
       <div className="flex items-end justify-between gap-4">
         {data.heading ? <h2 className={h2}>{data.heading}</h2> : <span />}
         <Link href="/listings" prefetch={false} className="font-medium text-primary">{data.link_label || "View all listings"} →</Link>
@@ -1017,7 +1019,7 @@ async function BlogGrid({ data, ctx }: BlockProps) {
   );
 
   return (
-    <div className={`${wrap} flex flex-col gap-6 py-7 md:py-16`}>
+    <div className={`${bw(ctx)} flex flex-col gap-6 py-7 md:py-16`}>
       <div className="flex items-end justify-between gap-4">
         {data.heading ? <h2 className={h2}>{data.heading}</h2> : <span />}
         <Link href="/updates" prefetch={false} className="font-medium text-primary">{data.link_label || "View all posts"} →</Link>
@@ -1034,7 +1036,7 @@ async function BlogGrid({ data, ctx }: BlockProps) {
 function CustomCode({ data, ctx }: BlockProps) {
   if (!data.html) return null;
   return (
-    <div className={`${wrap} flex flex-col items-center gap-5 py-5 text-center md:py-12`}>
+    <div className={`${bw(ctx)} flex flex-col items-center gap-5 py-5 text-center md:py-12`}>
       {data.heading ? <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2> : null}
       {/* items-center handles anything with its own intrinsic width (an embedded widget, an image,
          a button); text-center handles plain inline content (text, inline elements) the embed might
@@ -1054,7 +1056,7 @@ function SocialLinks({ data, ctx }: BlockProps) {
   if (!items.length) return null;
   const size = SOCIAL_SIZE[data.size || ctx.settings.social_links?.size || "md"] || SOCIAL_SIZE.md;
   return (
-    <div className={`${wrap} flex flex-col items-center gap-5 py-6 md:py-14`}>
+    <div className={`${bw(ctx)} flex flex-col items-center gap-5 py-6 md:py-14`}>
       {data.heading ? <h2 className={`${h2} text-center text-2xl ${heading(ctx)}`}>{data.heading}</h2> : null}
       <div className="flex flex-wrap items-center justify-center gap-3">
         {items.map((it: any, i: number) => (
@@ -1132,7 +1134,7 @@ function WhatsIncluded({ data, ctx }: BlockProps) {
   // directly (for icons with hardcoded colors); these icons use currentColor, so plain CSS is enough.
   const iconColor = compact ? "var(--color-accent)" : "var(--color-primary)";
   return (
-    <div className={`${wrap} flex flex-col ${compact ? "gap-6 py-10 md:py-16" : "gap-8 py-10 md:gap-12 md:py-20"}`}>
+    <div className={`${bw(ctx)} flex flex-col ${compact ? "gap-6 py-10 md:py-16" : "gap-8 py-10 md:gap-12 md:py-20"}`}>
       <div className="flex flex-col gap-2">
         {data.eyebrow ? <div className={`${compact ? "text-[11px]" : "text-sm"} font-semibold uppercase tracking-wide ${compact ? "text-accent" : "text-primary"}`}>{data.eyebrow}</div> : null}
         {data.heading ? (compact
@@ -1173,7 +1175,7 @@ function PhasedReasons({ data, ctx }: BlockProps) {
   const accentStyle = compact ? { color: "var(--color-accent)" } : undefined;
   let n = 0;
   return (
-    <div className={`${wrap} flex flex-col ${compact ? "gap-6 py-10 md:py-16" : "gap-8 py-10 md:gap-12 md:py-20"}`}>
+    <div className={`${bw(ctx)} flex flex-col ${compact ? "gap-6 py-10 md:py-16" : "gap-8 py-10 md:gap-12 md:py-20"}`}>
       <div className="flex flex-col gap-2">
         {data.eyebrow ? <div className={`${compact ? "text-[11px]" : "text-sm"} font-semibold uppercase tracking-wide ${compact ? "text-accent" : "text-primary"}`}>{data.eyebrow}</div> : null}
         {data.heading ? (compact
@@ -1355,7 +1357,7 @@ function renderMerged(h: Section, p: Section, ctx: BlockCtx) {
   const partnerCls = [ps.hide_on_mobile && "hide-mobile", ps.hide_on_desktop && "hide-desktop"].filter(Boolean).join(" ");
   return (
     <section key={h.id} id={hs.anchor || h.id} className={cls} style={customBg ? { background: customBg } : undefined} data-block="merged">
-      <div className={`${wrap} py-5 md:py-12`}>
+      <div className={`${bw(ctx)} py-5 md:py-12`}>
         <MergedCard header={h.data ?? {}} layout={layout} color={color} ctx={ctx}
           partner={<Block data={p.data ?? {}} ctx={partnerCtx} />} partnerId={ps.anchor || p.id} partnerClass={partnerCls} />
       </div>
