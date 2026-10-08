@@ -1296,10 +1296,19 @@ function renderOne(s: Section, ctx: BlockCtx) {
   const showBorder = st.border !== false;
   const showDivider = !!st.divider;
   const dividerColor = st.divider_color || "#e5e5e5";
+  const dividerMt = st.divider_mt ?? 0;
+  const dividerMb = st.divider_mb ?? 0;
+  const dividerFullBleed = !!st.divider_full_bleed;
 
   // Border classes: only apply border if enabled.
   const boxBorder = showBorder ? "border-[length:var(--border-card-width)]" : "border-0";
   const boxShadow = "shadow-[var(--shadow-card)]";
+
+  const dividerEl = showDivider ? (
+    <div className={dividerFullBleed ? "" : wrap} aria-hidden="true" style={{ marginTop: dividerMt, marginBottom: dividerMb }}>
+      <hr style={{ border: "none", borderTop: `1px solid ${dividerColor}`, margin: "0 auto" }} />
+    </div>
+  ) : null;
 
   return (
     <section key={s.id} id={st.anchor || s.id} className={cls} style={customBg ? { background: customBg } : undefined} data-block={s.block_type}>
@@ -1312,11 +1321,7 @@ function renderOne(s: Section, ctx: BlockCtx) {
           </div>
         )
       ) : content}
-      {showDivider ? (
-        <div className={wrap} aria-hidden="true">
-          <hr style={{ border: "none", borderTop: `1px solid ${dividerColor}`, margin: "0 auto" }} />
-        </div>
-      ) : null}
+      {dividerEl}
     </section>
   );
 }
