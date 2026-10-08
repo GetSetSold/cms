@@ -144,8 +144,8 @@ export function FeatureSection({ data, ctx }: { data: any; ctx: BlockCtx }) {
   const items: Item[] = data.items ?? [];
   const bs = ctx.buttonStyle;
   const borderHidden = ctx.settings.theme?.card_border === false;
-  // When border is hidden, go full-width on mobile (no side padding) like other blocks.
-  const outer = ctx.inRow ? "h-full w-full" : borderHidden ? "mx-auto w-full max-w-7xl md:px-10 py-5 md:py-12" : `${wrap} py-5 md:py-12`;
+  // When border is hidden, go full-width (no side padding, no rounded corners, no max-width) like hero.
+  const outer = ctx.inRow ? "h-full w-full" : borderHidden ? "w-full py-5 md:py-12" : `${wrap} py-5 md:py-12`;
 
   // One custom color colors the WHOLE section (both halves) and drives the
   // text contrast. Without it each layout keeps its own default look.
@@ -206,7 +206,7 @@ export function FeatureSection({ data, ctx }: { data: any; ctx: BlockCtx }) {
 
   return (
     <div className={outer}>
-      <div className={`${borderHidden ? "overflow-hidden md:rounded-[var(--radius-lg)] shadow-[var(--shadow-card)]" : shell} ${ctx.inRow ? "h-full" : ""}`} style={fill ? { background: fill } : undefined}>{body}</div>
+      <div className={`${borderHidden ? "overflow-hidden shadow-[var(--shadow-card)]" : shell} ${ctx.inRow ? "h-full" : ""}`} style={fill ? { background: fill } : undefined}>{body}</div>
     </div>
   );
 }
