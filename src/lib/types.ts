@@ -30,6 +30,9 @@ export interface SectionSettings {
   /** Show a thin divider line at the end of the block. */
   divider?: boolean;
   divider_color?: string;
+  divider_mt?: number; // space above (px, can be negative)
+  divider_mb?: number; // space below (px, can be negative)
+  divider_full_bleed?: boolean; // edge to edge, ignores page width
   /** Section Header only — draw this header and the visible block right below
    *  it as ONE card. Layout: header beside the block, or header above it. */
   merge_next?: boolean;
