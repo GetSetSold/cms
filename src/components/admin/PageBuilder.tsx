@@ -331,11 +331,17 @@ export function PageBuilder({ page: initialPage, sections: initialSections, bloc
                     </div>
                   ) : null}
                   <p className="text-xs text-muted">Text inside automatically switches to light or dark based on this color's actual brightness — no separate setting needed.</p>
-                  <label className="flex items-center justify-between text-sm">Border color
-                    <input type="color" value={/^#[0-9a-f]{6}$/i.test(current.settings.border_color ?? "") ? current.settings.border_color : "#e5e5e5"}
-                      onChange={(e) => patchSection(current.id, { settings: { ...current.settings, border_color: e.target.value } })}
-                      className="h-7 w-9 cursor-pointer rounded border-0 bg-transparent" title="Border color" />
+                  <label className="flex items-center justify-between text-sm">Border
+                    <input type="checkbox" checked={current.settings.border !== false}
+                      onChange={(e) => patchSection(current.id, { settings: { ...current.settings, border: e.target.checked } })} />
                   </label>
+                  {current.settings.border !== false ? (
+                    <label className="flex items-center justify-between text-sm">Border color
+                      <input type="color" value={/^#[0-9a-f]{6}$/i.test(current.settings.border_color ?? "") ? current.settings.border_color : "#e5e5e5"}
+                        onChange={(e) => patchSection(current.id, { settings: { ...current.settings, border_color: e.target.value } })}
+                        className="h-7 w-9 cursor-pointer rounded border-0 bg-transparent" title="Border color" />
+                    </label>
+                  ) : null}
                   <label className="flex items-center justify-between text-sm">Divider line at end
                     <input type="checkbox" checked={!!current.settings.divider}
                       onChange={(e) => patchSection(current.id, { settings: { ...current.settings, divider: e.target.checked, divider_color: current.settings.divider_color || "#e5e5e5" } })} />
