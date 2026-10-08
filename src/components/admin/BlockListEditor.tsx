@@ -79,10 +79,16 @@ export function BlockListEditor({
                 </div>
               ) : null}
               <div className="flex items-center justify-between text-xs">
-                <span className="font-medium text-muted">Border color</span>
-                <input type="color" value={/^#[0-9a-f]{6}$/i.test(b.settings?.border_color ?? "") ? b.settings!.border_color : "#e5e5e5"}
-                  onChange={(e) => setSettings(i, { border_color: e.target.value })} className="h-6 w-8 cursor-pointer rounded border-0 bg-transparent" />
+                <span className="font-medium text-muted">Border</span>
+                <input type="checkbox" checked={b.settings?.border !== false} onChange={(e) => setSettings(i, { border: e.target.checked })} />
               </div>
+              {b.settings?.border !== false ? (
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-medium text-muted">Border color</span>
+                  <input type="color" value={/^#[0-9a-f]{6}$/i.test(b.settings?.border_color ?? "") ? b.settings!.border_color : "#e5e5e5"}
+                    onChange={(e) => setSettings(i, { border_color: e.target.value })} className="h-6 w-8 cursor-pointer rounded border-0 bg-transparent" />
+                </div>
+              ) : null}
               <div className="flex items-center justify-between text-xs">
                 <span className="font-medium text-muted">Divider line at end</span>
                 <input type="checkbox" checked={!!b.settings?.divider} onChange={(e) => setSettings(i, { divider: e.target.checked, divider_color: b.settings?.divider_color || "#e5e5e5" })} />
