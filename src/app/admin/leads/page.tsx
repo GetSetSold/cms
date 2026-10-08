@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireStaff } from "@/lib/auth";
 import { LEAD_STATUSES, type Lead } from "@/lib/types";
 import { AddLeadButton } from "@/components/admin/AddLeadButton";
+import { LeadLink } from "@/components/admin/LeadLink";
 
 // One color per stage — light column tint, a matching dot/border accent — so the board reads at a
 // glance instead of every column looking the same.
@@ -71,7 +72,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
                   <span className="text-xs text-muted">{col.length}</span>
                 </div>
                 {col.map((l) => (
-                  <Link key={l.id} href={`/admin/leads/${l.id}`} className={`flex flex-col gap-1 rounded-lg border-l-[3px] bg-white p-2 hover:ring-2 hover:ring-primary ${c.border}`}>
+                  <LeadLink key={l.id} id={l.id} className={`flex flex-col gap-1 rounded-lg border-l-[3px] bg-white p-2 hover:ring-2 hover:ring-primary ${c.border}`}>
                     <div className="flex justify-between gap-2"><strong className="truncate text-[13px]">{name(l)}</strong><span className="shrink-0 text-[11px] text-muted">{ago(l.created_at)}</span></div>
                     <div className="truncate text-[12px] text-muted">{[l.service, l.form_key].filter(Boolean).join(" · ")}</div>
                     <div className="flex flex-wrap gap-1 text-[10px]">
@@ -79,7 +80,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
                       {l.sms_opted_out ? <span className="rounded-full bg-[#FBEBDD] px-1.5 py-0.5 text-[#8A3F12]">Opted out</span> : null}
                       {l.utm?.utm_source ? <span className="rounded-full bg-soft px-1.5 py-0.5 text-muted">{l.utm.utm_source}</span> : null}
                     </div>
-                  </Link>
+                  </LeadLink>
                 ))}
               </div>
             );
@@ -94,7 +95,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
             <tbody>
               {leads.map((l) => (
                 <tr key={l.id} className="border-b border-line/60 last:border-0">
-                  <td className="p-3 font-medium"><Link href={`/admin/leads/${l.id}`} className="hover:text-primary">{name(l)}</Link></td>
+                  <td className="p-3 font-medium"><LeadLink id={l.id} className="hover:text-primary">{name(l)}</LeadLink></td>
                   <td className="p-3">{l.email}</td><td className="p-3">{l.phone}</td><td className="p-3">{l.form_key}</td>
                   <td className="p-3 capitalize">{l.status}</td><td className="p-3 text-muted">{new Date(l.created_at).toLocaleString()}</td>
                 </tr>

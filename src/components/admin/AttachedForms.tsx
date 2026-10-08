@@ -5,6 +5,7 @@ import { ShareFormButton } from "./ShareFormButton";
 
 type Attachment = {
   id: string;
+  form_id: string;
   form_name: string;
   form_key: string;
   answers: Record<string, unknown>;
@@ -13,6 +14,8 @@ type Attachment = {
 };
 
 type Flow = { id: string; name: string; steps: { channel: string; delay_minutes?: number }[] };
+type FormField = { key: string; label: string; type: string; options?: string[] };
+type FormSection = { id: string; heading?: string; fields: FormField[] };
 
 function renderAnswer(v: unknown): string {
   if (v == null || v === "") return "—";
@@ -30,10 +33,12 @@ function renderAnswer(v: unknown): string {
   return String(v);
 }
 
-/** Attached forms on a lead (staff fill-out or send-to-fill). */
+/** Attached forms on a lead: structured by form sections, with edit/share/flow actions. */
 export function AttachedForms({ leadId }: { leadId: string }) {
   const [items, setItems] = useState<Attachment[]>([]);
+  const [forms, setForms] = useState<Record<string, FormSection[]>>({});
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [editing, setEditing] = useState<Attachment | null>(null);
   const [flows, setFlows] = useState<Flow[]>([]);
   const [flowFor, setFlowFor] = useState<string | null>(null);
   const [flowId, setFlowId] = useState("");
@@ -42,7 +47,18 @@ export function AttachedForms({ leadId }: { leadId: string }) {
   useEffect(() => {
     const sb = createClient();
     sb.from("lead_form_attachments").select("*").eq("lead_id", leadId).order("created_at", { ascending: false })
-      .then(({ data }) => setItems((data ?? []) as Attachment[]));
+      .then(async ({ data }) => {
+        const atts = (data ?? []) as Attachment[];
+        setItems(atts);
+        // Fetch form definitions for structured display.
+        const formIds = [...new Set(atts.map((a) => a.form_id))];
+        const defs: Record<string, FormSection[]> = {};
+        for (const fid of formIds) {
+          const { data: f } = await sb.from("forms").select("sections").eq("id", fid).maybeSingle();
+          if (f) defs[fid] = ((f as { sections: FormSection[] }).sections ?? []) as FormSection[];
+        }
+        setForms(defs);
+      });
     sb.from("lead_flows").select("id,name,steps").eq("is_active", true).order("name")
       .then(({ data }) => setFlows((data ?? []) as Flow[]));
   }, [leadId]);
@@ -66,53 +82,162 @@ export function AttachedForms({ leadId }: { leadId: string }) {
   if (!items.length) return null;
 
   return (
-    <div className="card flex flex-col gap-3">
-      <strong>Attached forms</strong>
+    <div className="flex flex-col gap-4">
       {msg ? <p className="text-sm text-muted" role="status">{msg}</p> : null}
       {items.map((a) => {
-        const entries = Object.entries(a.answers ?? {});
+        const sections = forms[a.form_id] ?? [];
         const isOpen = expanded === a.id;
         return (
-          <div key={a.id} className="rounded-xl border border-line p-3">
-            <button className="flex w-full items-center justify-between gap-2 text-left" onClick={() => setExpanded(isOpen ? null : a.id)}>
-              <span>
-                <span className="font-medium">{a.form_name}</span>
-                <span className="ml-2 text-xs text-muted">
-                  {a.filled_by === "staff" ? "filled by staff" : "filled by lead"} · {new Date(a.created_at).toLocaleDateString()}
-                </span>
-              </span>
-              <span className="text-xs text-muted">{isOpen ? "Hide" : "View"} ({entries.length})</span>
-            </button>
+          <div key={a.id} className="card flex flex-col gap-3">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <strong className="text-[16px]">{a.form_name}</strong>
+                <p className="text-xs text-muted">
+                  {a.filled_by === "staff" ? "Filled by staff" : "Filled by lead"} · {new Date(a.created_at).toLocaleDateString()}
+                </p>
+              </div>
+              <button className="btn h-8 shrink-0 px-3 text-[12px]" onClick={() => setExpanded(isOpen ? null : a.id)}>
+                {isOpen ? "Collapse" : "Expand"}
+              </button>
+            </div>
+
             {isOpen ? (
-              <dl className="mt-3 flex flex-col">
-                {entries.map(([k, v]) => (
-                  <div key={k} className="flex items-baseline justify-between gap-4 border-b border-line/60 py-2 last:border-0">
-                    <dt className="shrink-0 text-xs font-medium uppercase tracking-wide text-muted">{k.replace(/_/g, " ")}</dt>
-                    <dd className="text-right text-[14px]">{renderAnswer(v)}</dd>
-                  </div>
-                ))}
-              </dl>
+              sections.length ? (
+                <div className="flex flex-col gap-5">
+                  {sections.map((sec) => {
+                    const answered = sec.fields.filter((f) => {
+                      const v = a.answers[f.key];
+                      return v != null && v !== "" && !(Array.isArray(v) && !v.length);
+                    });
+                    if (!answered.length) return null;
+                    return (
+                      <section key={sec.id}>
+                        {sec.heading ? <h4 className="mb-2 border-b border-line pb-1.5 text-[14px] font-bold">{sec.heading}</h4> : null}
+                        <dl className="grid gap-x-6 gap-y-3 sm:grid-cols-2">
+                          {answered.map((f) => (
+                            <div key={f.key}>
+                              <dt className="text-[11px] uppercase tracking-wide text-muted">{f.label}</dt>
+                              <dd className="mt-0.5 text-[14px]">{renderAnswer(a.answers[f.key])}</dd>
+                            </div>
+                          ))}
+                        </dl>
+                      </section>
+                    );
+                  })}
+                </div>
+              ) : (
+                <dl className="flex flex-col">
+                  {Object.entries(a.answers).map(([k, v]) => (
+                    <div key={k} className="flex items-baseline justify-between gap-4 border-b border-line/60 py-2 last:border-0">
+                      <dt className="shrink-0 text-xs font-medium uppercase tracking-wide text-muted">{k.replace(/_/g, " ")}</dt>
+                      <dd className="text-right text-[14px]">{renderAnswer(v)}</dd>
+                    </div>
+                  ))}
+                </dl>
+              )
             ) : null}
-            <div className="mt-2 flex flex-wrap gap-2">
+
+            <div className="flex flex-wrap items-center gap-2 border-t border-line pt-3">
+              <button className="btn h-9 px-4 text-[13px]" onClick={() => setEditing(a)}>Edit</button>
+              <ShareFormButton leadId={leadId} attachmentId={a.id} label="Share" />
               {flowFor === a.id ? (
                 <div className="flex flex-1 gap-2">
-                  <select className="input flex-1" value={flowId} onChange={(e) => setFlowId(e.target.value)}>
+                  <select className="input h-9 flex-1 py-1 text-[13px]" value={flowId} onChange={(e) => setFlowId(e.target.value)}>
                     <option value="">Choose a flow…</option>
                     {flows.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
                   </select>
-                  <button className="btn-primary" disabled={!flowId} onClick={startFlow}>Start</button>
-                  <button className="btn" onClick={() => { setFlowFor(null); setFlowId(""); }}>Cancel</button>
+                  <button className="btn-primary h-9 px-4 text-[13px]" disabled={!flowId} onClick={startFlow}>Start</button>
+                  <button className="btn h-9 px-3 text-[13px]" onClick={() => { setFlowFor(null); setFlowId(""); }}>Cancel</button>
                 </div>
               ) : (
-                <>
-                  <button className="btn h-8 px-3 text-[12px]" onClick={() => setFlowFor(a.id)}>Start flow</button>
-                  <ShareFormButton leadId={leadId} attachmentId={a.id} label="Share" />
-                </>
+                <button className="btn h-9 px-4 text-[13px]" onClick={() => setFlowFor(a.id)}>Start flow</button>
               )}
             </div>
           </div>
         );
       })}
+      {editing ? (
+        <EditAttachmentModal
+          attachment={editing}
+          sections={forms[editing.form_id] ?? []}
+          onClose={() => setEditing(null)}
+          onSaved={() => { setEditing(null); setMsg("Answers updated"); }}
+        />
+      ) : null}
+    </div>
+  );
+}
+
+function EditAttachmentModal({ attachment, sections, onClose, onSaved }: {
+  attachment: Attachment; sections: FormSection[]; onClose: () => void; onSaved: () => void;
+}) {
+  const [draft, setDraft] = useState<Record<string, string>>(() => {
+    const d: Record<string, string> = {};
+    for (const sec of sections) for (const f of sec.fields) {
+      const v = attachment.answers[f.key];
+      d[f.key] = typeof v === "string" ? v : v != null ? JSON.stringify(v) : "";
+    }
+    return d;
+  });
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState("");
+
+  async function save() {
+    setSaving(true); setMsg("");
+    const out: Record<string, unknown> = {};
+    for (const [k, raw] of Object.entries(draft)) {
+      if (!raw.trim()) continue;
+      try { out[k] = JSON.parse(raw); }
+      catch { out[k] = raw; }
+    }
+    const { error } = await createClient().from("lead_form_attachments").update({ answers: out }).eq("id", attachment.id);
+    setSaving(false);
+    if (error) { setMsg(error.message); return; }
+    onSaved();
+  }
+
+  return (
+    <div className="fixed inset-0 z-[120] overflow-y-auto bg-black/50" onClick={onClose}>
+      <div className="mx-auto min-h-full w-full max-w-4xl bg-white shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-line bg-white px-5 py-4 sm:px-8">
+          <div>
+            <strong className="text-lg">Edit {attachment.form_name}</strong>
+            <p className="text-sm text-muted">All fields shown — blanks are empty answers.</p>
+          </div>
+          <button className="btn shrink-0" onClick={onClose}>Close</button>
+        </div>
+        <div className="flex flex-col gap-6 px-5 py-6 sm:px-8">
+          {msg ? <p className="text-sm text-muted" role="status">{msg}</p> : null}
+          {sections.map((sec) => (
+            <section key={sec.id}>
+              {sec.heading ? <h4 className="mb-3 border-b border-line pb-2 text-[16px] font-bold">{sec.heading}</h4> : null}
+              <div className="grid gap-4 sm:grid-cols-2">
+                {sec.fields.filter((f) => f.type !== "heading").map((f) => {
+                  const isLong = f.type === "textarea" || f.type === "subform";
+                  return (
+                    <label key={f.key} className={`label ${isLong ? "sm:col-span-2" : ""}`}>{f.label}
+                      {f.type === "textarea" || f.type === "subform" ? (
+                        <textarea className="textarea font-mono text-xs" rows={3} value={draft[f.key] ?? ""} onChange={(e) => setDraft({ ...draft, [f.key]: e.target.value })} placeholder={f.type === "subform" ? "JSON array" : ""} />
+                      ) : f.type === "dropdown" && f.options?.length ? (
+                        <select className="input" value={draft[f.key] ?? ""} onChange={(e) => setDraft({ ...draft, [f.key]: e.target.value })}>
+                          <option value="">Select…</option>
+                          {f.options.map((o) => <option key={o} value={o}>{o}</option>)}
+                        </select>
+                      ) : (
+                        <input className="input" type={f.type === "date" ? "date" : f.type === "email" ? "email" : f.type === "tel" ? "tel" : "text"} value={draft[f.key] ?? ""} onChange={(e) => setDraft({ ...draft, [f.key]: e.target.value })} />
+                      )}
+                    </label>
+                  );
+                })}
+              </div>
+            </section>
+          ))}
+          <div className="flex gap-2 border-t border-line pt-4">
+            <button className="btn-primary" disabled={saving} onClick={save}>{saving ? "Saving…" : "Save answers"}</button>
+            <button className="btn" onClick={onClose}>Cancel</button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

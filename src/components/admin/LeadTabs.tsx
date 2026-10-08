@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { Lead, LeadFlow, LeadFlowEnrollment } from "@/lib/types";
@@ -459,7 +459,6 @@ function OverviewPanel({ lead, activities }: { lead: Lead; activities: Activity[
           Delete lead
         </button>
       </div>
-      <Opportunities leadId={lead.id} />
     </div>
   );
 }
@@ -473,12 +472,41 @@ function MatchesPanel() {
   );
 }
 
+type Template = { flow: string; category: string; channel: "sms" | "email"; subject?: string; body: string };
+
 function CommunicationPanel({ lead }: { lead: Lead }) {
   const supabase = useMemo(() => createClient(), []);
   const [sms, setSms] = useState("");
+  const [emailSubject, setEmailSubject] = useState("");
+  const [emailBody, setEmailBody] = useState("");
   const [msg, setMsg] = useState("");
+  const [templates, setTemplates] = useState<Template[]>([]);
+  const [tplCategory, setTplCategory] = useState<string>("");
   const canSms = !!lead.phone && lead.sms_opt_in && !lead.sms_opted_out;
   const leadName = [lead.first_name, lead.last_name].filter(Boolean).join(" ") || "this lead";
+
+  useEffect(() => {
+    supabase.from("follow_up_sequences").select("name,category,steps").eq("is_active", true)
+      .then(({ data }) => {
+        const out: Template[] = [];
+        for (const f of (data ?? []) as { name: string; category: string; steps: { channel: "sms" | "email"; subject?: string; template: string }[] }[]) {
+          for (const s of f.steps ?? []) {
+            if (s.template?.trim()) out.push({ flow: f.name, category: f.category, channel: s.channel, subject: s.subject, body: s.template });
+          }
+        }
+        setTemplates(out);
+      });
+  }, [supabase]);
+
+  const categories = [...new Set(templates.map((t) => t.category))];
+  const visible = tplCategory ? templates.filter((t) => t.category === tplCategory) : templates;
+
+  function useTemplate(t: Template) {
+    const rendered = t.body.replace(/\{\{\s*first_name\s*\}\}/g, lead.first_name ?? "there");
+    if (t.channel === "sms") setSms(rendered);
+    else { setEmailSubject((t.subject ?? "").replace(/\{\{\s*first_name\s*\}\}/g, lead.first_name ?? "there")); setEmailBody(rendered); }
+    setMsg(`Template from “${t.flow}” loaded — edit before sending.`);
+  }
 
   async function sendSms() {
     const { data, error } = await supabase.functions.invoke("send-sms", { body: { lead_id: lead.id, body: sms } });
@@ -489,8 +517,40 @@ function CommunicationPanel({ lead }: { lead: Lead }) {
     setSms(""); setMsg("SMS sent");
   }
 
+  async function sendEmail() {
+    const { data, error } = await supabase.functions.invoke("send-email", { body: { lead_id: lead.id, subject: emailSubject, body: emailBody } });
+    if (error || (data as { error?: string })?.error) {
+      setMsg((data as { error?: string })?.error ?? error?.message ?? "Failed");
+      return;
+    }
+    setEmailSubject(""); setEmailBody(""); setMsg("Email sent");
+  }
+
   return (
     <div className="flex flex-col gap-4">
+      {templates.length ? (
+        <div className="card flex flex-col gap-3">
+          <strong>Templates</strong>
+          <div className="flex flex-wrap gap-2">
+            <button className={`rounded-full px-4 py-2 text-[13px] font-medium ${!tplCategory ? "bg-[#111] text-white" : "bg-[#f7f7f7] text-[#333]"}`} onClick={() => setTplCategory("")}>All</button>
+            {categories.map((c) => (
+              <button key={c} className={`rounded-full px-4 py-2 text-[13px] font-medium capitalize ${tplCategory === c ? "bg-[#111] text-white" : "bg-[#f7f7f7] text-[#333]"}`} onClick={() => setTplCategory(c)}>{c}</button>
+            ))}
+          </div>
+          <div className="flex flex-col gap-2">
+            {visible.map((t, i) => (
+              <button key={i} className="flex items-center justify-between gap-3 rounded-xl bg-[#f7f7f7] p-3 text-left hover:bg-[#eee]" onClick={() => useTemplate(t)}>
+                <span className="min-w-0">
+                  <span className="block truncate text-[14px] font-medium">{t.channel === "email" && t.subject ? t.subject : t.body.slice(0, 60)}</span>
+                  <span className="text-xs text-muted capitalize">{t.channel} · {t.flow} · {t.category}</span>
+                </span>
+                <span className="shrink-0 text-[12px] font-medium text-[#0066cc]">Use</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
       <div className="card flex flex-col gap-3">
         <strong>Send SMS</strong>
         {canSms ? (
@@ -501,12 +561,25 @@ function CommunicationPanel({ lead }: { lead: Lead }) {
         ) : (
           <p className="text-[13px] text-muted">{lead.sms_opted_out ? "This lead replied STOP." : !lead.phone ? "No phone number on file." : "No SMS consent — call or email instead."}</p>
         )}
+      </div>
+
+      <div className="card flex flex-col gap-3">
+        <strong>Send email</strong>
+        {lead.email ? (
+          <>
+            <input className="input" placeholder="Subject" value={emailSubject} onChange={(e) => setEmailSubject(e.target.value)} />
+            <textarea className="textarea" rows={5} value={emailBody} onChange={(e) => setEmailBody(e.target.value)} placeholder={`Email ${leadName}…`} />
+            <button className="btn-primary w-fit" disabled={!emailSubject.trim() || !emailBody.trim()} onClick={sendEmail}>Send email</button>
+          </>
+        ) : (
+          <p className="text-[13px] text-muted">No email address on file.</p>
+        )}
         <div className="flex flex-wrap gap-2">
           {lead.phone ? <a className="btn" href={`tel:${lead.phone}`}>Call {lead.phone}</a> : null}
-          {lead.email ? <a className="btn" href={`mailto:${lead.email}`}>Email {lead.email}</a> : null}
         </div>
         {msg ? <p className="text-sm text-muted" role="status">{msg}</p> : null}
       </div>
+
       <div className="card flex flex-col gap-3">
         <strong>Send a form</strong>
         <p className="text-[13px] text-muted">Pick a form and send {leadName} a link to fill it — answers attach to this lead.</p>
@@ -524,7 +597,7 @@ function CommunicationPanel({ lead }: { lead: Lead }) {
   );
 }
 
-const TABS = ["overview", "form", "communication", "activity", "flows", "matches"] as const;
+const TABS = ["overview", "form", "communication", "opportunities", "activity", "flows", "matches"] as const;
 type Tab = (typeof TABS)[number];
 
 export function LeadTabs({ lead, activities, queue, enrollments, availableFlows }: {
@@ -533,10 +606,10 @@ export function LeadTabs({ lead, activities, queue, enrollments, availableFlows 
   const [tab, setTab] = useState<Tab>("overview");
   const counts: Record<Tab, number | null> = {
     overview: null, form: Object.keys(lead.custom_fields ?? {}).length || null,
-    communication: null,
+    communication: null, opportunities: null,
     activity: activities.length || null, flows: enrollments.filter((e) => e.status === "active").length || null, matches: null,
   };
-  const titles: Record<Tab, string> = { overview: "Overview", form: "Forms", communication: "Communication", activity: "Activity", flows: "Flows & automations", matches: "Matches" };
+  const titles: Record<Tab, string> = { overview: "Overview", form: "Forms", communication: "Communication", opportunities: "Opportunities", activity: "Activity", flows: "Flows & automations", matches: "Matches" };
 
   return (
     <div className="flex flex-col gap-5">
@@ -553,6 +626,7 @@ export function LeadTabs({ lead, activities, queue, enrollments, availableFlows 
       {tab === "overview" ? <OverviewPanel lead={lead} activities={activities} /> : null}
       {tab === "form" ? <FormSubmissionPanel lead={lead} /> : null}
       {tab === "communication" ? <CommunicationPanel lead={lead} /> : null}
+      {tab === "opportunities" ? <Opportunities leadId={lead.id} /> : null}
       {tab === "activity" ? <ActivityPanel leadId={lead.id} activities={activities} queue={queue} /> : null}
       {tab === "flows" ? <FlowsPanel leadId={lead.id} enrollments={enrollments} available={availableFlows} /> : null}
       {tab === "matches" ? <MatchesPanel /> : null}
