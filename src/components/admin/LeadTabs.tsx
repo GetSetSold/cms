@@ -203,11 +203,14 @@ function FormSubmissionPanel({ lead }: { lead: Lead }) {
           ) : null}
         </dl>
       ) : (
-        <p className="text-[13px] text-muted">This form had no additional questions beyond name, email and phone.</p>
+        <p className="text-[13px] text-muted">No answers stored on the main submission — see attached forms below.</p>
       )}
       {showAll ? <SubmissionModal lead={lead} onClose={() => setShowAll(false)} /> : null}
     </div>
-    <AttachedForms leadId={lead.id} />
+    <div className="flex flex-col gap-3">
+      <h3 className="text-[15px] font-bold">Attached forms</h3>
+      <AttachedForms leadId={lead.id} />
+    </div>
     </div>
   );
 }
@@ -276,6 +279,8 @@ function FlowsPanel({ leadId, enrollments, available }: { leadId: string; enroll
 function ActivityPanel({ leadId, activities, queue }: { leadId: string; activities: Activity[]; queue: QueueItem[] }) {
   const [note, setNote] = useState("");
   const [msg, setMsg] = useState("");
+  const [filter, setFilter] = useState<string>("");
+  const [open, setOpen] = useState<string | null>(null);
 
   async function addNote() {
     if (!note.trim()) return;
@@ -286,6 +291,9 @@ function ActivityPanel({ leadId, activities, queue }: { leadId: string; activiti
     setMsg(error ? error.message : "Note added");
   }
 
+  const types = [...new Set(activities.map((a) => a.type))];
+  const visible = filter ? activities.filter((a) => a.type === filter) : activities;
+
   return (
     <div className="flex flex-col gap-4">
       <div className="card flex flex-col gap-3">
@@ -294,25 +302,53 @@ function ActivityPanel({ leadId, activities, queue }: { leadId: string; activiti
         <button className="btn-primary w-fit" disabled={!note.trim()} onClick={addNote}>Add note</button>
         {msg ? <p className="text-sm text-muted" role="status">{msg}</p> : null}
       </div>
-      <div className="card flex flex-col gap-4">
-        <strong>Activity</strong>
-      {queue.map((q) => (
-        <div key={q.id} className="flex gap-3">
-          <div className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full border-2 border-dashed border-[#B5AFA2]" />
-          <div><div className="font-medium text-muted">Scheduled {q.channel}</div><div className="text-xs text-muted">{new Date(q.run_at).toLocaleString()}</div></div>
+      <div className="card flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <strong>Activity</strong>
+          <span className="text-xs text-muted">{visible.length} items</span>
         </div>
-      ))}
-      {activities.map((a) => (
-        <div key={a.id} className="flex gap-3">
-          <div className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ${DOT[a.type] ?? "bg-line"}`} />
-          <div>
-            <div className="font-medium">{LABEL[a.type] ?? a.type}{a.meta?.automation ? " · automation" : ""}</div>
-            {a.body ? <div className="whitespace-pre-line text-[13px] text-muted">{a.body}</div> : null}
-            <div className="text-xs text-muted">{new Date(a.created_at).toLocaleString()}</div>
+        {types.length > 1 ? (
+          <div className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <button className={`shrink-0 rounded-full px-3 py-1.5 text-[12px] font-medium ${!filter ? "bg-[#111] text-white" : "bg-[#f7f7f7] text-[#333]"}`} onClick={() => setFilter("")}>All</button>
+            {types.map((t) => (
+              <button key={t} className={`shrink-0 rounded-full px-3 py-1.5 text-[12px] font-medium ${filter === t ? "bg-[#111] text-white" : "bg-[#f7f7f7] text-[#333]"}`} onClick={() => setFilter(t)}>{LABEL[t] ?? t}</button>
+            ))}
           </div>
+        ) : null}
+        <div className="flex flex-col gap-2">
+          {queue.map((q) => (
+            <div key={q.id} className="flex items-center gap-3 rounded-lg bg-[#f7f7f7] px-3 py-2">
+              <div className="h-2 w-2 shrink-0 rounded-full border-2 border-dashed border-[#B5AFA2]" />
+              <div className="min-w-0 flex-1">
+                <span className="text-[13px] font-medium text-muted">Scheduled {q.channel}</span>
+                <span className="ml-2 text-xs text-muted">{new Date(q.run_at).toLocaleString()}</span>
+              </div>
+            </div>
+          ))}
+          {visible.map((a) => {
+            const isOpen = open === a.id;
+            const preview = (a.body ?? "").split("\n")[0].slice(0, 80);
+            return (
+              <div key={a.id} className="rounded-lg bg-[#f7f7f7]">
+                <button className="flex w-full items-center gap-3 px-3 py-2 text-left" onClick={() => setOpen(isOpen ? null : a.id)}>
+                  <div className={`h-2 w-2 shrink-0 rounded-full ${DOT[a.type] ?? "bg-line"}`} />
+                  <span className="min-w-0 flex-1 truncate text-[13px] font-medium">{LABEL[a.type] ?? a.type}{a.meta?.automation ? " · auto" : ""}</span>
+                  <span className="shrink-0 text-xs text-muted">{new Date(a.created_at).toLocaleDateString()}</span>
+                  <span className="shrink-0 text-muted">{isOpen ? "▲" : "▼"}</span>
+                </button>
+                {isOpen && a.body ? (
+                  <div className="border-t border-line/60 px-3 py-2">
+                    <div className="whitespace-pre-line text-[13px]">{a.body}</div>
+                    <div className="mt-1 text-xs text-muted">{new Date(a.created_at).toLocaleString()}</div>
+                  </div>
+                ) : !isOpen && preview ? (
+                  <div className="truncate px-3 pb-2 pl-8 text-xs text-muted">{preview}</div>
+                ) : null}
+              </div>
+            );
+          })}
         </div>
-      ))}
-      {!activities.length && !queue.length ? <p className="text-[13px] text-muted">Nothing yet.</p> : null}
+        {!visible.length && !queue.length ? <p className="text-[13px] text-muted">Nothing yet.</p> : null}
       </div>
     </div>
   );
@@ -480,6 +516,7 @@ function CommunicationPanel({ lead }: { lead: Lead }) {
   const [emailSubject, setEmailSubject] = useState("");
   const [emailBody, setEmailBody] = useState("");
   const [msg, setMsg] = useState("");
+  const [sending, setSending] = useState<"sms" | "email" | null>(null);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [tplCategory, setTplCategory] = useState<string>("");
   const canSms = !!lead.phone && lead.sms_opt_in && !lead.sms_opted_out;
@@ -509,7 +546,9 @@ function CommunicationPanel({ lead }: { lead: Lead }) {
   }
 
   async function sendSms() {
+    setSending("sms"); setMsg("");
     const { data, error } = await supabase.functions.invoke("send-sms", { body: { lead_id: lead.id, body: sms } });
+    setSending(null);
     if (error || (data as { error?: string })?.error) {
       setMsg((data as { error?: string })?.error ?? error?.message ?? "Failed");
       return;
@@ -518,7 +557,9 @@ function CommunicationPanel({ lead }: { lead: Lead }) {
   }
 
   async function sendEmail() {
+    setSending("email"); setMsg("");
     const { data, error } = await supabase.functions.invoke("send-email", { body: { lead_id: lead.id, subject: emailSubject, body: emailBody } });
+    setSending(null);
     if (error || (data as { error?: string })?.error) {
       setMsg((data as { error?: string })?.error ?? error?.message ?? "Failed");
       return;
@@ -530,21 +571,22 @@ function CommunicationPanel({ lead }: { lead: Lead }) {
     <div className="flex flex-col gap-4">
       {templates.length ? (
         <div className="card flex flex-col gap-3">
-          <strong>Templates</strong>
-          <div className="flex flex-wrap gap-2">
-            <button className={`rounded-full px-4 py-2 text-[13px] font-medium ${!tplCategory ? "bg-[#111] text-white" : "bg-[#f7f7f7] text-[#333]"}`} onClick={() => setTplCategory("")}>All</button>
+          <div className="flex items-center justify-between">
+            <strong>Templates</strong>
+            <span className="text-xs text-muted">{visible.length} available</span>
+          </div>
+          <div className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <button className={`shrink-0 rounded-full px-3 py-1.5 text-[12px] font-medium ${!tplCategory ? "bg-[#111] text-white" : "bg-[#f7f7f7] text-[#333]"}`} onClick={() => setTplCategory("")}>All</button>
             {categories.map((c) => (
-              <button key={c} className={`rounded-full px-4 py-2 text-[13px] font-medium capitalize ${tplCategory === c ? "bg-[#111] text-white" : "bg-[#f7f7f7] text-[#333]"}`} onClick={() => setTplCategory(c)}>{c}</button>
+              <button key={c} className={`shrink-0 rounded-full px-3 py-1.5 text-[12px] font-medium capitalize ${tplCategory === c ? "bg-[#111] text-white" : "bg-[#f7f7f7] text-[#333]"}`} onClick={() => setTplCategory(c)}>{c}</button>
             ))}
           </div>
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-1.5">
             {visible.map((t, i) => (
-              <button key={i} className="flex items-center justify-between gap-3 rounded-xl bg-[#f7f7f7] p-3 text-left hover:bg-[#eee]" onClick={() => useTemplate(t)}>
-                <span className="min-w-0">
-                  <span className="block truncate text-[14px] font-medium">{t.channel === "email" && t.subject ? t.subject : t.body.slice(0, 60)}</span>
-                  <span className="text-xs text-muted capitalize">{t.channel} · {t.flow} · {t.category}</span>
-                </span>
-                <span className="shrink-0 text-[12px] font-medium text-[#0066cc]">Use</span>
+              <button key={i} className="flex items-center gap-2 rounded-lg bg-[#f7f7f7] px-3 py-2 text-left hover:bg-[#eee]" onClick={() => useTemplate(t)}>
+                <span className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-bold uppercase ${t.channel === "sms" ? "bg-[#0066cc] text-white" : "bg-[#111] text-white"}`}>{t.channel}</span>
+                <span className="min-w-0 flex-1 truncate text-[13px]">{t.channel === "email" && t.subject ? t.subject : t.body.slice(0, 50)}</span>
+                <span className="shrink-0 text-[11px] text-muted">{t.flow}</span>
               </button>
             ))}
           </div>
@@ -556,7 +598,9 @@ function CommunicationPanel({ lead }: { lead: Lead }) {
         {canSms ? (
           <>
             <textarea className="textarea" rows={3} maxLength={1200} value={sms} onChange={(e) => setSms(e.target.value)} placeholder={`Message ${leadName}…`} />
-            <button className="btn-primary w-fit" disabled={!sms.trim()} onClick={sendSms}>Send SMS</button>
+            <button className="btn-primary w-fit" disabled={!sms.trim() || sending === "sms"} onClick={sendSms}>
+              {sending === "sms" ? <><span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" /> Sending…</> : "Send SMS"}
+            </button>
           </>
         ) : (
           <p className="text-[13px] text-muted">{lead.sms_opted_out ? "This lead replied STOP." : !lead.phone ? "No phone number on file." : "No SMS consent — call or email instead."}</p>
@@ -569,7 +613,9 @@ function CommunicationPanel({ lead }: { lead: Lead }) {
           <>
             <input className="input" placeholder="Subject" value={emailSubject} onChange={(e) => setEmailSubject(e.target.value)} />
             <textarea className="textarea" rows={5} value={emailBody} onChange={(e) => setEmailBody(e.target.value)} placeholder={`Email ${leadName}…`} />
-            <button className="btn-primary w-fit" disabled={!emailSubject.trim() || !emailBody.trim()} onClick={sendEmail}>Send email</button>
+            <button className="btn-primary w-fit" disabled={!emailSubject.trim() || !emailBody.trim() || sending === "email"} onClick={sendEmail}>
+              {sending === "email" ? <><span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" /> Sending…</> : "Send email"}
+            </button>
           </>
         ) : (
           <p className="text-[13px] text-muted">No email address on file.</p>
