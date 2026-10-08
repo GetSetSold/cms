@@ -89,8 +89,17 @@ export function FormSubmissionCard({ submission, bare }: { submission: FormSubmi
 
   async function revoke(token: string) {
     if (!confirm("Revoke this link? It will stop working immediately.")) return;
-    const { error } = await createClient().from("form_shares").delete().eq("token", token);
-    if (!error) setShares(shares.filter((s) => s.token !== token));
+    const res = await fetch("/api/form-shares/revoke", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) {
+      setShares(shares.filter((s) => s.token !== token));
+    } else {
+      setMsg(data.error ?? "Failed to revoke link.");
+    }
   }
 
   async function copy(url: string) {
