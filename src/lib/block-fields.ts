@@ -162,6 +162,7 @@ export const BLOCK_FIELDS: Record<string, Field[]> = {
     t("thickness", "Thickness (px)"),
     { key: "width", label: "Width", type: "select", options: ["100%", "75%", "50%", "25%"] },
     t("spacing", "Space above/below (px)"),
+    { key: "full_bleed", label: "Full width (edge to edge, ignores page width)", type: "boolean" },
   ],
   section_header: [
     t("eyebrow", "Eyebrow (colored, above the heading)"),

@@ -861,16 +861,21 @@ function Divider({ data }: BlockProps) {
   const thickness = Number(data.thickness) || 1;
   const width = data.width || "100%";
   const spacing = Number(data.spacing) || 24;
+  const fullBleed = !!data.full_bleed;
+  const hr = (
+    <hr
+      style={{
+        border: "none",
+        borderTop: `${thickness}px solid ${color}`,
+        width: fullBleed ? "100%" : width,
+        margin: `${spacing}px auto`,
+      }}
+    />
+  );
+  if (fullBleed) return <div aria-hidden="true">{hr}</div>;
   return (
     <div className={wrap} aria-hidden="true">
-      <hr
-        style={{
-          border: "none",
-          borderTop: `${thickness}px solid ${color}`,
-          width,
-          margin: `${spacing}px auto`,
-        }}
-      />
+      {hr}
     </div>
   );
 }
