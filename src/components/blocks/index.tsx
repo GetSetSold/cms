@@ -1304,10 +1304,11 @@ function renderOne(s: Section, ctx: BlockCtx) {
   // Border classes: only apply border if enabled.
   const boxBorder = showBorder && !globalBorderHidden ? "border-[length:var(--border-card-width)]" : "border-0";
   const boxShadow = "shadow-[var(--shadow-card)]";
-  // When global border is hidden, go full-width (no side padding, no rounded corners, no max-width).
-  const boxWrap = globalBorderHidden ? "w-full py-5 md:py-12" : `${wrap} py-5 md:py-12`;
+  // When global border is hidden, use standard page width (same as hero) but no card styling.
+  // All blocks align to the same width — no edge-to-edge, no narrow blocks.
+  const boxWrap = `${wrap} py-5 md:py-12`;
   const boxInner = globalBorderHidden
-    ? `p-6 md:p-8 ${boxBorder} ${boxShadow}`
+    ? `p-6 md:p-8 ${boxShadow}`
     : `rounded-[var(--radius-lg)] p-6 md:p-8 ${boxBorder} ${showBorder && !globalBorderHidden ? "border-line" : ""} ${boxShadow}`;
 
   const dividerEl = showDivider ? (
@@ -1326,7 +1327,12 @@ function renderOne(s: Section, ctx: BlockCtx) {
             <div className={boxInner} style={{ background: box.css, borderColor: showBorder && !globalBorderHidden ? borderColor : undefined }}>{content}</div>
           </div>
         )
-      ) : content}
+      ) : (
+        // No box: render directly without extra wrap to avoid double-wrapping.
+        // Blocks with internal wrap get correct single padding; blocks without
+        // are full-width (unified, not narrow). Keep vertical rhythm.
+        <div className="py-5 md:py-12">{content}</div>
+      )}
       {dividerEl}
     </section>
   );
