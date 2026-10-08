@@ -30,6 +30,7 @@ const heading = (ctx: BlockCtx) => (ctx.dark ? "text-ground" : "text-ink");
 type BlockProps = { data: any; ctx: BlockCtx };
 
 const wrap = "mx-auto w-full max-w-7xl px-5 md:px-10";
+export { wrap };
 const h2 = "font-display font-bold tracking-tight text-[26px] leading-tight md:text-[56px] md:leading-none";
 // Shared compact heading size, used everywhere `h2` is — one definition instead of repeating a
 // smaller scale at every call site. Site-wide Density (Settings → Branding) drives this.
