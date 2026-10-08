@@ -57,7 +57,7 @@ function SubformTable({ rows, subfields }: { rows: Record<string, unknown>[]; su
 type Share = { token: string; url: string; expires_at: string; view_count: number; created_at: string };
 
 /** Unified form submission card: expand, edit (prefilled + subforms), share with per-form link history, start flow. */
-export function FormSubmissionCard({ submission }: { submission: FormSubmission }) {
+export function FormSubmissionCard({ submission, bare }: { submission: FormSubmission; bare?: boolean }) {
   const [expanded, setExpanded] = useState(false);
   const [editing, setEditing] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -142,7 +142,7 @@ export function FormSubmissionCard({ submission }: { submission: FormSubmission 
   if (gone) return null;
 
   return (
-    <div className="card flex flex-col gap-3">
+    <div className={bare ? "flex flex-col gap-3" : "card flex flex-col gap-3"}>
       <div className="flex items-start justify-between gap-3">
         <div>
           <strong className="text-[16px]">{submission.formName}</strong>

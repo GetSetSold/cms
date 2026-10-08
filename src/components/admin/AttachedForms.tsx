@@ -52,11 +52,11 @@ export function AttachedForms({ leadId }: { leadId: string }) {
   if (!submissions.length) return null;
 
   return (
-    <div className="flex flex-col divide-y divide-line">
-      {msg ? <p className="text-sm text-muted" role="status">{msg}</p> : null}
-      {submissions.map((s) => (
-        <div key={s.id} className="py-3 first:pt-0 last:pb-0">
-          <FormSubmissionCard submission={s} />
+    <div className="card flex flex-col !gap-0 !p-0">
+      {msg ? <p className="p-6 pb-0 text-sm text-muted" role="status">{msg}</p> : null}
+      {submissions.map((s, i) => (
+        <div key={s.id} className={`px-6 py-4 ${i > 0 ? "border-t border-line" : ""}`}>
+          <FormSubmissionCard submission={s} bare />
         </div>
       ))}
     </div>
