@@ -1309,7 +1309,7 @@ function renderOne(s: Section, ctx: BlockCtx) {
   // no double-wrapping. Blocks without internal wrap fill the card.
   const boxWrap = "w-full py-5 md:py-12";
   const boxInner = globalBorderHidden
-    ? `mx-auto w-full max-w-7xl px-5 md:px-10 ${boxShadow}`
+    ? `mx-auto w-full max-w-7xl ${boxShadow}`
     : `mx-auto w-full max-w-7xl rounded-[var(--radius-lg)] p-6 md:p-8 ${boxBorder} ${showBorder && !globalBorderHidden ? "border-line" : ""} ${boxShadow}`;
 
   const dividerEl = showDivider ? (
