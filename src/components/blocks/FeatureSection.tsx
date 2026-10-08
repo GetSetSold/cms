@@ -72,7 +72,7 @@ function Intro({ data, t, topRule, bs, compact, bg, accent }: { data: any; t: To
             <p className={`text-sm font-medium leading-relaxed ${t.head}`}>{data.footnote}</p>
           </>
         ) : null}
-        {link ? <Cta href={link.href} label={link.label} t={t} style={bs} textSize="text-base md:text-xl" /> : null}
+        {link ? <Cta href={link.href} label={link.label} t={t} style={bs} textSize="text-base md:text-xl" className="self-end md:self-start" /> : null}
       </div>
     );
   }
@@ -93,7 +93,7 @@ function Intro({ data, t, topRule, bs, compact, bg, accent }: { data: any; t: To
           <p className={`text-[15px] font-medium leading-relaxed md:text-lg ${t.head}`}>{data.footnote}</p>
         </>
       ) : null}
-      {link ? <Cta href={link.href} label={link.label} t={t} style={bs} textSize="text-base md:text-xl" /> : null}
+      {link ? <Cta href={link.href} label={link.label} t={t} style={bs} textSize="text-base md:text-xl" className="self-end md:self-start" /> : null}
     </div>
   );
 }
@@ -110,7 +110,7 @@ function Row({ it, ctx, t, bs }: { it: Item; ctx: BlockCtx; t: Tone; bs?: "solid
         {it.title ? <h3 className={`text-lg font-semibold md:text-2xl ${t.head}`}>{it.title}</h3> : null}
         {it.text ? <p className={`text-sm leading-relaxed md:text-base ${t.body}`}>{it.text}</p> : null}
       </div>
-      {it.href ? <Cta href={it.href} label={it.link_label || "Learn more"} t={t} style={bs} className="col-span-2 whitespace-nowrap md:col-span-1 md:justify-self-end" /> : null}
+      {it.href ? <Cta href={it.href} label={it.link_label || "Learn more"} t={t} style={bs} className="col-span-2 justify-self-end whitespace-nowrap md:col-span-1" /> : null}
     </div>
   );
 }
@@ -132,7 +132,7 @@ function Cell({ it, ctx, t, i, n, bs }: { it: Item; ctx: BlockCtx; t: Tone; i: n
       <Icon it={it} ctx={ctx} t={t} boxed />
       {it.title ? <h3 className={`text-xl font-semibold md:text-2xl ${t.head}`}>{it.title}</h3> : null}
       {it.text ? <p className={`text-sm leading-relaxed md:text-base ${t.body}`}>{it.text}</p> : null}
-      {it.href ? <Cta href={it.href} label={it.link_label || "Learn more"} t={t} style={bs} /> : null}
+      {it.href ? <Cta href={it.href} label={it.link_label || "Learn more"} t={t} style={bs} className="self-end md:self-start" /> : null}
     </div>
   );
 }
@@ -143,7 +143,9 @@ export function FeatureSection({ data, ctx }: { data: any; ctx: BlockCtx }) {
   const custom: string | undefined = /^#[0-9a-f]{6}$/i.test(data.color ?? "") ? data.color : undefined;
   const items: Item[] = data.items ?? [];
   const bs = ctx.buttonStyle;
-  const outer = ctx.inRow ? "h-full w-full" : `${wrap} py-5 md:py-12`;
+  const borderHidden = ctx.settings.theme?.card_border === false;
+  // When border is hidden, go full-width on mobile (no side padding) like other blocks.
+  const outer = ctx.inRow ? "h-full w-full" : borderHidden ? "mx-auto w-full max-w-7xl md:px-10 py-5 md:py-12" : `${wrap} py-5 md:py-12`;
 
   // One custom color colors the WHOLE section (both halves) and drives the
   // text contrast. Without it each layout keeps its own default look.
@@ -165,7 +167,7 @@ export function FeatureSection({ data, ctx }: { data: any; ctx: BlockCtx }) {
               <div className="flex flex-col gap-1.5">
                 {it.title ? <h3 className={`text-lg font-semibold md:text-2xl ${tr.head}`}>{it.title}</h3> : null}
                 {it.text ? <p className={`text-sm leading-relaxed md:text-base ${tr.body}`}>{it.text}</p> : null}
-                {it.href ? <Cta href={it.href} label={it.link_label || "Learn more"} t={tr} style={bs} textSize="text-[15px]" className="mt-1" /> : null}
+                {it.href ? <Cta href={it.href} label={it.link_label || "Learn more"} t={tr} style={bs} textSize="text-[15px]" className="mt-1 self-end md:self-start" /> : null}
               </div>
             </div>
           ))}
@@ -204,7 +206,7 @@ export function FeatureSection({ data, ctx }: { data: any; ctx: BlockCtx }) {
 
   return (
     <div className={outer}>
-      <div className={`${shell} ${ctx.inRow ? "h-full" : ""}`} style={fill ? { background: fill } : undefined}>{body}</div>
+      <div className={`${borderHidden ? "overflow-hidden md:rounded-[var(--radius-lg)] shadow-[var(--shadow-card)]" : shell} ${ctx.inRow ? "h-full" : ""}`} style={fill ? { background: fill } : undefined}>{body}</div>
     </div>
   );
 }
