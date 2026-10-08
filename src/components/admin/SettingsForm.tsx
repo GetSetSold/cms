@@ -45,7 +45,7 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
     setMsg(error ? error.message : "Saved");
   }
 
-  const colors: [keyof SiteSettings["theme"], string][] = [["primary", "Primary"], ["accent", "Accent"], ["ink", "Text"], ["ground", "Background"]];
+  const colorEntries: Array<["primary" | "accent" | "ink" | "ground", string]> = [["primary", "Primary"], ["accent", "Accent"], ["ink", "Text"], ["ground", "Background"]];
   const presets: { name: string; theme: SiteSettings["theme"] }[] = [
     { name: "Purple & indigo", theme: { primary: "#6C5DD3", accent: "#1B1145", ink: "#14142B", ground: "#F4F2FC", font_heading: "Space Grotesk", font_body: "Inter" } },
     { name: "Teal & clay", theme: { primary: "#0E5C55", accent: "#B8581F", ink: "#15171C", ground: "#F5F3EE", font_heading: "Manrope", font_body: "Inter" } },
@@ -92,7 +92,7 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-                      {colors.map(([k, label]) => (
+                      {colorEntries.map(([k, label]) => (
                         <label key={k} className="label">{label}
                           <span className="flex items-center gap-2 rounded-lg border border-line p-1.5">
                             <input type="color" value={s.theme[k]} onChange={(e) => set("theme", { ...s.theme, [k]: e.target.value })} className="h-8 w-8 cursor-pointer rounded border-0 bg-transparent" />
@@ -159,6 +159,19 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
                             <option value="sharp">Sharp</option>
                           </select>
                         </label>
+                      </div>
+                      <div className="flex flex-wrap gap-4">
+                        <label className="flex items-center gap-2 text-sm">Card border
+                          <input type="checkbox" checked={s.theme.card_border !== false}
+                            onChange={(e) => set("theme", { ...s.theme, card_border: e.target.checked })} />
+                        </label>
+                        {s.theme.card_border !== false ? (
+                          <label className="flex items-center gap-2 text-sm">Border color
+                            <input type="color" value={/^#[0-9a-f]{6}$/i.test(s.theme.card_border_color ?? "") ? s.theme.card_border_color : "#e5e5e5"}
+                              onChange={(e) => set("theme", { ...s.theme, card_border_color: e.target.value })}
+                              className="h-7 w-9 cursor-pointer rounded border-0 bg-transparent" />
+                          </label>
+                        ) : null}
                       </div>
                     </div>
 

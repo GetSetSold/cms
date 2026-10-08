@@ -75,7 +75,9 @@ export function themeVars(settings: SiteSettings): React.CSSProperties {
     "--radius-btn": btnRadius,
     "--radius-label": labelRadius,
     "--shadow-card": shadow.shadow,
-    "--border-card-width": shadow.borderWidth,
+    "--border-card-width": t.card_border === false ? "0px" : shadow.borderWidth,
+    // Global card border color override (Settings > Branding > Shape).
+    ...(t.card_border_color ? { "--c-line": t.card_border_color } : {}),
   };
   // Forces the background behind every icon (hero's centered icon circle,
   // icon_card's box) to one color at once, sitewide — distinct from
