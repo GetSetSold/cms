@@ -50,6 +50,7 @@ Deno.serve(async (req) => {
     await db.from("lead_activities").insert({ lead_id, type: "email_out", body: `${renderedSubject}\n\n${rendered}`, created_by: user.id, meta: sent });
     return json(req, { ok: true });
   } catch (e) {
-    return json(req, { error: String((e as Error)?.message ?? e), stack: String((e as Error)?.stack ?? "").slice(0, 500) }, 502);
+    // Return 200 (not 502) so the gateway doesn't mask the real error as EDGE_FUNCTION_ERROR.
+    return json(req, { error: String((e as Error)?.message ?? e), stack: String((e as Error)?.stack ?? "").slice(0, 800) }, 200);
   }
 });
