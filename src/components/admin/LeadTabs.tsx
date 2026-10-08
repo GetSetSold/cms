@@ -119,8 +119,40 @@ function FormSubmissionPanel({ lead }: { lead: Lead }) {
   const [draft, setDraft] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState("");
+  const [flows, setFlows] = useState<{ id: string; name: string; steps: { channel: string; delay_minutes?: number }[] }[]>([]);
+  const [flowOpen, setFlowOpen] = useState(false);
+  const [flowId, setFlowId] = useState("");
+  const [sections, setSections] = useState<{ id: string; heading?: string; fields: { key: string; label: string; type: string }[] }[]>([]);
+  const [expanded, setExpanded] = useState(false);
   const entries = Object.entries(lead.custom_fields ?? {});
   const preview = entries.slice(0, 5);
+
+  useEffect(() => {
+    createClient().from("lead_flows").select("id,name,steps").eq("is_active", true).order("name")
+      .then(({ data }) => setFlows((data ?? []) as { id: string; name: string; steps: { channel: string; delay_minutes?: number }[] }[]));
+    if (lead.form_key) {
+      createClient().from("forms").select("sections").eq("form_key", lead.form_key).maybeSingle()
+        .then(({ data }) => {
+          if (data) setSections(((data as { sections: { id: string; heading?: string; fields: { key: string; label: string; type: string }[] }[] }).sections ?? []));
+        });
+    }
+  }, [lead.form_key]);
+
+  async function startFlow() {
+    if (!flowId) return;
+    const flow = flows.find((f) => f.id === flowId);
+    if (!flow) return;
+    const sb = createClient();
+    const { error } = await sb.from("lead_flow_enrollments").insert({ lead_id: lead.id, flow_id: flow.id });
+    if (error) { setMsg(error.message); return; }
+    const now = Date.now();
+    const queue = flow.steps.map((step, i) => ({
+      lead_id: lead.id, sequence_id: flow.id, step_index: i, channel: step.channel,
+      run_at: new Date(now + (Number(step.delay_minutes) || 0) * 60_000).toISOString(),
+    }));
+    if (queue.length) await sb.from("follow_up_queue").insert(queue);
+    setMsg(`Added to “${flow.name}”`); setFlowOpen(false); setFlowId("");
+  }
 
   function startEdit() {
     const d: Record<string, string> = {};
@@ -168,6 +200,25 @@ function FormSubmissionPanel({ lead }: { lead: Lead }) {
               View
             </button>
           ) : null}
+          {entries.length > 0 && !editing ? (
+            <ShareFormButton leadId={lead.id} label="Share" />
+          ) : null}
+          {entries.length > 0 && !editing ? (
+            flowOpen ? (
+              <div className="flex gap-2">
+                <select className="input h-9 text-[13px]" value={flowId} onChange={(e) => setFlowId(e.target.value)}>
+                  <option value="">Choose flow…</option>
+                  {flows.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
+                </select>
+                <button className="btn-primary h-9 px-4 text-[13px]" disabled={!flowId} onClick={startFlow}>Start</button>
+                <button className="btn h-9 px-3 text-[13px]" onClick={() => { setFlowOpen(false); setFlowId(""); }}>✕</button>
+              </div>
+            ) : (
+              <button onClick={() => setFlowOpen(true)} className="btn h-9 shrink-0 px-4 text-[13px]">
+                Start flow
+              </button>
+            )
+          ) : null}
         </div>
       </div>
       {msg ? <p className="text-sm text-muted" role="status">{msg}</p> : null}
@@ -190,6 +241,34 @@ function FormSubmissionPanel({ lead }: { lead: Lead }) {
             <button className="btn-primary" disabled={saving} onClick={saveAnswers}>{saving ? "Saving…" : "Save answers"}</button>
             <button className="btn" onClick={() => { setEditing(false); setMsg(""); }}>Cancel</button>
           </div>
+        </div>
+      ) : sections.length ? (
+        <div className="flex flex-col gap-5">
+          {(expanded ? sections : sections.slice(0, 2)).map((sec) => {
+            const answered = sec.fields.filter((f) => {
+              const v = (lead.custom_fields ?? {})[f.key];
+              return v != null && v !== "" && !(Array.isArray(v) && !v.length);
+            });
+            if (!answered.length) return null;
+            return (
+              <section key={sec.id}>
+                {sec.heading ? <h4 className="mb-2 border-b border-line pb-1.5 text-[14px] font-bold">{sec.heading}</h4> : null}
+                <dl className="grid gap-x-6 gap-y-3 sm:grid-cols-2">
+                  {answered.map((f) => (
+                    <div key={f.key}>
+                      <dt className="text-[11px] uppercase tracking-wide text-muted">{f.label}</dt>
+                      <dd className="mt-0.5 text-[14px]"><FieldValue v={(lead.custom_fields ?? {})[f.key]} /></dd>
+                    </div>
+                  ))}
+                </dl>
+              </section>
+            );
+          })}
+          {sections.length > 2 ? (
+            <button className="text-[13px] font-medium text-[#0066cc] hover:underline" onClick={() => setExpanded(!expanded)}>
+              {expanded ? "Show less" : `Show all ${sections.length} sections`}
+            </button>
+          ) : null}
         </div>
       ) : (
         <dl className="flex flex-col">
