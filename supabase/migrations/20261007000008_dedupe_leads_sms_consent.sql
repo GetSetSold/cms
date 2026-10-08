@@ -20,7 +20,14 @@ BEGIN
       -- Move child records
       UPDATE lead_form_attachments SET lead_id = keep_id WHERE lead_id = dup_id;
       UPDATE lead_activities SET lead_id = keep_id WHERE lead_id = dup_id;
+      -- Flow enrollments: delete dup's if keep already enrolled (unique constraint)
+      DELETE FROM lead_flow_enrollments d USING lead_flow_enrollments k
+        WHERE d.lead_id = dup_id AND k.lead_id = keep_id AND d.flow_id = k.flow_id;
       UPDATE lead_flow_enrollments SET lead_id = keep_id WHERE lead_id = dup_id;
+      -- Follow-up queue: same dedupe by (lead_id, sequence_id, step_index)
+      DELETE FROM follow_up_queue d USING follow_up_queue k
+        WHERE d.lead_id = dup_id AND k.lead_id = keep_id
+          AND d.sequence_id = k.sequence_id AND d.step_index = k.step_index;
       UPDATE follow_up_queue SET lead_id = keep_id WHERE lead_id = dup_id;
       UPDATE opportunities SET lead_id = keep_id WHERE lead_id = dup_id;
       UPDATE form_shares SET lead_id = keep_id WHERE lead_id = dup_id;
@@ -55,7 +62,12 @@ BEGIN
       dup_id := grp.ids[i];
       UPDATE lead_form_attachments SET lead_id = keep_id WHERE lead_id = dup_id;
       UPDATE lead_activities SET lead_id = keep_id WHERE lead_id = dup_id;
+      DELETE FROM lead_flow_enrollments d USING lead_flow_enrollments k
+        WHERE d.lead_id = dup_id AND k.lead_id = keep_id AND d.flow_id = k.flow_id;
       UPDATE lead_flow_enrollments SET lead_id = keep_id WHERE lead_id = dup_id;
+      DELETE FROM follow_up_queue d USING follow_up_queue k
+        WHERE d.lead_id = dup_id AND k.lead_id = keep_id
+          AND d.sequence_id = k.sequence_id AND d.step_index = k.step_index;
       UPDATE follow_up_queue SET lead_id = keep_id WHERE lead_id = dup_id;
       UPDATE opportunities SET lead_id = keep_id WHERE lead_id = dup_id;
       UPDATE form_shares SET lead_id = keep_id WHERE lead_id = dup_id;
