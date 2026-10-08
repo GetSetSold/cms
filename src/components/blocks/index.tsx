@@ -1304,10 +1304,10 @@ function renderOne(s: Section, ctx: BlockCtx) {
   // Border classes: only apply border if enabled.
   const boxBorder = showBorder && !globalBorderHidden ? "border-[length:var(--border-card-width)]" : "border-0";
   const boxShadow = "shadow-[var(--shadow-card)]";
-  // When global border is hidden, go full-width on mobile (no side padding, no rounded corners).
-  const boxWrap = globalBorderHidden ? "mx-auto w-full max-w-7xl md:px-10 py-5 md:py-12" : `${wrap} py-5 md:py-12`;
+  // When global border is hidden, go full-width (no side padding, no rounded corners, no max-width).
+  const boxWrap = globalBorderHidden ? "w-full py-5 md:py-12" : `${wrap} py-5 md:py-12`;
   const boxInner = globalBorderHidden
-    ? `p-6 md:p-8 md:rounded-[var(--radius-lg)] ${boxBorder} ${boxShadow}`
+    ? `p-6 md:p-8 ${boxBorder} ${boxShadow}`
     : `rounded-[var(--radius-lg)] p-6 md:p-8 ${boxBorder} ${showBorder && !globalBorderHidden ? "border-line" : ""} ${boxShadow}`;
 
   const dividerEl = showDivider ? (
