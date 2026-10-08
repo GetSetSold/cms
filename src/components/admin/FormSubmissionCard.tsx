@@ -299,17 +299,47 @@ function EditSubmissionModal({ submission, onClose, onSaved }: {
                       </div>
                     );
                   }
+                  if (f.type === "radio" && f.options?.length) {
+                    const val = draft[f.key] ?? "";
+                    return (
+                      <fieldset key={f.key} className="label sm:col-span-2">
+                        <legend className="mb-2 text-[13px] font-medium">{f.label}</legend>
+                        <div className="flex flex-wrap gap-2">
+                          {f.options.map((o) => (
+                            <label key={o} className={`cursor-pointer rounded-[var(--radius-btn)] border px-4 py-2 text-[13px] transition ${val === o ? "border-[#0066cc] bg-[#0066cc] text-white" : "border-line bg-white hover:border-[#0066cc]"}`}>
+                              <input type="radio" className="sr-only" checked={val === o} onChange={() => setDraft({ ...draft, [f.key]: o })} />
+                              {o}
+                            </label>
+                          ))}
+                        </div>
+                      </fieldset>
+                    );
+                  }
+                  if (f.type === "checkbox") {
+                    const checked = (draft[f.key] ?? "") === "Yes" || (draft[f.key] ?? "") === "true";
+                    return (
+                      <label key={f.key} className="flex cursor-pointer items-center gap-2.5 rounded-[var(--radius-md)] bg-[#f7f7f7] p-3 text-[14px]">
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={(e) => setDraft({ ...draft, [f.key]: e.target.checked ? "Yes" : "No" })}
+                          className="h-4 w-4 rounded accent-[#0066cc]"
+                        />
+                        {f.label}
+                      </label>
+                    );
+                  }
                   return (
                     <label key={f.key} className={`label ${f.type === "textarea" ? "sm:col-span-2" : ""}`}>{f.label}
                       {f.type === "textarea" ? (
-                        <textarea className="textarea" rows={3} value={draft[f.key] ?? ""} onChange={(e) => setDraft({ ...draft, [f.key]: e.target.value })} />
+                        <textarea className="textarea rounded-[var(--radius-md)]" rows={3} value={draft[f.key] ?? ""} onChange={(e) => setDraft({ ...draft, [f.key]: e.target.value })} />
                       ) : f.type === "dropdown" && f.options?.length ? (
-                        <select className="input" value={draft[f.key] ?? ""} onChange={(e) => setDraft({ ...draft, [f.key]: e.target.value })}>
+                        <select className="input rounded-[var(--radius-btn)]" value={draft[f.key] ?? ""} onChange={(e) => setDraft({ ...draft, [f.key]: e.target.value })}>
                           <option value="">Select…</option>
                           {f.options.map((o) => <option key={o} value={o}>{o}</option>)}
                         </select>
                       ) : (
-                        <input className="input" value={draft[f.key] ?? ""} onChange={(e) => setDraft({ ...draft, [f.key]: e.target.value })} />
+                        <input className="input rounded-[var(--radius-btn)]" type={f.type === "date" ? "date" : f.type === "email" ? "email" : f.type === "tel" ? "tel" : "text"} value={draft[f.key] ?? ""} onChange={(e) => setDraft({ ...draft, [f.key]: e.target.value })} />
                       )}
                     </label>
                   );
@@ -346,30 +376,92 @@ function SubformEditor({ field, rows, onChange }: {
     for (const sf of field.subfields ?? []) blank[sf.key] = "";
     onChange([...rows, blank]);
   }
+
+  function renderSubfield(sf: FormField, row: Record<string, string>, i: number) {
+    const val = row[sf.key] ?? "";
+    const set = (v: string) => setRow(i, sf.key, v);
+    const labelCls = "label text-[12px]";
+    if (sf.type === "dropdown" && sf.options?.length) {
+      return (
+        <label key={sf.key} className={labelCls}>{sf.label}
+          <select className="input h-9 rounded-[var(--radius-btn)] text-[13px]" value={val} onChange={(e) => set(e.target.value)}>
+            <option value="">Select…</option>
+            {sf.options.map((o) => <option key={o} value={o}>{o}</option>)}
+          </select>
+        </label>
+      );
+    }
+    if (sf.type === "radio" && sf.options?.length) {
+      return (
+        <fieldset key={sf.key} className={labelCls}>
+          <legend className="mb-1.5">{sf.label}</legend>
+          <div className="flex flex-wrap gap-2">
+            {sf.options.map((o) => (
+              <label key={o} className={`cursor-pointer rounded-[var(--radius-btn)] border px-3 py-1.5 text-[13px] transition ${val === o ? "border-[#0066cc] bg-[#0066cc] text-white" : "border-line bg-white hover:border-[#0066cc]"}`}>
+                <input type="radio" className="sr-only" checked={val === o} onChange={() => set(o)} />
+                {o}
+              </label>
+            ))}
+          </div>
+        </fieldset>
+      );
+    }
+    if (sf.type === "checkbox") {
+      const checked = val === "true" || val === "yes" || val === "Yes";
+      return (
+        <label key={sf.key} className="flex cursor-pointer items-center gap-2.5 rounded-[var(--radius-md)] bg-white p-3 text-[13px]">
+          <input
+            type="checkbox"
+            checked={checked}
+            onChange={(e) => set(e.target.checked ? "Yes" : "No")}
+            className="h-4 w-4 rounded accent-[#0066cc]"
+          />
+          {sf.label}
+        </label>
+      );
+    }
+    if (sf.type === "textarea") {
+      return (
+        <label key={sf.key} className={`${labelCls} sm:col-span-2`}>{sf.label}
+          <textarea className="textarea rounded-[var(--radius-md)] text-[13px]" rows={2} value={val} onChange={(e) => set(e.target.value)} />
+        </label>
+      );
+    }
+    return (
+      <label key={sf.key} className={labelCls}>{sf.label}
+        <input
+          className="input h-9 rounded-[var(--radius-btn)] text-[13px]"
+          type={sf.type === "date" ? "date" : sf.type === "email" ? "email" : sf.type === "tel" ? "tel" : sf.type === "number" ? "number" : "text"}
+          value={val}
+          onChange={(e) => set(e.target.value)}
+        />
+      </label>
+    );
+  }
+
   return (
-    <div className="rounded-xl bg-[#f7f7f7] p-4">
+    <div className="rounded-[var(--radius-lg)] bg-[#f7f7f7] p-4 shadow-[var(--shadow-card)]">
       <div className="mb-3 flex items-center justify-between">
-        <strong className="text-[14px]">{field.label}</strong>
-        <span className="text-xs text-muted">{rows.length} {rows.length === 1 ? "entry" : "entries"}</span>
+        <strong className="text-[14px] text-[#111]">{field.label}</strong>
+        <span className="rounded-[var(--radius-label)] bg-[#111] px-2 py-0.5 text-[11px] font-medium text-white">{rows.length} {rows.length === 1 ? "entry" : "entries"}</span>
       </div>
       <div className="flex flex-col gap-3">
         {rows.map((row, i) => (
-          <div key={i} className="rounded-lg bg-white p-3">
-            <div className="mb-2 flex items-center justify-between">
-              <span className="text-[12px] font-medium text-muted">Entry {i + 1}</span>
-              <button className="text-[12px] text-red-600 hover:underline" onClick={() => onChange(rows.filter((_, j) => j !== i))}>Remove</button>
+          <div key={i} className="rounded-[var(--radius-md)] bg-white p-4 shadow-[var(--shadow-card)]">
+            <div className="mb-3 flex items-center justify-between border-b border-line pb-2">
+              <span className="text-[13px] font-bold text-[#111]">Entry {i + 1}</span>
+              <button className="rounded-[var(--radius-btn)] px-2 py-1 text-[12px] font-medium text-red-600 hover:bg-red-50" onClick={() => onChange(rows.filter((_, j) => j !== i))}>Remove</button>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
-              {(field.subfields ?? []).map((sf) => (
-                <label key={sf.key} className="label text-[12px]">{sf.label}
-                  <input className="input h-9 text-[13px]" value={row[sf.key] ?? ""} onChange={(e) => setRow(i, sf.key, e.target.value)} />
-                </label>
-              ))}
+              {(field.subfields ?? []).map((sf) => renderSubfield(sf, row, i))}
             </div>
           </div>
         ))}
+        {!rows.length ? (
+          <p className="rounded-[var(--radius-md)] bg-white p-4 text-center text-[13px] text-muted">No entries yet — add one below.</p>
+        ) : null}
       </div>
-      <button className="btn mt-3 h-9 text-[13px]" onClick={addRow}>+ {field.repeat_label ?? "Add entry"}</button>
+      <button className="btn-primary mt-3 h-9 rounded-[var(--radius-btn)] text-[13px]" onClick={addRow}>+ {field.repeat_label ?? "Add entry"}</button>
     </div>
   );
 }

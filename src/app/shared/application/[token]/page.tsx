@@ -27,5 +27,5 @@ export default async function SharedApplicationPage({ params }: { params: Promis
     .then(() => {});
 
   const snap = (share as { snapshot: { form_name?: string; sections: { heading: string; fields: { label: string; value: unknown; heading?: boolean }[] }[]; submitted_at: string } }).snapshot;
-  return <SharedApplicationView share={{ ...(share as { expires_at: string; branding: Record<string, string> }), snapshot: snap }} formName={snap.form_name ?? "Rental Application"} />;
+  return <SharedApplicationView share={{ ...(share as { expires_at: string; branding: Record<string, string> }), snapshot: snap }} formName={snap.form_name ?? "Form"} />;
 }
