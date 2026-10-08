@@ -148,17 +148,36 @@ export async function GET(req: NextRequest) {
 
   const { data } = await staff.supabase
     .from("form_shares")
-    .select("token,expires_at,view_count,created_at,snapshot,attachment_id")
+    .select("token,expires_at,view_count,created_at,snapshot,attachment_id,lead_id")
     .eq("lead_id", leadId)
     .gt("expires_at", new Date().toISOString())
     .order("created_at", { ascending: false });
 
+  // Resolve form names for shares missing it in snapshot (old shares).
+  const shares = (data ?? []) as { token: string; expires_at: string; view_count: number; created_at: string; snapshot: { form_name?: string }; attachment_id: string | null; lead_id: string }[];
+  const attachmentIds = [...new Set(shares.map((s) => s.attachment_id).filter(Boolean))] as string[];
+  const attNames: Record<string, string> = {};
+  if (attachmentIds.length) {
+    const { data: atts } = await staff.supabase.from("lead_form_attachments").select("id,form_name").in("id", attachmentIds);
+    for (const a of (atts ?? []) as { id: string; form_name: string }[]) attNames[a.id] = a.form_name;
+  }
+  // For main-submission shares, get the lead's form name.
+  let leadFormName = "";
+  if (shares.some((s) => !s.attachment_id && !s.snapshot?.form_name)) {
+    const { data: lead } = await staff.supabase.from("leads").select("form_key").eq("id", leadId).maybeSingle();
+    const fk = (lead as { form_key: string } | null)?.form_key;
+    if (fk) {
+      const { data: form } = await staff.supabase.from("forms").select("name").eq("form_key", fk).maybeSingle();
+      leadFormName = ((form as { name: string } | null)?.name) ?? fk;
+    }
+  }
+
   const base = process.env.NEXT_PUBLIC_SITE_URL ?? "";
   return NextResponse.json({
-    shares: ((data ?? []) as { token: string; expires_at: string; view_count: number; created_at: string; snapshot: { form_name: string }; attachment_id: string | null }[]).map((s) => ({
+    shares: shares.map((s) => ({
       token: s.token,
       url: `${base}/shared/application/${s.token}`,
-      form_name: s.snapshot?.form_name ?? "Form",
+      form_name: s.snapshot?.form_name ?? (s.attachment_id ? attNames[s.attachment_id] ?? "Form" : leadFormName || "Form"),
       expires_at: s.expires_at,
       view_count: s.view_count,
       created_at: s.created_at,

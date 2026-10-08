@@ -8,13 +8,24 @@ type Share = {
   snapshot: { sections: Section[]; submitted_at: string };
 };
 
-function Value({ value }: { value: unknown }) {
-  // Subform: array of labeled entries → organized table per entry
+function Value({ value, fieldLabel }: { value: unknown; fieldLabel?: string }) {
+  // Subform: array of labeled entries → organized tables
   if (value && typeof value === "object" && !Array.isArray(value) && "subform" in value) {
     const entries = (value as { subform: Record<string, string>[] }).subform;
+    // Order: First Name first, then Last Name, then the rest.
+    const ordered = entries.map((entry) => {
+      const o: Record<string, string> = {};
+      const firstKey = Object.keys(entry).find((k) => /first.?name/i.test(k));
+      const lastKey = Object.keys(entry).find((k) => /last.?name/i.test(k));
+      if (firstKey) o[firstKey] = entry[firstKey];
+      if (lastKey) o[lastKey] = entry[lastKey];
+      for (const [k, v] of Object.entries(entry)) if (!(k in o)) o[k] = v;
+      return o;
+    });
+    const cols = entries.length === 1 ? "grid-cols-1" : entries.length === 2 ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3";
     return (
-      <div className="flex flex-col gap-3">
-        {entries.map((entry, i) => (
+      <div className={`grid gap-3 ${cols}`}>
+        {ordered.map((entry, i) => (
           <div key={i} className="overflow-hidden rounded-lg border border-line">
             <div className="bg-[#111] px-3 py-1.5 text-[12px] font-semibold text-white">Entry {i + 1}</div>
             <table className="w-full text-[14px]">
@@ -43,6 +54,46 @@ function Value({ value }: { value: unknown }) {
     );
   }
   return <p className="text-[15px] font-medium text-[#111]">{String(value)}</p>;
+}
+
+/** Groups occupant count fields into a summary table. */
+function OccupantTable({ fields }: { fields: { label: string; value: unknown }[] }) {
+  const get = (match: RegExp) => {
+    const f = fields.find((x) => match.test(x.label));
+    return f ? String(f.value) : "—";
+  };
+  const total = get(/total.*occupants/i);
+  const adults = get(/number of adults/i);
+  const working = get(/how many working/i);
+  // Children = total - adults (if numeric).
+  const t = parseInt(total), a = parseInt(adults);
+  const children = !isNaN(t) && !isNaN(a) ? String(t - a) : "—";
+  const rows: [string, string][] = [
+    ["Total Occupants", total],
+    ["Adults", adults],
+    ["Children", children],
+    ["Working Occupants", working],
+  ];
+  return (
+    <div className="overflow-hidden rounded-lg border border-line sm:col-span-2">
+      <table className="w-full text-[14px]">
+        <thead>
+          <tr className="bg-[#111] text-white">
+            {rows.map(([label]) => (
+              <th key={label} className="px-3 py-2 text-left text-[12px] font-semibold">{label}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            {rows.map(([label, val]) => (
+              <td key={label} className="border-t border-line/60 bg-[#f7f7f7] px-3 py-2 text-center text-[16px] font-bold">{val}</td>
+            ))}
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  );
 }
 
 /** Branded, print-friendly rental application. Header/footer come from the
@@ -85,27 +136,37 @@ export function SharedApplicationView({ share, formName }: { share: Share; formN
               <p className="text-[13px] text-[#666]">Submitted {submitted}</p>
             </div>
 
-            {share.snapshot.sections.map((sec, si) => (
+            {share.snapshot.sections.map((sec, si) => {
+              // Group occupant count fields into a summary table.
+              const occupantFields = sec.fields.filter((f) =>
+                !f.heading && /total.*occupants|number of adults|how many working/i.test(f.label)
+              );
+              const otherFields = sec.fields.filter((f) =>
+                f.heading || !/total.*occupants|number of adults|how many working/i.test(f.label)
+              );
+              return (
               <section key={si} className="mb-8 break-inside-avoid">
                 {sec.heading ? (
                   <h3 className="mb-3 border-b border-[#e5e5e5] pb-2 text-[16px] font-bold text-[#111]">{sec.heading}</h3>
                 ) : null}
                 <dl className="grid gap-x-8 gap-y-4 sm:grid-cols-2">
-                  {sec.fields.map((f, fi) =>
+                  {occupantFields.length >= 2 ? <OccupantTable fields={occupantFields} /> : null}
+                  {otherFields.map((f, fi) =>
                     f.heading ? (
                       <div key={fi} className="sm:col-span-2">
                         <p className="text-[14px] font-semibold text-[#333]">{f.label}</p>
                       </div>
-                    ) : (
-                      <div key={fi} className="sm:col-span-1">
+                    ) : occupantFields.includes(f) ? null : (
+                      <div key={fi} className={f.value && typeof f.value === "object" && "subform" in (f.value as object) ? "sm:col-span-2" : "sm:col-span-1"}>
                         <dt className="text-[12px] uppercase tracking-wide text-[#888]">{f.label}</dt>
-                        <dd className="mt-0.5"><Value value={f.value} /></dd>
+                        <dd className="mt-0.5"><Value value={f.value} fieldLabel={f.label} /></dd>
                       </div>
                     ),
                   )}
                 </dl>
               </section>
-            ))}
+              );
+            })}
           </div>
 
           {/* Branded footer */}
