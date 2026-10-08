@@ -21,16 +21,36 @@ function renderAnswer(v: unknown): string {
   if (v == null || v === "") return "—";
   if (Array.isArray(v)) {
     if (v.length && typeof v[0] === "object") {
-      return v.map((row) =>
-        Object.entries(row as Record<string, unknown>)
-          .map(([k, val]) => `${k.replace(/_/g, " ")}: ${String(val)}`)
-          .join(" · ")
-      ).join(" | ");
+      return `${v.length} ${v.length === 1 ? "entry" : "entries"}`;
     }
     return v.map(String).join(", ");
   }
   if (typeof v === "boolean") return v ? "Yes" : "No";
   return String(v);
+}
+
+/** Renders a subform (array of objects) as organized tables, one per entry. */
+function SubformTable({ rows, subfields }: { rows: Record<string, unknown>[]; subfields?: { key: string; label: string }[] }) {
+  const labelFor = (key: string) => subfields?.find((sf) => sf.key === key)?.label ?? key.replace(/_/g, " ");
+  return (
+    <div className="flex flex-col gap-2">
+      {rows.map((row, i) => (
+        <div key={i} className="overflow-hidden rounded-lg border border-line">
+          <div className="bg-[#111] px-3 py-1 text-[11px] font-semibold text-white">Entry {i + 1}</div>
+          <table className="w-full text-[13px]">
+            <tbody>
+              {Object.entries(row).filter(([, v]) => v != null && v !== "").map(([k, v]) => (
+                <tr key={k} className="border-t border-line/60 first:border-0">
+                  <td className="w-2/5 bg-[#f7f7f7] px-3 py-1.5 align-top text-[11px] font-medium uppercase tracking-wide text-muted">{labelFor(k)}</td>
+                  <td className="px-3 py-1.5">{String(v)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 /** Attached forms on a lead: structured by form sections, with edit/share/flow actions. */
@@ -117,7 +137,13 @@ export function AttachedForms({ leadId }: { leadId: string }) {
                           {answered.map((f) => (
                             <div key={f.key}>
                               <dt className="text-[11px] uppercase tracking-wide text-muted">{f.label}</dt>
-                              <dd className="mt-0.5 text-[14px]">{renderAnswer(a.answers[f.key])}</dd>
+                              <dd className="mt-0.5 text-[14px]">
+                                {f.type === "subform" && Array.isArray(a.answers[f.key]) ? (
+                                  <SubformTable rows={a.answers[f.key] as Record<string, unknown>[]} subfields={f.subfields} />
+                                ) : (
+                                  renderAnswer(a.answers[f.key])
+                                )}
+                              </dd>
                             </div>
                           ))}
                         </dl>

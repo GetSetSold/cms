@@ -14,22 +14,20 @@ const EXPIRY_OPTIONS: Record<string, number> = {
 type Field = { key: string; label: string; type: string; subfields?: Field[] };
 type Section = { id: string; heading?: string; fields: Field[] };
 
-function renderValue(value: unknown, field: Field): string | { label: string; value: string }[] | null {
+function renderValue(value: unknown, field: Field): string | { label: string; value: string }[] | { subform: Record<string, string>[] } | null {
   if (value == null || value === "") return null;
   if (field.type === "subform" && Array.isArray(value)) {
-    const rows = (value as Record<string, unknown>[])
+    const entries = (value as Record<string, unknown>[])
       .map((entry) => {
-        const label = (field.subfields ?? [])
-          .map((sf) => {
-            const v = entry[sf.key];
-            return v != null && v !== "" ? `${sf.label}: ${String(v)}` : "";
-          })
-          .filter(Boolean)
-          .join(" · ");
-        return label ? { label, value: "" } : null;
+        const labeled: Record<string, string> = {};
+        for (const sf of field.subfields ?? []) {
+          const v = entry[sf.key];
+          if (v != null && v !== "") labeled[sf.label] = String(v);
+        }
+        return Object.keys(labeled).length ? labeled : null;
       })
-      .filter(Boolean) as { label: string; value: string }[];
-    return rows.length ? rows : null;
+      .filter(Boolean) as Record<string, string>[];
+    return entries.length ? { subform: entries } : null;
   }
   if (Array.isArray(value)) return value.map(String).join(", ");
   if (typeof value === "boolean") return value ? "Yes" : "No";

@@ -9,6 +9,29 @@ type Share = {
 };
 
 function Value({ value }: { value: unknown }) {
+  // Subform: array of labeled entries → organized table per entry
+  if (value && typeof value === "object" && !Array.isArray(value) && "subform" in value) {
+    const entries = (value as { subform: Record<string, string>[] }).subform;
+    return (
+      <div className="flex flex-col gap-3">
+        {entries.map((entry, i) => (
+          <div key={i} className="overflow-hidden rounded-lg border border-line">
+            <div className="bg-[#111] px-3 py-1.5 text-[12px] font-semibold text-white">Entry {i + 1}</div>
+            <table className="w-full text-[14px]">
+              <tbody>
+                {Object.entries(entry).map(([label, val]) => (
+                  <tr key={label} className="border-t border-line/60 first:border-0">
+                    <td className="w-2/5 bg-[#f7f7f7] px-3 py-2 align-top text-[12px] font-medium uppercase tracking-wide text-muted">{label}</td>
+                    <td className="px-3 py-2">{val}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ))}
+      </div>
+    );
+  }
   if (Array.isArray(value)) {
     const rows = value as { label: string; value: string }[];
     return (
