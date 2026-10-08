@@ -10,7 +10,7 @@ const EXPIRIES = [
 type Preview = { form_name: string; sections: number; answers: number };
 
 /** Share a form (lead submission or attachment): preview what's included, pick expiry, copy link. */
-export function ShareFormButton({ leadId, attachmentId, label }: { leadId: string; attachmentId?: string; label?: string }) {
+export function ShareFormButton({ leadId, attachmentId, label, onCreated }: { leadId: string; attachmentId?: string; label?: string; onCreated?: (url: string) => void }) {
   const [open, setOpen] = useState(false);
   const [expiry, setExpiry] = useState("24h");
   const [link, setLink] = useState("");
@@ -29,6 +29,7 @@ export function ShareFormButton({ leadId, attachmentId, label }: { leadId: strin
       const data = await res.json();
       if (!res.ok) { setMsg(data.error ?? "Failed."); return; }
       setLink(data.url);
+      onCreated?.(data.url);
       setPreview(data.preview as Preview);
     } catch {
       setMsg("Failed.");

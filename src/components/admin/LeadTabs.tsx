@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import type { Lead, LeadFlow, LeadFlowEnrollment } from "@/lib/types";
 import { LEAD_FLOW_CATEGORIES, LEAD_STATUSES } from "@/lib/types";
 import { AttachedForms } from "./AttachedForms";
+import { FormSubmissionCard } from "./FormSubmissionCard";
 import { AttachFormButton } from "./AttachFormButton";
 import { ShareApplicationButton } from "./ShareApplicationButton";
 import { ShareFormButton } from "./ShareFormButton";
@@ -114,181 +115,48 @@ function SubmissionModal({ lead, onClose }: { lead: Lead; onClose: () => void })
 }
 
 function FormSubmissionPanel({ lead }: { lead: Lead }) {
-  const [showAll, setShowAll] = useState(false);
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState<Record<string, string>>({});
-  const [saving, setSaving] = useState(false);
-  const [msg, setMsg] = useState("");
-  const [flows, setFlows] = useState<{ id: string; name: string; steps: { channel: string; delay_minutes?: number }[] }[]>([]);
-  const [flowOpen, setFlowOpen] = useState(false);
-  const [flowId, setFlowId] = useState("");
-  const [sections, setSections] = useState<{ id: string; heading?: string; fields: { key: string; label: string; type: string }[] }[]>([]);
-  const [expanded, setExpanded] = useState(false);
+  const [sections, setSections] = useState<{ id: string; heading?: string; fields: { key: string; label: string; type: string; options?: string[]; subfields?: { key: string; label: string; type: string }[]; repeat_label?: string }[] }[]>([]);
+  const [formName, setFormName] = useState("Form submission");
   const entries = Object.entries(lead.custom_fields ?? {});
-  const preview = entries.slice(0, 5);
 
   useEffect(() => {
-    createClient().from("lead_flows").select("id,name,steps").eq("is_active", true).order("name")
-      .then(({ data }) => setFlows((data ?? []) as { id: string; name: string; steps: { channel: string; delay_minutes?: number }[] }[]));
-    if (lead.form_key) {
-      createClient().from("forms").select("sections").eq("form_key", lead.form_key).maybeSingle()
-        .then(({ data }) => {
-          if (data) setSections(((data as { sections: { id: string; heading?: string; fields: { key: string; label: string; type: string }[] }[] }).sections ?? []));
-        });
-    }
+    if (!lead.form_key) return;
+    createClient().from("forms").select("name,sections").eq("form_key", lead.form_key).maybeSingle()
+      .then(({ data }) => {
+        if (data) {
+          const d = data as { name: string; sections: { id: string; heading?: string; fields: { key: string; label: string; type: string }[] }[] };
+          setFormName(d.name ?? "Form submission");
+          setSections(d.sections ?? []);
+        }
+      });
   }, [lead.form_key]);
 
-  async function startFlow() {
-    if (!flowId) return;
-    const flow = flows.find((f) => f.id === flowId);
-    if (!flow) return;
-    const sb = createClient();
-    const { error } = await sb.from("lead_flow_enrollments").insert({ lead_id: lead.id, flow_id: flow.id });
-    if (error) { setMsg(error.message); return; }
-    const now = Date.now();
-    const queue = flow.steps.map((step, i) => ({
-      lead_id: lead.id, sequence_id: flow.id, step_index: i, channel: step.channel,
-      run_at: new Date(now + (Number(step.delay_minutes) || 0) * 60_000).toISOString(),
-    }));
-    if (queue.length) await sb.from("follow_up_queue").insert(queue);
-    setMsg(`Added to “${flow.name}”`); setFlowOpen(false); setFlowId("");
+  if (!entries.length) {
+    return (
+      <div className="flex flex-col gap-4">
+        <AttachedForms leadId={lead.id} />
+      </div>
+    );
   }
 
-  function startEdit() {
-    const d: Record<string, string> = {};
-    for (const [k, v] of entries) {
-      d[k] = typeof v === "string" ? v : JSON.stringify(v ?? "");
-    }
-    setDraft(d); setEditing(true); setMsg("");
-  }
-
-  async function saveAnswers() {
-    setSaving(true); setMsg("");
-    const out: Record<string, unknown> = {};
-    for (const [k, raw] of Object.entries(draft)) {
-      const orig = (lead.custom_fields ?? {})[k];
-      if (typeof orig === "string" || orig == null) {
-        out[k] = raw;
-      } else {
-        try { out[k] = JSON.parse(raw); }
-        catch { out[k] = raw; }
-      }
-    }
-    const { error } = await createClient().from("leads").update({ custom_fields: out }).eq("id", lead.id);
-    setSaving(false);
-    if (error) { setMsg(error.message); return; }
-    setEditing(false); setMsg("Answers updated");
-  }
+  const submission = {
+    id: "main",
+    leadId: lead.id,
+    formName,
+    formKey: lead.form_key ?? undefined,
+    subtitle: `Answers from the “${lead.form_key ?? "unknown"}” form`,
+    answers: lead.custom_fields ?? {},
+    sections,
+    onSave: async (answers: Record<string, unknown>) => {
+      const { error } = await createClient().from("leads").update({ custom_fields: answers }).eq("id", lead.id);
+      return error ? error.message : null;
+    },
+  };
 
   return (
     <div className="flex flex-col gap-4">
-    {entries.length ? (
-    <div className="card flex flex-col gap-4">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <strong>Form submission</strong>
-          <p className="text-[13px] text-muted">Answers from the “{lead.form_key ?? "unknown"}” form.</p>
-        </div>
-        <div className="flex gap-2">
-          {entries.length > 0 && !editing ? (
-            <button onClick={() => setEditing(true)} className="btn h-9 shrink-0 px-4 text-[13px]">
-              Edit
-            </button>
-          ) : null}
-          {entries.length > 0 && !editing ? (
-            <button onClick={() => setShowAll(true)} className="btn h-9 shrink-0 px-4 text-[13px]">
-              View
-            </button>
-          ) : null}
-          {entries.length > 0 && !editing ? (
-            <ShareFormButton leadId={lead.id} label="Share" />
-          ) : null}
-          {entries.length > 0 && !editing ? (
-            flowOpen ? (
-              <div className="flex gap-2">
-                <select className="input h-9 text-[13px]" value={flowId} onChange={(e) => setFlowId(e.target.value)}>
-                  <option value="">Choose flow…</option>
-                  {flows.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
-                </select>
-                <button className="btn-primary h-9 px-4 text-[13px]" disabled={!flowId} onClick={startFlow}>Start</button>
-                <button className="btn h-9 px-3 text-[13px]" onClick={() => { setFlowOpen(false); setFlowId(""); }}>✕</button>
-              </div>
-            ) : (
-              <button onClick={() => setFlowOpen(true)} className="btn h-9 shrink-0 px-4 text-[13px]">
-                Start flow
-              </button>
-            )
-          ) : null}
-        </div>
-      </div>
-      {msg ? <p className="text-sm text-muted" role="status">{msg}</p> : null}
-      {editing ? (
-        <div className="flex flex-col gap-3">
-          {entries.map(([key]) => {
-            const orig = (lead.custom_fields ?? {})[key];
-            const isComplex = orig != null && typeof orig !== "string";
-            return (
-              <label key={key} className="label">{key.replace(/_/g, " ")}
-                {isComplex ? (
-                  <textarea className="textarea font-mono text-xs" rows={3} value={draft[key] ?? ""} onChange={(e) => setDraft({ ...draft, [key]: e.target.value })} />
-                ) : (
-                  <input className="input" value={draft[key] ?? ""} onChange={(e) => setDraft({ ...draft, [key]: e.target.value })} />
-                )}
-              </label>
-            );
-          })}
-          <div className="flex gap-2">
-            <button className="btn-primary" disabled={saving} onClick={saveAnswers}>{saving ? "Saving…" : "Save answers"}</button>
-            <button className="btn" onClick={() => { setEditing(false); setMsg(""); }}>Cancel</button>
-          </div>
-        </div>
-      ) : sections.length ? (
-        <div className="flex flex-col gap-5">
-          {(expanded ? sections : sections.slice(0, 2)).map((sec) => {
-            const answered = sec.fields.filter((f) => {
-              const v = (lead.custom_fields ?? {})[f.key];
-              return v != null && v !== "" && !(Array.isArray(v) && !v.length);
-            });
-            if (!answered.length) return null;
-            return (
-              <section key={sec.id}>
-                {sec.heading ? <h4 className="mb-2 border-b border-line pb-1.5 text-[14px] font-bold">{sec.heading}</h4> : null}
-                <dl className="grid gap-x-6 gap-y-3 sm:grid-cols-2">
-                  {answered.map((f) => (
-                    <div key={f.key}>
-                      <dt className="text-[11px] uppercase tracking-wide text-muted">{f.label}</dt>
-                      <dd className="mt-0.5 text-[14px]"><FieldValue v={(lead.custom_fields ?? {})[f.key]} /></dd>
-                    </div>
-                  ))}
-                </dl>
-              </section>
-            );
-          })}
-          {sections.length > 2 ? (
-            <button className="text-[13px] font-medium text-[#0066cc] hover:underline" onClick={() => setExpanded(!expanded)}>
-              {expanded ? "Show less" : `Show all ${sections.length} sections`}
-            </button>
-          ) : null}
-        </div>
-      ) : (
-        <dl className="flex flex-col">
-          {preview.map(([key, v]) => (
-            <div key={key} className="flex items-baseline justify-between gap-4 border-b border-line/60 py-2 last:border-0">
-              <dt className="shrink-0 text-xs font-medium uppercase tracking-wide text-muted">{key.replace(/_/g, " ")}</dt>
-              <dd className="truncate text-right text-[14px]">{fieldPreview(v)}</dd>
-            </div>
-          ))}
-          {entries.length > preview.length ? (
-            <p className="pt-2 text-[12px] text-muted">+ {entries.length - preview.length} more — click View for all.</p>
-          ) : null}
-        </dl>
-      )}
-      {showAll ? <SubmissionModal lead={lead} onClose={() => setShowAll(false)} /> : null}
-    </div>
-    ) : null}
-    <div className="flex flex-col gap-3">
+      <FormSubmissionCard submission={submission} />
       <AttachedForms leadId={lead.id} />
-    </div>
     </div>
   );
 }
