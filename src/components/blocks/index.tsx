@@ -30,7 +30,6 @@ const heading = (ctx: BlockCtx) => (ctx.dark ? "text-ground" : "text-ink");
 type BlockProps = { data: any; ctx: BlockCtx };
 
 const wrap = "mx-auto w-full max-w-7xl px-5 md:px-10";
-export { wrap };
 const h2 = "font-display font-bold tracking-tight text-[26px] leading-tight md:text-[56px] md:leading-none";
 // Shared compact heading size, used everywhere `h2` is — one definition instead of repeating a
 // smaller scale at every call site. Site-wide Density (Settings → Branding) drives this.
@@ -1305,12 +1304,13 @@ function renderOne(s: Section, ctx: BlockCtx) {
   // Border classes: only apply border if enabled.
   const boxBorder = showBorder && !globalBorderHidden ? "border-[length:var(--border-card-width)]" : "border-0";
   const boxShadow = "shadow-[var(--shadow-card)]";
-  // When global border is hidden, use standard page width (same as hero) but no card styling.
-  // All blocks align to the same width — no edge-to-edge, no narrow blocks.
-  const boxWrap = `${wrap} py-5 md:py-12`;
+  // Card gets the standard page width (max-w-7xl). Blocks with internal wrap
+  // (TeamProfile, CustomCode, etc.) are constrained by the card width —
+  // no double-wrapping. Blocks without internal wrap fill the card.
+  const boxWrap = "w-full py-5 md:py-12";
   const boxInner = globalBorderHidden
-    ? `p-6 md:p-8 ${boxShadow}`
-    : `rounded-[var(--radius-lg)] p-6 md:p-8 ${boxBorder} ${showBorder && !globalBorderHidden ? "border-line" : ""} ${boxShadow}`;
+    ? `mx-auto w-full max-w-7xl px-5 md:px-10 ${boxShadow}`
+    : `mx-auto w-full max-w-7xl rounded-[var(--radius-lg)] p-6 md:p-8 ${boxBorder} ${showBorder && !globalBorderHidden ? "border-line" : ""} ${boxShadow}`;
 
   const dividerEl = showDivider ? (
     <div className={dividerFullBleed ? "" : wrap} aria-hidden="true" style={{ marginTop: dividerMt, marginBottom: dividerMb }}>
