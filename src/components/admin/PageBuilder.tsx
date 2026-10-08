@@ -353,11 +353,27 @@ export function PageBuilder({ page: initialPage, sections: initialSections, bloc
                       onChange={(e) => patchSection(current.id, { settings: { ...current.settings, divider: e.target.checked, divider_color: current.settings.divider_color || "#e5e5e5" } })} />
                   </label>
                   {current.settings.divider ? (
-                    <label className="flex items-center justify-between text-sm">Divider color
-                      <input type="color" value={/^#[0-9a-f]{6}$/i.test(current.settings.divider_color ?? "") ? current.settings.divider_color : "#e5e5e5"}
-                        onChange={(e) => patchSection(current.id, { settings: { ...current.settings, divider_color: e.target.value } })}
-                        className="h-7 w-9 cursor-pointer rounded border-0 bg-transparent" title="Divider color" />
-                    </label>
+                    <>
+                      <label className="flex items-center justify-between text-sm">Divider color
+                        <input type="color" value={/^#[0-9a-f]{6}$/i.test(current.settings.divider_color ?? "") ? current.settings.divider_color : "#e5e5e5"}
+                          onChange={(e) => patchSection(current.id, { settings: { ...current.settings, divider_color: e.target.value } })}
+                          className="h-7 w-9 cursor-pointer rounded border-0 bg-transparent" title="Divider color" />
+                      </label>
+                      <label className="flex items-center justify-between text-sm">Space above (px)
+                        <input type="number" value={current.settings.divider_mt ?? 0}
+                          onChange={(e) => patchSection(current.id, { settings: { ...current.settings, divider_mt: Number(e.target.value) } })}
+                          className="input h-7 w-20 text-sm" />
+                      </label>
+                      <label className="flex items-center justify-between text-sm">Space below (px)
+                        <input type="number" value={current.settings.divider_mb ?? 0}
+                          onChange={(e) => patchSection(current.id, { settings: { ...current.settings, divider_mb: Number(e.target.value) } })}
+                          className="input h-7 w-20 text-sm" />
+                      </label>
+                      <label className="flex items-center justify-between text-sm">Full width (edge to edge)
+                        <input type="checkbox" checked={!!current.settings.divider_full_bleed}
+                          onChange={(e) => patchSection(current.id, { settings: { ...current.settings, divider_full_bleed: e.target.checked } })} />
+                      </label>
+                    </>
                   ) : null}
                 </div>
 
