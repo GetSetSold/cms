@@ -23,6 +23,11 @@ export interface SectionSettings {
   /** Available on every block — any button the block renders reads this
    *  when the block itself doesn't hardcode its own style. */
   button_style?: "solid" | "bordered";
+  /** Border color for the background box. */
+  border_color?: string;
+  /** Show a thin divider line at the end of the block. */
+  divider?: boolean;
+  divider_color?: string;
   /** Section Header only — draw this header and the visible block right below
    *  it as ONE card. Layout: header beside the block, or header above it. */
   merge_next?: boolean;

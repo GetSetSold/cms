@@ -856,6 +856,25 @@ function Spacer({ data }: BlockProps) {
   return <div style={{ height: 0, marginTop: h }} aria-hidden="true" />;
 }
 
+function Divider({ data }: BlockProps) {
+  const color = data.color || "#e5e5e5";
+  const thickness = Number(data.thickness) || 1;
+  const width = data.width || "100%";
+  const spacing = Number(data.spacing) || 24;
+  return (
+    <div className={wrap} aria-hidden="true">
+      <hr
+        style={{
+          border: "none",
+          borderTop: `${thickness}px solid ${color}`,
+          width,
+          margin: `${spacing}px auto`,
+        }}
+      />
+    </div>
+  );
+}
+
 async function FeaturedListing({ data }: BlockProps) {
   if (!data.listing_key) return null;
   const mls = createMlsClient();
@@ -1210,6 +1229,7 @@ export const BLOCKS: Record<string, (p: BlockProps) => React.ReactNode> = {
   process_steps: ProcessSteps,
   checklist: Checklist,
   spacer: Spacer,
+  divider: Divider,
   section_header: SectionHeader,
   featured_listing: FeaturedListing,
   blog_grid: BlogGrid,
@@ -1267,17 +1287,26 @@ function renderOne(s: Section, ctx: BlockCtx) {
 
   const content = <Block data={s.data ?? {}} ctx={blockCtx} />;
 
+  const borderColor = st.border_color || undefined;
+  const showDivider = !!st.divider;
+  const dividerColor = st.divider_color || "#e5e5e5";
+
   return (
     <section key={s.id} id={st.anchor || s.id} className={cls} style={customBg ? { background: customBg } : undefined} data-block={s.block_type}>
       {boxed ? (
         ctx.inRow ? (
-          <div className={`h-full rounded-[var(--radius-lg)] px-6 py-8 md:px-8 md:py-10 ${cardShadow}`} style={{ background: box.css }}>{content}</div>
+          <div className={`h-full rounded-[var(--radius-lg)] px-6 py-8 md:px-8 md:py-10 ${cardShadow}`} style={{ background: box.css, borderColor }}>{content}</div>
         ) : (
           <div className={`${wrap} py-5 md:py-12`}>
-            <div className={`rounded-[var(--radius-lg)] p-6 md:p-8 ${cardShadow}`} style={{ background: box.css }}>{content}</div>
+            <div className={`rounded-[var(--radius-lg)] p-6 md:p-8 ${cardShadow}`} style={{ background: box.css, borderColor }}>{content}</div>
           </div>
         )
       ) : content}
+      {showDivider ? (
+        <div className={wrap} aria-hidden="true">
+          <hr style={{ border: "none", borderTop: `1px solid ${dividerColor}`, margin: "0 auto" }} />
+        </div>
+      ) : null}
     </section>
   );
 }

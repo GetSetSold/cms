@@ -157,6 +157,12 @@ export const BLOCK_FIELDS: Record<string, Field[]> = {
   spacer: [
     t("height", "Space (px) — positive adds space, negative reduces it (e.g. -50)"),
   ],
+  divider: [
+    { key: "color", label: "Line color", type: "color" },
+    t("thickness", "Thickness (px)"),
+    { key: "width", label: "Width", type: "select", options: ["100%", "75%", "50%", "25%"] },
+    t("spacing", "Space above/below (px)"),
+  ],
   section_header: [
     t("eyebrow", "Eyebrow (colored, above the heading)"),
     t("heading", "Heading"),

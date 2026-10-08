@@ -78,6 +78,22 @@ export function BlockListEditor({
                     onChange={(e) => setSettings(i, { box_bg: e.target.value })} className="h-6 w-8 cursor-pointer rounded border-0 bg-transparent" />
                 </div>
               ) : null}
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-medium text-muted">Border color</span>
+                <input type="color" value={/^#[0-9a-f]{6}$/i.test(b.settings?.border_color ?? "") ? b.settings!.border_color : "#e5e5e5"}
+                  onChange={(e) => setSettings(i, { border_color: e.target.value })} className="h-6 w-8 cursor-pointer rounded border-0 bg-transparent" />
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-medium text-muted">Divider line at end</span>
+                <input type="checkbox" checked={!!b.settings?.divider} onChange={(e) => setSettings(i, { divider: e.target.checked, divider_color: b.settings?.divider_color || "#e5e5e5" })} />
+              </div>
+              {b.settings?.divider ? (
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-medium text-muted">Divider color</span>
+                  <input type="color" value={/^#[0-9a-f]{6}$/i.test(b.settings?.divider_color ?? "") ? b.settings!.divider_color : "#e5e5e5"}
+                    onChange={(e) => setSettings(i, { divider_color: e.target.value })} className="h-6 w-8 cursor-pointer rounded border-0 bg-transparent" />
+                </div>
+              ) : null}
               <label className="flex items-center justify-between text-xs">
                 <span className="font-medium text-muted">Button style</span>
                 <select className="input h-7 w-32 text-xs" value={b.settings?.button_style ?? "solid"} onChange={(e) => setSettings(i, { button_style: e.target.value })}>
