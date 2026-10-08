@@ -331,6 +331,12 @@ export function PageBuilder({ page: initialPage, sections: initialSections, bloc
                     </div>
                   ) : null}
                   <p className="text-xs text-muted">Text inside automatically switches to light or dark based on this color's actual brightness — no separate setting needed.</p>
+                </div>
+                ) : null}
+
+                {/* Border & divider — available on every block, including featured sections */}
+                <div className="flex flex-col gap-3 rounded-lg border border-line p-3">
+                  <strong className="text-sm">Border & divider</strong>
                   <label className="flex items-center justify-between text-sm">Border
                     <input type="checkbox" checked={current.settings.border !== false}
                       onChange={(e) => patchSection(current.id, { settings: { ...current.settings, border: e.target.checked } })} />
@@ -354,7 +360,6 @@ export function PageBuilder({ page: initialPage, sections: initialSections, bloc
                     </label>
                   ) : null}
                 </div>
-                ) : null}
 
                 <label className="label">Button style (any button this block shows)
                   <select className="input" value={current.settings.button_style ?? (current.block_type === "feature_section" ? "" : "solid")}
