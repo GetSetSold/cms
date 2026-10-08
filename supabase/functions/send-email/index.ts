@@ -31,8 +31,11 @@ Deno.serve(async (req) => {
 
     const { data: lead } = await db.from("leads")
       .select("id, email, first_name").eq("id", lead_id).maybeSingle();
-    const leadEmail = (lead as { email: string } | null)?.email;
-    if (!leadEmail) return json(req, { error: "This lead has no email address" }, 422);
+    const leadEmail = (lead as { email: string } | null)?.email?.trim();
+    if (!leadEmail) return json(req, { error: "This lead has no email address" }, 200);
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(leadEmail)) {
+      return json(req, { error: `Invalid email address on lead: "${leadEmail}"` }, 200);
+    }
 
     const { data: settings } = await db.from("site_settings").select("email_provider, site_name").maybeSingle();
     const siteName = (settings as { site_name?: string } | null)?.site_name ?? "GetSetSold";
