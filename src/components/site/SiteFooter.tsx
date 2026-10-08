@@ -18,7 +18,7 @@ function VSlot({ color, offset = 16 }: { color: string; offset?: number }) {
 function FooterCol({ col }: { col: NavColumn }) {
   return (
     <div className="flex min-w-0 flex-col items-start gap-2.5 text-left">
-      {col.heading ? <strong className="block w-full text-white leading-[1.15] break-words">{col.heading}</strong> : null}
+      {col.heading ? <strong className="block w-full leading-[1.15] break-words">{col.heading}</strong> : null}
       {col.links.map((l) => <Link key={l.href} href={l.href} className="opacity-75 hover:opacity-100 leading-[1.35] text-left break-words">{l.label}</Link>)}
     </div>
   );
@@ -83,7 +83,7 @@ export async function SiteFooter({ settings, logo }: { settings: SiteSettings; l
   const compact = settings.theme.density === "compact";
   const dcols = f.columns_per_row ?? 4;
   const mcols = f.mobile_columns_per_row ?? 2;
-  const divider = "rgba(255,255,255,0.18)";
+  const divider = "var(--c-line)";
   const rowPad = compact ? "pt-6" : "pt-8";
   const footerDark = !f.bg || isDarkColor(f.bg);
   const footerLogo = logo && footerDark ? { ...logo, markup: liftLogoForDark(logo.markup) } : logo;
