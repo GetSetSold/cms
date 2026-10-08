@@ -25,6 +25,8 @@ export interface SectionSettings {
   button_style?: "solid" | "bordered";
   /** Border color for the background box. */
   border_color?: string;
+  /** Show/hide the box border (default true). */
+  border?: boolean;
   /** Show a thin divider line at the end of the block. */
   divider?: boolean;
   divider_color?: string;
