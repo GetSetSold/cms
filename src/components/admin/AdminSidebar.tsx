@@ -24,7 +24,7 @@ export function AdminSidebar({
       <Link href="/admin" className="flex items-center justify-center px-1 pb-5 font-display text-2xl text-white" title={siteName}>
         {collapsed ? siteName.slice(0, 1) : <>{siteName} <span className="font-sans text-xs text-[#9EA2AC]">CMS</span></>}
       </Link>
-      <div className={`min-h-0 flex-1 overflow-y-auto ${collapsed ? "sb-hidden" : "sb-thin-dark"}`}>
+      <div className="min-h-0 flex-1 overflow-y-auto sb-hidden">
         <AdminNav role={role} newLeads={newLeads} collapsed={collapsed} />
       </div>
       <style>{`.sb-thin-dark{scrollbar-width:thin;scrollbar-color:#3a3e47 transparent}.sb-thin-dark::-webkit-scrollbar{width:5px}.sb-thin-dark::-webkit-scrollbar-thumb{background:#3a3e47;border-radius:3px}.sb-thin-dark::-webkit-scrollbar-track{background:transparent}.sb-hidden{scrollbar-width:none;-ms-overflow-style:none}.sb-hidden::-webkit-scrollbar{display:none}`}</style>
