@@ -1299,10 +1299,16 @@ function renderOne(s: Section, ctx: BlockCtx) {
   const dividerMt = st.divider_mt ?? 0;
   const dividerMb = st.divider_mb ?? 0;
   const dividerFullBleed = !!st.divider_full_bleed;
+  const globalBorderHidden = theme?.card_border === false;
 
   // Border classes: only apply border if enabled.
-  const boxBorder = showBorder ? "border-[length:var(--border-card-width)]" : "border-0";
+  const boxBorder = showBorder && !globalBorderHidden ? "border-[length:var(--border-card-width)]" : "border-0";
   const boxShadow = "shadow-[var(--shadow-card)]";
+  // When global border is hidden, go full-width on mobile (no side padding, no rounded corners).
+  const boxWrap = globalBorderHidden ? "mx-auto w-full max-w-7xl md:px-10 py-5 md:py-12" : `${wrap} py-5 md:py-12`;
+  const boxInner = globalBorderHidden
+    ? `p-6 md:p-8 md:rounded-[var(--radius-lg)] ${boxBorder} ${boxShadow}`
+    : `rounded-[var(--radius-lg)] p-6 md:p-8 ${boxBorder} ${showBorder && !globalBorderHidden ? "border-line" : ""} ${boxShadow}`;
 
   const dividerEl = showDivider ? (
     <div className={dividerFullBleed ? "" : wrap} aria-hidden="true" style={{ marginTop: dividerMt, marginBottom: dividerMb }}>
@@ -1314,10 +1320,10 @@ function renderOne(s: Section, ctx: BlockCtx) {
     <section key={s.id} id={st.anchor || s.id} className={cls} style={customBg ? { background: customBg } : undefined} data-block={s.block_type}>
       {boxed ? (
         ctx.inRow ? (
-          <div className={`h-full rounded-[var(--radius-lg)] px-6 py-8 md:px-8 md:py-10 ${boxBorder} ${showBorder ? "border-line" : ""} ${boxShadow}`} style={{ background: box.css, borderColor: showBorder ? borderColor : undefined }}>{content}</div>
+          <div className={`h-full px-6 py-8 md:px-8 md:py-10 md:rounded-[var(--radius-lg)] ${boxBorder} ${boxShadow}`} style={{ background: box.css, borderColor: showBorder && !globalBorderHidden ? borderColor : undefined }}>{content}</div>
         ) : (
-          <div className={`${wrap} py-5 md:py-12`}>
-            <div className={`rounded-[var(--radius-lg)] p-6 md:p-8 ${boxBorder} ${showBorder ? "border-line" : ""} ${boxShadow}`} style={{ background: box.css, borderColor: showBorder ? borderColor : undefined }}>{content}</div>
+          <div className={boxWrap}>
+            <div className={boxInner} style={{ background: box.css, borderColor: showBorder && !globalBorderHidden ? borderColor : undefined }}>{content}</div>
           </div>
         )
       ) : content}
