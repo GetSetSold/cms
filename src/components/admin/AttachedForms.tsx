@@ -14,7 +14,7 @@ type Attachment = {
 };
 
 type Flow = { id: string; name: string; steps: { channel: string; delay_minutes?: number }[] };
-type FormField = { key: string; label: string; type: string; options?: string[] };
+type FormField = { key: string; label: string; type: string; options?: string[]; subfields?: FormField[]; repeat_label?: string };
 type FormSection = { id: string; heading?: string; fields: FormField[] };
 
 function renderAnswer(v: unknown): string {
@@ -174,10 +174,26 @@ function EditAttachmentModal({ attachment, sections, onClose, onSaved }: {
   const [draft, setDraft] = useState<Record<string, string>>(() => {
     const d: Record<string, string> = {};
     for (const sec of sections) for (const f of sec.fields) {
+      if (f.type === "subform") continue;
       const v = attachment.answers[f.key];
       d[f.key] = typeof v === "string" ? v : v != null ? JSON.stringify(v) : "";
     }
     return d;
+  });
+  const [subformRows, setSubformRows] = useState<Record<string, Record<string, string>[]>>(() => {
+    const r: Record<string, Record<string, string>[]> = {};
+    for (const sec of sections) for (const f of sec.fields) {
+      if (f.type !== "subform" || !f.subfields?.length) continue;
+      const v = attachment.answers[f.key];
+      if (Array.isArray(v)) {
+        r[f.key] = v.map((row) => {
+          const o: Record<string, string> = {};
+          for (const sf of f.subfields!) o[sf.key] = row?.[sf.key] != null ? String(row[sf.key]) : "";
+          return o;
+        });
+      } else r[f.key] = [];
+    }
+    return r;
   });
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState("");
@@ -189,6 +205,14 @@ function EditAttachmentModal({ attachment, sections, onClose, onSaved }: {
       if (!raw.trim()) continue;
       try { out[k] = JSON.parse(raw); }
       catch { out[k] = raw; }
+    }
+    for (const [k, rows] of Object.entries(subformRows)) {
+      const cleaned = rows.map((r) => {
+        const o: Record<string, string> = {};
+        for (const [sk, sv] of Object.entries(r)) if (sv.trim()) o[sk] = sv.trim();
+        return o;
+      }).filter((r) => Object.keys(r).length > 0);
+      if (cleaned.length) out[k] = cleaned;
     }
     const { error } = await createClient().from("lead_form_attachments").update({ answers: out }).eq("id", attachment.id);
     setSaving(false);
@@ -213,11 +237,22 @@ function EditAttachmentModal({ attachment, sections, onClose, onSaved }: {
               {sec.heading ? <h4 className="mb-3 border-b border-line pb-2 text-[16px] font-bold">{sec.heading}</h4> : null}
               <div className="grid gap-4 sm:grid-cols-2">
                 {sec.fields.filter((f) => f.type !== "heading").map((f) => {
-                  const isLong = f.type === "textarea" || f.type === "subform";
+                  if (f.type === "subform" && f.subfields?.length) {
+                    return (
+                      <div key={f.key} className="sm:col-span-2">
+                        <SubformEditor
+                          field={f}
+                          rows={subformRows[f.key] ?? []}
+                          onChange={(rows) => setSubformRows({ ...subformRows, [f.key]: rows })}
+                        />
+                      </div>
+                    );
+                  }
+                  const isLong = f.type === "textarea";
                   return (
                     <label key={f.key} className={`label ${isLong ? "sm:col-span-2" : ""}`}>{f.label}
-                      {f.type === "textarea" || f.type === "subform" ? (
-                        <textarea className="textarea font-mono text-xs" rows={3} value={draft[f.key] ?? ""} onChange={(e) => setDraft({ ...draft, [f.key]: e.target.value })} placeholder={f.type === "subform" ? "JSON array" : ""} />
+                      {f.type === "textarea" ? (
+                        <textarea className="textarea" rows={3} value={draft[f.key] ?? ""} onChange={(e) => setDraft({ ...draft, [f.key]: e.target.value })} />
                       ) : f.type === "dropdown" && f.options?.length ? (
                         <select className="input" value={draft[f.key] ?? ""} onChange={(e) => setDraft({ ...draft, [f.key]: e.target.value })}>
                           <option value="">Select…</option>
@@ -238,6 +273,60 @@ function EditAttachmentModal({ attachment, sections, onClose, onSaved }: {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+/** Editor for a repeatable subform: rows with add/remove, each row has the subfields. */
+function SubformEditor({ field, rows, onChange }: {
+  field: FormField; rows: Record<string, string>[]; onChange: (rows: Record<string, string>[]) => void;
+}) {
+  function setRow(i: number, key: string, val: string) {
+    const next = rows.map((r, j) => (j === i ? { ...r, [key]: val } : r));
+    onChange(next);
+  }
+  function addRow() {
+    const blank: Record<string, string> = {};
+    for (const sf of field.subfields ?? []) blank[sf.key] = "";
+    onChange([...rows, blank]);
+  }
+  function removeRow(i: number) {
+    onChange(rows.filter((_, j) => j !== i));
+  }
+
+  return (
+    <div className="rounded-xl bg-[#f7f7f7] p-4">
+      <div className="mb-3 flex items-center justify-between">
+        <strong className="text-[14px]">{field.label}</strong>
+        <span className="text-xs text-muted">{rows.length} {rows.length === 1 ? "entry" : "entries"}</span>
+      </div>
+      <div className="flex flex-col gap-3">
+        {rows.map((row, i) => (
+          <div key={i} className="rounded-lg bg-white p-3">
+            <div className="mb-2 flex items-center justify-between">
+              <span className="text-[12px] font-medium text-muted">Entry {i + 1}</span>
+              <button className="text-[12px] text-red-600 hover:underline" onClick={() => removeRow(i)}>Remove</button>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {(field.subfields ?? []).map((sf) => (
+                <label key={sf.key} className="label text-[12px]">{sf.label}
+                  {sf.type === "dropdown" && sf.options?.length ? (
+                    <select className="input h-9 text-[13px]" value={row[sf.key] ?? ""} onChange={(e) => setRow(i, sf.key, e.target.value)}>
+                      <option value="">Select…</option>
+                      {sf.options.map((o) => <option key={o} value={o}>{o}</option>)}
+                    </select>
+                  ) : (
+                    <input className="input h-9 text-[13px]" value={row[sf.key] ?? ""} onChange={(e) => setRow(i, sf.key, e.target.value)} />
+                  )}
+                </label>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+      <button className="btn mt-3 h-9 text-[13px]" onClick={addRow}>
+        + {field.repeat_label ?? "Add entry"}
+      </button>
     </div>
   );
 }
