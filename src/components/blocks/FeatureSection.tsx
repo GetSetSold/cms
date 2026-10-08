@@ -2,7 +2,9 @@ import Link from "next/link";
 import { Svg } from "@/components/site/Svg";
 import { isDarkColor, contrastRatio } from "@/lib/color";
 import type { BlockCtx } from "./index";
-import { wrap } from "./index";
+
+// Standard page width — must match header/footer: mx-auto max-w-7xl px-5 md:px-10
+const wrap = "mx-auto w-full max-w-7xl px-5 md:px-10";
 
 type Item = { svg_id?: string; icon_color?: string; title?: string; text?: string; href?: string; link_label?: string };
 type Layout = "simple" | "lines" | "cross" | "bands";
