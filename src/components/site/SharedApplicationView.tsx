@@ -24,7 +24,7 @@ function Value({ value }: { value: unknown }) {
 
 /** Branded, print-friendly rental application. Header/footer come from the
  *  branding snapshot taken when the share was created (Settings → Documents). */
-export function SharedApplicationView({ share }: { share: Share }) {
+export function SharedApplicationView({ share, formName }: { share: Share; formName: string }) {
   const b = share.branding ?? {};
   const submitted = new Date(share.snapshot.submitted_at).toLocaleDateString("en-CA", {
     year: "numeric", month: "long", day: "numeric",
@@ -58,7 +58,7 @@ export function SharedApplicationView({ share }: { share: Share }) {
 
           <div className="px-8 py-6">
             <div className="mb-6 flex items-baseline justify-between">
-              <h2 className="text-xl font-bold text-[#111]">Rental Application</h2>
+              <h2 className="text-xl font-bold text-[#111]">{formName}</h2>
               <p className="text-[13px] text-[#666]">Submitted {submitted}</p>
             </div>
 

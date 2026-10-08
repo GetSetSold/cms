@@ -7,6 +7,9 @@ import { LEAD_FLOW_CATEGORIES, LEAD_STATUSES } from "@/lib/types";
 import { AttachedForms } from "./AttachedForms";
 import { AttachFormButton } from "./AttachFormButton";
 import { ShareApplicationButton } from "./ShareApplicationButton";
+import { ShareFormButton } from "./ShareFormButton";
+import { ShareManager } from "./ShareManager";
+import { Opportunities } from "./Opportunities";
 
 type Activity = { id: string; type: string; body: string | null; meta: any; created_at: string };
 type QueueItem = { id: string; channel: string; run_at: string; sequence_id: string };
@@ -315,6 +318,14 @@ function ActivityPanel({ leadId, activities, queue }: { leadId: string; activiti
   );
 }
 
+const LEAD_TYPES = [
+  { id: "tenant", label: "Tenant" },
+  { id: "buyer", label: "Buyer" },
+  { id: "seller", label: "Seller" },
+  { id: "landlord", label: "Landlord" },
+  { id: "investor", label: "Investor" },
+] as const;
+
 function OverviewPanel({ lead, activities }: { lead: Lead; activities: Activity[] }) {
   const name = [lead.first_name, lead.last_name].filter(Boolean).join(" ") || "Unnamed lead";
   const [editing, setEditing] = useState(false);
@@ -323,6 +334,7 @@ function OverviewPanel({ lead, activities }: { lead: Lead; activities: Activity[
   const [email, setEmail] = useState(lead.email ?? "");
   const [phone, setPhone] = useState(lead.phone ?? "");
   const [status, setStatus] = useState(lead.status);
+  const [types, setTypes] = useState<string[]>(Array.isArray(lead.types) ? lead.types : []);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState("");
 
@@ -334,10 +346,15 @@ function OverviewPanel({ lead, activities }: { lead: Lead; activities: Activity[
       email: email.trim() || null,
       phone: phone.trim() || null,
       status,
+      types,
     }).eq("id", lead.id);
     setSaving(false);
     if (error) { setMsg(error.message); return; }
     setEditing(false); setMsg("Saved");
+  }
+
+  function toggleType(id: string) {
+    setTypes(types.includes(id) ? types.filter((t) => t !== id) : [...types, id]);
   }
 
   async function deleteLead() {
@@ -376,6 +393,21 @@ function OverviewPanel({ lead, activities }: { lead: Lead; activities: Activity[
                 </select>
               </label>
             </div>
+            <div>
+              <p className="label">Types</p>
+              <div className="flex flex-wrap gap-2">
+                {LEAD_TYPES.map((t) => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => toggleType(t.id)}
+                    className={`rounded-full px-4 py-2 text-[13px] font-medium ${types.includes(t.id) ? "bg-[#111] text-white" : "bg-[#f7f7f7] text-[#333] hover:bg-[#eee]"}`}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+            </div>
             <div className="flex gap-2">
               <button className="btn-primary" disabled={saving} onClick={save}>{saving ? "Saving…" : "Save"}</button>
               <button className="btn" onClick={() => { setEditing(false); setMsg(""); }}>Cancel</button>
@@ -383,6 +415,15 @@ function OverviewPanel({ lead, activities }: { lead: Lead; activities: Activity[
           </div>
         ) : (
           <>
+            {types.length ? (
+              <div className="flex flex-wrap gap-2">
+                {types.map((t) => (
+                  <span key={t} className="rounded-full bg-[#111] px-3 py-1 text-[12px] font-medium text-white">
+                    {LEAD_TYPES.find((lt) => lt.id === t)?.label ?? t}
+                  </span>
+                ))}
+              </div>
+            ) : null}
             <dl className="grid gap-4 text-[13px] sm:grid-cols-2">
               {[
                 ["Phone", lead.phone && <a href={`tel:${lead.phone}`}>{lead.phone}</a>],
@@ -418,6 +459,7 @@ function OverviewPanel({ lead, activities }: { lead: Lead; activities: Activity[
           Delete lead
         </button>
       </div>
+      <Opportunities leadId={lead.id} />
     </div>
   );
 }
@@ -470,9 +512,14 @@ function CommunicationPanel({ lead }: { lead: Lead }) {
         <p className="text-[13px] text-muted">Pick a form and send {leadName} a link to fill it — answers attach to this lead.</p>
         <AttachFormButton leadId={lead.id} leadName={leadName} sendOnly />
       </div>
-      {lead.form_key === "rental_application" ? (
-        <ShareApplicationButton leadId={lead.id} />
+      {lead.form_key ? (
+        <div className="card flex flex-col gap-3">
+          <strong>Share submission</strong>
+          <p className="text-[13px] text-muted">Share {leadName}'s {lead.form_key.replace(/_/g, " ")} answers with a branded link.</p>
+          <ShareFormButton leadId={lead.id} />
+        </div>
       ) : null}
+      <ShareManager leadId={lead.id} />
     </div>
   );
 }
@@ -493,12 +540,13 @@ export function LeadTabs({ lead, activities, queue, enrollments, availableFlows 
 
   return (
     <div className="flex flex-col gap-5">
-      <nav role="tablist" aria-label="Lead record sections" className="flex flex-wrap gap-1 rounded-xl bg-soft/70 p-1">
-        {TABS.map((t) => (
+      <nav role="tablist" aria-label="Lead record sections" className="flex gap-px overflow-x-auto rounded-[var(--radius-btn)] bg-[#111] p-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {TABS.map((t, i) => (
           <button key={t} role="tab" aria-selected={tab === t} onClick={() => setTab(t)}
-            className={`flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-medium ${tab === t ? "bg-white shadow-sm" : "text-muted"}`}>
+            className={`flex h-9 shrink-0 items-center gap-1.5 px-4 text-sm font-medium ${i > 0 ? "border-l border-white/15" : ""} ${tab === t ? "bg-[#0066cc] text-white" : "text-white/70 hover:text-white"}`}
+            style={tab === t ? { borderRadius: "var(--radius-btn)" } : undefined}>
             {titles[t]}
-            {counts[t] ? <span className="rounded-full bg-ground px-1.5 text-xs text-muted">{counts[t]}</span> : null}
+            {counts[t] ? <span className={`rounded-full px-1.5 text-xs ${tab === t ? "bg-white/20 text-white" : "bg-white/10 text-white/60"}`}>{counts[t]}</span> : null}
           </button>
         ))}
       </nav>

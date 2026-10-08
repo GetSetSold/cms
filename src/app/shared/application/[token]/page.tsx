@@ -13,7 +13,7 @@ export default async function SharedApplicationPage({ params }: { params: Promis
   const supabase = await createClient();
   // RLS: public can only read unexpired shares.
   const { data: share } = await supabase
-    .from("rental_application_shares")
+    .from("form_shares")
     .select("token,expires_at,view_count,branding,snapshot")
     .eq("token", token)
     .maybeSingle();
@@ -21,14 +21,11 @@ export default async function SharedApplicationPage({ params }: { params: Promis
 
   // Bump view count (fire-and-forget).
   supabase
-    .from("rental_application_shares")
+    .from("form_shares")
     .update({ view_count: ((share as { view_count: number }).view_count ?? 0) + 1 })
     .eq("token", token)
     .then(() => {});
 
-  return <SharedApplicationView share={share as {
-    expires_at: string;
-    branding: Record<string, string>;
-    snapshot: { sections: { heading: string; fields: { label: string; value: unknown; heading?: boolean }[] }[]; submitted_at: string };
-  }} />;
+  const snap = (share as { snapshot: { form_name?: string; sections: { heading: string; fields: { label: string; value: unknown; heading?: boolean }[] }[]; submitted_at: string } }).snapshot;
+  return <SharedApplicationView share={{ ...(share as { expires_at: string; branding: Record<string, string> }), snapshot: snap }} formName={snap.form_name ?? "Rental Application"} />;
 }

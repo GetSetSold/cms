@@ -1,0 +1,169 @@
+import { NextRequest, NextResponse } from "next/server";
+import { requireStaff } from "@/lib/auth";
+import { createClient } from "@/lib/supabase/server";
+import { randomBytes } from "crypto";
+
+/** Form shares: create, list, revoke, refresh. */
+
+const EXPIRY_OPTIONS: Record<string, number> = {
+  "24h": 24 * 3600,
+  "3d": 3 * 24 * 3600,
+  "7d": 7 * 24 * 3600,
+};
+
+type Field = { key: string; label: string; type: string; subfields?: Field[] };
+type Section = { id: string; heading?: string; fields: Field[] };
+
+function renderValue(value: unknown, field: Field): string | { label: string; value: string }[] | null {
+  if (value == null || value === "") return null;
+  if (field.type === "subform" && Array.isArray(value)) {
+    const rows = (value as Record<string, unknown>[])
+      .map((entry) => {
+        const label = (field.subfields ?? [])
+          .map((sf) => {
+            const v = entry[sf.key];
+            return v != null && v !== "" ? `${sf.label}: ${String(v)}` : "";
+          })
+          .filter(Boolean)
+          .join(" · ");
+        return label ? { label, value: "" } : null;
+      })
+      .filter(Boolean) as { label: string; value: string }[];
+    return rows.length ? rows : null;
+  }
+  if (Array.isArray(value)) return value.map(String).join(", ");
+  if (typeof value === "boolean") return value ? "Yes" : "No";
+  return String(value);
+}
+
+function buildSnapshot(sections: Section[], answers: Record<string, unknown>) {
+  return sections
+    .map((sec) => {
+      const fields = (sec.fields ?? [])
+        .map((f) => {
+          if (f.type === "heading") return null; // headings alone don't make a section worth showing
+          const rendered = renderValue(answers[f.key], f);
+          if (rendered == null) return null;
+          return { label: f.label, value: rendered };
+        })
+        .filter(Boolean);
+      return fields.length ? { heading: sec.heading ?? "", fields } : null;
+    })
+    .filter(Boolean);
+}
+
+/** POST: create a share. Body: { lead_id, attachment_id? (or "main" for the lead's own submission), expiry } */
+export async function POST(req: NextRequest) {
+  let staff;
+  try {
+    staff = await requireStaff(["admin", "sales", "editor"]);
+  } catch {
+    return NextResponse.json({ error: "Not authorized." }, { status: 401 });
+  }
+
+  const body = await req.json().catch(() => ({}));
+  const leadId = typeof body.lead_id === "string" ? body.lead_id : "";
+  const attachmentId = typeof body.attachment_id === "string" ? body.attachment_id : null;
+  const expiryKey = typeof body.expiry === "string" ? body.expiry : "24h";
+  if (!leadId) return NextResponse.json({ error: "Missing lead_id." }, { status: 400 });
+  const ttl = EXPIRY_OPTIONS[expiryKey] ?? EXPIRY_OPTIONS["24h"];
+
+  let formKey: string, formName: string, answers: Record<string, unknown>, submittedAt: string;
+
+  if (attachmentId) {
+    const { data: att } = await staff.supabase
+      .from("lead_form_attachments")
+      .select("id,lead_id,form_id,form_key,form_name,answers,created_at")
+      .eq("id", attachmentId)
+      .eq("lead_id", leadId)
+      .maybeSingle();
+    if (!att) return NextResponse.json({ error: "Attachment not found." }, { status: 404 });
+    const a = att as { form_id: string; form_key: string; form_name: string; answers: Record<string, unknown>; created_at: string };
+    formKey = a.form_key; formName = a.form_name; answers = a.answers ?? {}; submittedAt = a.created_at;
+
+    var formId = a.form_id;
+  } else {
+    const { data: lead } = await staff.supabase
+      .from("leads")
+      .select("id,form_key,custom_fields,created_at")
+      .eq("id", leadId)
+      .maybeSingle();
+    if (!lead) return NextResponse.json({ error: "Lead not found." }, { status: 404 });
+    const l = lead as { form_key: string; custom_fields: Record<string, unknown>; created_at: string };
+    if (!l.form_key) return NextResponse.json({ error: "Lead has no form submission to share." }, { status: 400 });
+    formKey = l.form_key; answers = l.custom_fields ?? {}; submittedAt = l.created_at;
+
+    const { data: form } = await staff.supabase.from("forms").select("id,name").eq("form_key", formKey).maybeSingle();
+    formName = ((form as { name: string } | null)?.name) ?? formKey;
+    var formId = ((form as { id: string } | null)?.id) ?? "";
+  }
+
+  // Resolve labels via the form definition.
+  let sections: Section[] = [];
+  if (formId) {
+    const { data: form } = await staff.supabase.from("forms").select("sections").eq("id", formId).maybeSingle();
+    sections = ((form as { sections: Section[] } | null)?.sections ?? []) as Section[];
+  }
+  const snapshotSections = buildSnapshot(sections, answers);
+  const answerCount = snapshotSections.reduce((n, s) => n + (s as { fields: unknown[] }).fields.length, 0);
+
+  const token = randomBytes(12).toString("base64url");
+  const expiresAt = new Date(Date.now() + ttl * 1000).toISOString();
+
+  const { data: settings } = await staff.supabase.from("site_settings").select("doc_branding").eq("id", 1).maybeSingle();
+
+  const { data: share, error } = await staff.supabase
+    .from("form_shares")
+    .insert({
+      lead_id: leadId,
+      attachment_id: attachmentId,
+      token,
+      expires_at: expiresAt,
+      branding: (settings as { doc_branding?: unknown } | null)?.doc_branding ?? {},
+      snapshot: { form_name: formName, sections: snapshotSections, submitted_at: submittedAt },
+    })
+    .select("token,expires_at")
+    .single();
+
+  if (error || !share) {
+    return NextResponse.json({ error: error?.message ?? "Failed to create share." }, { status: 500 });
+  }
+
+  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "";
+  return NextResponse.json({
+    url: `${base}/shared/application/${share.token}`,
+    expires_at: share.expires_at,
+    preview: { form_name: formName, sections: snapshotSections.length, answers: answerCount },
+  });
+}
+
+/** GET ?lead_id=... : list active shares for a lead. */
+export async function GET(req: NextRequest) {
+  let staff;
+  try {
+    staff = await requireStaff(["admin", "sales", "editor"]);
+  } catch {
+    return NextResponse.json({ error: "Not authorized." }, { status: 401 });
+  }
+  const leadId = new URL(req.url).searchParams.get("lead_id") ?? "";
+  if (!leadId) return NextResponse.json({ error: "Missing lead_id." }, { status: 400 });
+
+  const { data } = await staff.supabase
+    .from("form_shares")
+    .select("token,expires_at,view_count,created_at,snapshot,attachment_id")
+    .eq("lead_id", leadId)
+    .gt("expires_at", new Date().toISOString())
+    .order("created_at", { ascending: false });
+
+  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "";
+  return NextResponse.json({
+    shares: ((data ?? []) as { token: string; expires_at: string; view_count: number; created_at: string; snapshot: { form_name: string }; attachment_id: string | null }[]).map((s) => ({
+      token: s.token,
+      url: `${base}/shared/application/${s.token}`,
+      form_name: s.snapshot?.form_name ?? "Form",
+      expires_at: s.expires_at,
+      view_count: s.view_count,
+      created_at: s.created_at,
+    })),
+  });
+}

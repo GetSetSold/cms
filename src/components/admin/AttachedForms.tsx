@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { ShareFormButton } from "./ShareFormButton";
 
 type Attachment = {
   id: string;
@@ -92,9 +93,9 @@ export function AttachedForms({ leadId }: { leadId: string }) {
                 ))}
               </dl>
             ) : null}
-            <div className="mt-2">
+            <div className="mt-2 flex flex-wrap gap-2">
               {flowFor === a.id ? (
-                <div className="flex gap-2">
+                <div className="flex flex-1 gap-2">
                   <select className="input flex-1" value={flowId} onChange={(e) => setFlowId(e.target.value)}>
                     <option value="">Choose a flow…</option>
                     {flows.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
@@ -103,7 +104,10 @@ export function AttachedForms({ leadId }: { leadId: string }) {
                   <button className="btn" onClick={() => { setFlowFor(null); setFlowId(""); }}>Cancel</button>
                 </div>
               ) : (
-                <button className="btn h-8 px-3 text-[12px]" onClick={() => setFlowFor(a.id)}>Start flow</button>
+                <>
+                  <button className="btn h-8 px-3 text-[12px]" onClick={() => setFlowFor(a.id)}>Start flow</button>
+                  <ShareFormButton leadId={leadId} attachmentId={a.id} label="Share" />
+                </>
               )}
             </div>
           </div>

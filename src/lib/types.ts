@@ -181,6 +181,7 @@ export interface Lead {
   status: LeadStatus;
   sms_opt_in: boolean;
   sms_opted_out: boolean;
+  types: string[];
   created_at: string;
 }
 
