@@ -94,11 +94,27 @@ export function BlockListEditor({
                 <input type="checkbox" checked={!!b.settings?.divider} onChange={(e) => setSettings(i, { divider: e.target.checked, divider_color: b.settings?.divider_color || "#e5e5e5" })} />
               </div>
               {b.settings?.divider ? (
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-medium text-muted">Divider color</span>
-                  <input type="color" value={/^#[0-9a-f]{6}$/i.test(b.settings?.divider_color ?? "") ? b.settings!.divider_color : "#e5e5e5"}
-                    onChange={(e) => setSettings(i, { divider_color: e.target.value })} className="h-6 w-8 cursor-pointer rounded border-0 bg-transparent" />
-                </div>
+                <>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-medium text-muted">Divider color</span>
+                    <input type="color" value={/^#[0-9a-f]{6}$/i.test(b.settings?.divider_color ?? "") ? b.settings!.divider_color : "#e5e5e5"}
+                      onChange={(e) => setSettings(i, { divider_color: e.target.value })} className="h-6 w-8 cursor-pointer rounded border-0 bg-transparent" />
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-medium text-muted">Space above (px)</span>
+                    <input type="number" value={b.settings?.divider_mt ?? 0}
+                      onChange={(e) => setSettings(i, { divider_mt: Number(e.target.value) })} className="input h-6 w-16 text-xs" />
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-medium text-muted">Space below (px)</span>
+                    <input type="number" value={b.settings?.divider_mb ?? 0}
+                      onChange={(e) => setSettings(i, { divider_mb: Number(e.target.value) })} className="input h-6 w-16 text-xs" />
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-medium text-muted">Full width (edge to edge)</span>
+                    <input type="checkbox" checked={!!b.settings?.divider_full_bleed} onChange={(e) => setSettings(i, { divider_full_bleed: e.target.checked })} />
+                  </div>
+                </>
               ) : null}
               <label className="flex items-center justify-between text-xs">
                 <span className="font-medium text-muted">Button style</span>
