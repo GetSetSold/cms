@@ -121,11 +121,13 @@ export function SharedApplicationView({ share, formName }: { share: Share; formN
         <article className="overflow-hidden rounded-2xl bg-white shadow-sm print:rounded-none print:shadow-none">
           {/* Branded header */}
           <header className="border-b-4 border-[#0066cc] px-8 py-6">
-            {b.header_name ? (
-              <p className="text-[13px] font-medium uppercase tracking-wide text-[#666]">{b.header_name}</p>
+            {b.header_tagline ? (
+              <h1 className="text-2xl font-bold text-[#111]">{b.header_tagline}</h1>
             ) : null}
-            <h1 className="mt-1 text-2xl font-bold text-[#111]">{formName}</h1>
-            {b.header_tagline ? <p className="mt-1 text-[15px] text-[#333]">{b.header_tagline}</p> : null}
+            {b.header_name ? (
+              <p className="mt-1 text-[14px] text-[#666]">{b.header_name}</p>
+            ) : null}
+            <p className="mt-2 text-[18px] font-semibold text-[#0066cc]">{formName}</p>
             <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-[13px] text-[#666]">
               {b.header_phone ? <span>{b.header_phone}</span> : null}
               {b.header_email ? <span>{b.header_email}</span> : null}
