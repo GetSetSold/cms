@@ -2,12 +2,12 @@ import Link from "next/link";
 import { Svg } from "@/components/site/Svg";
 import { isDarkColor, contrastRatio } from "@/lib/color";
 import type { BlockCtx } from "./index";
+import { wrap } from "./index";
 
 type Item = { svg_id?: string; icon_color?: string; title?: string; text?: string; href?: string; link_label?: string };
 type Layout = "simple" | "lines" | "cross" | "bands";
 const LAYOUTS: Layout[] = ["simple", "lines", "cross", "bands"];
 
-const wrap = "mx-auto w-full max-w-7xl px-5 md:px-10";
 const shell = "overflow-hidden rounded-[var(--radius-lg)] border-[length:var(--border-card-width)] border-line shadow-[var(--shadow-card)]";
 
 /** Every color inside the section comes from one light/dark decision, so a
