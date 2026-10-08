@@ -49,7 +49,7 @@ Deno.serve(async (req) => {
       .replace(/\{\{\s*first_name\s*\}\}/g, firstName || "there")
       .replace(/\{\{\s*site_name\s*\}\}/g, siteName);
 
-    const sent = await sendEmail(leadEmail, renderedSubject, rendered, undefined, provider);
+    const sent = await sendZeptoMailDebug(leadEmail, renderedSubject, rendered);
     await db.from("lead_activities").insert({ lead_id, type: "email_out", body: `${renderedSubject}\n\n${rendered}`, created_by: user.id, meta: sent });
     return json(req, { ok: true });
   } catch (e) {
@@ -57,3 +57,26 @@ Deno.serve(async (req) => {
     return json(req, { error: String((e as Error)?.message ?? e), stack: String((e as Error)?.stack ?? "").slice(0, 800) }, 200);
   }
 });
+
+async function sendZeptoMailDebug(to: string, subject: string, text: string) {
+  const token = Deno.env.get("ZEPTOMAIL_TOKEN");
+  const from = Deno.env.get("EMAIL_FROM");
+  const fromName = Deno.env.get("EMAIL_FROM_NAME");
+  if (!token || !from) throw new Error("ZeptoMail secrets are not set");
+  const res = await fetch("https://api.zeptomail.com/v1.1/email", {
+    method: "POST",
+    headers: { Authorization: token, "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify({
+      from: { address: from, name: fromName || undefined },
+      to: [{ email_address: { address: to } }],
+      subject,
+      htmlbody: `<p>${text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/\n/g, "<br>")}</p>`,
+      textbody: text,
+    }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(`ZeptoMail ${res.status}: ${JSON.stringify(data).slice(0, 500)} (from=${from}, to=${to})`);
+  }
+  return { provider: "zeptomail" };
+}
