@@ -1293,17 +1293,22 @@ function renderOne(s: Section, ctx: BlockCtx) {
   const content = <Block data={s.data ?? {}} ctx={blockCtx} />;
 
   const borderColor = st.border_color || undefined;
+  const showBorder = st.border !== false;
   const showDivider = !!st.divider;
   const dividerColor = st.divider_color || "#e5e5e5";
+
+  // Border classes: only apply border if enabled.
+  const boxBorder = showBorder ? "border-[length:var(--border-card-width)]" : "border-0";
+  const boxShadow = "shadow-[var(--shadow-card)]";
 
   return (
     <section key={s.id} id={st.anchor || s.id} className={cls} style={customBg ? { background: customBg } : undefined} data-block={s.block_type}>
       {boxed ? (
         ctx.inRow ? (
-          <div className={`h-full rounded-[var(--radius-lg)] px-6 py-8 md:px-8 md:py-10 ${cardShadow}`} style={{ background: box.css, borderColor }}>{content}</div>
+          <div className={`h-full rounded-[var(--radius-lg)] px-6 py-8 md:px-8 md:py-10 ${boxBorder} ${showBorder ? "border-line" : ""} ${boxShadow}`} style={{ background: box.css, borderColor: showBorder ? borderColor : undefined }}>{content}</div>
         ) : (
           <div className={`${wrap} py-5 md:py-12`}>
-            <div className={`rounded-[var(--radius-lg)] p-6 md:p-8 ${cardShadow}`} style={{ background: box.css, borderColor }}>{content}</div>
+            <div className={`rounded-[var(--radius-lg)] p-6 md:p-8 ${boxBorder} ${showBorder ? "border-line" : ""} ${boxShadow}`} style={{ background: box.css, borderColor: showBorder ? borderColor : undefined }}>{content}</div>
           </div>
         )
       ) : content}
