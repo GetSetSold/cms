@@ -260,6 +260,8 @@ export type FormField = {
   required?: boolean;
   options?: string[]; // dropdown / radio / multiple_choice
   span?: 1 | 2;        // force full width in a 2-column section
+  /** Internal only: shown in admin, excluded from shared links/PDF. */
+  internal?: boolean;
   // subform only: a repeatable group of its own fields
   subfields?: FormField[];
   repeat_label?: string; // e.g. "Add another applicant"

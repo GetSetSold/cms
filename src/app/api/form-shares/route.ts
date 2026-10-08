@@ -40,6 +40,7 @@ function buildSnapshot(sections: Section[], answers: Record<string, unknown>) {
       const fields = (sec.fields ?? [])
         .map((f) => {
           if (f.type === "heading") return null; // headings alone don't make a section worth showing
+          if ((f as { internal?: boolean }).internal) return null; // internal fields stay in admin only
           const rendered = renderValue(answers[f.key], f);
           if (rendered == null) return null;
           return { label: f.label, value: rendered };

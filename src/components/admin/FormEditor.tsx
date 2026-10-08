@@ -176,6 +176,7 @@ function FieldRow({ field, showSpan, duplicate, earlier, problems, formPaginate,
       <div className="flex flex-wrap items-center gap-3">
         <input className="input w-40" placeholder="Field key" value={keyDraft} onChange={(e) => setKeyDraft(e.target.value)} onBlur={commitKey} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); commitKey(); } }} />
         <label className="flex shrink-0 items-center gap-1.5 text-sm">Required<input type="checkbox" checked={!!field.required} onChange={(e) => set({ required: e.target.checked })} /></label>
+        <label className="flex shrink-0 items-center gap-1.5 text-sm" title="Internal: visible in admin, hidden from shared links and PDFs">Internal<input type="checkbox" checked={!!field.internal} onChange={(e) => set({ internal: e.target.checked })} /></label>
         {showSpan ? (
           <label className="flex shrink-0 items-center gap-1.5 text-sm">Full width<input type="checkbox" checked={field.span === 2} onChange={(e) => set({ span: e.target.checked ? 2 : 1 })} /></label>
         ) : null}
