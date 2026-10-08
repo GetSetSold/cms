@@ -240,3 +240,16 @@ nav[aria-label="Breadcrumb"] a:hover { text-decoration: underline; }
 @media (prefers-reduced-motion: reduce) {
   .sk-shimmer::after { animation: none; }
 }
+
+/* Merged cards: blocks embedded inside a merged header+block card must not
+   apply their own page-width wrapper — the card already provides it.
+   Without this, embedded blocks get double/triple padding and look narrow. */
+.embed > .mx-auto,
+.embed-side > .mx-auto {
+  margin-left: 0;
+  margin-right: 0;
+  max-width: none;
+  padding-left: 0;
+  padding-right: 0;
+  width: 100%;
+}
