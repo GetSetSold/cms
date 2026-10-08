@@ -2,11 +2,6 @@
 // Self-contained (no _shared import) so it deploys cleanly via the dashboard.
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-const admin = () =>
-  createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, {
-    auth: { persistSession: false },
-  });
-
 function corsHeaders(req: Request) {
   const allowed = (Deno.env.get("ALLOWED_ORIGINS") ?? "*").split(",").map((s) => s.trim());
   const origin = req.headers.get("Origin") ?? "";
@@ -66,7 +61,10 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders(req) });
 
   try {
-    const db = admin();
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (!supabaseUrl || !serviceKey) return json(req, { error: "Supabase env not configured" }, 500);
+    const db = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false } });
     const jwt = (req.headers.get("Authorization") ?? "").replace(/^Bearer\s+/i, "");
     const { data: { user } } = await db.auth.getUser(jwt);
     if (!user) return json(req, { error: "Not signed in" }, 401);
