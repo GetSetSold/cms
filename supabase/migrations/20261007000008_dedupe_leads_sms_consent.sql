@@ -32,11 +32,20 @@ BEGIN
       UPDATE opportunities SET lead_id = keep_id WHERE lead_id = dup_id;
       UPDATE form_shares SET lead_id = keep_id WHERE lead_id = dup_id;
       -- Fill in missing contact fields on the kept record
+      -- Merge custom_fields: dup's data takes precedence for keys keep doesn't have
       UPDATE leads k SET
         first_name = COALESCE(k.first_name, d.first_name),
         last_name = COALESCE(k.last_name, d.last_name),
         phone = COALESCE(k.phone, d.phone),
-        custom_fields = COALESCE(k.custom_fields, '{}'::jsonb) || COALESCE(d.custom_fields, '{}'::jsonb)
+        email = COALESCE(k.email, d.email),
+        -- If keep has empty custom_fields but dup has data, take dup's form_key too
+        form_key = CASE 
+          WHEN (k.custom_fields IS NULL OR k.custom_fields = '{}'::jsonb) 
+           AND d.custom_fields IS NOT NULL AND d.custom_fields != '{}'::jsonb 
+          THEN d.form_key 
+          ELSE k.form_key 
+        END,
+        custom_fields = COALESCE(d.custom_fields, '{}'::jsonb) || COALESCE(k.custom_fields, '{}'::jsonb)
       FROM leads d WHERE k.id = keep_id AND d.id = dup_id;
       -- Delete the duplicate
       DELETE FROM leads WHERE id = dup_id;
