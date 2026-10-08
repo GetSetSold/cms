@@ -121,7 +121,10 @@ export function SharedApplicationView({ share, formName }: { share: Share; formN
         <article className="overflow-hidden rounded-2xl bg-white shadow-sm print:rounded-none print:shadow-none">
           {/* Branded header */}
           <header className="border-b-4 border-[#0066cc] px-8 py-6">
-            <h1 className="text-2xl font-bold text-[#111]">{b.header_name || formName}</h1>
+            {b.header_name ? (
+              <p className="text-[13px] font-medium uppercase tracking-wide text-[#666]">{b.header_name}</p>
+            ) : null}
+            <h1 className="mt-1 text-2xl font-bold text-[#111]">{formName}</h1>
             {b.header_tagline ? <p className="mt-1 text-[15px] text-[#333]">{b.header_tagline}</p> : null}
             <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-[13px] text-[#666]">
               {b.header_phone ? <span>{b.header_phone}</span> : null}
@@ -132,7 +135,6 @@ export function SharedApplicationView({ share, formName }: { share: Share; formN
 
           <div className="px-8 py-6">
             <div className="mb-6 flex items-baseline justify-between">
-              <h2 className="text-xl font-bold text-[#111]">{formName}</h2>
               <p className="text-[13px] text-[#666]">Submitted {submitted}</p>
             </div>
 
