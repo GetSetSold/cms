@@ -150,6 +150,7 @@ function FormSubmissionPanel({ lead }: { lead: Lead }) {
 
   return (
     <div className="flex flex-col gap-4">
+    {entries.length ? (
     <div className="card flex flex-col gap-4">
       <div className="flex items-start justify-between gap-3">
         <div>
@@ -190,7 +191,7 @@ function FormSubmissionPanel({ lead }: { lead: Lead }) {
             <button className="btn" onClick={() => { setEditing(false); setMsg(""); }}>Cancel</button>
           </div>
         </div>
-      ) : entries.length ? (
+      ) : (
         <dl className="flex flex-col">
           {preview.map(([key, v]) => (
             <div key={key} className="flex items-baseline justify-between gap-4 border-b border-line/60 py-2 last:border-0">
@@ -202,13 +203,11 @@ function FormSubmissionPanel({ lead }: { lead: Lead }) {
             <p className="pt-2 text-[12px] text-muted">+ {entries.length - preview.length} more — click View for all.</p>
           ) : null}
         </dl>
-      ) : (
-        <p className="text-[13px] text-muted">No answers stored on the main submission — see attached forms below.</p>
       )}
       {showAll ? <SubmissionModal lead={lead} onClose={() => setShowAll(false)} /> : null}
     </div>
+    ) : null}
     <div className="flex flex-col gap-3">
-      <h3 className="text-[15px] font-bold">Attached forms</h3>
       <AttachedForms leadId={lead.id} />
     </div>
     </div>
