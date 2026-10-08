@@ -16,8 +16,9 @@ export type FormSubmission = {
   subtitle: string;
   answers: Record<string, unknown>;
   sections: FormSection[];
-  onSave: (answers: Record<string, unknown>) => Promise<string | null>; // returns error or null
+  onSave: (answers: Record<string, unknown>) => Promise<string | null>;
   onDeleted?: () => void;
+  leadId: string;
 };
 
 function renderAnswer(v: unknown): string {
@@ -59,11 +60,15 @@ type Share = { token: string; url: string; expires_at: string; view_count: numbe
 export function FormSubmissionCard({ submission }: { submission: FormSubmission }) {
   const [expanded, setExpanded] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteInput, setDeleteInput] = useState("");
+  const [deletingBusy, setDeletingBusy] = useState(false);
   const [shares, setShares] = useState<Share[]>([]);
   const [flows, setFlows] = useState<{ id: string; name: string }[]>([]);
   const [flowOpen, setFlowOpen] = useState(false);
   const [flowId, setFlowId] = useState("");
   const [msg, setMsg] = useState("");
+  const [gone, setGone] = useState(false);
 
   const attachmentId = submission.id === "main" ? null : submission.id;
 
@@ -111,6 +116,30 @@ export function FormSubmissionCard({ submission }: { submission: FormSubmission 
   }
 
   const leadId = (submission as unknown as { leadId: string }).leadId;
+
+  async function handleDelete() {
+    if (deleteInput.trim().toUpperCase() !== "DELETE") return;
+    setDeletingBusy(true);
+    const sb = createClient();
+    if (attachmentId) {
+      // Delete the attachment and its shares.
+      await sb.from("form_shares").delete().eq("attachment_id", attachmentId);
+      const { error } = await sb.from("lead_form_attachments").delete().eq("id", attachmentId);
+      setDeletingBusy(false);
+      if (error) { setMsg(error.message); return; }
+    } else {
+      // Main submission: clear custom_fields and its shares.
+      await sb.from("form_shares").delete().eq("lead_id", leadId).is("attachment_id", null);
+      const { error } = await sb.from("leads").update({ custom_fields: {}, form_key: null }).eq("id", leadId);
+      setDeletingBusy(false);
+      if (error) { setMsg(error.message); return; }
+    }
+    setDeleting(false); setDeleteInput("");
+    setGone(true);
+    submission.onDeleted?.();
+  }
+
+  if (gone) return null;
 
   return (
     <div className="card flex flex-col gap-3">
@@ -201,8 +230,20 @@ export function FormSubmissionCard({ submission }: { submission: FormSubmission 
         ) : (
           <button className="btn h-9 px-4 text-[13px]" onClick={() => setFlowOpen(true)}>Start flow</button>
         )}
+        <button className="btn h-9 px-4 text-[13px] text-red-600 hover:bg-red-50" onClick={() => setDeleting(true)}>Delete</button>
       </div>
       {msg ? <p className="text-sm text-muted" role="status">{msg}</p> : null}
+
+      {deleting ? (
+        <DeleteConfirmModal
+          formName={submission.formName}
+          onClose={() => { setDeleting(false); setDeleteInput(""); }}
+          onConfirm={handleDelete}
+          deleteInput={deleteInput}
+          setDeleteInput={setDeleteInput}
+          busy={deletingBusy}
+        />
+      ) : null}
 
       {editing ? (
         <EditSubmissionModal
@@ -462,6 +503,38 @@ function SubformEditor({ field, rows, onChange }: {
         ) : null}
       </div>
       <button className="btn-primary mt-3 h-9 rounded-[var(--radius-btn)] text-[13px]" onClick={addRow}>+ {field.repeat_label ?? "Add entry"}</button>
+    </div>
+  );
+}
+
+/** Delete confirmation: type DELETE to confirm. */
+function DeleteConfirmModal({ formName, onClose, onConfirm, deleteInput, setDeleteInput, busy }: {
+  formName: string; onClose: () => void; onConfirm: () => void;
+  deleteInput: string; setDeleteInput: (v: string) => void; busy: boolean;
+}) {
+  const ok = deleteInput.trim().toUpperCase() === "DELETE";
+  return (
+    <div className="fixed inset-0 z-[130] flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
+      <div className="w-full max-w-md rounded-[var(--radius-lg)] bg-white p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        <h3 className="text-[16px] font-bold text-[#111]">Delete this form submission?</h3>
+        <p className="mt-2 text-[14px] text-muted">
+          “{formName}” will be permanently deleted, including its share links. This cannot be undone.
+        </p>
+        <p className="mt-4 text-[13px] font-medium">Type <code className="rounded bg-[#f7f7f7] px-1.5 py-0.5 font-bold">DELETE</code> to confirm:</p>
+        <input
+          className="input mt-2 rounded-[var(--radius-btn)]"
+          value={deleteInput}
+          onChange={(e) => setDeleteInput(e.target.value)}
+          placeholder="DELETE"
+          autoFocus
+        />
+        <div className="mt-4 flex gap-2">
+          <button className="btn flex-1 border-red-200 text-red-600 hover:bg-red-50" disabled={!ok || busy} onClick={onConfirm}>
+            {busy ? "Deleting…" : "Delete permanently"}
+          </button>
+          <button className="btn flex-1" onClick={onClose}>Cancel</button>
+        </div>
+      </div>
     </div>
   );
 }
