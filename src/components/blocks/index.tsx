@@ -629,7 +629,7 @@ function TeamProfile({ data, ctx }: BlockProps) {
   const credentials = [data.credential_1, data.credential_2].filter(Boolean);
   return (
     <div className={`${bw(ctx)} grid items-center ${stack ? "gap-8" : "gap-14 py-16 md:grid-cols-[320px_1fr] md:py-20"}`}>
-      <Svg asset={art} label={art?.name} className={`aspect-[8/9] overflow-hidden ${radiusCls} ${alignCls} ${stack ? "w-full max-w-[280px]" : ""}`} />
+      <Svg asset={art} label={art?.name} className={`aspect-[8/9] overflow-hidden ${radiusCls} ${alignCls} ${stack ? "w-full max-w-[360px]" : ""}`} />
       <div className="flex flex-col gap-3.5">
         {data.eyebrow ? <div className="text-xs font-bold uppercase tracking-[0.08em] text-primary">{data.eyebrow}</div> : null}
         <h2 className={`font-display text-[24px] md:text-[32px] font-bold ${heading(ctx)}`}>{data.name}</h2>

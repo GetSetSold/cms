@@ -55,17 +55,17 @@ export function MergedCard({ header, layout, color, ctx, partner, partnerId, par
     <div className={`${shell} ${dark ? "text-white" : "text-ink"}`} style={{ background: color }}>
       {layout === "side" ? (
         <div className="grid md:grid-cols-[42%_58%]">
-          <div className="flex flex-col justify-center p-6 md:p-14">{head}</div>
-          <div className={`flex flex-col justify-center border-t p-6 md:border-l md:border-t-0 md:p-12 ${rule} ${partnerClass}`}>
+          <div className="flex flex-col justify-center p-6 md:p-10">{head}</div>
+          <div className={`flex flex-col justify-center border-t p-6 md:border-l md:border-t-0 md:p-10 ${rule} ${partnerClass}`}>
             <div id={partnerId} className={embed}>{partner}</div>
           </div>
         </div>
       ) : (
         <div className="flex flex-col">
-          <div className="px-6 pb-8 pt-6 md:px-14 md:pb-12 md:pt-14">{head}</div>
+          <div className="px-6 pb-8 pt-6 md:px-10 md:pb-10 md:pt-10">{head}</div>
           <div className={partnerClass}>
-            <div className={`mx-6 border-t md:mx-14 ${rule}`} />
-            <div className="p-6 md:p-14"><div id={partnerId} className={embed}>{partner}</div></div>
+            <div className={`mx-6 border-t md:mx-10 ${rule}`} />
+            <div className="p-6 md:p-10"><div id={partnerId} className={embed}>{partner}</div></div>
           </div>
         </div>
       )}
