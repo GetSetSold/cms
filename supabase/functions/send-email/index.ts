@@ -22,23 +22,25 @@ Deno.serve(async (req) => {
     .select("id, email, first_name").eq("id", lead_id).maybeSingle();
   if (!(lead as { email: string } | null)?.email) return json(req, { error: "This lead has no email address" }, 422);
 
-  const { data: settings } = await db.from("site_settings").select("email_provider, site_name").single();
-
-  // Replace placeholders.
-  const leadEmail = (lead as { email: string }).email;
-  const firstName = ((lead as { first_name: string | null }).first_name ?? "").trim();
-  const rendered = text
-    .replace(/\{\{\s*first_name\s*\}\}/g, firstName || "there")
-    .replace(/\{\{\s*site_name\s*\}\}/g, settings?.site_name ?? "GetSetSold");
-  const renderedSubject = subj
-    .replace(/\{\{\s*first_name\s*\}\}/g, firstName || "there")
-    .replace(/\{\{\s*site_name\s*\}\}/g, settings?.site_name ?? "GetSetSold");
-
   try {
-    const sent = await sendEmail(leadEmail, renderedSubject, rendered, undefined, settings?.email_provider ?? "zeptomail");
+    const { data: settings } = await db.from("site_settings").select("email_provider, site_name").maybeSingle();
+    const siteName = (settings as { site_name?: string } | null)?.site_name ?? "GetSetSold";
+    const provider = ((settings as { email_provider?: string } | null)?.email_provider ?? "zeptomail") as "zeptomail" | "resend";
+
+    // Replace placeholders.
+    const leadEmail = (lead as { email: string }).email;
+    const firstName = ((lead as { first_name: string | null }).first_name ?? "").trim();
+    const rendered = text
+      .replace(/\{\{\s*first_name\s*\}\}/g, firstName || "there")
+      .replace(/\{\{\s*site_name\s*\}\}/g, siteName);
+    const renderedSubject = subj
+      .replace(/\{\{\s*first_name\s*\}\}/g, firstName || "there")
+      .replace(/\{\{\s*site_name\s*\}\}/g, siteName);
+
+    const sent = await sendEmail(leadEmail, renderedSubject, rendered, undefined, provider);
     await db.from("lead_activities").insert({ lead_id, type: "email_out", body: `${renderedSubject}\n\n${rendered}`, created_by: user.id, meta: sent });
     return json(req, { ok: true });
   } catch (e) {
-    return json(req, { error: String(e) }, 502);
+    return json(req, { error: String(e?.message ?? e) }, 502);
   }
 });
