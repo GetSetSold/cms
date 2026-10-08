@@ -54,7 +54,7 @@ export function MergedCard({ header, layout, color, ctx, partner, partnerId, par
   return (
     <div className={`${shell} ${dark ? "text-white" : "text-ink"}`} style={{ background: color }}>
       {layout === "side" ? (
-        <div className="grid md:grid-cols-[42%_58%]">
+        <div className="grid md:grid-cols-2">
           <div className="flex flex-col justify-center p-6 md:p-10">{head}</div>
           <div className={`flex flex-col justify-center border-t p-6 md:border-l md:border-t-0 md:p-10 ${rule} ${partnerClass}`}>
             <div id={partnerId} className={embed}>{partner}</div>
