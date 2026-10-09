@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 type ActiveComp = {
   ListingKey: string; ListPrice: number | null; UnparsedAddress: string | null; City: string | null;
   BedroomsTotal: number | null; BathroomsTotalInteger: number | null; AboveGradeFinishedArea: number | null;
-  OriginalEntryTimestamp: string | null; Media: string | null; _distKm?: number;
+  OriginalEntryTimestamp: string | null; Media: string | null; _distKm?: number; _dom?: number | null;
 };
 type SoldComp = { address: string; price: number | null; date: string; beds: string; baths: string; sqft: string; dom: string };
 type UpgradeItem = { description: string; amount: string };
@@ -45,6 +45,7 @@ const DEFAULT_AGENT = {
   email: "rohit@getsetsold.com",
   brokerage: "Lombard Group Real Estate Inc., Brokerage",
   tagline: "Your Trusted Partner in Real Estate",
+  photo: "",
   bio: "With over a decade of experience in the Greater Toronto Area's dynamic real estate market, Rohit Sharma has established himself as a trusted advisor for both buyers and sellers. Specializing in residential properties, Rohit combines deep market knowledge with cutting-edge technology to deliver exceptional results. His client-first approach and innovative 1% commission model have saved homeowners over $2 million in commission fees while maintaining full-service quality. Rohit is committed to transparent pricing, honest communication, and ensuring every client feels confident throughout their real estate journey.",
 };
 
@@ -260,6 +261,7 @@ export default function ValuationBuilder() {
         OriginalEntryTimestamp: null,
         Media: l.image ?? null,
         _distKm: l.distanceKm ?? undefined,
+        _dom: l.daysOnMarket ?? null,
       }));
       setActives(list);
       setPicked(new Set(list.slice(0, 6).map((l) => l.ListingKey)));
@@ -485,6 +487,7 @@ export default function ValuationBuilder() {
             <div><label className={label}>Email</label><input className={input} value={agent.email} onChange={(e) => setAgent({ ...agent, email: e.target.value })} /></div>
           </div>
           <div><label className={label}>Brokerage</label><input className={input} value={agent.brokerage} onChange={(e) => setAgent({ ...agent, brokerage: e.target.value })} /></div>
+          <div><label className={label}>Agent photo URL</label><input className={input} value={agent.photo} onChange={(e) => setAgent({ ...agent, photo: e.target.value })} placeholder="https://…" /></div>
           <div><label className={label}>Tagline</label><input className={input} value={agent.tagline} onChange={(e) => setAgent({ ...agent, tagline: e.target.value })} /></div>
           <div><label className={label}>Bio</label><textarea className={input} rows={5} value={agent.bio} onChange={(e) => setAgent({ ...agent, bio: e.target.value })} /></div>
           <div className="flex gap-2">
