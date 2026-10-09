@@ -8,6 +8,7 @@ import { AttachedForms } from "./AttachedForms";
 import { FormSubmissionCard } from "./FormSubmissionCard";
 import { AttachFormButton } from "./AttachFormButton";
 import { ShareApplicationButton } from "./ShareApplicationButton";
+import { LeadValuations } from "./LeadValuations";
 import { ShareFormButton } from "./ShareFormButton";
 import { ShareManager } from "./ShareManager";
 import { Opportunities } from "./Opportunities";
@@ -135,6 +136,7 @@ function FormSubmissionPanel({ lead }: { lead: Lead }) {
     return (
       <div className="flex flex-col gap-4">
         <AttachedForms leadId={lead.id} />
+        <LeadValuations leadId={lead.id} />
       </div>
     );
   }
@@ -157,6 +159,7 @@ function FormSubmissionPanel({ lead }: { lead: Lead }) {
     <div className="flex flex-col gap-4">
       <FormSubmissionCard submission={submission} />
       <AttachedForms leadId={lead.id} />
+      <LeadValuations leadId={lead.id} />
     </div>
   );
 }
