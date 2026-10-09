@@ -16,7 +16,7 @@ export async function GET() {
   let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
   xml += `  <sitemap><loc>${base}/sitemap.xml</loc></sitemap>\n`;
   for (let i = 1; i <= totalShards; i++) {
-    xml += `  <sitemap><loc>${base}/sitemap-listings-${i}.xml</loc></sitemap>\n`;
+    xml += `  <sitemap><loc>${base}/sitemap-listings/${i}</loc></sitemap>\n`;
   }
   xml += `</sitemapindex>`;
   
