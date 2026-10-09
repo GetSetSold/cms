@@ -167,7 +167,17 @@ export default function ValuationBuilder() {
 
   // Presentation
   const [includeSections, setIncludeSections] = useState<string[]>(PRESENTATION_SECTIONS.map((s) => s.key));
-  const [nearby, setNearby] = useState<{ name: string; kind: string; distKm: number }[]>([]);
+  const [nearbyText, setNearbyText] = useState("");
+  const nearbyToText = (list: { name: string; kind: string; distKm: number }[]) =>
+    list.map((p) => `${p.kind} | ${p.name} | ${p.distKm}`).join("\n");
+  const parseNearbyText = (text: string) =>
+    text.split("\n").map((l) => l.trim()).filter(Boolean).map((line) => {
+      const [kindRaw = "", name = "", distRaw = ""] = line.split("|").map((s) => s.trim());
+      const kind = /school/i.test(kindRaw) ? "school" : /park|green/i.test(kindRaw) ? "park"
+        : /grocer|market|shop|food/i.test(kindRaw) ? "grocery" : "";
+      if (!kind || !name) return null;
+      return { name, kind, distKm: parseFloat(distRaw.replace(/km/i, "")) || 0 };
+    }).filter(Boolean) as { name: string; kind: string; distKm: number }[];
   const [reviewsSource, setReviewsSource] = useState("elfsight");
   const [agent, setAgent] = useState(DEFAULT_AGENT);
 
@@ -199,7 +209,7 @@ export default function ValuationBuilder() {
           if (p.reviews_source) setReviewsSource(p.reviews_source);
           if (p.agent) setAgent({ ...DEFAULT_AGENT, ...p.agent });
           if (p.client_name) setClientName(p.client_name);
-          if (Array.isArray(p.nearby_places)) setNearby(p.nearby_places);
+          if (Array.isArray(p.nearby_places)) setNearbyText(nearbyToText(p.nearby_places));
         }
         setLoading(false);
       }).catch(() => setLoading(false));
@@ -238,9 +248,9 @@ export default function ValuationBuilder() {
       if (hit?.lat != null && hit?.lng != null) {
         setLat(String(hit.lat)); setLng(String(hit.lng));
         if (!city && hit.city) setCity(hit.city);
-        // Nearby places (schools/parks/grocery) for the report — non-blocking.
+        // Nearby places (schools/parks/grocery) for the report — non-blocking, editable below.
         fetch(`/api/nearby?lat=${hit.lat}&lng=${hit.lng}`).then((r) => r.json())
-          .then((j) => setNearby(j.places ?? [])).catch(() => {});
+          .then((j) => { if (j.places?.length) setNearbyText(nearbyToText(j.places)); }).catch(() => {});
       }
     } finally { setGeocoding(false); }
   }
@@ -310,7 +320,7 @@ export default function ValuationBuilder() {
         price_high: priceHigh ? Number(priceHigh) : null,
         recommended_price: priceRec ? Number(priceRec) : null,
         pricing_notes: pricingNotes,
-        presentation: { include: includeSections, reviews_source: reviewsSource, agent, client_name: clientName || undefined, nearby_places: nearby },
+        presentation: { include: includeSections, reviews_source: reviewsSource, agent, client_name: clientName || undefined, nearby_places: parseNearbyText(nearbyText) },
       };
       const url = editId ? `/api/valuation-reports/${editId}` : "/api/valuation-reports";
       const r = await fetch(url, {
@@ -367,6 +377,7 @@ export default function ValuationBuilder() {
             <div><label className={label}>Lot size</label><input className={input} value={lotSize} onChange={(e) => setLotSize(e.target.value)} /></div>
             <div><label className={label}>Year built</label><input className={input} value={yearBuilt} onChange={(e) => setYearBuilt(e.target.value)} /></div>
             <div><label className={label}>Lat / Lng {lat && lng ? "✓" : ""}</label><input className={input} value={lat && lng ? `${lat}, ${lng}` : ""} readOnly placeholder="Click Locate" /></div>
+            <div className="md:col-span-2"><label className={label}>Nearby places — one per line: type | name | km (type = school, park, grocery)</label><textarea className={input} rows={4} value={nearbyText} onChange={(e) => setNearbyText(e.target.value)} placeholder={"school | Caledonia Centennial Public School | 0.8\npark | Caledonia Lions Park | 1.2\ngrocery | Food Basics | 0.6"} /></div>
           </div>
           <div>
             <label className={label}>Upgrades — value adjustments</label>
