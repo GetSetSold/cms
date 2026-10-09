@@ -30,21 +30,89 @@ async function load(props: Props) {
   return { result: await getPage(toSlug(slug), wantPreview), preview: wantPreview };
 }
 
+/** Extract plain text from page sections for auto-generated meta description. */
+function extractPageText(sections: any[]): string {
+  const texts: string[] = [];
+  for (const s of sections) {
+    const d = s.data ?? {};
+    // Common text fields across blocks
+    for (const key of ["heading", "subline", "content", "text", "bio", "description"]) {
+      if (typeof d[key] === "string" && d[key].trim()) {
+        // Strip HTML tags if present
+        const plain = d[key].replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+        if (plain) texts.push(plain);
+      }
+    }
+    // FAQ items
+    if (Array.isArray(d.items)) {
+      for (const item of d.items) {
+        if (item.q) texts.push(String(item.q));
+        if (item.a) texts.push(String(item.a).replace(/<[^>]*>/g, " "));
+      }
+    }
+    if (texts.join(" ").length > 500) break; // Enough for description
+  }
+  return texts.join(" ").replace(/\s+/g, " ").trim();
+}
+
+/** Find first image URL in page sections for OG image. */
+function findFirstImage(sections: any[]): string | null {
+  for (const s of sections) {
+    const d = s.data ?? {};
+    // Check common image fields
+    for (const key of ["image", "photo", "bg_image", "src"]) {
+      if (typeof d[key] === "string" && d[key].startsWith("http")) return d[key];
+      if (typeof d[key] === "object" && d[key]?.url) return d[key].url;
+    }
+  }
+  return null;
+}
+
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const [{ result }, settings] = await Promise.all([load(props), getSettings()]);
   if (!result) return { title: "Not found" };
-  const { page } = result;
+  const { page, sections } = result;
   const seo = settings.seo_defaults ?? { title_suffix: "", description: "" };
   const title = page.seo_title || `${page.slug === "home" ? settings.site_name : page.title}${page.slug === "home" ? "" : seo.title_suffix ?? ""}`;
-  const description = page.seo_description || seo.description || undefined;
+  
+  // Auto-generate description from page content if not set
+  let description = page.seo_description || seo.description || undefined;
+  if (!description && sections) {
+    const pageText = extractPageText(sections);
+    if (pageText) {
+      // Truncate to ~155 chars at word boundary
+      if (pageText.length > 155) {
+        const truncated = pageText.slice(0, 155);
+        const lastSpace = truncated.lastIndexOf(" ");
+        description = (lastSpace > 100 ? truncated.slice(0, lastSpace) : truncated) + "...";
+      } else {
+        description = pageText;
+      }
+    }
+  }
+  
   const path = page.slug === "home" ? "/" : `/${page.slug}`;
+  const ogImage = (sections ? findFirstImage(sections) : null) || settings.seo_defaults?.og_image || undefined;
+  
   return {
     title,
     description,
     alternates: { canonical: page.canonical_url || path },
     robots: page.noindex ? { index: false, follow: false } : undefined,
-    openGraph: { title, description, url: path, siteName: settings.site_name, type: "website" },
-    twitter: { card: "summary", title, description },
+    openGraph: { 
+      title, 
+      description, 
+      url: path, 
+      siteName: settings.site_name, 
+      type: "website",
+      ...(ogImage ? { images: [{ url: ogImage }] } : {}),
+    },
+    twitter: { 
+      card: ogImage ? "summary_large_image" : "summary", 
+      title, 
+      description,
+      ...(ogImage ? { images: [ogImage] } : {}),
+    },
   };
 }
 

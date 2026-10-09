@@ -112,6 +112,7 @@ export function PageBuilder({ page: initialPage, sections: initialSections, bloc
     setBusy("Saving…"); setMessage("");
     const { error: pErr } = await supabase.from("pages").update({
       title: page.title, slug: page.slug, seo_title: page.seo_title || null, seo_description: page.seo_description || null,
+      focus_keyword: page.focus_keyword || null,
       canonical_url: page.canonical_url || null, noindex: page.noindex, hide_nav: page.hide_nav, hide_footer: page.hide_footer,
       publish_at: page.publish_at,
     }).eq("id", page.id);
@@ -476,11 +477,63 @@ export function PageBuilder({ page: initialPage, sections: initialSections, bloc
                   <span className="text-xs">{(page.seo_title || page.title).length} / 60</span></label>
                 <label className="label">Meta description<textarea rows={3} className="textarea" value={page.seo_description ?? ""} onChange={(e) => patchPage({ seo_description: e.target.value })} />
                   <span className="text-xs">{(page.seo_description ?? "").length} / 160</span></label>
+                <label className="label">Focus keyword (optional)<input className="input" value={page.focus_keyword ?? ""} placeholder="e.g. Caledonia homes for sale" onChange={(e) => patchPage({ focus_keyword: e.target.value })} />
+                  <span className="text-xs text-muted">Used for the SEO checklist below — not a meta tag.</span></label>
+                {page.focus_keyword ? (
+                  <div className="rounded-lg border border-line p-3">
+                    <div className="text-xs font-semibold mb-2">Keyword checklist</div>
+                    {(() => {
+                      const kw = page.focus_keyword!.toLowerCase().trim();
+                      const title = (page.seo_title || page.title).toLowerCase();
+                      const slug = page.slug.toLowerCase();
+                      const checks = [
+                        { label: "In SEO title", pass: title.includes(kw) },
+                        { label: "In URL slug", pass: slug.includes(kw.replace(/\s+/g, "-")) || slug.includes(kw.replace(/\s+/g, "")) },
+                      ];
+                      // Check H1 (first heading in sections)
+                      let h1Found = false;
+                      for (const s of sections) {
+                        const d: any = s.data ?? {};
+                        const heading = String(d.heading || d.title || "").toLowerCase();
+                        if (heading && heading.includes(kw)) { h1Found = true; break; }
+                      }
+                      checks.push({ label: "In page heading (H1)", pass: h1Found });
+                      return (
+                        <div className="flex flex-col gap-1.5">
+                          {checks.map((c, i) => (
+                            <div key={i} className="flex items-center gap-2 text-sm">
+                              <span className={c.pass ? "text-green-600" : "text-muted"}>{c.pass ? "✓" : "○"}</span>
+                              <span className={c.pass ? "" : "text-muted"}>{c.label}</span>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })()}
+                  </div>
+                ) : null}
                 <div className="rounded-lg border border-line p-3">
                   <div className="text-xs text-muted">Search preview</div>
                   <div className="text-lg text-[#1A0DAB]">{page.seo_title || page.title}</div>
-                  <div className="text-[13px] text-muted">{page.seo_description || "Uses the default description from Settings."}</div>
+                  <div className="text-[13px] text-muted">{page.seo_description || "Auto-generated from page content."}</div>
                 </div>
+                {(() => {
+                  let score = 0;
+                  const max = 5;
+                  const title = page.seo_title || page.title;
+                  if (title) score += 1;
+                  if (title.length >= 30 && title.length <= 60) score += 1;
+                  if (page.seo_description || true) score += 1; // Auto-generated counts
+                  if ((page.seo_description ?? "").length >= 120) score += 1;
+                  if (page.focus_keyword) score += 1;
+                  const grade = score >= 4 ? "A" : score >= 3 ? "B" : "C";
+                  const color = score >= 4 ? "text-green-600" : score >= 3 ? "text-yellow-600" : "text-red-600";
+                  return (
+                    <div className="rounded-lg border border-line p-3 flex items-center justify-between">
+                      <div className="text-sm">SEO score</div>
+                      <div className={`text-2xl font-bold ${color}`}>{grade} <span className="text-sm font-normal text-muted">({score}/{max})</span></div>
+                    </div>
+                  );
+                })()}
                 <label className="label">Canonical URL (optional)<input className="input" value={page.canonical_url ?? ""} onChange={(e) => patchPage({ canonical_url: e.target.value })} /></label>
                 <label className="label">Schedule publish (optional)
                   <input type="datetime-local" className="input" value={page.publish_at ? page.publish_at.slice(0, 16) : ""}
