@@ -966,7 +966,7 @@ async function FeaturedListingsGrid({ data, ctx }: BlockProps) {
         {data.heading ? <h2 className={h2}>{data.heading}</h2> : <span />}
         <Link href="/listings" prefetch={false} className="font-medium text-primary">{data.link_label || "View all listings"} →</Link>
       </div>
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
         {visible.map((id) => {
           if (mlsListings[id]) return <ListingCard key={id} listing={mlsListings[id]} />;
           const p = privateListings[id];
