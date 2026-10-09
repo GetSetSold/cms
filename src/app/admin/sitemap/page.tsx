@@ -20,7 +20,7 @@ export default async function SitemapDashboard() {
   
   // Count active listings (grid table contains active listings only)
   const mls = createMlsClient();
-  const { count: listingCount } = await mls.from("grid").select("id", { count: "exact", head: true });
+  const { count: listingCount } = await mls.from("grid").select("ListingKey", { count: "exact", head: true });
   
   const sections = [
     { name: "CMS Pages", count: pages.length, url: `${base}/sitemap.xml`, desc: "Auto from database" },

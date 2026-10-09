@@ -10,7 +10,7 @@ export async function GET() {
   
   // Count listings to determine shard count (grid = active listings)
   const mls = createMlsClient();
-  const { count } = await mls.from("grid").select("id", { count: "exact", head: true });
+  const { count } = await mls.from("grid").select("ListingKey", { count: "exact", head: true });
   const totalShards = Math.ceil((count ?? 0) / PER_PAGE);
   
   let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
