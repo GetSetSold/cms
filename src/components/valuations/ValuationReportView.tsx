@@ -1,15 +1,96 @@
-/** Black & white CMA report — used by admin print view and public shared link. */
+/** Black & white CMA report + listing presentation — used by admin print view and public shared link. */
 
 type Comp = Record<string, any>;
 
 const money = (n: any) => (n ? "$" + Math.round(Number(n)).toLocaleString() : "—");
 
+const DEFAULT_AGENT = {
+  name: "Rohit Sharma",
+  phone: "416-605-7488",
+  email: "rohit@getsetsold.com",
+  brokerage: "Lombard Group Real Estate Inc., Brokerage",
+  tagline: "Your Trusted Partner in Real Estate",
+  bio: "With over a decade of experience in the Greater Toronto Area's dynamic real estate market, Rohit Sharma has established himself as a trusted advisor for both buyers and sellers. Specializing in residential properties, Rohit combines deep market knowledge with cutting-edge technology to deliver exceptional results. His client-first approach and innovative 1% commission model have saved homeowners over $2 million in commission fees while maintaining full-service quality. Rohit is committed to transparent pricing, honest communication, and ensuring every client feels confident throughout their real estate journey.",
+};
+
+const WHY_FEATURES = [
+  "Professional Cleaning", "Professional Photography", "Weekly Progress Report", "Social Media Promos",
+  "MLS & Realtor.ca", "Online Booking System", "Staging Consultation", "Open Houses On Your Schedule",
+];
+
+const COMPARISON: [string, boolean, boolean][] = [
+  ["MLS & Realtor.ca Listing", true, true],
+  ["Professional Photography", true, true],
+  ["Virtual Tours / 3D Walkthrough", true, true],
+  ["For Sale Sign Installation", true, true],
+  ["Professional Staging Consultation", true, true],
+  ["Open Houses", true, true],
+  ["Social Media Marketing", true, true],
+  ["Email Campaigns", true, true],
+  ["Offer Negotiation", true, true],
+  ["Paperwork & Legal Guidance", true, true],
+  ["Weekly Progress Reports", false, true],
+  ["Online Booking System", false, true],
+  ["Google & SEO Marketing", false, true],
+  ["Professional Cleaning Service", false, true],
+  ["No-Sale Guarantee", false, true],
+];
+
+const MARKETING: [string, string][] = [
+  ["MLS & Realtor.ca", "Maximum exposure on Canada's #1 real estate platform, reaching thousands of active buyers daily."],
+  ["Social Media Blitz", "Targeted campaigns across Facebook, Instagram, and TikTok to reach buyers where they spend their time."],
+  ["Email Campaigns", "Direct outreach to our network of 5,000+ potential buyers and local real estate professionals."],
+  ["Professional Media", "High-quality photography, virtual tours, and video walkthroughs that showcase your home's best features."],
+  ["Open Houses", "Strategically scheduled open houses designed to create urgency and attract serious, qualified buyers."],
+  ["Google & SEO", "Search engine optimization ensures your property ranks at the top when buyers search online."],
+];
+
+const REASONS = [
+  "Free in-home consultation & property assessment",
+  "Detailed market analysis & competitive pricing strategy",
+  "Customized marketing plan development",
+  "Transparent commission & service agreement",
+  "Professional staging consultation & recommendations",
+  "Arrangement of professional cleaning services",
+  "Professional photography & virtual tour creation",
+  "MLS & Realtor.ca listing activation",
+  "Social media marketing launch across all platforms",
+  "Email blast to our buyer network of 5,000+ contacts",
+  "For Sale sign installation & neighborhood outreach",
+  "Open house scheduling & event management",
+  "Offer review & detailed comparison analysis",
+  "Skilled negotiation to maximize your sale price",
+  "Conditional management & buyer qualification verification",
+  "Legal paperwork preparation & review coordination",
+  "Final walkthrough scheduling & support",
+  "Closing document review & signing facilitation",
+  "Keys & possession transfer coordination",
+  "Post-sale follow-up & satisfaction check-in",
+];
+
+const REVIEWS: [string, string][] = [
+  ["Sarah & James Mitchell", "Rohit sold our home in just 12 days and saved us over $15,000 in commission. His marketing strategy was incredible, and we got above asking price. Can't recommend him enough!"],
+  ["Michael Chen", "As a first-time seller, I was nervous about the process. Rohit made everything seamless. The 1% commission was a game-changer — I used the savings for my new home's down payment."],
+  ["Priya Patel", "Professional, knowledgeable, and genuinely cares about his clients. Rohit's weekly progress reports kept me informed every step of the way. The photos he arranged were stunning."],
+  ["David & Karen Thompson", "We interviewed several agents before choosing Rohit. His transparent pricing and full-service approach won us over. Our property sold for $25,000 over asking!"],
+  ["Lisa Rodriguez", "Rohit's staging consultation transformed our home. Buyers were impressed from the moment they walked in. The open house strategy he implemented brought multiple competing offers."],
+  ["Robert & Anne Williams", "Outstanding service at an unbeatable price. Rohit handled everything from professional cleaning to MLS listing. We couldn't be happier with the results and the money we saved."],
+  ["Jennifer Park", "Rohit exceeded all expectations. His knowledge of the market and negotiation skills resulted in a sale well above asking. Highly professional and always available."],
+  ["Amanda & Chris Scott", "From listing to closing, Rohit was exceptional. His 1% commission saved us thousands, and the service was better than agents charging full commission. A true professional."],
+];
+
 export function ValuationReportView({ report, leadName }: { report: any; leadName?: string }) {
   const actives: Comp[] = report.active_comps ?? [];
   const solds: Comp[] = report.sold_comps ?? [];
+  const upgrades: { description: string; amount: number }[] = report.upgrade_items ?? [];
+  const upgradeTotal = upgrades.reduce((s, u) => s + (Number(u.amount) || 0), 0);
   const rec = Number(report.recommended_price) || 0;
   const listFee = rec ? Math.round(rec * 0.01) : 0;
   const tradFee = rec ? Math.round(rec * 0.05) : 0;
+  const pres = report.presentation ?? {};
+  const include: string[] = Array.isArray(pres.include) ? pres.include : [];
+  const agent = { ...DEFAULT_AGENT, ...(pres.agent ?? {}) };
+  const has = (k: string) => include.includes(k);
 
   return (
     <div className="cma">
@@ -36,7 +117,7 @@ export function ValuationReportView({ report, leadName }: { report: any; leadNam
               <div key={k} className="cma-cell"><span>{k}</span><strong>{String(v)}</strong></div>
             ))}
         </div>
-        {report.upgrades && <p className="cma-notes"><strong>Upgrades / notes:</strong> {report.upgrades}</p>}
+        {report.upgrades && <p className="cma-notes"><strong>Notes:</strong> {report.upgrades}</p>}
       </section>
 
       {/* Active comps */}
@@ -87,6 +168,17 @@ export function ValuationReportView({ report, leadName }: { report: any; leadNam
       {/* Pricing */}
       <section>
         <h2>Pricing Recommendation</h2>
+        {!!upgrades.length && (
+          <table className="cma-adj">
+            <thead><tr><th>Upgrade / adjustment</th><th className="r">Value added</th></tr></thead>
+            <tbody>
+              {upgrades.map((u, i) => (
+                <tr key={i}><td>{u.description || "Upgrade"}</td><td className="r">+{money(u.amount)}</td></tr>
+              ))}
+              <tr className="cma-save"><td>Total adjustments</td><td className="r">+{money(upgradeTotal)}</td></tr>
+            </tbody>
+          </table>
+        )}
         <div className="cma-price-row">
           {report.price_low && <div><span>Range low</span><strong>{money(report.price_low)}</strong></div>}
           <div className="cma-rec"><span>Recommended list price</span><strong>{money(report.recommended_price)}</strong></div>
@@ -110,8 +202,97 @@ export function ValuationReportView({ report, leadName }: { report: any; leadNam
         </section>
       )}
 
+      {/* ===== Listing presentation sections ===== */}
+
+      {has("agent") && (
+        <section className="cma-page">
+          <h2>Meet Your Agent</h2>
+          <div className="cma-agent-name">{agent.name}</div>
+          <div className="cma-agent-tag">{agent.tagline}</div>
+          <p className="cma-notes">{agent.bio}</p>
+          <div className="cma-stats">
+            {[["20+", "Properties Sold"], ["1%", "Commission Rate"], ["100%", "Client Satisfaction"], ["$2M+", "Saved for Clients"]].map(([n, l]) => (
+              <div key={l} className="cma-stat"><strong>{n}</strong><span>{l}</span></div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {has("why") && (
+        <section className="cma-page">
+          <h2>Why List With Me</h2>
+          <div className="cma-cards">
+            {WHY_FEATURES.map((f) => <div key={f} className="cma-card">{f}</div>)}
+          </div>
+        </section>
+      )}
+
+      {has("comparison") && (
+        <section className="cma-page">
+          <h2>GetSetSold vs Traditional</h2>
+          <table>
+            <thead><tr><th>Service</th><th className="c">Traditional</th><th className="c">GetSetSold</th></tr></thead>
+            <tbody>
+              {COMPARISON.map(([f, t, r]) => (
+                <tr key={f}><td>{f}</td><td className="c">{t ? "✓" : "—"}</td><td className="c"><strong>{r ? "✓" : "—"}</strong></td></tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+      )}
+
+      {has("marketing") && (
+        <section className="cma-page">
+          <h2>Marketing Strategy</h2>
+          <div className="cma-cards">
+            {MARKETING.map(([t, d]) => (
+              <div key={t} className="cma-card"><strong>{t}</strong><p>{d}</p></div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {has("reasons") && (
+        <section className="cma-page">
+          <h2>20 Reasons to List With Me</h2>
+          <ol className="cma-reasons">
+            {REASONS.map((r, i) => <li key={i}>{r}</li>)}
+          </ol>
+        </section>
+      )}
+
+      {has("reviews") && (
+        <section className="cma-page">
+          <h2>What Clients Say</h2>
+          <p className="cma-notes"><strong>5.0</strong> average across <strong>63+</strong> Google reviews</p>
+          <div className="cma-reviews">
+            {REVIEWS.map(([n, q]) => (
+              <div key={n} className="cma-review">
+                <div className="cma-stars">★★★★★</div>
+                <p>"{q}"</p>
+                <div className="cma-reviewer">— {n}</div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {has("cta") && (
+        <section className="cma-page">
+          <h2>Next Steps</h2>
+          <p className="cma-notes">
+            Ready to sell for more and keep more? Contact {agent.name} today for your free in-home consultation.
+          </p>
+          <div className="cma-cta">
+            <div><strong>{agent.name}</strong>, REALTOR®</div>
+            <div>{agent.brokerage}</div>
+            <div>{agent.phone} · {agent.email}</div>
+          </div>
+        </section>
+      )}
+
       <footer>
-        <div>Rohit Sharma, REALTOR® · Lombard Group Real Estate Inc., Brokerage · 416-605-7488 · rohit@getsetsold.com</div>
+        <div>{agent.name}, REALTOR® · {agent.brokerage} · {agent.phone} · {agent.email}</div>
         <div className="cma-fine">This analysis is an opinion of value based on available market data, not an appraisal. Market conditions change; pricing should be reviewed before listing.</div>
       </footer>
 
@@ -133,6 +314,8 @@ export function ValuationReportView({ report, leadName }: { report: any; leadNam
         .cma th { text-align: left; font-size: 11px; text-transform: uppercase; color: #777; padding: 8px; border-bottom: 2px solid #111; }
         .cma td { padding: 8px; border-bottom: 1px solid #eee; }
         .cma td.r, .cma th.r { text-align: right; }
+        .cma td.c, .cma th.c { text-align: center; }
+        .cma-adj { margin-bottom: 16px; }
         .cma-price-row { display: flex; gap: 24px; align-items: center; margin-bottom: 12px; }
         .cma-price-row span { display: block; font-size: 11px; color: #777; text-transform: uppercase; }
         .cma-price-row strong { font-size: 18px; }
@@ -140,10 +323,27 @@ export function ValuationReportView({ report, leadName }: { report: any; leadNam
         .cma-notes { font-size: 13px; color: #333; margin-top: 8px; line-height: 1.6; }
         .cma-save td { font-weight: 700; }
         .cma-fine { font-size: 11px; color: #888; margin-top: 8px; }
+        .cma-agent-name { font-size: 24px; font-weight: 800; }
+        .cma-agent-tag { font-size: 14px; color: #0066cc; font-weight: 600; margin: 4px 0 12px; }
+        .cma-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: #ddd; border: 1px solid #ddd; margin-top: 16px; }
+        .cma-stat { background: #fff; padding: 14px 8px; text-align: center; }
+        .cma-stat strong { display: block; font-size: 22px; color: #0066cc; }
+        .cma-stat span { font-size: 11px; color: #777; text-transform: uppercase; }
+        .cma-cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .cma-card { border: 1px solid #ddd; border-radius: 8px; padding: 14px; font-size: 13px; }
+        .cma-card p { color: #555; margin-top: 4px; font-size: 12px; line-height: 1.5; }
+        .cma-reasons { columns: 2; column-gap: 32px; font-size: 13px; line-height: 1.9; padding-left: 20px; }
+        .cma-reviews { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+        .cma-review { border: 1px solid #ddd; border-radius: 8px; padding: 12px; font-size: 12px; }
+        .cma-review p { color: #333; line-height: 1.5; margin: 6px 0; }
+        .cma-stars { color: #0066cc; letter-spacing: 2px; }
+        .cma-reviewer { font-weight: 600; }
+        .cma-cta { border: 2px solid #111; border-radius: 8px; padding: 20px; margin-top: 12px; font-size: 15px; line-height: 1.8; }
         .cma footer { border-top: 3px solid #111; padding-top: 12px; margin-top: 32px; font-size: 13px; }
         @media print {
           .cma { padding: 0; max-width: none; }
           .cma-no-print { display: none !important; }
+          .cma-page { page-break-before: always; }
         }
       `}</style>
     </div>

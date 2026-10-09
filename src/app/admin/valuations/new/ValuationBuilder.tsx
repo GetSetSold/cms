@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 type ActiveComp = {
@@ -8,6 +8,7 @@ type ActiveComp = {
   OriginalEntryTimestamp: string | null; Media: string | null; _distKm?: number;
 };
 type SoldComp = { address: string; price: number | null; date: string; beds: string; baths: string; sqft: string };
+type UpgradeItem = { description: string; amount: string };
 
 const money = (n: number | null | undefined) => (n ? "$" + Math.round(n).toLocaleString() : "—");
 
@@ -27,11 +28,35 @@ function parseSold(text: string): SoldComp[] {
   });
 }
 
+const PRESENTATION_SECTIONS = [
+  { key: "agent", label: "Meet the agent" },
+  { key: "why", label: "Why list with me" },
+  { key: "comparison", label: "Value comparison" },
+  { key: "marketing", label: "Marketing strategy" },
+  { key: "reasons", label: "20 reasons to list with me" },
+  { key: "reviews", label: "Client reviews" },
+  { key: "cta", label: "Contact / next steps" },
+];
+
+const DEFAULT_AGENT = {
+  name: "Rohit Sharma",
+  phone: "416-605-7488",
+  email: "rohit@getsetsold.com",
+  brokerage: "Lombard Group Real Estate Inc., Brokerage",
+  tagline: "Your Trusted Partner in Real Estate",
+  bio: "With over a decade of experience in the Greater Toronto Area's dynamic real estate market, Rohit Sharma has established himself as a trusted advisor for both buyers and sellers. Specializing in residential properties, Rohit combines deep market knowledge with cutting-edge technology to deliver exceptional results. His client-first approach and innovative 1% commission model have saved homeowners over $2 million in commission fees while maintaining full-service quality. Rohit is committed to transparent pricing, honest communication, and ensuring every client feels confident throughout their real estate journey.",
+};
+
+const STEP_NAMES = ["Property", "Active comps", "Sold comps", "Pricing", "Presentation"];
+
 export default function ValuationBuilder() {
   const router = useRouter();
   const qs = useSearchParams();
+  const editId = qs.get("id");
+  const leadId = qs.get("lead_id");
   const [step, setStep] = useState(1);
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(!!editId);
 
   // Property
   const [address, setAddress] = useState("");
@@ -44,7 +69,9 @@ export default function ValuationBuilder() {
   const [sqft, setSqft] = useState("");
   const [lotSize, setLotSize] = useState("");
   const [yearBuilt, setYearBuilt] = useState("");
-  const [upgrades, setUpgrades] = useState("");
+  const [upgrades, setUpgrades] = useState<UpgradeItem[]>([]);
+  const [notes, setNotes] = useState("");
+  const [clientName, setClientName] = useState("");
   const [geocoding, setGeocoding] = useState(false);
 
   // Active comps
@@ -61,6 +88,59 @@ export default function ValuationBuilder() {
   const [priceHigh, setPriceHigh] = useState("");
   const [priceRec, setPriceRec] = useState("");
   const [pricingNotes, setPricingNotes] = useState("");
+
+  // Presentation
+  const [includeSections, setIncludeSections] = useState<string[]>(PRESENTATION_SECTIONS.map((s) => s.key));
+  const [agent, setAgent] = useState(DEFAULT_AGENT);
+
+  // Edit mode: load existing report. Otherwise prefill from lead.
+  useEffect(() => {
+    if (editId) {
+      fetch(`/api/valuation-reports/${editId}`).then((r) => r.json()).then((j) => {
+        const r = j.report;
+        if (r) {
+          setAddress(r.address ?? ""); setCity(r.city ?? "");
+          setLat(r.lat != null ? String(r.lat) : ""); setLng(r.lng != null ? String(r.lng) : "");
+          setPropertyType(r.property_type ?? "Detached");
+          setBeds(r.beds != null ? String(r.beds) : ""); setBaths(r.baths != null ? String(r.baths) : "");
+          setSqft(r.sqft ?? ""); setLotSize(r.lot_size ?? ""); setYearBuilt(r.year_built ?? "");
+          setNotes(r.upgrades ?? "");
+          setUpgrades((r.upgrade_items ?? []).map((u: any) => ({ description: u.description ?? "", amount: u.amount ? String(u.amount) : "" })));
+          const ac: ActiveComp[] = r.active_comps ?? [];
+          setActives(ac); setPicked(new Set(ac.map((a) => a.ListingKey)));
+          setSoldText((r.sold_comps ?? []).map((s: any) =>
+            [s.address, s.price != null ? "$" + Number(s.price).toLocaleString() : "", s.date || "",
+             [s.beds && s.beds + "bd", s.baths && s.baths + "ba", s.sqft && s.sqft + "sf"].filter(Boolean).join(" ")
+            ].join(" | ")).join("\n"));
+          setPriceLow(r.price_low != null ? String(r.price_low) : "");
+          setPriceHigh(r.price_high != null ? String(r.price_high) : "");
+          setPriceRec(r.recommended_price != null ? String(r.recommended_price) : "");
+          setPricingNotes(r.pricing_notes ?? "");
+          const p = r.presentation ?? {};
+          if (Array.isArray(p.include)) setIncludeSections(p.include);
+          if (p.agent) setAgent({ ...DEFAULT_AGENT, ...p.agent });
+          if (p.client_name) setClientName(p.client_name);
+        }
+        setLoading(false);
+      }).catch(() => setLoading(false));
+    } else if (leadId) {
+      fetch(`/api/admin/leads/${leadId}`).then((r) => r.json()).then((j) => {
+        const l = j.lead;
+        if (l) {
+          setClientName(`${l.first_name ?? ""} ${l.last_name ?? ""}`.trim());
+          const cf = l.custom_fields ?? {};
+          const addr = cf.property_address || cf.address || cf.propertyAddress || "";
+          if (addr) {
+            const m = /^(.+?),\s*([^,]+)$/.exec(String(addr));
+            setAddress(m ? m[1].trim() : String(addr));
+            if (m) setCity(m[2].trim());
+          }
+        }
+      }).catch(() => {});
+    }
+  }, []);
+
+  const upgradeTotal = upgrades.reduce((s, u) => s + (Number(u.amount) || 0), 0);
 
   async function geocode() {
     if (!address.trim()) return;
@@ -115,7 +195,7 @@ export default function ValuationBuilder() {
     const sp = solds.filter((s) => s.price).map((s) => s.price!);
     const all = [...ap, ...sp].sort((a, b) => a - b);
     if (!all.length) return;
-    const med = all[Math.floor(all.length / 2)];
+    const med = all[Math.floor(all.length / 2)] + upgradeTotal;
     const lo = Math.round((med * 0.97) / 1000) * 1000;
     const hi = Math.round((med * 1.03) / 1000) * 1000;
     setPriceLow(String(lo)); setPriceHigh(String(hi)); setPriceRec(String(med));
@@ -125,46 +205,63 @@ export default function ValuationBuilder() {
     setPicked((p) => { const n = new Set(p); if (n.has(k)) n.delete(k); else n.add(k); return n; });
   }
 
+  function toggleSection(k: string) {
+    setIncludeSections((prev) => prev.includes(k) ? prev.filter((x) => x !== k) : [...prev, k]);
+  }
+
   async function save() {
     setSaving(true);
     try {
-      const r = await fetch("/api/valuation-reports", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          lead_id: qs.get("lead_id") || null,
-          address, city, lat: lat ? Number(lat) : null, lng: lng ? Number(lng) : null,
-          property_type: propertyType, beds: beds ? Number(beds) : null, baths: baths ? Number(baths) : null,
-          sqft, lot_size: lotSize, year_built: yearBuilt, upgrades,
-          active_comps: actives.filter((a) => picked.has(a.ListingKey)),
-          sold_comps: solds,
-          price_low: priceLow ? Number(priceLow) : null,
-          price_high: priceHigh ? Number(priceHigh) : null,
-          recommended_price: priceRec ? Number(priceRec) : null,
-          pricing_notes: pricingNotes,
-        }),
+      const body = {
+        lead_id: leadId || null,
+        address, city, lat: lat ? Number(lat) : null, lng: lng ? Number(lng) : null,
+        property_type: propertyType, beds: beds ? Number(beds) : null, baths: baths ? Number(baths) : null,
+        sqft, lot_size: lotSize, year_built: yearBuilt, upgrades: notes,
+        upgrade_items: upgrades
+          .filter((u) => u.description.trim() || Number(u.amount))
+          .map((u) => ({ description: u.description.trim(), amount: Number(u.amount) || 0 })),
+        active_comps: actives.filter((a) => picked.has(a.ListingKey)),
+        sold_comps: solds,
+        price_low: priceLow ? Number(priceLow) : null,
+        price_high: priceHigh ? Number(priceHigh) : null,
+        recommended_price: priceRec ? Number(priceRec) : null,
+        pricing_notes: pricingNotes,
+        presentation: { include: includeSections, agent, client_name: clientName || undefined },
+      };
+      const url = editId ? `/api/valuation-reports/${editId}` : "/api/valuation-reports";
+      const r = await fetch(url, {
+        method: editId ? "PATCH" : "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
       });
       const j = await r.json();
-      if (j.id) router.push(`/admin/valuations/${j.id}`);
+      const id = editId || j.id;
+      if (id) router.push(`/admin/valuations/${id}`);
     } finally { setSaving(false); }
   }
 
   const input = "w-full rounded-lg border border-line px-3 py-2 text-sm";
   const label = "block text-xs font-semibold text-muted mb-1";
 
+  if (loading) return <div className="p-6">Loading report…</div>;
+
   return (
     <div className="p-6 max-w-3xl">
-      <h1 className="text-2xl font-bold mb-1">New valuation report</h1>
-      <div className="flex gap-2 mb-6 text-sm">
-        {[1, 2, 3, 4].map((n) => (
-          <button key={n} onClick={() => setStep(n)}
-            className={`px-3 py-1.5 rounded-full font-semibold ${step === n ? "bg-black text-white" : "bg-gray-100 text-muted"}`}>
-            {["Property", "Active comps", "Sold comps", "Pricing"][n - 1]}
+      <h1 className="text-2xl font-bold mb-1">{editId ? "Edit valuation report" : "New valuation report"}</h1>
+      <div className="flex gap-2 mb-6 text-sm flex-wrap">
+        {STEP_NAMES.map((name, i) => (
+          <button key={name} onClick={() => setStep(i + 1)}
+            className={`px-3 py-1.5 rounded-full font-semibold ${step === i + 1 ? "bg-black text-white" : "bg-gray-100 text-muted"}`}>
+            {name}
           </button>
         ))}
       </div>
 
       {step === 1 && (
         <div className="flex flex-col gap-4">
+          <div>
+            <label className={label}>Prepared for (client name)</label>
+            <input className={input} value={clientName} onChange={(e) => setClientName(e.target.value)} placeholder="Client name" />
+          </div>
           <div>
             <label className={label}>Property address *</label>
             <div className="flex gap-2">
@@ -187,7 +284,25 @@ export default function ValuationBuilder() {
             <div><label className={label}>Year built</label><input className={input} value={yearBuilt} onChange={(e) => setYearBuilt(e.target.value)} /></div>
             <div><label className={label}>Lat / Lng {lat && lng ? "✓" : ""}</label><input className={input} value={lat && lng ? `${lat}, ${lng}` : ""} readOnly placeholder="Click Locate" /></div>
           </div>
-          <div><label className={label}>Upgrades / notes</label><textarea className={input} rows={3} value={upgrades} onChange={(e) => setUpgrades(e.target.value)} /></div>
+          <div>
+            <label className={label}>Upgrades — value adjustments</label>
+            {upgrades.map((u, i) => (
+              <div key={i} className="flex gap-2 mb-2">
+                <input className={input} value={u.description} placeholder="e.g. Kitchen renovation"
+                  onChange={(e) => setUpgrades((prev) => prev.map((x, j) => j === i ? { ...x, description: e.target.value } : x))} />
+                <input className={`${input} !w-32`} value={u.amount} placeholder="$" inputMode="numeric"
+                  onChange={(e) => setUpgrades((prev) => prev.map((x, j) => j === i ? { ...x, amount: e.target.value } : x))} />
+                <button onClick={() => setUpgrades((prev) => prev.filter((_, j) => j !== i))}
+                  className="px-3 rounded-lg border border-line text-muted" aria-label="Remove upgrade">×</button>
+              </div>
+            ))}
+            <button onClick={() => setUpgrades((prev) => [...prev, { description: "", amount: "" }])}
+              className="rounded-lg border border-line px-3 py-1.5 text-sm font-semibold">+ Add upgrade</button>
+            {upgradeTotal > 0 && (
+              <p className="text-sm text-muted mt-2">+{money(upgradeTotal)} will be added to the suggested price.</p>
+            )}
+          </div>
+          <div><label className={label}>Notes</label><textarea className={input} rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} /></div>
           <button onClick={() => setStep(2)} className="rounded-lg bg-black px-4 py-2 text-sm font-semibold text-white self-start">Continue →</button>
         </div>
       )}
@@ -248,12 +363,44 @@ export default function ValuationBuilder() {
             <div><label className={label}>Range high ($)</label><input className={input} value={priceHigh} onChange={(e) => setPriceHigh(e.target.value)} inputMode="numeric" /></div>
             <div><label className={label}>Recommended ($)</label><input className={input} value={priceRec} onChange={(e) => setPriceRec(e.target.value)} inputMode="numeric" /></div>
           </div>
+          {upgradeTotal > 0 && <p className="text-sm text-muted">Includes +{money(upgradeTotal)} in upgrade adjustments.</p>}
           <div><label className={label}>Pricing notes</label><textarea className={input} rows={3} value={pricingNotes} onChange={(e) => setPricingNotes(e.target.value)} placeholder="Why this price — condition, upgrades, market…" /></div>
           <div className="text-sm text-muted">{picked.size} active comps · {solds.length} sold comps selected</div>
           <div className="flex gap-2">
             <button onClick={() => setStep(3)} className="rounded-lg border border-line px-4 py-2 text-sm">← Back</button>
+            <button onClick={() => setStep(5)} className="rounded-lg bg-black px-4 py-2 text-sm font-semibold text-white">Continue →</button>
+          </div>
+        </div>
+      )}
+
+      {step === 5 && (
+        <div className="flex flex-col gap-4">
+          <div>
+            <label className={label}>Include in presentation</label>
+            <div className="flex flex-col gap-2">
+              {PRESENTATION_SECTIONS.map((s) => (
+                <label key={s.key} className="flex items-center gap-3 rounded-lg border border-line p-3 cursor-pointer hover:bg-gray-50 text-sm">
+                  <input type="checkbox" checked={includeSections.includes(s.key)} onChange={() => toggleSection(s.key)} />
+                  <span className="font-medium">{s.label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+          <div>
+            <label className={label}>Agent name</label>
+            <input className={input} value={agent.name} onChange={(e) => setAgent({ ...agent, name: e.target.value })} />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div><label className={label}>Phone</label><input className={input} value={agent.phone} onChange={(e) => setAgent({ ...agent, phone: e.target.value })} /></div>
+            <div><label className={label}>Email</label><input className={input} value={agent.email} onChange={(e) => setAgent({ ...agent, email: e.target.value })} /></div>
+          </div>
+          <div><label className={label}>Brokerage</label><input className={input} value={agent.brokerage} onChange={(e) => setAgent({ ...agent, brokerage: e.target.value })} /></div>
+          <div><label className={label}>Tagline</label><input className={input} value={agent.tagline} onChange={(e) => setAgent({ ...agent, tagline: e.target.value })} /></div>
+          <div><label className={label}>Bio</label><textarea className={input} rows={5} value={agent.bio} onChange={(e) => setAgent({ ...agent, bio: e.target.value })} /></div>
+          <div className="flex gap-2">
+            <button onClick={() => setStep(4)} className="rounded-lg border border-line px-4 py-2 text-sm">← Back</button>
             <button onClick={save} disabled={saving || !address.trim()} className="rounded-lg bg-black px-6 py-2 text-sm font-semibold text-white disabled:opacity-50">
-              {saving ? "Saving…" : "Save report"}
+              {saving ? "Saving…" : editId ? "Save changes" : "Save report"}
             </button>
           </div>
         </div>

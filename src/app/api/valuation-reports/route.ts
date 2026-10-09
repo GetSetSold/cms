@@ -38,6 +38,13 @@ export async function POST(req: NextRequest) {
     lot_size: body.lot_size ? String(body.lot_size).slice(0, 80) : null,
     year_built: body.year_built ? String(body.year_built).slice(0, 20) : null,
     upgrades: body.upgrades ? String(body.upgrades).slice(0, 2000) : null,
+    upgrade_items: Array.isArray(body.upgrade_items)
+      ? body.upgrade_items.slice(0, 20).map((u: any) => ({
+          description: String(u.description ?? "").slice(0, 200),
+          amount: Number(u.amount) || 0,
+        })).filter((u: any) => u.description || u.amount)
+      : [],
+    presentation: body.presentation && typeof body.presentation === "object" ? body.presentation : {},
     active_comps: Array.isArray(body.active_comps) ? body.active_comps.slice(0, 30) : [],
     sold_comps: Array.isArray(body.sold_comps) ? body.sold_comps.slice(0, 30) : [],
     price_low: Number(body.price_low) || null,

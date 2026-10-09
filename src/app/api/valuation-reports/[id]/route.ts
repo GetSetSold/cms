@@ -22,6 +22,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     "lead_id", "address", "city", "lat", "lng", "property_type", "beds", "baths",
     "sqft", "lot_size", "year_built", "upgrades", "active_comps", "sold_comps",
     "price_low", "price_high", "recommended_price", "pricing_notes",
+    "upgrade_items", "presentation",
   ]) {
     if (k in body) patch[k] = body[k];
   }
