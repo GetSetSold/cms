@@ -526,12 +526,25 @@ export function PageBuilder({ page: initialPage, sections: initialSections, bloc
                       ];
                       // Check H1 (first heading in sections)
                       let h1Found = false;
+                      let firstParaHasKw = false;
+                      let wordCount = 0;
                       for (const s of sections) {
                         const d: any = s.data ?? {};
                         const heading = String(d.heading || d.title || "").toLowerCase();
-                        if (heading && heading.includes(kw)) { h1Found = true; break; }
+                        if (heading && heading.includes(kw)) { h1Found = true; }
+                        // Check first paragraph and word count
+                        for (const key of ["content", "text", "bio", "description", "subline"]) {
+                          const txt = String(d[key] || "").replace(/<[^>]*>/g, " ").toLowerCase();
+                          if (txt) {
+                            wordCount += txt.split(/\s+/).filter(Boolean).length;
+                            if (!firstParaHasKw && txt.includes(kw)) firstParaHasKw = true;
+                          }
+                        }
+                        if (h1Found && firstParaHasKw && wordCount > 300) break;
                       }
                       checks.push({ label: "In page heading (H1)", pass: h1Found });
+                      checks.push({ label: "In first paragraph", pass: firstParaHasKw });
+                      checks.push({ label: "300+ words on page", pass: wordCount >= 300 });
                       return (
                         <div className="flex flex-col gap-1.5">
                           {checks.map((c, i) => (
