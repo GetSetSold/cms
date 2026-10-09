@@ -157,16 +157,22 @@ export function ValuationReportView({ report, leadName }: { report: any; leadNam
             if (!prices.length) return null;
             const avg = Math.round(prices.reduce((a, b) => a + b, 0) / prices.length);
             const median = prices[Math.floor(prices.length / 2)];
+            const doms = solds.map((s: any) => Number(s.dom)).filter((d) => d > 0);
+            const avgDom = doms.length ? Math.round(doms.reduce((a, b) => a + b, 0) / doms.length) : null;
             return (
               <div className="cma-stats" style={{ marginBottom: 16 }}>
-                {[["Low", prices[0]], ["High", prices[prices.length - 1]], ["Median", median], ["Average", avg]].map(([l, v]) => (
-                  <div key={l as string} className="cma-stat"><strong>{money(v)}</strong><span>{l}</span></div>
-                ))}
+                {[["Low", money(prices[0])], ["High", money(prices[prices.length - 1])], ["Median", money(median)], ["Average", money(avg)]]
+                  .map(([l, v]) => (
+                    <div key={l as string} className="cma-stat"><strong>{v}</strong><span>{l}</span></div>
+                  ))}
+                {avgDom != null && (
+                  <div className="cma-stat"><strong>{avgDom}</strong><span>Avg DOM</span></div>
+                )}
               </div>
             );
           })()}
           <table>
-            <thead><tr><th>Address</th><th>Sold price</th><th>Sold date</th><th>Bd/Ba/Sqft</th></tr></thead>
+            <thead><tr><th>Address</th><th>Sold price</th><th>Sold date</th><th>Bd/Ba/Sqft</th><th>DOM</th></tr></thead>
             <tbody>
               {solds.map((s: any, i: number) => (
                 <tr key={i}>
@@ -174,6 +180,7 @@ export function ValuationReportView({ report, leadName }: { report: any; leadNam
                   <td className="r">{money(s.price)}</td>
                   <td>{s.date || "—"}</td>
                   <td>{[s.beds && s.beds + "bd", s.baths && s.baths + "ba", s.sqft && String(s.sqft).replace(/,/g, "") + "sf"].filter(Boolean).join(" · ") || "—"}</td>
+                  <td className="r">{s.dom || "—"}</td>
                 </tr>
               ))}
             </tbody>

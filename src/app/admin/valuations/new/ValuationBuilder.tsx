@@ -7,7 +7,7 @@ type ActiveComp = {
   BedroomsTotal: number | null; BathroomsTotalInteger: number | null; AboveGradeFinishedArea: number | null;
   OriginalEntryTimestamp: string | null; Media: string | null; _distKm?: number;
 };
-type SoldComp = { address: string; price: number | null; date: string; beds: string; baths: string; sqft: string };
+type SoldComp = { address: string; price: number | null; date: string; beds: string; baths: string; sqft: string; dom: string };
 type UpgradeItem = { description: string; amount: string };
 
 const money = (n: number | null | undefined) => (n ? "$" + Math.round(n).toLocaleString() : "—");
@@ -24,7 +24,8 @@ function parseSold(text: string): SoldComp[] {
     const beds = (/(\d+)\s*bd/i.exec(specs)?.[1]) ?? "";
     const baths = (/(\d+(?:\.\d+)?)\s*ba/i.exec(specs)?.[1]) ?? "";
     const sqft = (/([\d,]+)\s*(?:sqft|sf)/i.exec(specs)?.[1]) ?? "";
-    return { address, price, date, beds, baths, sqft };
+    const dom = (/^(\d+)\s*(?:dom)?$/i.exec((parts[4] ?? "").trim())?.[1]) ?? "";
+    return { address, price, date, beds, baths, sqft, dom };
   });
 }
 
@@ -49,21 +50,63 @@ const DEFAULT_AGENT = {
 
 const STEP_NAMES = ["Property", "Active comps", "Sold comps", "Pricing", "Presentation"];
 
+/** Parse a price like $640,000 / $635K / 640000 */
+function parsePrice(s: string): number | null {
+  const t = s.trim().replace(/\$/g, "").replace(/,/g, "");
+  const km = /^([\d.]+)\s*K$/i.exec(t);
+  if (km) return Math.round(parseFloat(km[1]) * 1000);
+  const nm = /^[\d.]+/.exec(t);
+  if (nm) { const v = parseFloat(nm[0]); return v >= 1000 ? Math.round(v) : null; }
+  return null;
+}
+
 /** Organize pasted raw comp data (MLS copy, PDF text, spreadsheet rows) into structured comps. */
 function parseRawComps(text: string): SoldComp[] {
+  // MLS-style tab-separated table: use column positions, skip header/subject/active rows.
+  if (text.includes("\t")) {
+    const lines = text.split("\n");
+    let i = 0;
+    while (i < lines.length && !/^\s*#\s*\t.*ADDRESS/i.test(lines[i])) i++;
+    i++; // skip header
+    while (i < lines.length && !/^\s*\d+\s*\t/.test(lines[i])) i++; // skip subject block
+    const recs: string[][] = [];
+    let buf = "";
+    for (; i < lines.length; i++) {
+      buf += (buf ? "\n" : "") + lines[i];
+      if (/X\d{5,}/.test(buf)) {
+        const toks = buf.split(/[\t\n]+/).map((t) => t.trim()).filter(Boolean);
+        if (toks.length >= 10) recs.push(toks);
+        buf = "";
+      }
+    }
+    return recs
+      .map((t) => ({
+        address: t[1] ?? "",
+        price: parsePrice(t[7] ?? ""),
+        date: /^\d{1,2}\/\d{1,2}\//.test(t[9] ?? "") ? t[9] : "",
+        beds: (t[5] ?? "").replace(/\s+/g, ""),
+        baths: t[6] ?? "",
+        sqft: "",
+        dom: /^\d+$/.test(t[10] ?? "") ? t[10] : "",
+        _status: t[2] ?? "",
+      }))
+      .filter((r) => /sold/i.test(r._status) && r.address && r.price)
+      .map(({ _status, ...rest }) => rest);
+  }
+  // Fallback: one comp per line, freeform.
   return text.split("\n").map((l) => l.trim()).filter(Boolean).map((line) => {
     const s = line.replace(/^\d+[\.\)]\s+/, ""); // strip leading "1." / "1)"
-    const pm = /\$\s*([\d,]+)/.exec(s) ?? /(?:^|\s)(\d{1,3}(?:,\d{3})+)(?=\s|$)/.exec(s);
-    const price = pm ? parseInt(pm[1].replace(/,/g, ""), 10) : null;
+    const pm = /\$\s*([\d,]+)/.exec(s);
+    const price = pm ? parsePrice(pm[0]) : null;
     const dm = /(\d{1,2}\/\d{1,2}\/\d{2,4}|\d{4}-\d{2}-\d{2})/.exec(s);
     const date = dm ? dm[1] : "";
     const addrEnd = pm ? (pm.index ?? s.length) : (dm ? (dm.index ?? s.length) : s.length);
-    let address = s.slice(0, addrEnd).replace(/[\t|,;]+$/, "").trim()
+    const address = s.slice(0, addrEnd).replace(/[\t|,;]+$/, "").trim()
       .replace(/\s+(sold|active|new|conditional|for sale)$/i, "").trim();
     const beds = (/(\d+)\s*bd/i.exec(s)?.[1]) ?? "";
     const baths = (/(\d+(?:\.\d+)?)\s*ba/i.exec(s)?.[1]) ?? "";
     const sqft = (/([\d,]+)\s*(?:sqft|sf)/i.exec(s)?.[1]) ?? "";
-    return { address, price, date, beds, baths, sqft };
+    return { address, price, date, beds, baths, sqft, dom: "" };
   }).filter((c) => c.address || c.price);
 }
 
@@ -107,7 +150,8 @@ export default function ValuationBuilder() {
     if (!parsed.length) return;
     const lines = parsed.map((s) =>
       [s.address, s.price ? "$" + s.price.toLocaleString() : "", s.date,
-       [s.beds && s.beds + "bd", s.baths && s.baths + "ba", s.sqft && s.sqft + "sf"].filter(Boolean).join(" ")
+       [s.beds && s.beds + "bd", s.baths && s.baths + "ba", s.sqft && s.sqft + "sf"].filter(Boolean).join(" "),
+       s.dom || ""
       ].join(" | "));
     setSoldText((prev) => (prev.trim() ? prev.trim() + "\n" : "") + lines.join("\n"));
     setRawText("");
@@ -379,10 +423,10 @@ export default function ValuationBuilder() {
             <div className="rounded-lg border border-line overflow-hidden">
               <table className="w-full text-sm">
                 <thead><tr className="bg-gray-50 text-left text-xs text-muted">
-                  <th className="p-2">Address</th><th className="p-2">Sold</th><th className="p-2">Date</th><th className="p-2">Beds/Baths/Sqft</th>
+                  <th className="p-2">Address</th><th className="p-2">Sold</th><th className="p-2">Date</th><th className="p-2">Beds/Baths/Sqft</th><th className="p-2">DOM</th>
                 </tr></thead>
                 <tbody>{solds.map((s, i) => (
-                  <tr key={i} className="border-t border-line"><td className="p-2">{s.address}</td><td className="p-2 font-semibold">{money(s.price)}</td><td className="p-2">{s.date}</td><td className="p-2">{[s.beds && s.beds + "bd", s.baths && s.baths + "ba", s.sqft && s.sqft + "sf"].filter(Boolean).join(" · ")}</td></tr>
+                  <tr key={i} className="border-t border-line"><td className="p-2">{s.address}</td><td className="p-2 font-semibold">{money(s.price)}</td><td className="p-2">{s.date}</td><td className="p-2">{[s.beds && s.beds + "bd", s.baths && s.baths + "ba", s.sqft && s.sqft + "sf"].filter(Boolean).join(" · ")}</td><td className="p-2">{s.dom || "—"}</td></tr>
                 ))}</tbody>
               </table>
             </div>
