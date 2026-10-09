@@ -108,15 +108,53 @@ export function PageBuilder({ page: initialPage, sections: initialSections, bloc
     setSections(n); setSelected(newSections[0]?.id ?? null); setAdding(false); setTab("content"); setDirty(true);
   };
 
+  /** Extract plain text from sections for auto-generating meta description. */
+  function extractSectionText(): string {
+    const texts: string[] = [];
+    for (const s of sections) {
+      const d: any = s.data ?? {};
+      for (const key of ["heading", "subline", "content", "text", "bio", "description"]) {
+        if (typeof d[key] === "string" && d[key].trim()) {
+          const plain = d[key].replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+          if (plain) texts.push(plain);
+        }
+      }
+      if (texts.join(" ").length > 500) break;
+    }
+    return texts.join(" ").replace(/\s+/g, " ").trim();
+  }
+
   async function save(): Promise<boolean> {
     setBusy("Saving…"); setMessage("");
+    // Auto-fill empty SEO fields on save
+    let autoTitle = page.seo_title;
+    let autoDesc = page.seo_description;
+    if (!autoTitle?.trim()) {
+      autoTitle = page.title; // Use page title as SEO title if empty
+    }
+    if (!autoDesc?.trim()) {
+      const pageText = extractSectionText();
+      if (pageText) {
+        autoDesc = pageText.length > 155
+          ? (() => {
+              const t = pageText.slice(0, 155);
+              const ls = t.lastIndexOf(" ");
+              return (ls > 100 ? t.slice(0, ls) : t) + "...";
+            })()
+          : pageText;
+      }
+    }
     const { error: pErr } = await supabase.from("pages").update({
-      title: page.title, slug: page.slug, seo_title: page.seo_title || null, seo_description: page.seo_description || null,
+      title: page.title, slug: page.slug, seo_title: autoTitle || null, seo_description: autoDesc || null,
       focus_keyword: page.focus_keyword || null,
       canonical_url: page.canonical_url || null, noindex: page.noindex, hide_nav: page.hide_nav, hide_footer: page.hide_footer,
       publish_at: page.publish_at,
     }).eq("id", page.id);
     if (pErr) { setBusy(""); setMessage(pErr.message); return false; }
+    // Update local state with auto-filled values
+    if (autoTitle !== page.seo_title || autoDesc !== page.seo_description) {
+      setPage((p) => ({ ...p, seo_title: autoTitle, seo_description: autoDesc }));
+    }
 
     const removed = savedIds.filter((id) => !sections.some((s) => s.id === id));
     if (removed.length) await supabase.from("page_sections").delete().in("id", removed);
@@ -520,16 +558,17 @@ export function PageBuilder({ page: initialPage, sections: initialSections, bloc
                   let score = 0;
                   const max = 5;
                   const title = page.seo_title || page.title;
-                  if (title) score += 1;
-                  if (title.length >= 30 && title.length <= 60) score += 1;
-                  if (page.seo_description || true) score += 1; // Auto-generated counts
-                  if ((page.seo_description ?? "").length >= 120) score += 1;
-                  if (page.focus_keyword) score += 1;
-                  const grade = score >= 4 ? "A" : score >= 3 ? "B" : "C";
+                  const desc = page.seo_description || "";
+                  if (page.seo_title?.trim()) score += 1; // Custom SEO title set
+                  if (title.length >= 30 && title.length <= 60) score += 1; // Good length
+                  if (desc.trim()) score += 1; // Description set (manual or auto)
+                  if (desc.length >= 120) score += 1; // Good length
+                  if (page.focus_keyword?.trim()) score += 1; // Keyword set
+                  const grade = score >= 4 ? "A" : score >= 3 ? "B" : score >= 2 ? "C" : "D";
                   const color = score >= 4 ? "text-green-600" : score >= 3 ? "text-yellow-600" : "text-red-600";
                   return (
                     <div className="rounded-lg border border-line p-3 flex items-center justify-between">
-                      <div className="text-sm">SEO score</div>
+                      <div className="text-sm">SEO score <span className="text-xs text-muted">(save to auto-fill empty fields)</span></div>
                       <div className={`text-2xl font-bold ${color}`}>{grade} <span className="text-sm font-normal text-muted">({score}/{max})</span></div>
                     </div>
                   );
