@@ -17,10 +17,10 @@ export async function GET(req: NextRequest) {
   if (!isFinite(lat) || !isFinite(lng)) return Response.json({ places: [] });
 
   const q = `[out:json][timeout:15];(`
-    + `node["amenity"="school"](around:3000,${lat},${lng});`
-    + `node["leisure"="park"](around:3000,${lat},${lng});`
-    + `node["shop"="supermarket"](around:3000,${lat},${lng});`
-    + `);out 20;`;
+    + `nwr["amenity"="school"](around:3000,${lat},${lng});`
+    + `nwr["leisure"="park"](around:3000,${lat},${lng});`
+    + `nwr["shop"="supermarket"](around:3000,${lat},${lng});`
+    + `);out center 40;`;
   const mirrors = [
     "https://overpass-api.de/api/interpreter",
     "https://overpass.kumi.systems/api/interpreter",
@@ -46,10 +46,12 @@ export async function GET(req: NextRequest) {
     for (const el of elements) {
       const tags = el.tags ?? {};
       const name: string | undefined = tags.name;
-      if (!name || seen.has(name) || typeof el.lat !== "number") continue;
+      const plat: number | undefined = el.center?.lat ?? el.lat;
+      const plon: number | undefined = el.center?.lon ?? el.lon;
+      if (!name || seen.has(name) || typeof plat !== "number" || typeof plon !== "number") continue;
       seen.add(name);
       const kind = tags.amenity === "school" ? "school" : tags.leisure === "park" ? "park" : "grocery";
-      all.push({ name, kind, distKm: Math.round(distKm(lat, lng, el.lat, el.lon) * 10) / 10 });
+      all.push({ name, kind, distKm: Math.round(distKm(lat, lng, plat, plon) * 10) / 10 });
     }
     all.sort((a, b) => a.distKm - b.distKm);
     const byKind: Record<string, typeof all> = {};
