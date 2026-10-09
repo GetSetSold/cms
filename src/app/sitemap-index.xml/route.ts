@@ -8,9 +8,9 @@ const PER_PAGE = 10000; // URLs per sitemap shard (max 50k per spec, we use 10k 
 export async function GET() {
   const base = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
   
-  // Count active listings to determine shard count
+  // Count listings to determine shard count (grid = active listings)
   const mls = createMlsClient();
-  const { count } = await mls.from("grid").select("id", { count: "exact", head: true }).eq("Status", "Active");
+  const { count } = await mls.from("grid").select("id", { count: "exact", head: true });
   const totalShards = Math.ceil((count ?? 0) / PER_PAGE);
   
   let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;

@@ -24,7 +24,6 @@ export async function GET(
   const { data } = await mls
     .from("grid")
     .select("UnparsedAddress, City, ListingId, OriginalEntryTimestamp")
-    .eq("Status", "Active")
     .order("OriginalEntryTimestamp", { ascending: false })
     .range(from, to);
   
