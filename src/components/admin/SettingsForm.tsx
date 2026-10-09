@@ -540,7 +540,10 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
                     <label className="label">Title suffix<input className="input" value={s.seo_defaults.title_suffix} onChange={(e) => set("seo_defaults", { ...s.seo_defaults, title_suffix: e.target.value })} /></label>
                     <label className="label">Default meta description<textarea className="textarea" rows={3} value={s.seo_defaults.description} onChange={(e) => set("seo_defaults", { ...s.seo_defaults, description: e.target.value })} /></label>
                     <label className="label">Google Analytics 4 ID<input className="input" placeholder="G-XXXXXXXXXX" value={s.scripts?.ga4_id ?? ""} onChange={(e) => set("scripts", { ...s.scripts, ga4_id: e.target.value.trim() })} /></label>
-                    <p className="text-xs text-muted">Sitemap: /sitemap.xml · robots: /robots.txt · LocalBusiness schema is added to the home page from your contact details.</p>
+                    <label className="label">Google Tag Manager ID<input className="input" placeholder="GTM-XXXXXXX" value={s.seo_defaults.gtm_id ?? ""} onChange={(e) => set("seo_defaults", { ...s.seo_defaults, gtm_id: e.target.value.trim() })} /></label>
+                    <label className="label">Google Search Console verification<input className="input" placeholder="Meta tag content" value={s.seo_defaults.google_verify ?? ""} onChange={(e) => set("seo_defaults", { ...s.seo_defaults, google_verify: e.target.value.trim() })} /></label>
+                    <label className="label">Bing Webmaster verification<input className="input" placeholder="Meta tag content" value={s.seo_defaults.bing_verify ?? ""} onChange={(e) => set("seo_defaults", { ...s.seo_defaults, bing_verify: e.target.value.trim() })} /></label>
+                    <p className="text-xs text-muted">Sitemap: /sitemap.xml · robots: /robots.txt · RealEstateAgent schema added to all pages.</p>
           </section>
         )}
         {tab === "ads" && (

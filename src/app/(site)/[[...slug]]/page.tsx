@@ -113,6 +113,10 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
       description,
       ...(ogImage ? { images: [ogImage] } : {}),
     },
+    verification: {
+      ...(seo.google_verify ? { google: seo.google_verify } : {}),
+      ...(seo.bing_verify ? { other: { "msvalidate.01": seo.bing_verify } } : {}),
+    },
   };
 }
 
@@ -120,6 +124,7 @@ export default async function SitePage(props: Props) {
   const [{ result, preview }, settings] = await Promise.all([load(props), getSettings()]);
   if (!result) notFound();
   const { page, sections } = result;
+  const seo = settings.seo_defaults ?? { title_suffix: "", description: "" };
 
   const ids = collectSvgIds(sections.map((s) => s.data));
   if (settings.logo_svg_id) ids.add(settings.logo_svg_id);
@@ -146,6 +151,12 @@ export default async function SitePage(props: Props) {
     <div style={themeVars_} className="bg-ground text-ink">
       <link rel="stylesheet" href={themeFontHref(settings)} />
       {themeIconOverrideCSS(settings) ? <style dangerouslySetInnerHTML={{ __html: themeIconOverrideCSS(settings) }} /> : null}
+      {seo.gtm_id ? (
+        <>
+          <script dangerouslySetInnerHTML={{ __html: `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','${seo.gtm_id}');` }} />
+          <noscript><iframe src={`https://www.googletagmanager.com/ns.html?id=${seo.gtm_id}`} height="0" width="0" style={{ display: "none", visibility: "hidden" }} /></noscript>
+        </>
+      ) : null}
       {preview ? (
         <div className="bg-accent px-4 py-2 text-center text-sm text-white">Preview — status: {page.status}</div>
       ) : null}
