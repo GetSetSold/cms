@@ -538,7 +538,6 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
           <section className="flex flex-col gap-3 border border-line bg-white p-4 md:p-5">
             <h2 className="text-base font-semibold">SEO</h2>
                     <label className="label">Title suffix<input className="input" value={s.seo_defaults.title_suffix} onChange={(e) => set("seo_defaults", { ...s.seo_defaults, title_suffix: e.target.value })} /></label>
-                    <label className="label">Default meta description<textarea className="textarea" rows={3} value={s.seo_defaults.description} onChange={(e) => set("seo_defaults", { ...s.seo_defaults, description: e.target.value })} /></label>
                     <label className="label">Google Analytics 4 ID<input className="input" placeholder="G-XXXXXXXXXX" value={s.scripts?.ga4_id ?? ""} onChange={(e) => set("scripts", { ...s.scripts, ga4_id: e.target.value.trim() })} /></label>
                     <label className="label">Google Tag Manager ID<input className="input" placeholder="GTM-XXXXXXX" value={s.seo_defaults.gtm_id ?? ""} onChange={(e) => set("seo_defaults", { ...s.seo_defaults, gtm_id: e.target.value.trim() })} /></label>
                     <label className="label">Google Search Console verification<input className="input" placeholder="Meta tag content" value={s.seo_defaults.google_verify ?? ""} onChange={(e) => set("seo_defaults", { ...s.seo_defaults, google_verify: e.target.value.trim() })} /></label>
