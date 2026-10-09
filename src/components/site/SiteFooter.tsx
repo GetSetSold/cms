@@ -88,9 +88,9 @@ export async function SiteFooter({ settings, logo }: { settings: SiteSettings; l
   const footerDark = !f.bg || isDarkColor(f.bg);
   const footerLogo = logo && footerDark ? { ...logo, markup: liftLogoForDark(logo.markup) } : logo;
 
-  // Brand block: Local Office + Brokerage, headers/lines in brand blue (#0066CC).
+  // Brand block: Local Office + Brokerage, headers/lines in black (#000000).
   // Local Office pulls name/title/tagline from Contact settings (not hardcoded).
-  const ACCENT = "#0066CC";
+  const ACCENT = "#000000";
   const localName = c.office_name || settings.site_name;
   const localTitle = c.office_title || settings.header?.subline;
   const localTagline = c.office_tagline || f.tagline;
