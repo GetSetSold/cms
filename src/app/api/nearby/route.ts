@@ -27,6 +27,8 @@ export async function GET(req: NextRequest) {
     "https://overpass.nchc.org.tw/api/interpreter",
   ];
   let elements: any[] = [];
+  const dbg: string[] = [];
+  const debug = sp.get("debug") === "1";
   for (const m of mirrors) {
     try {
       const r = await fetch(m, {
@@ -35,11 +37,14 @@ export async function GET(req: NextRequest) {
         body: "data=" + encodeURIComponent(q),
         signal: AbortSignal.timeout(15000),
       });
-      if (!r.ok) continue;
+      if (!r.ok) { dbg.push(`${m}: http ${r.status}`); continue; }
       const j = await r.json();
-      if (Array.isArray(j.elements) && j.elements.length) { elements = j.elements; break; }
-    } catch { /* try next mirror */ }
+      const n = Array.isArray(j.elements) ? j.elements.length : -1;
+      dbg.push(`${m}: ok, ${n} elements`);
+      if (n > 0) { elements = j.elements; break; }
+    } catch (e) { dbg.push(`${m}: ${(e as Error).message || "fetch failed"}`); }
   }
+  if (debug) return Response.json({ places: [], _debug: dbg, _q: q });
   try {
     const seen = new Set<string>();
     const all: { name: string; kind: string; distKm: number }[] = [];
