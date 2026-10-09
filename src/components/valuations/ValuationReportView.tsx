@@ -26,7 +26,9 @@ const ICONS: Record<string, ReactNode> = {
   clock: (<svg {...svgProps}><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>),
   lamp: (<svg {...svgProps}><path d="M9 2h6l3 8H6z" /><line x1="12" y1="10" x2="12" y2="22" /><path d="M8 22h8" /></svg>),
   door: (<svg {...svgProps}><rect x="5" y="3" width="14" height="18" rx="1" /><circle cx="15" cy="12" r="1" fill="currentColor" stroke="none" /></svg>),
-  key: (<svg {...svgProps}><circle cx="8" cy="15" r="4.5" /><path d="M11.2 11.8L21 2m-3 3l3 3" /></svg>),
+  cart: (<svg {...svgProps}><circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" /><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" /></svg>),
+  tree: (<svg {...svgProps}><path d="M12 3l6 9h-3.5L18 19H6l3.5-7H6z" /><line x1="12" y1="19" x2="12" y2="22" /></svg>),
+  cap: (<svg {...svgProps}><path d="M22 10L12 5 2 10l10 5 10-5z" /><path d="M6 12v5c3 3 9 3 12 0v-5" /></svg>),
 };
 
 const DEFAULT_AGENT = {
@@ -77,27 +79,27 @@ const MARKETING: [string, string, string][] = [
   ["Google & SEO", "Search engine optimization ensures your property ranks at the top when buyers search online.", "search"],
 ];
 
-const REASONS = [
-  "Free in-home consultation & property assessment",
-  "Detailed market analysis & competitive pricing strategy",
-  "Customized marketing plan development",
-  "Transparent commission & service agreement",
-  "Professional staging consultation & recommendations",
-  "Arrangement of professional cleaning services",
-  "Professional photography & virtual tour creation",
-  "MLS & Realtor.ca listing activation",
-  "Social media marketing launch across all platforms",
-  "Email blast to our buyer network of 5,000+ contacts",
-  "For Sale sign installation & neighborhood outreach",
-  "Open house scheduling & event management",
-  "Offer review & detailed comparison analysis",
-  "Skilled negotiation to maximize your sale price",
-  "Conditional management & buyer qualification verification",
-  "Legal paperwork preparation & review coordination",
-  "Final walkthrough scheduling & support",
-  "Closing document review & signing facilitation",
-  "Keys & possession transfer coordination",
-  "Post-sale follow-up & satisfaction check-in",
+const REASONS: [string, string][] = [
+  ["Free in-home consultation & property assessment", "A relaxed walkthrough to understand your home, your goals, and your timeline."],
+  ["Detailed market analysis & competitive pricing strategy", "Real sold data from your neighbourhood — priced to attract, not to sit."],
+  ["Customized marketing plan development", "A plan built around your property, not a one-size-fits-all template."],
+  ["Transparent commission & service agreement", "Everything in writing, in plain language — no fine print, no surprises."],
+  ["Professional staging consultation & recommendations", "Small changes that make buyers fall in love at first showing."],
+  ["Arrangement of professional cleaning services", "Your home shows its absolute best from the very first photo."],
+  ["Professional photography & virtual tour creation", "Scroll-stopping visuals that get buyers through the door."],
+  ["MLS & Realtor.ca listing activation", "Maximum exposure on Canada's biggest buyer platforms from day one."],
+  ["Social media marketing launch across all platforms", "Your listing in front of thousands of local buyers where they scroll."],
+  ["Email blast to our buyer network of 5,000+ contacts", "Instant exposure to thousands of active buyers and agents."],
+  ["For Sale sign installation & neighborhood outreach", "Curb appeal plus neighbours who may know your next buyer."],
+  ["Open house scheduling & event management", "Professionally run events that create urgency and competition."],
+  ["Offer review & detailed comparison analysis", "Every offer broken down side-by-side so you decide with confidence."],
+  ["Skilled negotiation to maximize your sale price", "Experienced negotiation that protects your bottom line."],
+  ["Conditional management & buyer qualification verification", "No shaky deals — buyers verified before your home comes off the market."],
+  ["Legal paperwork preparation & review coordination", "All documents handled correctly and on time."],
+  ["Final walkthrough scheduling & support", "A smooth final walkthrough with nothing left to chance."],
+  ["Closing document review & signing facilitation", "Every signature in place for a stress-free closing day."],
+  ["Keys & possession transfer coordination", "A clean handoff so you move on without loose ends."],
+  ["Post-sale follow-up & satisfaction check-in", "The relationship doesn't end at closing — I'm here after you move."],
 ];
 
 const REVIEWS: [string, string][] = [
@@ -125,7 +127,14 @@ export function ValuationReportView({ report, leadName }: { report: any; leadNam
   const include: string[] = Array.isArray(pres.include) ? pres.include : [];
   const reviewsSource = pres.reviews_source === "static" ? "static" : "elfsight";
   const agent = { ...DEFAULT_AGENT, ...(pres.agent ?? {}) };
+  const nearby: { name: string; kind: string; distKm: number }[] = pres.nearby_places ?? [];
   const has = (k: string) => include.includes(k);
+
+  const NEARBY_GROUPS: [string, string, string][] = [
+    ["school", "Schools", "cap"],
+    ["park", "Parks & Green Space", "tree"],
+    ["grocery", "Grocery & Essentials", "cart"],
+  ];
 
   return (
     <div className="cma">
@@ -145,13 +154,6 @@ export function ValuationReportView({ report, leadName }: { report: any; leadNam
       <section>
         <h2>Subject Property</h2>
         <div className="cma-address">{report.address}{report.city ? `, ${report.city}` : ""}</div>
-        <div className="cma-grid">
-          {[["Type", report.property_type], ["Bedrooms", report.beds], ["Bathrooms", report.baths],
-            ["Square feet", report.sqft], ["Lot size", report.lot_size], ["Year built", report.year_built]]
-            .filter(([, v]) => v).map(([k, v]) => (
-              <div key={k} className="cma-cell"><span>{k}</span><strong>{String(v)}</strong></div>
-            ))}
-        </div>
         {report.upgrades && <p className="cma-notes"><strong>Notes:</strong> {report.upgrades}</p>}
       </section>
 
@@ -229,10 +231,33 @@ export function ValuationReportView({ report, leadName }: { report: any; leadNam
         </section>
       )}
 
+      {/* Nearby places */}
+      {has("nearby") && !!nearby.length && (
+        <section>
+          <h2>Nearby Places</h2>
+          <p className="cma-notes" style={{ marginBottom: 16 }}>Schools, parks, and everyday essentials within minutes — one more reason this location holds its value.</p>
+          <div className="cma-nearby">
+            {NEARBY_GROUPS.map(([kind, label, icon]) => {
+              const items = nearby.filter((p) => p.kind === kind);
+              if (!items.length) return null;
+              return (
+                <div key={kind} className="cma-nearby-group">
+                  <div className="cma-nearby-head"><span className="cma-mkt-icon">{ICONS[icon]}</span><strong>{label}</strong></div>
+                  <ul>
+                    {items.map((p, i) => (
+                      <li key={i}><span>{p.name}</span><span className="cma-nearby-dist">{p.distKm} km</span></li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
       {/* Pricing */}
       <section>
-        <h2>Pricing Recommendation</h2>
-        {!!upgrades.length && (
+        <h2>Pricing Recommendation</h2>        {!!upgrades.length && (
           <table className="cma-adj">
             <thead><tr><th>Upgrade / adjustment</th><th className="r">Value added</th></tr></thead>
             <tbody>
@@ -308,7 +333,7 @@ export function ValuationReportView({ report, leadName }: { report: any; leadNam
         <section className="cma-page">
           <h2>GetSetSold vs Traditional</h2>
           <table>
-            <thead><tr><th>Service</th><th className="c">Traditional</th><th className="c">GetSetSold</th></tr></thead>
+            <thead><tr><th>Service</th><th className="c">Traditional</th><th className="c">GetSetSold.ca (Rohit Sharma)</th></tr></thead>
             <tbody>
               {COMPARISON.map(([f, t, r]) => (
                 <tr key={f}><td>{f}</td><td className="c">{t ? "✓" : "—"}</td><td className="c"><strong>{r ? "✓" : "—"}</strong></td></tr>
@@ -338,7 +363,12 @@ export function ValuationReportView({ report, leadName }: { report: any; leadNam
           <h2>20 Reasons to List With Confidence</h2>
           <p className="cma-notes" style={{ marginBottom: 16 }}>A proven, step-by-step process designed to sell your home faster and for more money.</p>
           <ol className="cma-reasons">
-            {REASONS.map((r, i) => <li key={i}><span className="cma-reason-num">{String(i + 1).padStart(2, "0")}</span>{r}</li>)}
+            {REASONS.map(([r, sub], i) => (
+              <li key={i}>
+                <span className="cma-reason-num">{String(i + 1).padStart(2, "0")}</span>
+                <span><strong>{r}</strong><span className="cma-reason-sub">{sub}</span></span>
+              </li>
+            ))}
           </ol>
         </section>
       )}
@@ -400,11 +430,7 @@ export function ValuationReportView({ report, leadName }: { report: any; leadNam
         .cma-meta { text-align: right; font-size: 13px; color: #555; }
         .cma section { margin-bottom: 28px; }
         .cma h2 { font-size: 15px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #ddd; padding-bottom: 6px; margin-bottom: 12px; }
-        .cma-address { font-size: 20px; font-weight: 700; margin-bottom: 12px; }
-        .cma-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: #ddd; border: 1px solid #ddd; }
-        .cma-cell { background: #fff; padding: 10px 12px; }
-        .cma-cell span { display: block; font-size: 11px; color: #777; text-transform: uppercase; }
-        .cma-cell strong { font-size: 15px; }
+        .cma-address { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
         .cma table { width: 100%; border-collapse: collapse; font-size: 13px; }
         .cma th { text-align: left; font-size: 11px; text-transform: uppercase; color: #777; padding: 8px; border-bottom: 2px solid #111; }
         .cma td { padding: 8px; border-bottom: 1px solid #eee; }
@@ -418,7 +444,7 @@ export function ValuationReportView({ report, leadName }: { report: any; leadNam
         .cma-notes { font-size: 13px; color: #333; margin-top: 8px; line-height: 1.6; }
         .cma-save td { font-weight: 700; }
         .cma-fine { font-size: 11px; color: #888; margin-top: 8px; }
-        .cma-listings { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .cma-listings { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
         .cma-listing { border: 1px solid #e2e2e2; border-radius: 10px; overflow: hidden; background: #fff; }
         .cma-listing img { width: 100%; height: 150px; object-fit: cover; display: block; }
         .cma-noimg { height: 150px; background: #f4f4f4; display: flex; align-items: center; justify-content: center; color: #999; font-size: 12px; }
@@ -447,9 +473,17 @@ export function ValuationReportView({ report, leadName }: { report: any; leadNam
         .cma-reasons { columns: 2; column-gap: 32px; font-size: 13px; line-height: 1.9; padding-left: 0; list-style: none; }
         .cma-reasons li { display: flex; gap: 10px; align-items: baseline; break-inside: avoid; }
         .cma-reason-num { font-weight: 800; color: #0066cc; font-size: 12px; flex-shrink: 0; }
+        .cma-reasons li strong { display: block; }
+        .cma-reason-sub { display: block; color: #666; font-size: 12px; margin-top: 2px; line-height: 1.5; }
+        .cma-nearby { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+        .cma-nearby-group { border: 1px solid #e2e2e2; border-radius: 10px; padding: 16px; }
+        .cma-nearby-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; font-size: 14px; }
+        .cma-nearby ul { list-style: none; padding: 0; margin: 0; font-size: 13px; }
+        .cma-nearby li { display: flex; justify-content: space-between; gap: 8px; padding: 6px 0; border-top: 1px solid #f0f0f0; }
+        .cma-nearby-dist { color: #777; font-size: 12px; white-space: nowrap; }
         .cma-reviews-head { display: flex; gap: 32px; margin-bottom: 16px; font-size: 14px; color: #555; }
         .cma-reviews-score { font-size: 28px; font-weight: 800; color: #111; }
-        .cma-reviews { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .cma-reviews { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
         .cma-review { border: 1px solid #e2e2e2; border-radius: 10px; padding: 20px; font-size: 13px; background: #fff; }
         .cma-review p { color: #333; line-height: 1.65; margin: 10px 0 12px; font-style: italic; }
         .cma-stars { color: #111; letter-spacing: 3px; font-size: 14px; }
@@ -465,7 +499,7 @@ export function ValuationReportView({ report, leadName }: { report: any; leadNam
           .cma-reviews { grid-template-columns: 1fr; }
           .cma-cards { grid-template-columns: 1fr; }
           .cma-reasons { columns: 1; }
-          .cma-grid { grid-template-columns: repeat(2, 1fr); }
+          .cma-nearby { grid-template-columns: 1fr; }
           .cma-agent { flex-direction: column; }
         }
         @media print {

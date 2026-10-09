@@ -37,6 +37,7 @@ const PRESENTATION_SECTIONS = [
   { key: "reasons", label: "20 reasons to list with me" },
   { key: "reviews", label: "Client reviews" },
   { key: "cta", label: "Contact / next steps" },
+  { key: "nearby", label: "Nearby places" },
 ];
 
 const DEFAULT_AGENT = {
@@ -166,6 +167,7 @@ export default function ValuationBuilder() {
 
   // Presentation
   const [includeSections, setIncludeSections] = useState<string[]>(PRESENTATION_SECTIONS.map((s) => s.key));
+  const [nearby, setNearby] = useState<{ name: string; kind: string; distKm: number }[]>([]);
   const [reviewsSource, setReviewsSource] = useState("elfsight");
   const [agent, setAgent] = useState(DEFAULT_AGENT);
 
@@ -197,6 +199,7 @@ export default function ValuationBuilder() {
           if (p.reviews_source) setReviewsSource(p.reviews_source);
           if (p.agent) setAgent({ ...DEFAULT_AGENT, ...p.agent });
           if (p.client_name) setClientName(p.client_name);
+          if (Array.isArray(p.nearby_places)) setNearby(p.nearby_places);
         }
         setLoading(false);
       }).catch(() => setLoading(false));
@@ -235,6 +238,9 @@ export default function ValuationBuilder() {
       if (hit?.lat != null && hit?.lng != null) {
         setLat(String(hit.lat)); setLng(String(hit.lng));
         if (!city && hit.city) setCity(hit.city);
+        // Nearby places (schools/parks/grocery) for the report — non-blocking.
+        fetch(`/api/nearby?lat=${hit.lat}&lng=${hit.lng}`).then((r) => r.json())
+          .then((j) => setNearby(j.places ?? [])).catch(() => {});
       }
     } finally { setGeocoding(false); }
   }
@@ -304,7 +310,7 @@ export default function ValuationBuilder() {
         price_high: priceHigh ? Number(priceHigh) : null,
         recommended_price: priceRec ? Number(priceRec) : null,
         pricing_notes: pricingNotes,
-        presentation: { include: includeSections, reviews_source: reviewsSource, agent, client_name: clientName || undefined },
+        presentation: { include: includeSections, reviews_source: reviewsSource, agent, client_name: clientName || undefined, nearby_places: nearby },
       };
       const url = editId ? `/api/valuation-reports/${editId}` : "/api/valuation-reports";
       const r = await fetch(url, {
