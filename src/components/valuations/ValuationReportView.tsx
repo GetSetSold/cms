@@ -149,6 +149,19 @@ export function ValuationReportView({ report, leadName }: { report: any; leadNam
       {!!solds.length && (
         <section>
           <h2>Recent Sold Comparables ({solds.length})</h2>
+          {(() => {
+            const prices = solds.map((s: any) => Number(s.price)).filter((p) => p > 0).sort((a, b) => a - b);
+            if (!prices.length) return null;
+            const avg = Math.round(prices.reduce((a, b) => a + b, 0) / prices.length);
+            const median = prices[Math.floor(prices.length / 2)];
+            return (
+              <div className="cma-stats" style={{ marginBottom: 16 }}>
+                {[["Low", prices[0]], ["High", prices[prices.length - 1]], ["Median", median], ["Average", avg]].map(([l, v]) => (
+                  <div key={l as string} className="cma-stat"><strong>{money(v)}</strong><span>{l}</span></div>
+                ))}
+              </div>
+            );
+          })()}
           <table>
             <thead><tr><th>Address</th><th>Sold price</th><th>Sold date</th><th>Bd/Ba/Sqft</th></tr></thead>
             <tbody>

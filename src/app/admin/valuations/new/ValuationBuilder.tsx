@@ -49,6 +49,24 @@ const DEFAULT_AGENT = {
 
 const STEP_NAMES = ["Property", "Active comps", "Sold comps", "Pricing", "Presentation"];
 
+/** Organize pasted raw comp data (MLS copy, PDF text, spreadsheet rows) into structured comps. */
+function parseRawComps(text: string): SoldComp[] {
+  return text.split("\n").map((l) => l.trim()).filter(Boolean).map((line) => {
+    const s = line.replace(/^\d+[\.\)]\s+/, ""); // strip leading "1." / "1)"
+    const pm = /\$\s*([\d,]+)/.exec(s) ?? /(?:^|\s)(\d{1,3}(?:,\d{3})+)(?=\s|$)/.exec(s);
+    const price = pm ? parseInt(pm[1].replace(/,/g, ""), 10) : null;
+    const dm = /(\d{1,2}\/\d{1,2}\/\d{2,4}|\d{4}-\d{2}-\d{2})/.exec(s);
+    const date = dm ? dm[1] : "";
+    const addrEnd = pm ? (pm.index ?? s.length) : (dm ? (dm.index ?? s.length) : s.length);
+    let address = s.slice(0, addrEnd).replace(/[\t|,;]+$/, "").trim()
+      .replace(/\s+(sold|active|new|conditional|for sale)$/i, "").trim();
+    const beds = (/(\d+)\s*bd/i.exec(s)?.[1]) ?? "";
+    const baths = (/(\d+(?:\.\d+)?)\s*ba/i.exec(s)?.[1]) ?? "";
+    const sqft = (/([\d,]+)\s*(?:sqft|sf)/i.exec(s)?.[1]) ?? "";
+    return { address, price, date, beds, baths, sqft };
+  }).filter((c) => c.address || c.price);
+}
+
 export default function ValuationBuilder() {
   const router = useRouter();
   const qs = useSearchParams();
@@ -81,7 +99,19 @@ export default function ValuationBuilder() {
 
   // Sold comps
   const [soldText, setSoldText] = useState("");
+  const [rawText, setRawText] = useState("");
   const solds = parseSold(soldText);
+
+  function organizeRaw() {
+    const parsed = parseRawComps(rawText);
+    if (!parsed.length) return;
+    const lines = parsed.map((s) =>
+      [s.address, s.price ? "$" + s.price.toLocaleString() : "", s.date,
+       [s.beds && s.beds + "bd", s.baths && s.baths + "ba", s.sqft && s.sqft + "sf"].filter(Boolean).join(" ")
+      ].join(" | "));
+    setSoldText((prev) => (prev.trim() ? prev.trim() + "\n" : "") + lines.join("\n"));
+    setRawText("");
+  }
 
   // Pricing
   const [priceLow, setPriceLow] = useState("");
@@ -332,7 +362,14 @@ export default function ValuationBuilder() {
       {step === 3 && (
         <div className="flex flex-col gap-4">
           <div>
-            <label className={label}>Paste sold comparables (one per line)</label>
+            <label className={label}>Paste raw comp data — we'll organize it</label>
+            <textarea className={input} rows={4} value={rawText} onChange={(e) => setRawText(e.target.value)}
+              placeholder={"Paste from MLS, a PDF, or a spreadsheet — e.g.\n20 Oak Cres, Hagersville Sold $660,000 11/15/25"} />
+            <button onClick={organizeRaw} disabled={!rawText.trim()}
+              className="mt-2 rounded-lg border border-line px-4 py-2 text-sm font-semibold disabled:opacity-40">Organize ↓</button>
+          </div>
+          <div>
+            <label className={label}>Sold comparables (one per line — edit as needed)</label>
             <textarea className={input} rows={8} value={soldText} onChange={(e) => setSoldText(e.target.value)}
               placeholder={"123 Main St, Caledonia | $685,000 | 2026-08-14 | 4bd 3ba 2200sqft"} />
           </div>
