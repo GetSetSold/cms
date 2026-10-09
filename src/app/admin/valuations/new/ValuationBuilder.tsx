@@ -68,8 +68,8 @@ export default function ValuationBuilder() {
     try {
       const r = await fetch(`/api/geocode?q=${encodeURIComponent(address + (city ? ", " + city : ""))}`);
       const j = await r.json();
-      const hit = j.results?.[0] ?? j;
-      if (hit?.lat && hit?.lng) {
+      const hit = j.features?.[0];
+      if (hit?.lat != null && hit?.lng != null) {
         setLat(String(hit.lat)); setLng(String(hit.lng));
         if (!city && hit.city) setCity(hit.city);
       }
