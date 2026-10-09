@@ -21,18 +21,29 @@ export async function GET(req: NextRequest) {
     + `node["leisure"="park"](around:3000,${lat},${lng});`
     + `node["shop"="supermarket"](around:3000,${lat},${lng});`
     + `);out 20;`;
+  const mirrors = [
+    "https://overpass-api.de/api/interpreter",
+    "https://overpass.kumi.systems/api/interpreter",
+    "https://overpass.nchc.org.tw/api/interpreter",
+  ];
+  let elements: any[] = [];
+  for (const m of mirrors) {
+    try {
+      const r = await fetch(m, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: "data=" + encodeURIComponent(q),
+        signal: AbortSignal.timeout(15000),
+      });
+      if (!r.ok) continue;
+      const j = await r.json();
+      if (Array.isArray(j.elements) && j.elements.length) { elements = j.elements; break; }
+    } catch { /* try next mirror */ }
+  }
   try {
-    const r = await fetch("https://overpass-api.de/api/interpreter", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: "data=" + encodeURIComponent(q),
-      signal: AbortSignal.timeout(18000),
-    });
-    if (!r.ok) return Response.json({ places: [] });
-    const j = await r.json();
     const seen = new Set<string>();
     const all: { name: string; kind: string; distKm: number }[] = [];
-    for (const el of j.elements ?? []) {
+    for (const el of elements) {
       const tags = el.tags ?? {};
       const name: string | undefined = tags.name;
       if (!name || seen.has(name) || typeof el.lat !== "number") continue;
