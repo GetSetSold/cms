@@ -129,9 +129,17 @@ export default async function SitePage(props: Props) {
 
   const c = settings.contact ?? {};
   const orgLd = {
-    "@context": "https://schema.org", "@type": "LocalBusiness",
+    "@context": "https://schema.org", "@type": "RealEstateAgent",
     name: settings.site_name, telephone: c.phone || undefined, email: c.email || undefined,
-    address: c.address || undefined, url: process.env.NEXT_PUBLIC_SITE_URL,
+    address: c.address ? {
+      "@type": "PostalAddress",
+      streetAddress: c.address,
+    } : undefined,
+    url: process.env.NEXT_PUBLIC_SITE_URL,
+    areaServed: ["Caledonia", "Haldimand County", "Hamilton", "Niagara", "Halton", "Greater Toronto Area"].map((area) => ({
+      "@type": "City", name: area,
+    })),
+    priceRange: "$$",
   };
 
   return (
@@ -147,9 +155,7 @@ export default async function SitePage(props: Props) {
       </main>
       {!page.hide_footer ? <SiteFooter settings={settings} logo={settings.logo_svg_id ? svgs[settings.logo_svg_id] : null} /> : null}
       {!page.hide_nav ? <MobileCtaBar settings={settings} /> : null}
-      {page.slug === "home" ? (
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(orgLd).replace(/</g, "\\u003c") }} />
-      ) : null}
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(orgLd).replace(/</g, "\\u003c") }} />
       {settings.scripts?.ga4_id && /^G-[A-Z0-9]+$/.test(settings.scripts.ga4_id) ? (
         <>
           <script async src={`https://www.googletagmanager.com/gtag/js?id=${settings.scripts.ga4_id}`} />

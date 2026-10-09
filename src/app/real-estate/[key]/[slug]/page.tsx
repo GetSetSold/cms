@@ -125,11 +125,19 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
 
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "Residence",
+    "@type": "SingleFamilyResidence",
     name: listing.UnparsedAddress,
     address: { "@type": "PostalAddress", addressLocality: listing.City, addressRegion: listing.Province, postalCode: listing.PostalCode },
     numberOfRooms: listing.BedroomsTotal,
+    numberOfBathroomsTotal: listing.BathroomsTotalInteger,
+    floorSize: listing.AboveGradeFinishedArea ? { "@type": "QuantitativeValue", value: listing.AboveGradeFinishedArea, unitCode: "SQM" } : undefined,
     ...(photos[0] ? { image: photos[0].MediaURL } : {}),
+    offers: listing.ListPrice ? {
+      "@type": "Offer",
+      price: listing.ListPrice,
+      priceCurrency: "CAD",
+      availability: "https://schema.org/InStock",
+    } : undefined,
   };
 
   return (
