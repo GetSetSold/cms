@@ -96,7 +96,7 @@ export interface SiteSettings {
     subline_size_desktop?: number; // px
     subline_weight?: "normal" | "bold";
   };
-  footer: { tagline?: string; rows: NavColumn[][]; bg?: string; text?: string; columns_per_row?: 3 | 4; mobile_columns_per_row?: 1 | 2 };
+  footer: { tagline?: string; rows: NavColumn[][]; bg?: string; text?: string; columns_per_row?: 3 | 4; mobile_columns_per_row?: 1 | 2; top_border?: boolean; top_border_color?: string; top_border_width?: number };
   mobile_cta: { buttons: MobileCtaButton[]; shape: "square" | "rectangle"; size?: "xs" | "sm" | "md" | "lg"; layout?: "plain" | "active-highlight"; style?: "buttons" | "tabs"; bar_bg?: "light" | "dark" };
   blog_cta: { heading?: string; text?: string; button_label?: string; button_href?: string };
   contact: { phone?: string; email?: string; address?: string; hours?: string; logo_svg_id?: string | null; office_name?: string; office_title?: string; office_tagline?: string };

@@ -147,8 +147,15 @@ export async function SiteFooter({ settings, logo }: { settings: SiteSettings; l
     </div>
   );
 
+  const topBorder = f.top_border !== false;
+  const topBorderColor = f.top_border_color || "var(--c-line)";
+  const topBorderWidth = f.top_border_width ?? 1;
+
   return (
     <footer style={{ background: f.bg || undefined, color: f.text || undefined }}>
+      {topBorder ? (
+        <div aria-hidden="true" style={{ borderTop: `${topBorderWidth}px solid ${topBorderColor}` }} />
+      ) : null}
       <div className={`mx-auto flex max-w-7xl flex-col px-5 md:px-10 ${compact ? "gap-6 pb-20 pt-10 text-[13px] md:pb-8" : "gap-10 pb-28 pt-16 text-[15px] md:pb-12"}`}>
         {/* Top: brand (slim) + offices (wide, two columns) — Option 3 split layout */}
         <div className="grid gap-8 md:grid-cols-[1fr_2fr] md:gap-12">

@@ -295,6 +295,26 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
                         </select>
                       </label>
                     </div>
+                    <div className="grid gap-3 rounded-lg border border-line p-3 sm:grid-cols-3">
+                      <label className="flex items-center gap-2 text-sm">Top border
+                        <input type="checkbox" checked={s.footer?.top_border !== false}
+                          onChange={(e) => set("footer", { ...s.footer, top_border: e.target.checked })} />
+                      </label>
+                      {s.footer?.top_border !== false ? (
+                        <>
+                          <label className="flex items-center gap-2 text-sm">Border color
+                            <input type="color" value={/^#[0-9a-f]{6}$/i.test(s.footer?.top_border_color ?? "") ? s.footer!.top_border_color : "#e5e5e5"}
+                              onChange={(e) => set("footer", { ...s.footer, top_border_color: e.target.value })}
+                              className="h-7 w-9 cursor-pointer rounded border-0 bg-transparent" />
+                          </label>
+                          <label className="flex items-center gap-2 text-sm">Thickness (px)
+                            <input type="number" min={1} max={10} value={s.footer?.top_border_width ?? 1}
+                              onChange={(e) => set("footer", { ...s.footer, top_border_width: Number(e.target.value) })}
+                              className="input h-7 w-16 text-sm" />
+                          </label>
+                        </>
+                      ) : null}
+                    </div>
                     <div className="label">Footer rows
                       <FooterRowsEditor rows={s.footer?.rows ?? []} maxPerRow={s.footer?.columns_per_row ?? 4} onChange={(rows) => set("footer", { ...s.footer, rows })} />
                     </div>
