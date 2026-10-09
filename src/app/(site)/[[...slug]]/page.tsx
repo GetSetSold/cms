@@ -73,7 +73,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   if (!result) return { title: "Not found" };
   const { page, sections } = result;
   const seo = settings.seo_defaults ?? { title_suffix: "", description: "" };
-  const title = page.seo_title || `${page.slug === "home" ? settings.site_name : page.title}${page.slug === "home" ? "" : seo.title_suffix ?? ""}`;
+  const title = page.seo_title || `${page.title}${seo.title_suffix ?? ""}`;
   
   // Auto-generate description from page content if not set
   let description = page.seo_description || undefined;

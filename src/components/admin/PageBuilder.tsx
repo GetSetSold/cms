@@ -548,6 +548,7 @@ export function PageBuilder({ page: initialPage, sections: initialSections, bloc
                 <div className="rounded-lg border border-line p-3">
                   <div className="text-xs text-muted">Search preview</div>
                   <div className="text-lg text-[#1A0DAB]">{page.seo_title || page.title}</div>
+                  <div className="text-[13px] text-green-700">{page.slug === "home" ? "/" : `/${page.slug}`}</div>
                   <div className="text-[13px] text-muted">{page.seo_description || "Auto-generated from page content."}</div>
                 </div>
                 {(() => {
