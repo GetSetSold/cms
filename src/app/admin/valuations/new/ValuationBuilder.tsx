@@ -68,7 +68,13 @@ export default function ValuationBuilder() {
     try {
       const r = await fetch(`/api/geocode?q=${encodeURIComponent(address + (city ? ", " + city : ""))}`);
       const j = await r.json();
-      const hit = j.features?.[0];
+      let hit = j.features?.[0];
+      // Google predictions carry no geometry — resolve via Place Details.
+      if (hit?.placeId && (hit.lat == null || hit.lng == null)) {
+        const dr = await fetch(`/api/geocode?placeId=${encodeURIComponent(hit.placeId)}`);
+        const dj = await dr.json();
+        if (dr.ok && dj.feature?.lat != null && dj.feature?.lng != null) hit = dj.feature;
+      }
       if (hit?.lat != null && hit?.lng != null) {
         setLat(String(hit.lat)); setLng(String(hit.lng));
         if (!city && hit.city) setCity(hit.city);
@@ -85,7 +91,20 @@ export default function ValuationBuilder() {
         body: JSON.stringify({ lat: Number(lat), lng: Number(lng), propertyType, beds: Number(beds) || undefined, sqft: sqft || undefined }),
       });
       const j = await r.json();
-      const list: ActiveComp[] = j.listings ?? j.similar ?? [];
+      // /api/evaluate returns transformed rows { address, price, beds, baths, sqft,
+      // daysOnMarket, distanceKm, key, image, url } — map to the ActiveComp shape.
+      const list: ActiveComp[] = (j.listings ?? []).map((l: any, i: number) => ({
+        ListingKey: String(l.key ?? `${l.address ?? "listing"}-${i}`),
+        ListPrice: l.price != null ? Number(l.price) : null,
+        UnparsedAddress: l.address ?? null,
+        City: "",
+        BedroomsTotal: l.beds ?? null,
+        BathroomsTotalInteger: l.baths ?? null,
+        AboveGradeFinishedArea: l.sqft ?? null,
+        OriginalEntryTimestamp: null,
+        Media: l.image ?? null,
+        _distKm: l.distanceKm ?? undefined,
+      }));
       setActives(list);
       setPicked(new Set(list.slice(0, 6).map((l) => l.ListingKey)));
     } finally { setLoadingActives(false); }
@@ -183,7 +202,7 @@ export default function ValuationBuilder() {
             <label key={a.ListingKey} className="flex items-start gap-3 rounded-lg border border-line p-3 cursor-pointer hover:bg-gray-50">
               <input type="checkbox" checked={picked.has(a.ListingKey)} onChange={() => toggle(a.ListingKey)} className="mt-1" />
               <div className="text-sm">
-                <div className="font-semibold">{a.UnparsedAddress}, {a.City} — {money(a.ListPrice)}</div>
+                <div className="font-semibold">{a.UnparsedAddress}{a.City ? `, ${a.City}` : ""} — {money(a.ListPrice)}</div>
                 <div className="text-muted">{a.BedroomsTotal}bd · {a.BathroomsTotalInteger}ba · {a.AboveGradeFinishedArea ? Number(a.AboveGradeFinishedArea).toLocaleString() + " sqft" : "—"}{a._distKm ? ` · ${a._distKm.toFixed(1)} km` : ""}</div>
               </div>
             </label>
