@@ -641,7 +641,7 @@ function TeamProfile({ data, ctx }: BlockProps) {
             ))}
           </div>
         ) : null}
-        {data.bio ? <p className={`max-w-xl text-[13px] md:text-[15px] leading-relaxed ${muted(ctx)}`}>{data.bio}</p> : null}
+        {data.bio ? <p className={`text-[13px] md:text-[15px] leading-relaxed ${muted(ctx)}`}>{data.bio}</p> : null}
         <div className="mt-2 flex gap-3"><Button link={data.primary_cta} dark={ctx.dark} /><Button link={data.secondary_cta} variant="outline" dark={ctx.dark} /></div>
       </div>
     </div>
