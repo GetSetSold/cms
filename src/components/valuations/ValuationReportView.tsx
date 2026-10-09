@@ -79,6 +79,8 @@ const REVIEWS: [string, string][] = [
   ["Amanda & Chris Scott", "From listing to closing, Rohit was exceptional. His 1% commission saved us thousands, and the service was better than agents charging full commission. A true professional."],
 ];
 
+const ELFSIGHT_APP_ID = "e705f2da-4d5f-48a0-8e1a-4e33be72155d";
+
 export function ValuationReportView({ report, leadName }: { report: any; leadName?: string }) {
   const actives: Comp[] = report.active_comps ?? [];
   const solds: Comp[] = report.sold_comps ?? [];
@@ -89,6 +91,7 @@ export function ValuationReportView({ report, leadName }: { report: any; leadNam
   const tradFee = rec ? Math.round(rec * 0.05) : 0;
   const pres = report.presentation ?? {};
   const include: string[] = Array.isArray(pres.include) ? pres.include : [];
+  const reviewsSource = pres.reviews_source === "static" ? "static" : "elfsight";
   const agent = { ...DEFAULT_AGENT, ...(pres.agent ?? {}) };
   const has = (k: string) => include.includes(k);
 
@@ -277,16 +280,25 @@ export function ValuationReportView({ report, leadName }: { report: any; leadNam
       {has("reviews") && (
         <section className="cma-page">
           <h2>What Clients Say</h2>
-          <p className="cma-notes"><strong>5.0</strong> average across <strong>63+</strong> Google reviews</p>
-          <div className="cma-reviews">
-            {REVIEWS.map(([n, q]) => (
-              <div key={n} className="cma-review">
-                <div className="cma-stars">★★★★★</div>
-                <p>"{q}"</p>
-                <div className="cma-reviewer">— {n}</div>
+          {reviewsSource === "elfsight" ? (
+            <>
+              <script src="https://static.elfsight.com/platform/platform.js" data-use-service-core defer></script>
+              <div className={`elfsight-app-${ELFSIGHT_APP_ID}`} data-elfsight-app-lazy></div>
+            </>
+          ) : (
+            <>
+              <p className="cma-notes"><strong>5.0</strong> average across <strong>63+</strong> Google reviews</p>
+              <div className="cma-reviews">
+                {REVIEWS.map(([n, q]) => (
+                  <div key={n} className="cma-review">
+                    <div className="cma-stars">★★★★★</div>
+                    <p>"{q}"</p>
+                    <div className="cma-reviewer">— {n}</div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </>
+          )}
         </section>
       )}
 

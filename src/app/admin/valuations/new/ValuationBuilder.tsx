@@ -121,6 +121,7 @@ export default function ValuationBuilder() {
 
   // Presentation
   const [includeSections, setIncludeSections] = useState<string[]>(PRESENTATION_SECTIONS.map((s) => s.key));
+  const [reviewsSource, setReviewsSource] = useState("elfsight");
   const [agent, setAgent] = useState(DEFAULT_AGENT);
 
   // Edit mode: load existing report. Otherwise prefill from lead.
@@ -148,6 +149,7 @@ export default function ValuationBuilder() {
           setPricingNotes(r.pricing_notes ?? "");
           const p = r.presentation ?? {};
           if (Array.isArray(p.include)) setIncludeSections(p.include);
+          if (p.reviews_source) setReviewsSource(p.reviews_source);
           if (p.agent) setAgent({ ...DEFAULT_AGENT, ...p.agent });
           if (p.client_name) setClientName(p.client_name);
         }
@@ -256,7 +258,7 @@ export default function ValuationBuilder() {
         price_high: priceHigh ? Number(priceHigh) : null,
         recommended_price: priceRec ? Number(priceRec) : null,
         pricing_notes: pricingNotes,
-        presentation: { include: includeSections, agent, client_name: clientName || undefined },
+        presentation: { include: includeSections, reviews_source: reviewsSource, agent, client_name: clientName || undefined },
       };
       const url = editId ? `/api/valuation-reports/${editId}` : "/api/valuation-reports";
       const r = await fetch(url, {
@@ -422,6 +424,13 @@ export default function ValuationBuilder() {
                 </label>
               ))}
             </div>
+          </div>
+          <div>
+            <label className={label}>Reviews display</label>
+            <select className={input} value={reviewsSource} onChange={(e) => setReviewsSource(e.target.value)}>
+              <option value="elfsight">Live Google reviews (Elfsight)</option>
+              <option value="static">Static review cards</option>
+            </select>
           </div>
           <div>
             <label className={label}>Agent name</label>
