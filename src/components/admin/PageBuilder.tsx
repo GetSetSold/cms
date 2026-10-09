@@ -126,12 +126,8 @@ export function PageBuilder({ page: initialPage, sections: initialSections, bloc
 
   async function save(): Promise<boolean> {
     setBusy("Saving…"); setMessage("");
-    // Auto-fill empty SEO fields on save
-    let autoTitle = page.seo_title;
+    // Auto-fill empty meta description on save (title uses site settings: site_name for home, title+suffix for others)
     let autoDesc = page.seo_description;
-    if (!autoTitle?.trim()) {
-      autoTitle = page.title; // Use page title as SEO title if empty
-    }
     if (!autoDesc?.trim()) {
       const pageText = extractSectionText();
       if (pageText) {
@@ -145,15 +141,15 @@ export function PageBuilder({ page: initialPage, sections: initialSections, bloc
       }
     }
     const { error: pErr } = await supabase.from("pages").update({
-      title: page.title, slug: page.slug, seo_title: autoTitle || null, seo_description: autoDesc || null,
+      title: page.title, slug: page.slug, seo_title: page.seo_title || null, seo_description: autoDesc || null,
       focus_keyword: page.focus_keyword || null,
       canonical_url: page.canonical_url || null, noindex: page.noindex, exclude_from_sitemap: !!page.exclude_from_sitemap, hide_nav: page.hide_nav, hide_footer: page.hide_footer,
       publish_at: page.publish_at,
     }).eq("id", page.id);
     if (pErr) { setBusy(""); setMessage(pErr.message); return false; }
-    // Update local state with auto-filled values
-    if (autoTitle !== page.seo_title || autoDesc !== page.seo_description) {
-      setPage((p) => ({ ...p, seo_title: autoTitle, seo_description: autoDesc }));
+    // Update local state with auto-filled description
+    if (autoDesc !== page.seo_description) {
+      setPage((p) => ({ ...p, seo_description: autoDesc }));
     }
 
     const removed = savedIds.filter((id) => !sections.some((s) => s.id === id));
@@ -511,8 +507,8 @@ export function PageBuilder({ page: initialPage, sections: initialSections, bloc
               <div className="flex flex-col gap-4">
                 <label className="label">Page title<input className="input" value={page.title} onChange={(e) => patchPage({ title: e.target.value })} /></label>
                 <label className="label">URL<input className="input" value={page.slug} onChange={(e) => patchPage({ slug: e.target.value.toLowerCase() })} /></label>
-                <label className="label">SEO title<input className="input" value={page.seo_title ?? ""} placeholder={page.title} onChange={(e) => patchPage({ seo_title: e.target.value })} />
-                  <span className="text-xs">{(page.seo_title || page.title).length} / 60</span></label>
+                <label className="label">SEO title<input className="input" value={page.seo_title ?? ""} placeholder={page.slug === "home" ? "Site name (from Settings)" : `${page.title} + suffix`} onChange={(e) => patchPage({ seo_title: e.target.value })} />
+                  <span className="text-xs">{(page.seo_title || page.title).length} / 60 <span className="text-muted">· Empty = auto (Settings → SEO)</span></span></label>
                 <label className="label">Meta description<textarea rows={3} className="textarea" value={page.seo_description ?? ""} onChange={(e) => patchPage({ seo_description: e.target.value })} />
                   <span className="text-xs">{(page.seo_description ?? "").length} / 160</span></label>
                 <label className="label">Focus keyword (optional)<input className="input" value={page.focus_keyword ?? ""} placeholder="e.g. Caledonia homes for sale" onChange={(e) => patchPage({ focus_keyword: e.target.value })} />
