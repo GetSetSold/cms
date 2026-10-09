@@ -147,7 +147,7 @@ export function PageBuilder({ page: initialPage, sections: initialSections, bloc
     const { error: pErr } = await supabase.from("pages").update({
       title: page.title, slug: page.slug, seo_title: autoTitle || null, seo_description: autoDesc || null,
       focus_keyword: page.focus_keyword || null,
-      canonical_url: page.canonical_url || null, noindex: page.noindex, hide_nav: page.hide_nav, hide_footer: page.hide_footer,
+      canonical_url: page.canonical_url || null, noindex: page.noindex, exclude_from_sitemap: !!page.exclude_from_sitemap, hide_nav: page.hide_nav, hide_footer: page.hide_footer,
       publish_at: page.publish_at,
     }).eq("id", page.id);
     if (pErr) { setBusy(""); setMessage(pErr.message); return false; }
@@ -579,6 +579,7 @@ export function PageBuilder({ page: initialPage, sections: initialSections, bloc
                     onChange={(e) => patchPage({ publish_at: e.target.value ? new Date(e.target.value).toISOString() : null })} />
                 </label>
                 <label className="flex items-center justify-between">Hide from search engines<input type="checkbox" checked={page.noindex} onChange={(e) => patchPage({ noindex: e.target.checked })} /></label>
+                <label className="flex items-center justify-between">Exclude from sitemap<input type="checkbox" checked={!!page.exclude_from_sitemap} onChange={(e) => patchPage({ exclude_from_sitemap: e.target.checked })} /></label>
                 <label className="flex items-center justify-between">Hide navigation (landing page)<input type="checkbox" checked={page.hide_nav} onChange={(e) => patchPage({ hide_nav: e.target.checked })} /></label>
                 <label className="flex items-center justify-between">Hide footer<input type="checkbox" checked={page.hide_footer} onChange={(e) => patchPage({ hide_footer: e.target.checked })} /></label>
                 <button className="btn mt-4 text-red-700" onClick={remove}>Delete page</button>

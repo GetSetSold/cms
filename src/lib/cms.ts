@@ -60,8 +60,8 @@ export async function getLogo(settings: SiteSettings): Promise<SvgAsset | null> 
 export async function getPublishedSlugs() {
   const supabase = await createClient();
   const { data } = await supabase
-    .from("pages").select("slug, updated_at, noindex")
+    .from("pages").select("slug, updated_at, noindex, exclude_from_sitemap")
     .in("status", ["published", "scheduled"])
     .or(`publish_at.is.null,publish_at.lte.${new Date().toISOString()}`);
-  return (data ?? []).filter((p) => !p.noindex);
+  return (data ?? []).filter((p) => !p.noindex && !p.exclude_from_sitemap);
 }

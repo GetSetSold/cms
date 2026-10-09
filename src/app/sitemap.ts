@@ -3,15 +3,17 @@ import { getPublishedSlugs } from "@/lib/cms";
 import { citySlug, listNormalizedCities } from "@/lib/mls";
 import { listNeighbourhoods } from "@/lib/neighbourhoods";
 import { GUIDES } from "@/lib/guides/registry";
+import { getPosts } from "@/lib/blog";
 
 export const dynamic = "force-dynamic";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-  const [pages, cities, hoods] = await Promise.all([
+  const [pages, cities, hoods, posts] = await Promise.all([
     getPublishedSlugs(),
     listNormalizedCities(),
     listNeighbourhoods(),
+    getPosts({ limit: 500 }),
   ]);
 
   const entries: MetadataRoute.Sitemap = pages.map((p) => ({
@@ -70,6 +72,28 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: `${base}/${citySlug(h.city)}-real-estate/${h.hoodSlug}`,
       changeFrequency: "daily",
       priority: 0.7,
+    });
+  }
+
+  // Updates/blog posts
+  entries.push({ url: `${base}/updates`, changeFrequency: "daily", priority: 0.8 });
+  for (const post of posts) {
+    entries.push({
+      url: `${base}/updates/${post.category_slug}/${post.slug}`,
+      lastModified: post.updated_at,
+      changeFrequency: "weekly",
+      priority: 0.6,
+    });
+  }
+
+  // HPI market trends
+  entries.push({ url: `${base}/ontario-housing-market-trends`, changeFrequency: "weekly", priority: 0.8 });
+  // HPI city pages use the same city list
+  for (const city of cities) {
+    entries.push({
+      url: `${base}/ontario-housing-market-trends/${citySlug(city)}`,
+      changeFrequency: "weekly",
+      priority: 0.6,
     });
   }
 

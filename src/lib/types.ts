@@ -62,6 +62,7 @@ export interface Page {
   focus_keyword: string | null;
   canonical_url: string | null;
   noindex: boolean;
+  exclude_from_sitemap: boolean;
   hide_nav: boolean;
   hide_footer: boolean;
   updated_at: string;
