@@ -96,6 +96,12 @@ export function ManageAlertsClient() {
     setSearches((s) => s.filter((x) => x.id !== id));
   }
 
+  async function removeFavorite(key: string) {
+    if (!confirm("Remove this listing from your favorites?")) return;
+    await fetch(`/api/favorites?key=${encodeURIComponent(key)}`, { method: "DELETE" });
+    setFavorites((favs) => favs.filter((f) => f.key !== key));
+  }
+
   function openEdit(s: SavedSearch) {
     const c = s.criteria || {};
     setEditForm({
@@ -233,9 +239,17 @@ export function ManageAlertsClient() {
                     ) : (
                       <div className="h-40 w-full bg-gray-100" />
                     )}
-                    <span className={`absolute top-2 left-2 text-[11px] font-semibold px-2 py-0.5 rounded ${f.price && f.type === "rent" ? "bg-accent text-white" : "bg-ink text-white"}`}>
+                    <span className={`absolute top-2 left-2 text-[11px] font-semibold px-2 py-0.5 rounded ${f.isRent ? "bg-accent text-white" : "bg-ink text-white"}`}>
                       {f.isRent ? "For Rent" : "For Sale"}
                     </span>
+                    <button
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); removeFavorite(f.key); }}
+                      aria-label="Remove from favorites"
+                      className="absolute top-2 right-2 flex h-8 w-8 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1.8">
+                        <path d="M12 20s-7-4.35-9.5-8.5C.7 8.1 2.4 4.5 6 4.5c2 0 3.4 1.1 6 3.5 2.6-2.4 4-3.5 6-3.5 3.6 0 5.3 3.6 3.5 7C19 15.65 12 20 12 20z" />
+                      </svg>
+                    </button>
                   </div>
                   <div className="p-3 flex items-center justify-between gap-2">
                     <div className="min-w-0">
