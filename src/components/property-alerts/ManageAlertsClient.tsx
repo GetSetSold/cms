@@ -85,36 +85,45 @@ export function ManageAlertsClient() {
   }
 
   if (status === "loading") {
-    return <main className="mx-auto max-w-md px-5 py-16 text-center text-muted">Loading...</main>;
+    return (
+      <div className="mx-auto w-full max-w-md">
+        <div className="rounded-2xl bg-white p-8 shadow-[0_6px_20px_rgba(20,20,43,0.08)] text-center text-muted">
+          Loading...
+        </div>
+      </div>
+    );
   }
 
   if (status === "login") {
     return (
-      <main className="mx-auto w-full max-w-md px-5 py-16 text-center">
-        <h1 className="text-2xl font-bold mb-3">Manage your alerts</h1>
-        <p className="text-muted mb-8 text-sm">
-          Enter your email for a secure login link.
-        </p>
-        <form onSubmit={handleLogin} className="space-y-4">
-          <input
-            type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@example.com"
-            className="w-full rounded-lg border border-line bg-white px-4 py-2.5 text-sm focus:border-accent focus:outline-none"
-            disabled={sending}
-          />
-          <button type="submit" disabled={sending || !email.trim()}
-            className="w-full rounded-lg bg-ink py-3 text-sm font-semibold text-white disabled:opacity-50">
-            {sending ? "Sending..." : "Send login link"}
-          </button>
-          {message && <p className="text-sm text-muted">{message}</p>}
-        </form>
-      </main>
+      <div className="mx-auto w-full max-w-md">
+        <div className="rounded-2xl bg-white p-8 md:p-10 shadow-[0_6px_20px_rgba(20,20,43,0.08)] text-center">
+          <h1 className="text-2xl font-bold mb-3">Manage your alerts</h1>
+          <p className="text-muted mb-8 text-sm">
+            Enter your email for a secure login link.
+          </p>
+          <form onSubmit={handleLogin} className="space-y-4 text-left">
+            <input
+              type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              className="w-full rounded-lg border border-line bg-white px-4 py-2.5 text-sm focus:border-accent focus:outline-none"
+              disabled={sending}
+            />
+            <button type="submit" disabled={sending || !email.trim()}
+              className="w-full rounded-lg bg-ink py-3 text-sm font-semibold text-white disabled:opacity-50">
+              {sending ? "Sending..." : "Send login link"}
+            </button>
+            {message && <p className="text-sm text-muted text-center">{message}</p>}
+          </form>
+        </div>
+      </div>
     );
   }
 
   return (
-    <main className="mx-auto w-full max-w-2xl px-5 py-10">
-      <h1 className="text-2xl font-bold mb-6">Your property alerts</h1>
+    <div className="mx-auto w-full max-w-2xl">
+      <div className="rounded-2xl bg-white p-8 md:p-10 shadow-[0_6px_20px_rgba(20,20,43,0.08)]">
+        <h1 className="text-2xl font-bold mb-6">Your property alerts</h1>
       {searches.length === 0 ? (
         <p className="text-muted">You have no saved alerts. <a href="/property-alerts" className="text-accent underline">Create one</a>.</p>
       ) : (
@@ -151,6 +160,7 @@ export function ManageAlertsClient() {
           ))}
         </div>
       )}
-    </main>
+      </div>
+    </div>
   );
 }

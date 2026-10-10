@@ -72,24 +72,27 @@ export function PropertyAlertsForm() {
 
   if (status === "done") {
     return (
-      <div className="mx-auto w-full max-w-xl px-5 py-16 text-center">
-        <div className="text-4xl mb-4">✓</div>
-        <h1 className="text-2xl font-bold mb-3">You're on the list!</h1>
-        <p className="text-muted mb-8">{message}</p>
-        <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <a href="/property-alerts/manage" className="rounded-lg bg-ink px-6 py-3 text-sm font-semibold text-white">
-            Manage your alerts
-          </a>
-          <a href="/listings" className="rounded-lg border border-line px-6 py-3 text-sm font-semibold hover:bg-gray-50">
-            Browse listings
-          </a>
+      <div className="mx-auto w-full max-w-xl">
+        <div className="rounded-2xl bg-white p-8 md:p-10 shadow-[0_6px_20px_rgba(20,20,43,0.08)] text-center">
+          <div className="text-4xl mb-4">✓</div>
+          <h1 className="text-2xl font-bold mb-3">You're on the list!</h1>
+          <p className="text-muted mb-8">{message}</p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <a href="/property-alerts/manage" className="rounded-lg bg-ink px-6 py-3 text-sm font-semibold text-white">
+              Manage your alerts
+            </a>
+            <a href="/listings" className="rounded-lg border border-line px-6 py-3 text-sm font-semibold hover:bg-gray-50">
+              Browse listings
+            </a>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="mx-auto w-full max-w-xl px-5 py-10 md:py-16">
+    <div className="mx-auto w-full max-w-xl">
+      <div className="rounded-2xl bg-white p-8 md:p-10 shadow-[0_6px_20px_rgba(20,20,43,0.08)]">
       <h1 className="text-3xl font-bold mb-2">Get notified of new listings</h1>
       <p className="text-muted mb-8">
         Tell us what you're looking for. We'll email you the moment matching listings hit the market.
@@ -176,6 +179,7 @@ export function PropertyAlertsForm() {
           No spam. Unsubscribe anytime with one click.
         </p>
       </form>
+      </div>
     </div>
   );
 }
