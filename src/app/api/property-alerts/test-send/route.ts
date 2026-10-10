@@ -52,6 +52,13 @@ export async function POST(req: NextRequest) {
     body: { lead_id: lead.id, subject: "Test: 2 new listings matching your search", body: html },
   });
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ sent: true, to: email });
+  if (error) {
+    // Try to get the actual function error details.
+    return NextResponse.json({ 
+      error: error.message,
+      details: error,
+      lead_id: lead.id,
+    }, { status: 500 });
+  }
+  return NextResponse.json({ sent: true, to: email, data });
 }
