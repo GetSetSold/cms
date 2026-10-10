@@ -138,6 +138,44 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
   const [dark, setDark] = useState(false);
   const rec = Number(report.recommended_price) || 0;
   const [calcPrice, setCalcPrice] = useState<number>(rec);
+  const [ctaOpen, setCtaOpen] = useState(false);
+  const [ctaState, setCtaState] = useState<"idle" | "sending" | "done" | "error">("idle");
+  const [ctaError, setCtaError] = useState("");
+  const fullAddress = `${report.address ?? ""}${report.city ? `, ${report.city}` : ""}`.trim();
+
+  async function submitCta(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (ctaState === "sending") return;
+    setCtaState("sending");
+    setCtaError("");
+    const form = new FormData(e.currentTarget);
+    const payload = {
+      ...Object.fromEntries(form),
+      form_key: "valuation_cta",
+      path: typeof window !== "undefined" ? window.location.pathname : "",
+      custom_fields: {
+        property_address: fullAddress,
+        valuation_report_id: report.id,
+        suggested_price: rec || null,
+        lead_id: report.lead_id ?? null,
+      },
+    };
+    const res = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/submit-lead`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "",
+        Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ""}`,
+      },
+      body: JSON.stringify(payload),
+    }).catch(() => null);
+    if (res?.ok) setCtaState("done");
+    else {
+      const body = await res?.json().catch(() => ({}));
+      setCtaState("error");
+      setCtaError(body?.error ?? "Something went wrong. Please try again.");
+    }
+  }
   // Print/PDF always renders light.
   useEffect(() => {
     const off = () => setDark(false);
@@ -153,6 +191,7 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
   const include: string[] = Array.isArray(pres.include) ? pres.include : [];
   const reviewsSource = pres.reviews_source === "static" ? "static" : "elfsight";
   const agent = { ...DEFAULT_AGENT, ...(pres.agent ?? {}) };
+  const agentFirst = agent.name.split(" ")[0] || "Rohit";
   const has = (k: string) => include.includes(k);
   const nearby: { name: string; kind: string; distKm: number }[] = pres.nearby_places ?? [];
 
@@ -327,7 +366,10 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
       {!!rec && (
         <section>
           <h2>Commission Comparison</h2>
-          <label className="cma-calc-label" htmlFor="cma-price">Enter Property Asking Price ($)</label>
+          <div className="cma-calc-addr">{report.address}{report.city ? `, ${report.city}` : ""}</div>
+          <label className="cma-calc-label" htmlFor="cma-price">
+            <span className="cma-calc-arrow">↓</span> Enter Property Asking Price ($) to see your savings
+          </label>
           <input
             id="cma-price"
             className="cma-calc-input"
@@ -513,6 +555,9 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
           <div className="cma-cta">
             <div className="cma-cta-title">Ready to Make Your Move?</div>
             <p>Get expert guidance, full-service representation, and keep more money in your pocket.</p>
+            <button type="button" className="cma-cta-btn cma-no-print" onClick={() => { setCtaOpen(true); setCtaState("idle"); setCtaError(""); }}>
+              List With {agentFirst} <span aria-hidden="true">→</span>
+            </button>
             <div className="cma-cta-contact">
               <div><strong>{agent.name}</strong>, REALTOR®</div>
               <div>{agent.brokerage}</div>
@@ -612,6 +657,28 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
         .cma-cta-title { font-size: 26px; font-weight: 800; margin-bottom: 8px; }
         .cma-cta p { color: #555; font-size: 14px; margin-bottom: 20px; }
         .cma-cta-contact { font-size: 15px; line-height: 1.9; overflow-wrap: break-word; }
+        .cma-cta-btn { display: inline-flex; align-items: center; gap: 8px; background: #111; color: #fff; border: none; border-radius: 30px; padding: 14px 32px; font-size: 16px; font-weight: 700; cursor: pointer; margin: 6px 0 22px; transition: background 0.2s; }
+        .cma-cta-btn:hover { background: #0066cc; }
+        .cma-cta-btn span { font-size: 18px; }
+        .cma-cta-btn:disabled { opacity: 0.6; cursor: default; }
+        .cma-modal-wrap { position: fixed; inset: 0; background: rgba(0,0,0,0.55); display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 100; }
+        .cma-modal { background: #fff; border-radius: 16px; padding: 28px; width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; position: relative; color: #111; }
+        .cma-modal h3 { font-size: 22px; font-weight: 800; margin: 0 0 6px; }
+        .cma-modal-sub { font-size: 13px; color: #555; margin-bottom: 16px; }
+        .cma-modal-x { position: absolute; top: 12px; right: 12px; border: none; background: #f0f0f0; width: 32px; height: 32px; border-radius: 50%; font-size: 14px; cursor: pointer; color: #111; }
+        .cma-field { display: block; font-size: 13px; font-weight: 600; margin-bottom: 12px; }
+        .cma-field input, .cma-field textarea { display: block; width: 100%; margin-top: 6px; border: 1px solid #ddd; border-radius: 10px; padding: 11px 14px; font-size: 15px; font-weight: 400; font-family: inherit; background: #fff; color: #111; }
+        .cma-field input:focus, .cma-field textarea:focus { outline: 2px solid #0066cc; border-color: #0066cc; }
+        .cma-field textarea { resize: vertical; }
+        .cma-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .cma-honey { position: absolute; left: -9999px; }
+        .cma-modal-send { width: 100%; justify-content: center; margin: 4px 0 0; }
+        .cma-modal-err { color: #dc2626; font-size: 13px; margin-bottom: 10px; }
+        .cma-modal-done { text-align: center; padding: 12px 0; }
+        .cma-modal-done h3 { margin-bottom: 8px; }
+        .cma-modal-done p { color: #555; font-size: 14px; margin-bottom: 20px; }
+        .cma-modal-done .cma-cta-btn { margin-bottom: 0; }
+        .cma-modal-check { width: 56px; height: 56px; border-radius: 50%; background: #16a34a; color: #fff; font-size: 28px; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; }
         .cma footer { background: #fff; border: 1px solid #e2e2e2; border-radius: 12px; padding: 20px 24px; margin-top: 4px; font-size: 13px; text-align: center; color: #555; }
         /* bar cards: dark color lives in the block header only */
         .cma-bars { display: grid; gap: 12px; }
@@ -630,6 +697,8 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
         .cma-bar-cap.save { color: #16a34a; }
         .cma-bar-cap.more { color: #dc2626; }
         .cma-calc-label { display: block; text-align: center; font-size: 14px; font-weight: 600; color: #444; margin-bottom: 8px; }
+        .cma-calc-addr { text-align: center; font-size: 19px; font-weight: 800; margin-bottom: 8px; overflow-wrap: break-word; }
+        .cma-calc-arrow { display: inline-block; margin-right: 6px; color: #0066cc; font-weight: 800; }
         .cma-calc-input { display: block; width: 100%; max-width: 420px; margin: 0 auto 20px; border: 1px solid #ddd; border-radius: 12px; padding: 14px 18px; font-size: 22px; font-weight: 700; text-align: center; background: #fff; color: #111; }
         .cma-calc-input:focus { outline: 2px solid #0066cc; border-color: #0066cc; }
         .cma-calc-head { text-align: center; font-size: 13px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: #111; margin: 22px 0 4px; padding-bottom: 10px; border-bottom: 2px solid #111; }
@@ -665,6 +734,8 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
         .cma-dark .cma-bar-sub { color: #555; }
         .cma-dark .cma-bar-label { color: #999; }
         .cma-dark .cma-calc-label { color: #aaa; }
+        .cma-dark .cma-calc-addr { color: #f2f2f2; }
+        .cma-dark .cma-calc-arrow { color: #4da3ff; }
         .cma-dark .cma-calc-input { background: #000; border-color: #3a3a3a; color: #f2f2f2; }
         .cma-dark .cma-calc-head { color: #f2f2f2; border-color: #f2f2f2; }
         .cma-dark .cma-agent-tag { color: #4da3ff; }
@@ -677,6 +748,8 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
         .cma-dark .cma-nearby-head strong { color: #f2f2f2; }
         .cma-dark .cma-nearby li { border-color: #2e2e2e; color: #ddd; }
         .cma-dark .cma-cta-title { color: #f2f2f2; }
+        .cma-dark .cma-cta-btn { background: #f5f5f5; color: #111; }
+        .cma-dark .cma-cta-btn:hover { background: #0066cc; color: #fff; }
         .cma-dark .cma-cta-contact { color: #ddd; }
         .cma-dark .cma-rec strong { color: #4da3ff; }
         .cma-dark .cma-price-row strong { color: #f2f2f2; }
@@ -700,6 +773,8 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
           .cma-agent { flex-direction: column; }
           .cma-bars.cols-5, .cma-bars.cols-4 { grid-template-columns: repeat(2, 1fr); }
           .cma-bars.cols-3, .cma-bars.cols-2 { grid-template-columns: 1fr; }
+          .cma-field-row { grid-template-columns: 1fr; }
+          .cma-modal { padding: 22px 18px; }
           .cma-topbar { font-size: 12px; }
           .cma-toolbar { justify-content: center; }
         }
@@ -717,6 +792,46 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
           .cma-calc-input { border-color: #999; }
         }
       `}</style>
+
+      {ctaOpen && (
+        <div className="cma-modal-wrap cma-no-print" onClick={() => setCtaOpen(false)} role="dialog" aria-modal="true" aria-label={`List with ${agentFirst}`}>
+          <div className="cma-modal" onClick={(e) => e.stopPropagation()}>
+            <button type="button" className="cma-modal-x" onClick={() => setCtaOpen(false)} aria-label="Close">✕</button>
+            {ctaState === "done" ? (
+              <div className="cma-modal-done">
+                <div className="cma-modal-check">✓</div>
+                <h3>Message sent!</h3>
+                <p>{agentFirst} will be in touch shortly about {fullAddress}.</p>
+                <button type="button" className="cma-cta-btn" onClick={() => setCtaOpen(false)}>Done</button>
+              </div>
+            ) : (
+              <form onSubmit={submitCta}>
+                <h3>List With {agentFirst}</h3>
+                <p className="cma-modal-sub">Send {agentFirst} a message about <strong>{fullAddress}</strong>.</p>
+                <label className="cma-field">Name
+                  <input name="name" required autoComplete="name" defaultValue={leadName ?? ""} placeholder="Your full name" />
+                </label>
+                <div className="cma-field-row">
+                  <label className="cma-field">Phone
+                    <input name="phone" type="tel" autoComplete="tel" placeholder="416-555-0100" />
+                  </label>
+                  <label className="cma-field">Email
+                    <input name="email" type="email" required autoComplete="email" placeholder="you@email.com" />
+                  </label>
+                </div>
+                <label className="cma-field">Message
+                  <textarea name="message" rows={4} defaultValue={`Hi ${agentFirst}, I'm interested in listing my property at ${fullAddress}. Please contact me to discuss the next steps.`} />
+                </label>
+                <input type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" className="cma-honey" />
+                {ctaState === "error" && <p className="cma-modal-err">{ctaError}</p>}
+                <button type="submit" className="cma-cta-btn cma-modal-send" disabled={ctaState === "sending"}>
+                  {ctaState === "sending" ? "Sending…" : <>Send message <span aria-hidden="true">→</span></>}
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
