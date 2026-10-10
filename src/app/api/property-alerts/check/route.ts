@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { createMlsClient } from "@/lib/mls";
+import { createMlsClient, rawCitiesFor } from "@/lib/mls";
 
 /**
  * Check saved searches for new matching listings.
@@ -45,9 +45,17 @@ export async function GET(req: NextRequest) {
       .limit(10);
 
     if (criteria.cities && Array.isArray(criteria.cities) && criteria.cities.length) {
-      // Handle city variants (e.g., "Toronto (Downtown)" -> normalized).
-      // For now, use direct match; the check endpoint resolves via rawCitiesFor if needed.
-      mq = mq.in("City", criteria.cities);
+      // Resolve each normalized city to its raw variants (e.g., "Caledon" -> ["Caledon (Bolton West)", ...]).
+      const allVariants: string[] = [];
+      for (const c of criteria.cities) {
+        try {
+          const variants = await rawCitiesFor(c);
+          allVariants.push(...variants);
+        } catch {
+          allVariants.push(c);
+        }
+      }
+      mq = mq.in("City", [...new Set(allVariants)]);
     } else if (criteria.city) {
       mq = mq.ilike("City", `%${criteria.city}%`);
     }
