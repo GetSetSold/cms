@@ -180,7 +180,7 @@ export function ManageAlertsClient() {
       ) : (
         <div className="space-y-4 mb-10">
           {searches.map((s) => (
-            <div key={s.id} className="rounded-lg border border-line bg-white p-5">
+            <div key={s.id} className="border-b border-line py-5">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="font-medium">{s.criteria_summary || "Custom search"}</p>
@@ -224,7 +224,7 @@ export function ManageAlertsClient() {
               f.missing ? null : (
                 <a key={f.key} href={`/real-estate/${encodeURIComponent(f.key)}`}
                   target="_blank" rel="noopener noreferrer"
-                  className="group rounded-[var(--radius-card)] border border-line bg-white overflow-hidden hover:shadow-md transition-shadow">
+                  className="group rounded-[var(--radius-lg)] border border-line bg-white overflow-hidden hover:shadow-md transition-shadow">
                   <div className="relative">
                     {f.photo ? (
                       <img src={f.photo} alt="" className="h-40 w-full object-cover" />

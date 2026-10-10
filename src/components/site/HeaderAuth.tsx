@@ -22,9 +22,9 @@ export function HeaderAuth() {
 
   return (
     <Link href="/property-alerts/manage"
-      className="inline-flex items-center gap-1.5 rounded-[var(--radius-btn)] bg-ink px-3 py-1.5 text-[12px] font-medium text-white hover:opacity-90"
+      className="inline-flex items-center gap-1.5 rounded-[var(--radius-btn)] bg-ink px-5 py-2.5 text-[15px] font-medium text-white hover:opacity-90"
       title={email}>
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
         <circle cx="12" cy="7" r="4" />
       </svg>
