@@ -38,12 +38,32 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, id: existing.id, alreadyExists: true });
   }
 
-  // Link to CRM lead if email matches.
-  const { data: lead } = await supabase
+  // Find or create CRM lead.
+  let leadId: string | null = null;
+  const { data: existingLead } = await supabase
     .from("leads")
     .select("id")
     .eq("email", email.toLowerCase().trim())
     .maybeSingle();
+
+  if (existingLead) {
+    leadId = existingLead.id;
+  } else {
+    // Auto-create lead: service=buyer/renter based on search type.
+    const service = criteria.type === "rent" ? "renter" : "buyer";
+    const { data: newLead, error: leadErr } = await supabase
+      .from("leads")
+      .insert({
+        email: email.toLowerCase().trim(),
+        service,
+        source_path: "/property-alerts",
+        custom_fields: { source: "property-alert", criteria_summary: criteriaSummary },
+        status: "new",
+      })
+      .select("id")
+      .single();
+    if (!leadErr && newLead) leadId = newLead.id;
+  }
 
   const { data, error } = await supabase
     .from("saved_searches")
@@ -51,7 +71,7 @@ export async function POST(req: NextRequest) {
       email: email.toLowerCase().trim(),
       criteria,
       criteria_summary: criteriaSummary || null,
-      lead_id: lead?.id || null,
+      lead_id: leadId,
     })
     .select("id, unsubscribe_token")
     .single();
