@@ -255,6 +255,10 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
   ].filter(Boolean).join(" · ");
   const shortBrand = b.header_tagline || "Rohit K Sharma | Real Estate Agent";
   const reportDate = report.created_at ? new Date(report.created_at).toISOString().slice(0, 10) : "";
+  const locLine = `${fullAddress} ON`;
+  const metaBase = [clientName ? `Prepared for ${clientName}` : null, locLine].filter(Boolean).join(" | ");
+  const headerMetaDesktop = [metaBase, reportDate].filter(Boolean).join(" | ");
+  const headerMetaMobile = metaBase;
 
   const NEARBY_GROUPS: [string, string, string][] = [
     ["school", "Schools", "cap"],
@@ -273,10 +277,11 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
               <div className="cma-fh-brandshort">{shortBrand}</div>
               <div className="cma-fh-logo">GETSETSOLD<span>.ca</span></div>
               <div className="cma-fh-title">Comparative Market Analysis</div>
-              <div className="cma-fh-date">{reportDate}</div>
+              <div className="cma-fh-date cma-fh-desk">{headerMetaDesktop}</div>
+              <div className="cma-fh-date cma-fh-mob">{headerMetaMobile}</div>
             </div>
             <div className="cma-fh-icons">
-              <button type="button" className="cma-fh-iconbtn" onClick={() => setDark(!dark)} aria-pressed={dark} aria-label="Toggle dark mode">{dark ? "☾" : "☀"}</button>
+              <button type="button" className="cma-fh-iconbtn" onClick={() => setDark(!dark)} aria-pressed={dark} aria-label="Toggle dark mode">{dark ? "☾︎" : "☀︎"}</button>
               <span className="cma-fh-div" aria-hidden="true" />
               <button type="button" className="cma-fh-iconbtn" onClick={() => window.print()} aria-label="Download PDF">⤓</button>
               <span className="cma-fh-div" aria-hidden="true" />
@@ -317,7 +322,13 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
       <section id="sec-subject">
         <h2>Subject Property</h2>
         <div className="cma-address">{report.address}{report.city ? `, ${report.city}` : ""}</div>
-        {clientName && <div className="cma-prepared">Prepared for <strong>{clientName}</strong></div>}
+        {(clientName || reportDate) && (
+          <div className="cma-prepared cma-sp-meta">
+            {clientName ? <>Prepared for <strong>{clientName}</strong></> : null}
+            {clientName && reportDate ? " · " : null}
+            {reportDate ? <span>{reportDate}</span> : null}
+          </div>
+        )}
         <div className="cma-kv">
           <div><span>Type</span><strong>{report.property_type || "—"}</strong></div>
           <div><span>Beds</span><strong>{report.beds ?? "—"}</strong></div>
@@ -682,7 +693,8 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
         .cma-fh-logo { font-size: 23px; font-weight: 800; letter-spacing: -0.5px; line-height: 1.15; }
         .cma-fh-logo span { color: #0066cc; }
         .cma-fh-title { font-size: 14px; font-weight: 700; margin-top: 2px; }
-        .cma-fh-date { font-size: 12px; color: #777; }
+        .cma-fh-date { font-size: 12px; color: #777; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .cma-fh-mob { display: none; }
         .cma-fh-icons { display: flex; align-items: center; flex-shrink: 0; }
         .cma-fh-iconbtn { background: none; border: none; padding: 8px 12px; font-size: 19px; line-height: 1; cursor: pointer; color: #111; }
         .cma-fh-iconbtn:hover { color: #0066cc; }
@@ -802,7 +814,7 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
         .cma-vp-eyebrow { text-align: center; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; font-weight: 700; color: #777; margin-bottom: 10px; }
         .cma-vp-title { text-align: center; font-size: 27px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 8px; }
         .cma-vp-sub { text-align: center; color: #555; font-size: 14px; line-height: 1.6; max-width: 600px; margin: 0 auto 18px; }
-        .cma-vp-table { min-width: 0; }
+        .cma-vp-table { min-width: 0; table-layout: fixed; }
         .cma-vp-table .c { width: 72px; }
         .cma-vp-table td { overflow-wrap: break-word; }
         .cma-vp-table th.cma-vp-hl, .cma-vp-table td.cma-vp-hl { background: #f5f5f5; }
@@ -918,6 +930,8 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
           .cma-fh-logo { display: none; }
           .cma-fh-title { font-size: 12px; margin-top: 1px; }
           .cma-fh-date { font-size: 11px; }
+          .cma-fh-desk { display: none; }
+          .cma-fh-mob { display: block; }
           .cma-fh-icons { flex: 1 1 100%; border-top: 1px solid #f0f0f0; padding-top: 4px; justify-content: flex-end; }
           .cma-root.cma-dark .cma-fh-icons { border-color: #2e2e2e; }
           .cma-fh-iconbtn { padding: 8px 14px; }
