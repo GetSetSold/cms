@@ -1,8 +1,29 @@
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
+import { getSettings } from "@/lib/cms";
 import { ValuationReportView } from "@/components/valuations/ValuationReportView";
 
-export const metadata: Metadata = { title: "Market Analysis", robots: { index: false, follow: false } };
+export async function generateMetadata({ params }: { params: Promise<{ token: string }> }): Promise<Metadata> {
+  const { token } = await params;
+  const supabase = await createClient();
+  const { data: report } = await supabase
+    .from("valuation_reports")
+    .select("address,city")
+    .eq("share_token", token)
+    .eq("share_revoked", false)
+    .maybeSingle();
+  let title = "Market Analysis";
+  if (report) {
+    const addr = `${(report as any).address ?? ""}${(report as any).city ? `, ${(report as any).city}` : ""}`.trim();
+    if (addr) title = `Market Analysis — ${addr}`;
+  }
+  try {
+    const settings = await getSettings();
+    const suffix = (settings as any)?.seo_defaults?.title_suffix?.trim();
+    if (suffix && !title.endsWith(suffix)) title = `${title} ${suffix}`;
+  } catch { /* keep title */ }
+  return { title, robots: { index: false, follow: false } };
+}
 
 export default async function SharedValuationPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
