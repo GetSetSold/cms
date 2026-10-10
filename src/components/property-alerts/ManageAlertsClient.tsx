@@ -219,7 +219,7 @@ export function ManageAlertsClient() {
       {favorites.length > 0 && (
         <div className="mt-10">
           <h2 className="text-xl font-bold mb-4">Your favorite listings ({favorites.length})</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {favorites.map((f) => (
               f.missing ? null : (
                 <a key={f.key} href={`/real-estate/${encodeURIComponent(f.key)}`}

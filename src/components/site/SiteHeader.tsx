@@ -100,7 +100,6 @@ export function SiteHeader({ settings, logo }: { settings: SiteSettings; logo?: 
         </nav>
 
         <div className="hidden items-center gap-4 md:flex">
-          <HeaderAuth />
           {settings.contact?.phone ? (
             <a
               href={`tel:${settings.contact.phone}`}
@@ -112,6 +111,7 @@ export function SiteHeader({ settings, logo }: { settings: SiteSettings; logo?: 
               {settings.contact.phone}
             </a>
           ) : null}
+          <HeaderAuth />
           {settings.header_cta?.label ? (
             <Link href={settings.header_cta.href} className={`flex items-center rounded-[var(--radius-btn)] bg-primary font-medium text-white ${compact ? "h-9 px-4 text-[13px]" : "h-11 px-5 text-[15px]"}`}>
               {settings.header_cta.label}
