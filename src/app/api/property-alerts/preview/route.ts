@@ -130,12 +130,14 @@ function buildPreviewEmail(criteriaSummary: string, matches: any[], unsubscribeT
           ${m.baths ? `<span style="font-size:13px;color:#555;"><strong style="color:#111;">${m.baths}</strong> ba</span>` : ""}
           ${m.type ? `<span style="font-size:13px;color:#555;">${m.type}</span>` : ""}
         </div>
-        <a href="${siteUrl}/real-estate/${m.key}" style="display:block;margin-top:14px;background:#111111;color:#ffffff;text-decoration:none;padding:12px;text-align:center;border-radius:10px;font-size:14px;font-weight:600;">View Listing</a>
+        <a href="${siteUrl}/real-estate/${m.key}" style="display:inline-block;margin-top:14px;background:#111111;color:#ffffff;text-decoration:none;padding:10px 28px;border-radius:999px;font-size:14px;font-weight:600;">View Listing</a>
       </div>
     </div>`).join("");
 
   const viewAll = remaining > 0 ? `
-    <a href="${siteUrl}/listings" style="display:block;margin:8px 0 16px;background:#f5f5f5;color:#111;text-decoration:none;padding:14px;text-align:center;border-radius:10px;font-size:14px;font-weight:600;border:1px solid #e0e0e0;">View all ${matches.length} listings →</a>` : "";
+    <div style="text-align:right;margin:8px 0 16px;">
+      <a href="${siteUrl}/listings" style="display:inline-block;background:#f5f5f5;color:#111;text-decoration:none;padding:10px 24px;border-radius:999px;font-size:14px;font-weight:600;border:1px solid #e0e0e0;">View all ${matches.length} listings →</a>
+    </div>` : "";
 
   return brandedEmail({
     kicker: "NEW LISTINGS FOR YOU",
