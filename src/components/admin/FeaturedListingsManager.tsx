@@ -177,6 +177,7 @@ export function FeaturedListingsManager({ initial, initialOfficeKey, details }: 
   const supabase = useMemo(() => createClient(), []);
   const [rows, setRows] = useState(initial);
   const [opError, setOpError] = useState("");
+  const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
   const existingKeys = useMemo(() => new Set(rows.map((r) => r.listing_key).filter((k): k is string => !!k)), [rows]);
 
   async function toggleActive(id: string, is_active: boolean) {
@@ -196,8 +197,8 @@ export function FeaturedListingsManager({ initial, initialOfficeKey, details }: 
     if (firstError) setOpError(`Couldn't save order: ${firstError.message}`);
   }
   async function remove(id: string) {
-    if (!confirm("Remove this from Featured Listings?")) return;
     setOpError("");
+    setConfirmRemoveId(null);
     const { error } = await supabase.from("featured_listings").delete().eq("id", id);
     if (error) { setOpError(`Couldn't remove: ${error.message}`); return; }
     setRows(rows.filter((r) => r.id !== id));
@@ -254,7 +255,14 @@ export function FeaturedListingsManager({ initial, initialOfficeKey, details }: 
               <label className="ml-auto flex shrink-0 items-center gap-1.5 text-sm text-muted">
                 Active <input type="checkbox" checked={r.is_active} onChange={(e) => toggleActive(r.id, e.target.checked)} />
               </label>
-              <button className="shrink-0 text-sm text-red-700" onClick={() => remove(r.id)}>Remove</button>
+              {confirmRemoveId === r.id ? (
+                <span className="flex shrink-0 items-center gap-2">
+                  <button className="rounded-lg bg-red-600 px-3 py-1.5 text-sm font-semibold text-white" onClick={() => remove(r.id)}>Confirm</button>
+                  <button className="text-sm text-muted" onClick={() => setConfirmRemoveId(null)}>Cancel</button>
+                </span>
+              ) : (
+                <button className="shrink-0 text-sm text-red-700" onClick={() => setConfirmRemoveId(r.id)}>Remove</button>
+              )}
             </div>
           );
         })}
