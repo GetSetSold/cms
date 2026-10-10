@@ -1,7 +1,7 @@
 "use client";
 import { useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import type { FeaturedListingRow } from "@/lib/featuredListings";
+import type { FeaturedListingRow, FeaturedMlsDetails } from "@/lib/featuredListings";
 
 const SOURCE_LABEL: Record<string, string> = { brokerage: "Our brokerage", friend: "Friend agent", private: "Private" };
 const SOURCE_STYLE: Record<string, string> = {
@@ -75,7 +75,7 @@ function AddByMls({ onAdded }: { onAdded: (row: FeaturedListingRow) => void }) {
   const supabase = useMemo(() => createClient(), []);
   const [key, setKey] = useState("");
   const [sourceType, setSourceType] = useState<"brokerage" | "friend">("brokerage");
-  const [preview, setPreview] = useState<{ address: string; price: number | null; image: string | null } | null>(null);
+  const [preview, setPreview] = useState<{ listingKey: string; address: string; price: number | null; image: string | null } | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -90,13 +90,14 @@ function AddByMls({ onAdded }: { onAdded: (row: FeaturedListingRow) => void }) {
     setBusy(false);
     if (!res.ok) return setError(body.error || "Something went wrong.");
     const data = body.listing;
-    setPreview({ address: [data.UnparsedAddress, data.City].filter(Boolean).join(", "), price: data.ListPrice, image: data.Media });
+    setPreview({ listingKey: data.ListingKey, address: [data.UnparsedAddress, data.City].filter(Boolean).join(", "), price: data.ListPrice, image: data.Media });
   }
 
   async function add() {
+    if (!preview) return;
     setBusy(true);
     const { data, error } = await supabase.from("featured_listings").insert({
-      source_type: sourceType, listing_key: key.trim(), sort_order: 999,
+      source_type: sourceType, listing_key: preview.listingKey, sort_order: 999,
     }).select("*").single();
     setBusy(false);
     if (error) return setError(error.message);
@@ -172,25 +173,33 @@ function AddPrivate({ onAdded }: { onAdded: (row: FeaturedListingRow) => void })
   );
 }
 
-export function FeaturedListingsManager({ initial, initialOfficeKey }: { initial: FeaturedListingRow[]; initialOfficeKey: string }) {
+export function FeaturedListingsManager({ initial, initialOfficeKey, details }: { initial: FeaturedListingRow[]; initialOfficeKey: string; details: Record<string, FeaturedMlsDetails> }) {
   const supabase = useMemo(() => createClient(), []);
   const [rows, setRows] = useState(initial);
+  const [opError, setOpError] = useState("");
   const existingKeys = useMemo(() => new Set(rows.map((r) => r.listing_key).filter((k): k is string => !!k)), [rows]);
 
   async function toggleActive(id: string, is_active: boolean) {
-    await supabase.from("featured_listings").update({ is_active }).eq("id", id);
+    setOpError("");
+    const { error } = await supabase.from("featured_listings").update({ is_active }).eq("id", id);
+    if (error) { setOpError(`Couldn't save: ${error.message}`); return; }
     setRows(rows.map((r) => (r.id === id ? { ...r, is_active } : r)));
   }
   async function move(i: number, dir: -1 | 1) {
+    setOpError("");
     const next = [...rows];
     if (!next[i + dir]) return;
     [next[i], next[i + dir]] = [next[i + dir], next[i]];
     setRows(next);
-    await Promise.all(next.map((r, idx) => supabase.from("featured_listings").update({ sort_order: idx }).eq("id", r.id)));
+    const results = await Promise.all(next.map((r, idx) => supabase.from("featured_listings").update({ sort_order: idx }).eq("id", r.id)));
+    const firstError = results.find((x) => x.error)?.error;
+    if (firstError) setOpError(`Couldn't save order: ${firstError.message}`);
   }
   async function remove(id: string) {
     if (!confirm("Remove this from Featured Listings?")) return;
-    await supabase.from("featured_listings").delete().eq("id", id);
+    setOpError("");
+    const { error } = await supabase.from("featured_listings").delete().eq("id", id);
+    if (error) { setOpError(`Couldn't remove: ${error.message}`); return; }
     setRows(rows.filter((r) => r.id !== id));
   }
 
@@ -203,22 +212,52 @@ export function FeaturedListingsManager({ initial, initialOfficeKey }: { initial
         <AddPrivate onAdded={(row) => setRows([...rows, row])} />
       </div>
 
+      {opError ? <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{opError}</p> : null}
       <div className="flex flex-col gap-2">
-        {rows.map((r, i) => (
-          <div key={r.id} className="flex items-center gap-3 rounded-xl border border-line bg-white p-3">
-            <div className="flex flex-col">
-              <button aria-label="Move up" disabled={i === 0} onClick={() => move(i, -1)} className="h-5 text-muted disabled:opacity-30">↑</button>
-              <button aria-label="Move down" disabled={i === rows.length - 1} onClick={() => move(i, 1)} className="h-5 text-muted disabled:opacity-30">↓</button>
+        {rows.map((r, i) => {
+          const d = r.listing_key ? details[r.listing_key] : undefined;
+          return (
+            <div key={r.id} className="flex items-center gap-3 rounded-xl border border-line bg-white p-3">
+              <div className="flex flex-col">
+                <button aria-label="Move up" disabled={i === 0} onClick={() => move(i, -1)} className="h-5 text-muted disabled:opacity-30">↑</button>
+                <button aria-label="Move down" disabled={i === rows.length - 1} onClick={() => move(i, 1)} className="h-5 text-muted disabled:opacity-30">↓</button>
+              </div>
+              {d?.image ? <img src={d.image} alt="" className="h-12 w-16 shrink-0 rounded-md object-cover" /> : null}
+              <div className="flex min-w-0 flex-col gap-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${SOURCE_STYLE[r.source_type]}`}>{SOURCE_LABEL[r.source_type]}</span>
+                  {d ? (
+                    <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${d.isSale ? "bg-[#E7F5EC] text-[#0F7A3D]" : "bg-[#EAF1FD] text-[#1D4ED8]"}`}>
+                      {d.isSale ? "For Sale" : "For Rent"}
+                    </span>
+                  ) : null}
+                </div>
+                {r.listing_key ? (
+                  d ? (
+                    <>
+                      <span className="truncate text-sm font-medium">{[d.address, d.city].filter(Boolean).join(", ") || "Address unavailable"}</span>
+                      <span className="text-xs text-muted">
+                        {d.price ? `$${d.price.toLocaleString()}` : "Call for price"} · MLS# {d.listingId ?? r.listing_key}
+                      </span>
+                    </>
+                  ) : (
+                    <span className="text-sm font-medium text-amber-700">MLS# {r.listing_key} — no longer resolves (sold/expired?)</span>
+                  )
+                ) : (
+                  <>
+                    <span className="truncate text-sm font-medium">{r.address}</span>
+                    <span className="text-xs text-muted">{r.price ? `$${Number(r.price).toLocaleString()}` : "Call for price"}</span>
+                  </>
+                )}
+                {r.note ? <span className="text-xs text-muted">"{r.note}"</span> : null}
+              </div>
+              <label className="ml-auto flex shrink-0 items-center gap-1.5 text-sm text-muted">
+                Active <input type="checkbox" checked={r.is_active} onChange={(e) => toggleActive(r.id, e.target.checked)} />
+              </label>
+              <button className="shrink-0 text-sm text-red-700" onClick={() => remove(r.id)}>Remove</button>
             </div>
-            <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${SOURCE_STYLE[r.source_type]}`}>{SOURCE_LABEL[r.source_type]}</span>
-            <span className="font-medium">{r.listing_key ? `MLS# ${r.listing_key}` : r.address}</span>
-            {r.note ? <span className="text-xs text-muted">"{r.note}"</span> : null}
-            <label className="ml-auto flex items-center gap-1.5 text-sm text-muted">
-              Active <input type="checkbox" checked={r.is_active} onChange={(e) => toggleActive(r.id, e.target.checked)} />
-            </label>
-            <button className="text-sm text-red-700" onClick={() => remove(r.id)}>Remove</button>
-          </div>
-        ))}
+          );
+        })}
         {!rows.length ? <p className="py-8 text-center text-muted">No featured listings yet.</p> : null}
       </div>
     </div>

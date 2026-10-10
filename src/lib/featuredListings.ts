@@ -8,6 +8,16 @@ export type FeaturedListingRow = {
   link: string | null; note: string | null;
 };
 
+/** Live-resolved MLS details for a featured row (admin list). */
+export type FeaturedMlsDetails = {
+  listingId: string | null;
+  address: string | null;
+  city: string | null;
+  price: number | null;
+  isSale: boolean;
+  image: string | null;
+};
+
 export type PrivateListingView = {
   id: string; href: string; image: string | null; priceLabel: string;
   address: string; bed: number | null; bath: number | null; sqft: number | null; note: string | null;
