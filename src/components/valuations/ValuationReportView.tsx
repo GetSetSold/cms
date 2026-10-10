@@ -192,6 +192,15 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
   const reviewsSource = pres.reviews_source === "static" ? "static" : "elfsight";
   const agent = { ...DEFAULT_AGENT, ...(pres.agent ?? {}) };
   const agentFirst = agent.name.split(" ")[0] || "Rohit";
+  const clientName = pres.client_name || leadName || "";
+  const ybRaw = (report.year_built ?? "").toString().trim();
+  let yearLabel = "—";
+  if (/^\d{4}$/.test(ybRaw)) {
+    const age = new Date().getFullYear() - parseInt(ybRaw, 10);
+    yearLabel = age >= 0 ? `${ybRaw} (${age} yrs old)` : ybRaw;
+  } else if (ybRaw) {
+    yearLabel = ybRaw;
+  }
   const has = (k: string) => include.includes(k);
   const nearby: { name: string; kind: string; distKm: number }[] = pres.nearby_places ?? [];
 
@@ -238,7 +247,40 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
       <section>
         <h2>Subject Property</h2>
         <div className="cma-address">{report.address}{report.city ? `, ${report.city}` : ""}</div>
+        {clientName && <div className="cma-prepared">Prepared for <strong>{clientName}</strong></div>}
+        <div className="cma-kv">
+          <div><span>Type</span><strong>{report.property_type || "—"}</strong></div>
+          <div><span>Beds</span><strong>{report.beds ?? "—"}</strong></div>
+          <div><span>Baths</span><strong>{report.baths ?? "—"}</strong></div>
+          <div><span>Sqft</span><strong>{report.sqft ? (isNaN(Number(report.sqft)) ? report.sqft : Number(report.sqft).toLocaleString()) : "—"}</strong></div>
+          <div><span>Lot size</span><strong>{report.lot_size || "—"}</strong></div>
+          <div><span>Year built / Age</span><strong>{yearLabel}</strong></div>
+        </div>
         {report.upgrades && <p className="cma-notes"><strong>Notes:</strong> {report.upgrades}</p>}
+      </section>
+
+      {/* Pricing */}
+      <section>
+        <h2>Pricing Recommendation</h2>
+        {!!upgrades.length && (
+          <div className="cma-table-wrap">
+            <table className="cma-adj">
+              <thead><tr><th>Upgrade / adjustment</th><th className="r">Value added</th></tr></thead>
+              <tbody>
+                {upgrades.map((u, i) => (
+                  <tr key={i}><td>{u.description || "Upgrade"}</td><td className="r">+{money(u.amount)}</td></tr>
+                ))}
+                <tr className="cma-save"><td>Total adjustments</td><td className="r">+{money(upgradeTotal)}</td></tr>
+              </tbody>
+            </table>
+          </div>
+        )}
+        <div className="cma-bars cols-3" style={{ marginBottom: 12 }}>
+          {report.price_low ? <Bar value={money(report.price_low)} label="Range low" /> : null}
+          <Bar highlight value={money(report.recommended_price)} label="Recommended list price" />
+          {report.price_high ? <Bar value={money(report.price_high)} label="Range high" /> : null}
+        </div>
+        {report.pricing_notes && <p className="cma-notes">{report.pricing_notes}</p>}
       </section>
 
       {/* Active comps */}
@@ -337,30 +379,6 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
           </div>
         </section>
       )}
-
-      {/* Pricing */}
-      <section>
-        <h2>Pricing Recommendation</h2>
-        {!!upgrades.length && (
-          <div className="cma-table-wrap">
-            <table className="cma-adj">
-              <thead><tr><th>Upgrade / adjustment</th><th className="r">Value added</th></tr></thead>
-              <tbody>
-                {upgrades.map((u, i) => (
-                  <tr key={i}><td>{u.description || "Upgrade"}</td><td className="r">+{money(u.amount)}</td></tr>
-                ))}
-                <tr className="cma-save"><td>Total adjustments</td><td className="r">+{money(upgradeTotal)}</td></tr>
-              </tbody>
-            </table>
-          </div>
-        )}
-        <div className="cma-bars cols-3" style={{ marginBottom: 12 }}>
-          {report.price_low ? <Bar value={money(report.price_low)} label="Range low" /> : null}
-          <Bar highlight value={money(report.recommended_price)} label="Recommended list price" />
-          {report.price_high ? <Bar value={money(report.price_high)} label="Range high" /> : null}
-        </div>
-        {report.pricing_notes && <p className="cma-notes">{report.pricing_notes}</p>}
-      </section>
 
       {/* Commission — interactive calculator, prefilled with the suggested price */}
       {!!rec && (
@@ -591,6 +609,12 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
         .cma section { background: #fff; border: 1px solid #e2e2e2; border-radius: 12px; padding: 24px; margin-bottom: 20px; }
         .cma h2 { font-size: 19px; font-weight: 800; letter-spacing: 0; border-bottom: 3px solid #111; padding-bottom: 8px; margin: 0 0 16px; }
         .cma-address { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+        .cma-prepared { font-size: 14px; color: #555; margin: 6px 0 16px; }
+        .cma-prepared strong { color: #111; }
+        .cma-kv { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border-top: 1px solid #eee; margin-top: 4px; }
+        .cma-kv > div { padding: 12px 12px 12px 0; border-bottom: 1px solid #eee; min-width: 0; }
+        .cma-kv span { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #777; font-weight: 600; margin-bottom: 4px; }
+        .cma-kv strong { font-size: 16px; overflow-wrap: break-word; }
         .cma-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
         .cma table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 480px; }
         .cma th { text-align: left; font-size: 11px; text-transform: uppercase; color: #777; padding: 8px; border-bottom: 2px solid #111; white-space: nowrap; }
@@ -741,6 +765,12 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
         .cma-dark .cma-agent-tag { color: #4da3ff; }
         .cma-dark .cma-agent-name { color: #f2f2f2; }
         .cma-dark .cma-address { color: #f2f2f2; }
+        .cma-dark .cma-prepared { color: #aaa; }
+        .cma-dark .cma-prepared strong { color: #f2f2f2; }
+        .cma-dark .cma-kv { border-color: #2e2e2e; }
+        .cma-dark .cma-kv > div { border-color: #2e2e2e; }
+        .cma-dark .cma-kv span { color: #999; }
+        .cma-dark .cma-kv strong { color: #f2f2f2; }
         .cma-dark .cma-sold-price { color: #4da3ff; }
         .cma-dark .cma-sold-addr { color: #f2f2f2; }
         .cma-dark .cma-listing-price { color: #f2f2f2; }
@@ -770,6 +800,7 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
           .cma-cards { grid-template-columns: 1fr; }
           .cma-reasons-grid { grid-template-columns: repeat(2, 1fr); }
           .cma-nearby { grid-template-columns: 1fr; }
+          .cma-kv { grid-template-columns: repeat(2, 1fr); }
           .cma-agent { flex-direction: column; }
           .cma-bars.cols-5, .cma-bars.cols-4 { grid-template-columns: repeat(2, 1fr); }
           .cma-bars.cols-3, .cma-bars.cols-2 { grid-template-columns: 1fr; }
