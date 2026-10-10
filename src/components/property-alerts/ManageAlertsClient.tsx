@@ -105,10 +105,12 @@ export function ManageAlertsClient() {
     setSearches((s) => s.filter((x) => x.id !== id));
   }
 
+  const [unheartKey, setUnheartKey] = useState<string | null>(null);
+
   async function removeFavorite(key: string) {
-    if (!confirm("Remove this listing from your favorites?")) return;
     await fetch(`/api/favorites?key=${encodeURIComponent(key)}`, { method: "DELETE" });
     setFavorites((favs) => favs.filter((f) => f.key !== key));
+    setUnheartKey(null);
   }
 
   function openEdit(s: SavedSearch) {
@@ -261,7 +263,7 @@ export function ManageAlertsClient() {
                       {f.isRent ? "For Rent" : "For Sale"}
                     </span>
                     <button
-                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); removeFavorite(f.key); }}
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); setUnheartKey(f.key); }}
                       aria-label="Remove from favorites"
                       className="absolute top-2 right-2 flex h-8 w-8 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1.8">
@@ -272,7 +274,7 @@ export function ManageAlertsClient() {
                   <div className="p-3 flex items-center justify-between gap-2">
                     <div className="min-w-0">
                       <div className="font-bold">${Number(f.price).toLocaleString()}</div>
-                      <div className="truncate text-xs text-muted">{f.address}, {f.city}</div>
+                      <div className="line-clamp-2 text-xs text-muted leading-snug min-h-[2rem]">{f.address}, {f.city}</div>
                       <div className="text-[11px] text-muted">
                         {f.beds ? `${f.beds} bd` : ""}{f.beds && f.baths ? " · " : ""}{f.baths ? `${f.baths} ba` : ""}
                       </div>
@@ -385,6 +387,28 @@ export function ManageAlertsClient() {
                   className="rounded-lg border border-line px-4 py-2.5 text-sm">Cancel</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Un-heart confirm modal */}
+      {unheartKey && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setUnheartKey(null)}>
+          <div className="w-full max-w-sm rounded-[var(--radius-lg)] bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-lg font-bold mb-2">Remove from favorites?</h3>
+            <p className="text-sm text-muted mb-6">This listing will be removed from your favorites.</p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => removeFavorite(unheartKey)}
+                className="flex-1 rounded-[var(--radius-btn)] bg-ink py-2.5 text-sm font-semibold text-white hover:opacity-90">
+                Remove
+              </button>
+              <button
+                onClick={() => setUnheartKey(null)}
+                className="flex-1 rounded-[var(--radius-btn)] border border-line py-2.5 text-sm font-medium hover:bg-gray-50">
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       )}
