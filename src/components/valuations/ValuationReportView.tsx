@@ -502,7 +502,7 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
         .cma-agent-initials { background: #111; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 800; }
         .cma-agent-name { font-size: 24px; font-weight: 800; overflow-wrap: break-word; }
         .cma-agent-tag { font-size: 14px; color: #0066cc; font-weight: 600; margin: 4px 0 8px; }
-        .cma-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: #ddd; border: 1px solid #ddd; margin-top: 16px; }
+        .cma-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1px; background: #ddd; border: 1px solid #ddd; margin-top: 16px; }
         .cma-stat { background: #fff; padding: 14px 8px; text-align: center; min-width: 0; }
         .cma-stat strong { display: block; font-size: 22px; color: #0066cc; }
         .cma-stat span { font-size: 11px; color: #777; text-transform: uppercase; }
@@ -517,6 +517,7 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
         .cma-reasons-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; }
         .cma-reason { padding: 20px 16px; border-top: 1px solid #eee; min-width: 0; }
         .cma-reason-num { font-size: 34px; font-weight: 800; color: #0066cc; line-height: 1; margin-bottom: 10px; }
+        .cma-reason-num::after { content: ""; display: block; width: 40px; height: 3px; background: #111; margin-top: 8px; }
         .cma-reason-title { font-size: 14px; font-weight: 700; line-height: 1.35; margin-bottom: 6px; }
         .cma-reason-sub { font-size: 12px; color: #666; line-height: 1.55; }
         .cma-reviews-head { display: flex; gap: 32px; margin-bottom: 16px; font-size: 14px; color: #555; flex-wrap: wrap; }
@@ -537,31 +538,32 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
         .cma-cta p { color: #555; font-size: 14px; margin-bottom: 20px; }
         .cma-cta-contact { font-size: 15px; line-height: 1.9; overflow-wrap: break-word; }
         .cma footer { background: #fff; border: 1px solid #e2e2e2; border-radius: 12px; padding: 20px 24px; margin-top: 4px; font-size: 13px; text-align: center; color: #555; }
-        /* dark mode */
-        .cma-dark { background: #111; color: #f2f2f2; }
-        .cma-dark .cma-topbar { color: #aaa; border-color: #2a2a2a; }
-        .cma-dark .cma-head, .cma-dark section, .cma-dark footer { background: #181818; border-color: #2c2c2c; }
+        /* dark mode: pure black blocks */
+        .cma-dark { background: #000; color: #f2f2f2; }
+        .cma-dark .cma-topbar { color: #aaa; border-color: #222; }
+        .cma-dark .cma-head, .cma-dark section, .cma-dark footer { background: #000; border-color: #333; }
         .cma-dark h2 { border-color: #f2f2f2; }
         .cma-dark .cma-sub, .cma-dark .cma-meta { color: #aaa; }
         .cma-dark .cma-notes, .cma-dark .cma-review p { color: #ccc; }
         .cma-dark .cma-fine, .cma-dark .cma-listing-meta, .cma-dark .cma-nearby-dist, .cma-dark .cma-reason-sub { color: #999; }
         .cma-dark th { color: #999; border-color: #f2f2f2; }
-        .cma-dark td { border-color: #2c2c2c; }
+        .cma-dark td { border-color: #333; }
         .cma-dark .cma-table-wrap table { color: #f2f2f2; }
-        .cma-dark .cma-stat { background: #181818; }
-        .cma-dark .cma-stats { background: #2c2c2c; border-color: #2c2c2c; }
-        .cma-dark .cma-listing, .cma-dark .cma-why-card, .cma-dark .cma-card, .cma-dark .cma-review, .cma-dark .cma-nearby-group { background: #181818; border-color: #2c2c2c; }
-        .cma-dark .cma-noimg { background: #222; color: #777; }
+        .cma-dark .cma-stat { background: #000; }
+        .cma-dark .cma-stats { background: #333; border-color: #333; }
+        .cma-dark .cma-listing, .cma-dark .cma-why-card, .cma-dark .cma-card, .cma-dark .cma-review, .cma-dark .cma-nearby-group { background: #000; border-color: #333; }
+        .cma-dark .cma-noimg { background: #111; color: #777; }
         .cma-dark .cma-card p { color: #aaa; }
         .cma-dark .cma-why-icon, .cma-dark .cma-mkt-icon { color: #f2f2f2; }
         .cma-dark .cma-stars, .cma-dark .cma-reviews-score { color: #f2f2f2; }
-        .cma-dark .cma-dom { background: #f2f2f2; color: #111; }
-        .cma-dark .cma-reason { border-color: #2c2c2c; }
+        .cma-dark .cma-dom { background: #f2f2f2; color: #000; }
+        .cma-dark .cma-reason { border-color: #333; }
+        .cma-dark .cma-reason-num::after { background: #f2f2f2; }
         .cma-dark .cma-cta { border-color: #f2f2f2; }
         .cma-dark .cma-cta p { color: #aaa; }
-        .cma-dark .cma-toolbar button { background: #1e1e1e; border-color: #333; color: #f2f2f2; }
-        .cma-dark .cma-toolbar button:hover { background: #2a2a2a; }
-        .cma-dark .cma-nearby li { border-color: #2c2c2c; }
+        .cma-dark .cma-toolbar button { background: #000; border-color: #333; color: #f2f2f2; }
+        .cma-dark .cma-toolbar button:hover { background: #1a1a1a; }
+        .cma-dark .cma-nearby li { border-color: #333; }
         @media (max-width: 640px) {
           .cma { padding: 16px 12px; overflow-x: hidden; }
           .cma section { padding: 18px 16px; }
