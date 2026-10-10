@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import type { Lead, LeadFlow, LeadFlowEnrollment } from "@/lib/types";
 import { LEAD_FLOW_CATEGORIES, LEAD_STATUSES } from "@/lib/types";
@@ -617,6 +618,10 @@ export function LeadTabs({ lead, activities, queue, enrollments, availableFlows 
             {counts[t] ? <span className={`rounded-full px-1.5 text-xs ${tab === t ? "bg-white/20 text-white" : "bg-white/10 text-white/60"}`}>{counts[t]}</span> : null}
           </button>
         ))}
+        <Link href={`/admin/valuations/new?lead_id=${lead.id}`}
+          className="ml-auto flex h-9 shrink-0 items-center gap-1.5 border-l border-white/15 px-4 text-sm font-medium text-white/70 hover:text-white">
+          + New Valuation
+        </Link>
       </nav>
       {tab === "overview" ? <OverviewPanel lead={lead} activities={activities} /> : null}
       {tab === "form" ? <FormSubmissionPanel lead={lead} /> : null}
