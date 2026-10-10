@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { getSettings } from "@/lib/cms";
 import { ValuationReportView } from "@/components/valuations/ValuationReportView";
+import { ExpiredValuationCta } from "./ExpiredValuationCta";
 
 export async function generateMetadata({ params }: { params: Promise<{ token: string }> }): Promise<Metadata> {
   const { token } = await params;
@@ -36,11 +37,21 @@ export default async function SharedValuationPage({ params }: { params: Promise<
     .eq("share_revoked", false)
     .maybeSingle();
   if (!report || (report.share_expires_at && new Date(report.share_expires_at) < new Date())) {
+    if (report) {
+      // Expired but real: turn the dead link into a refresh lead.
+      let expiredName = (report.presentation as any)?.client_name ?? "";
+      if (!expiredName && report.lead_id) {
+        const { data: lead } = await supabase.from("leads").select("first_name,last_name").eq("id", report.lead_id).maybeSingle();
+        if (lead) expiredName = `${(lead as any).first_name ?? ""} ${(lead as any).last_name ?? ""}`.trim();
+      }
+      const expiredAddr = `${(report as any).address ?? ""}${(report as any).city ? `, ${(report as any).city}` : ""}`.trim();
+      return <ExpiredValuationCta address={expiredAddr} clientName={expiredName} />;
+    }
     return (
       <div className="flex min-h-screen items-center justify-center bg-white px-4">
         <div className="max-w-md text-center">
-          <h1 className="text-xl font-bold mb-2">This link has expired</h1>
-          <p className="text-sm text-gray-500">Please contact Rohit Sharma at 416-605-7488 for an updated market analysis.</p>
+          <h1 className="text-xl font-bold mb-2">This link is no longer valid</h1>
+          <p className="text-sm text-gray-500">Please contact Rohit Sharma at (416)-605-7488 for an updated market analysis.</p>
         </div>
       </div>
     );
