@@ -66,7 +66,12 @@ export async function POST(req: NextRequest) {
       })
       .select("id")
       .single();
-    if (!leadErr && newLead) leadId = newLead.id;
+    if (!leadErr && newLead) {
+      leadId = newLead.id;
+    } else if (leadErr) {
+      console.error("lead insert error:", leadErr);
+      return NextResponse.json({ error: `Lead DB error: ${leadErr.message}` }, { status: 500 });
+    }
   }
 
   const { data, error } = await supabase
@@ -81,7 +86,8 @@ export async function POST(req: NextRequest) {
     .single();
 
   if (error) {
-    return NextResponse.json({ error: "Couldn't save your alert" }, { status: 500 });
+    console.error("saved_searches insert error:", error);
+    return NextResponse.json({ error: `DB error: ${error.message}` }, { status: 500 });
   }
 
   return NextResponse.json({ ok: true, id: data.id });
