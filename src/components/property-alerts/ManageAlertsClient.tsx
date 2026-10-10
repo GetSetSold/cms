@@ -29,12 +29,13 @@ export function ManageAlertsClient() {
       if (session?.user?.email) {
         const userEmail = session.user.email.toLowerCase();
         // Link any existing saved searches (created before signup) to this user.
+        // (Best-effort; the select below works by email regardless.)
         await supabase.from("saved_searches").update({ user_id: session.user.id }).eq("email", userEmail).is("user_id", null);
-        // Load their saved searches.
+        // Load their saved searches by email (works even if linking didn't stick).
         const { data } = await supabase
           .from("saved_searches")
           .select("id, criteria, criteria_summary, is_active, created_at, last_notified_at")
-          .eq("user_id", session.user.id)
+          .eq("email", userEmail)
           .order("created_at", { ascending: false });
         setSearches(data ?? []);
         setStatus("dashboard");
