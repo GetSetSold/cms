@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 
 interface SavedSearch {
   id: string;
+  criteria: Record<string, string>;
   criteria_summary: string | null;
   is_active: boolean;
   created_at: string;
@@ -32,7 +33,7 @@ export default function ManageAlertsPage() {
         // Load their saved searches.
         const { data } = await supabase
           .from("saved_searches")
-          .select("id, criteria_summary, is_active, created_at, last_notified_at")
+          .select("id, criteria, criteria_summary, is_active, created_at, last_notified_at")
           .eq("user_id", session.user.id)
           .order("created_at", { ascending: false });
         setSearches(data ?? []);
@@ -60,6 +61,14 @@ export default function ManageAlertsPage() {
     } finally {
       setSending(false);
     }
+  }
+
+  function listingsUrl(criteria: Record<string, string>): string {
+    const params = new URLSearchParams();
+    for (const [k, v] of Object.entries(criteria)) {
+      if (v) params.set(k, v);
+    }
+    return `/listings?${params.toString()}`;
   }
 
   async function toggleActive(id: string, current: boolean) {
@@ -124,6 +133,10 @@ export default function ManageAlertsPage() {
                   </span>
                 </div>
                 <div className="flex gap-2 shrink-0">
+                  <a href={listingsUrl(s.criteria)}
+                    className="text-xs px-3 py-1.5 rounded-lg bg-ink text-white hover:opacity-90">
+                    View listings
+                  </a>
                   <button onClick={() => toggleActive(s.id, s.is_active)}
                     className="text-xs px-3 py-1.5 rounded-lg border border-line hover:bg-gray-50">
                     {s.is_active ? "Pause" : "Resume"}
