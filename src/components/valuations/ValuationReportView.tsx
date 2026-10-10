@@ -116,8 +116,28 @@ const REVIEWS: [string, string][] = [
 
 const ELFSIGHT_APP_ID = "e705f2da-4d5f-48a0-8e1a-4e33be72155d";
 
+/** Stat card with a dark top bar (value) and label/caption below — like the commission cards. */
+function Bar({ value, sub, label, caption, captionClass, highlight }: {
+  value: string; sub?: string; label: string; caption?: string; captionClass?: string; highlight?: boolean;
+}) {
+  return (
+    <div className={`cma-bar${highlight ? " hl" : ""}`}>
+      <div className="cma-bar-top">
+        <div className="cma-bar-value">{value}</div>
+        {sub ? <div className="cma-bar-sub">{sub}</div> : null}
+      </div>
+      <div className="cma-bar-body">
+        <div className="cma-bar-label">{label}</div>
+        {caption ? <div className={`cma-bar-cap ${captionClass ?? ""}`}>{caption}</div> : null}
+      </div>
+    </div>
+  );
+}
+
 export function ValuationReportView({ report, leadName, branding }: { report: any; leadName?: string; branding?: any }) {
   const [dark, setDark] = useState(false);
+  const rec = Number(report.recommended_price) || 0;
+  const [calcPrice, setCalcPrice] = useState<number>(rec);
   // Print/PDF always renders light.
   useEffect(() => {
     const off = () => setDark(false);
@@ -129,9 +149,6 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
   const solds: Comp[] = report.sold_comps ?? [];
   const upgrades: { description: string; amount: number }[] = report.upgrade_items ?? [];
   const upgradeTotal = upgrades.reduce((s, u) => s + (Number(u.amount) || 0), 0);
-  const rec = Number(report.recommended_price) || 0;
-  const listFee = rec ? Math.round(rec * 0.01) : 0;
-  const tradFee = rec ? Math.round(rec * 0.05) : 0;
   const pres = report.presentation ?? {};
   const include: string[] = Array.isArray(pres.include) ? pres.include : [];
   const reviewsSource = pres.reviews_source === "static" ? "static" : "elfsight";
@@ -231,14 +248,12 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
             const doms = solds.map((s: any) => Number(s.dom)).filter((d) => d > 0);
             const avgDom = doms.length ? Math.round(doms.reduce((a, b) => a + b, 0) / doms.length) : null;
             return (
-              <div className="cma-stats" style={{ marginBottom: 16 }}>
-                {[["Low", money(prices[0])], ["High", money(prices[prices.length - 1])], ["Median", money(median)], ["Average", money(avg)]]
-                  .map(([l, v]) => (
-                    <div key={l as string} className="cma-stat"><strong>{v}</strong><span>{l}</span></div>
-                  ))}
-                {avgDom != null && (
-                  <div className="cma-stat"><strong>{avgDom}</strong><span>Avg DOM</span></div>
-                )}
+              <div className="cma-bars cols-5" style={{ marginBottom: 16 }}>
+                <Bar value={money(prices[0])} label="Low" />
+                <Bar value={money(prices[prices.length - 1])} label="High" />
+                <Bar value={money(median)} label="Median" />
+                <Bar value={money(avg)} label="Average" />
+                {avgDom != null && <Bar value={String(avgDom)} label="Avg DOM" />}
               </div>
             );
           })()}
@@ -300,28 +315,77 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
             </table>
           </div>
         )}
-        <div className="cma-price-row">
-          {report.price_low ? <div><span>Range low</span><strong>{money(report.price_low)}</strong></div> : null}
-          <div className="cma-rec"><span>Recommended list price</span><strong>{money(report.recommended_price)}</strong></div>
-          {report.price_high ? <div><span>Range high</span><strong>{money(report.price_high)}</strong></div> : null}
+        <div className="cma-bars cols-3" style={{ marginBottom: 12 }}>
+          {report.price_low ? <Bar value={money(report.price_low)} label="Range low" /> : null}
+          <Bar highlight value={money(report.recommended_price)} label="Recommended list price" />
+          {report.price_high ? <Bar value={money(report.price_high)} label="Range high" /> : null}
         </div>
         {report.pricing_notes && <p className="cma-notes">{report.pricing_notes}</p>}
       </section>
 
-      {/* Commission */}
+      {/* Commission — interactive calculator, prefilled with the suggested price */}
       {!!rec && (
         <section>
           <h2>Commission Comparison</h2>
-          <div className="cma-table-wrap">
-            <table>
-              <tbody>
-                <tr><td>GetSetSold listing side (1%)</td><td className="r">{money(listFee)}</td></tr>
-                <tr><td>Traditional total (5%)</td><td className="r">{money(tradFee)}</td></tr>
-                <tr className="cma-save"><td>You keep (est. savings on listing side)</td><td className="r">{money(tradFee - Math.round(rec * 0.03))}</td></tr>
-              </tbody>
-            </table>
-          </div>
-          <p className="cma-fine">Buyer-agent co-op (2% under $1M / 2.5% over) is separate and paid to the buyer's brokerage. HST extra.</p>
+          <label className="cma-calc-label" htmlFor="cma-price">Enter Property Asking Price ($)</label>
+          <input
+            id="cma-price"
+            className="cma-calc-input"
+            type="text"
+            inputMode="numeric"
+            value={calcPrice ? calcPrice.toLocaleString() : ""}
+            onChange={(e) => {
+              const v = parseInt(e.target.value.replace(/[^0-9]/g, ""), 10);
+              setCalcPrice(isNaN(v) ? 0 : v);
+            }}
+          />
+          {(() => {
+            const p = calcPrice || 0;
+            const coopRate = p >= 1000000 ? 0.025 : 0.02;
+            const totalRate = 0.01 + coopRate;
+            const totalPct = coopRate === 0.02 ? "3%" : "3.5%";
+            const pctLabel = (r: number) => `${parseFloat((r * 100).toFixed(2))}%`;
+            return (
+              <>
+                <div className="cma-calc-head">Listing side commission</div>
+                <div className="cma-bars cols-4">
+                  {[0.01, 0.02, 0.025, 0.03].map((r) => {
+                    const first = r === 0.01;
+                    return (
+                      <Bar
+                        key={r}
+                        highlight={first}
+                        value={pctLabel(r)}
+                        sub={money(Math.round(p * r))}
+                        label={first ? "GetSetSold" : "Typical agent"}
+                        caption={first ? `You save ${money(Math.round(p * 0.015))}` : `${money(Math.round(p * (r - 0.01)))} more`}
+                        captionClass={first ? "save" : "more"}
+                      />
+                    );
+                  })}
+                </div>
+                <div className="cma-calc-head">Total commission (listing + buyer agent)</div>
+                <div className="cma-bars cols-2">
+                  <Bar
+                    highlight
+                    value={`${totalPct} Total`}
+                    sub={money(Math.round(p * totalRate))}
+                    label="GetSetSold"
+                    caption={`You save ${money(Math.round(p * (0.05 - totalRate)))}`}
+                    captionClass="save"
+                  />
+                  <Bar
+                    value="5% Total"
+                    sub={money(Math.round(p * 0.05))}
+                    label="Traditional"
+                    caption={`${money(Math.round(p * (0.05 - totalRate)))} more`}
+                    captionClass="more"
+                  />
+                </div>
+                <p className="cma-fine">Buyer-agent co-op ({coopRate === 0.02 ? "2% under $1M" : "2.5% over $1M"}) is paid to the buyer's brokerage. HST extra.</p>
+              </>
+            );
+          })()}
         </section>
       )}
 
@@ -342,9 +406,9 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
               <p className="cma-notes" style={{ marginTop: 0 }}>{agent.bio}</p>
             </div>
           </div>
-          <div className="cma-stats">
+          <div className="cma-bars cols-4" style={{ marginTop: 16 }}>
             {[["20+", "Properties Sold"], ["1%", "Commission Rate"], ["100%", "Client Satisfaction"], ["$2M+", "Saved for Clients"]].map(([n, l]) => (
-              <div key={l} className="cma-stat"><strong>{n}</strong><span>{l}</span></div>
+              <Bar key={l} value={n} label={l} />
             ))}
           </div>
         </section>
@@ -489,10 +553,6 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
         .cma td.r, .cma th.r { text-align: right; }
         .cma td.c, .cma th.c { text-align: center; }
         .cma-adj { margin-bottom: 16px; }
-        .cma-price-row { display: flex; gap: 24px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
-        .cma-price-row span { display: block; font-size: 11px; color: #777; text-transform: uppercase; }
-        .cma-price-row strong { font-size: 18px; }
-        .cma-rec strong { font-size: 30px; color: #0066cc; }
         .cma-notes { font-size: 13px; color: #333; margin-top: 8px; line-height: 1.6; }
         .cma-save td { font-weight: 700; }
         .cma-fine { font-size: 11px; color: #888; margin-top: 8px; }
@@ -521,10 +581,6 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
         .cma-agent-initials { background: #111; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 800; }
         .cma-agent-name { font-size: 24px; font-weight: 800; overflow-wrap: break-word; }
         .cma-agent-tag { font-size: 14px; color: #0066cc; font-weight: 600; margin: 4px 0 8px; }
-        .cma-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1px; background: #ddd; border: 1px solid #ddd; margin-top: 16px; }
-        .cma-stat { background: #fff; padding: 14px 8px; text-align: center; min-width: 0; }
-        .cma-stat strong { display: block; font-size: 22px; color: #0066cc; }
-        .cma-stat span { font-size: 11px; color: #777; text-transform: uppercase; }
         .cma-why { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
         .cma-why-card { border: 1px solid #e2e2e2; border-radius: 10px; padding: 18px 10px; text-align: center; font-size: 13px; font-weight: 600; line-height: 1.4; background: #fff; min-width: 0; }
         .cma-why-icon { display: flex; justify-content: center; color: #111; margin-bottom: 10px; }
@@ -557,39 +613,78 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
         .cma-cta p { color: #555; font-size: 14px; margin-bottom: 20px; }
         .cma-cta-contact { font-size: 15px; line-height: 1.9; overflow-wrap: break-word; }
         .cma footer { background: #fff; border: 1px solid #e2e2e2; border-radius: 12px; padding: 20px 24px; margin-top: 4px; font-size: 13px; text-align: center; color: #555; }
-        /* dark mode: pure black blocks on near-black page */
-        .cma-dark { background: #0e0e0e; color: #f2f2f2; }
-        .cma-dark .cma-topbar { color: #aaa; border-color: #222; }
-        .cma-dark .cma-head, .cma-dark section, .cma-dark footer { background: #000; border-color: #2e2e2e; }
-        .cma-dark h2 { border-color: #f2f2f2; }
+        /* bar cards: dark color lives in the block header only */
+        .cma-bars { display: grid; gap: 12px; }
+        .cma-bars.cols-2 { grid-template-columns: repeat(2, 1fr); }
+        .cma-bars.cols-3 { grid-template-columns: repeat(3, 1fr); }
+        .cma-bars.cols-4 { grid-template-columns: repeat(4, 1fr); }
+        .cma-bars.cols-5 { grid-template-columns: repeat(5, 1fr); }
+        .cma-bar { border: 1px solid #e2e2e2; border-radius: 12px; overflow: hidden; background: #fff; text-align: center; min-width: 0; }
+        .cma-bar-top { background: #111; color: #fff; padding: 16px 8px; }
+        .cma-bar.hl .cma-bar-top { background: #0066cc; }
+        .cma-bar-value { font-size: 24px; font-weight: 800; line-height: 1.15; overflow-wrap: break-word; }
+        .cma-bar-sub { font-size: 15px; color: #bbb; margin-top: 4px; font-weight: 600; }
+        .cma-bar-body { padding: 12px 8px 14px; }
+        .cma-bar-label { font-size: 11px; letter-spacing: 1.2px; color: #777; text-transform: uppercase; font-weight: 700; }
+        .cma-bar-cap { font-size: 14px; font-weight: 700; margin-top: 6px; }
+        .cma-bar-cap.save { color: #16a34a; }
+        .cma-bar-cap.more { color: #dc2626; }
+        .cma-calc-label { display: block; text-align: center; font-size: 14px; font-weight: 600; color: #444; margin-bottom: 8px; }
+        .cma-calc-input { display: block; width: 100%; max-width: 420px; margin: 0 auto 20px; border: 1px solid #ddd; border-radius: 12px; padding: 14px 18px; font-size: 22px; font-weight: 700; text-align: center; background: #fff; color: #111; }
+        .cma-calc-input:focus { outline: 2px solid #0066cc; border-color: #0066cc; }
+        .cma-calc-head { text-align: center; font-size: 13px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: #111; margin: 22px 0 4px; padding-bottom: 10px; border-bottom: 2px solid #111; }
+        /* dark mode: dark color in blocks only — page stays light */
+        .cma-dark { background: #f5f5f5; color: #111; }
+        .cma-dark .cma-topbar { color: #555; border-color: #e2e2e2; }
+        .cma-dark .cma-head, .cma-dark section, .cma-dark footer { background: #141414; border-color: #141414; color: #f2f2f2; }
+        .cma-dark h2 { border-color: #f2f2f2; color: #f2f2f2; }
+        .cma-dark .cma-brand span { color: #4da3ff; }
         .cma-dark .cma-sub, .cma-dark .cma-meta { color: #aaa; }
         .cma-dark .cma-notes, .cma-dark .cma-review p { color: #ccc; }
-        .cma-dark .cma-fine, .cma-dark .cma-listing-meta, .cma-dark .cma-nearby-dist, .cma-dark .cma-reason-sub { color: #999; }
+        .cma-dark .cma-fine, .cma-dark .cma-listing-meta, .cma-dark .cma-nearby-dist, .cma-dark .cma-reason-sub, .cma-dark .cma-sold-meta { color: #999; }
         .cma-dark th { color: #999; border-color: #f2f2f2; }
-        .cma-dark td { border-color: #333; }
+        .cma-dark td { border-color: #2e2e2e; }
         .cma-dark .cma-table-wrap table { color: #f2f2f2; }
-        .cma-dark .cma-stat { background: #000; }
-        .cma-dark .cma-stats { background: #333; border-color: #333; }
         .cma-dark .cma-listing, .cma-dark .cma-why-card, .cma-dark .cma-card, .cma-dark .cma-review, .cma-dark .cma-nearby-group, .cma-dark .cma-sold { background: #000; border-color: #2e2e2e; }
-        .cma-dark .cma-sold-meta { color: #999; }
         .cma-dark .cma-cmp-icon.yes { color: #f2f2f2; }
         .cma-dark .cma-cmp-icon.no { color: #555; }
-        .cma-dark .cma-noimg { background: #111; color: #777; }
+        .cma-dark .cma-noimg { background: #1c1c1c; color: #777; }
         .cma-dark .cma-card p { color: #aaa; }
         .cma-dark .cma-why-icon, .cma-dark .cma-mkt-icon { color: #f2f2f2; }
         .cma-dark .cma-stars, .cma-dark .cma-reviews-score { color: #f2f2f2; }
         .cma-dark .cma-dom { background: #f2f2f2; color: #000; }
-        .cma-dark .cma-reason { border-color: #333; }
+        .cma-dark .cma-reason { border-color: #2e2e2e; }
+        .cma-dark .cma-reason-num { color: #4da3ff; }
         .cma-dark .cma-reason-num::after { background: #f2f2f2; }
+        .cma-dark .cma-reason-title { color: #f2f2f2; }
         .cma-dark .cma-cta { border-color: #f2f2f2; }
         .cma-dark .cma-cta p { color: #aaa; }
-        .cma-dark .cma-toolbar button { background: #000; border-color: #333; color: #f2f2f2; }
-        .cma-dark .cma-toolbar button:hover { background: #1a1a1a; }
-        .cma-dark .cma-theme-toggle, .cma-dark .cma-pdf-btn { background: #000; border-color: #3a3a3a; color: #f2f2f2; }
-        .cma-dark .cma-theme-toggle:hover, .cma-dark .cma-pdf-btn:hover { background: #1a1a1a; }
-        .cma-dark .cma-theme-toggle .cma-toggle-track { background: #3a3a3a; }
+        .cma-dark .cma-bar { background: #000; border-color: #2e2e2e; }
+        .cma-dark .cma-bar-top { background: #f5f5f5; color: #111; }
+        .cma-dark .cma-bar.hl .cma-bar-top { background: #0066cc; color: #fff; }
+        .cma-dark .cma-bar-sub { color: #555; }
+        .cma-dark .cma-bar-label { color: #999; }
+        .cma-dark .cma-calc-label { color: #aaa; }
+        .cma-dark .cma-calc-input { background: #000; border-color: #3a3a3a; color: #f2f2f2; }
+        .cma-dark .cma-calc-head { color: #f2f2f2; border-color: #f2f2f2; }
+        .cma-dark .cma-agent-tag { color: #4da3ff; }
+        .cma-dark .cma-agent-name { color: #f2f2f2; }
+        .cma-dark .cma-address { color: #f2f2f2; }
+        .cma-dark .cma-sold-price { color: #4da3ff; }
+        .cma-dark .cma-sold-addr { color: #f2f2f2; }
+        .cma-dark .cma-listing-price { color: #f2f2f2; }
+        .cma-dark .cma-listing-addr { color: #ddd; }
+        .cma-dark .cma-nearby-head strong { color: #f2f2f2; }
+        .cma-dark .cma-nearby li { border-color: #2e2e2e; color: #ddd; }
+        .cma-dark .cma-cta-title { color: #f2f2f2; }
+        .cma-dark .cma-cta-contact { color: #ddd; }
+        .cma-dark .cma-rec strong { color: #4da3ff; }
+        .cma-dark .cma-price-row strong { color: #f2f2f2; }
+        .cma-dark .cma-price-row span { color: #999; }
+        .cma-dark .cma-theme-toggle, .cma-dark .cma-pdf-btn { background: #fff; border-color: #ddd; color: #111; }
+        .cma-dark .cma-theme-toggle:hover, .cma-dark .cma-pdf-btn:hover { background: #eee; }
+        .cma-dark .cma-theme-toggle .cma-toggle-track { background: #ccc; }
         .cma-dark .cma-theme-toggle.on .cma-toggle-track { background: #0066cc; }
-        .cma-dark .cma-nearby li { border-color: #333; }
         @media (max-width: 640px) {
           .cma { padding: 16px 12px; overflow-x: hidden; }
           .cma section { padding: 18px 16px; }
@@ -603,7 +698,8 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
           .cma-reasons-grid { grid-template-columns: repeat(2, 1fr); }
           .cma-nearby { grid-template-columns: 1fr; }
           .cma-agent { flex-direction: column; }
-          .cma-stats { grid-template-columns: repeat(2, 1fr); }
+          .cma-bars.cols-5, .cma-bars.cols-4 { grid-template-columns: repeat(2, 1fr); }
+          .cma-bars.cols-3, .cma-bars.cols-2 { grid-template-columns: 1fr; }
           .cma-topbar { font-size: 12px; }
           .cma-toolbar { justify-content: center; }
         }
@@ -613,8 +709,12 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
           .cma-topbar { color: #555; border-color: #eee; }
           .cma-head, .cma section, .cma footer { border-color: #ddd; background: #fff; }
           .cma-page { page-break-before: always; }
-          .cma-listing, .cma-why-card, .cma-card, .cma-review, .cma-reason { break-inside: avoid; }
+          .cma-listing, .cma-why-card, .cma-card, .cma-review, .cma-reason, .cma-bar, .cma-sold { break-inside: avoid; }
           .cma-table-wrap { overflow: visible; }
+          .cma-bar-top { background: #fff !important; color: #111 !important; border-bottom: 2px solid #111; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          .cma-bar.hl .cma-bar-top { color: #0066cc !important; }
+          .cma-bar-sub { color: #555 !important; }
+          .cma-calc-input { border-color: #999; }
         }
       `}</style>
     </div>
