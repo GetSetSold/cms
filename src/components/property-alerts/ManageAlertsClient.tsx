@@ -151,23 +151,25 @@ export function ManageAlertsClient() {
   if (status === "login") {
     return (
       <div className="mx-auto w-full max-w-md">
-        <h1 className="text-2xl font-bold mb-3 text-center">Manage your alerts</h1>
-        <p className="text-muted mb-8 text-sm text-center">
-          Enter your email for a secure login link.
-        </p>
-        <form onSubmit={handleLogin} className="space-y-4">
-          <input
-            type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@example.com"
-            className="w-full rounded-lg border border-line bg-white px-4 py-2.5 text-sm focus:border-accent focus:outline-none"
-            disabled={sending}
-          />
-          <button type="submit" disabled={sending || !email.trim()}
-            className="w-full rounded-lg bg-ink py-3 text-sm font-semibold text-white disabled:opacity-50">
-            {sending ? "Sending..." : "Send login link"}
-          </button>
-          {message && <p className="text-sm text-muted text-center">{message}</p>}
-        </form>
+        <div className="rounded-[var(--radius-lg)] bg-white p-8 md:p-10 shadow-[var(--shadow-card)]">
+          <h1 className="text-2xl font-bold mb-3 text-center">Manage your alerts</h1>
+          <p className="text-muted mb-8 text-sm text-center">
+            Enter your email for a secure login link.
+          </p>
+          <form onSubmit={handleLogin} className="space-y-4">
+            <input
+              type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              className="w-full rounded-lg border border-line bg-white px-4 py-2.5 text-sm focus:border-accent focus:outline-none"
+              disabled={sending}
+            />
+            <button type="submit" disabled={sending || !email.trim()}
+              className="w-full rounded-lg bg-ink py-3 text-sm font-semibold text-white disabled:opacity-50">
+              {sending ? "Sending..." : "Send login link"}
+            </button>
+            {message && <p className="text-sm text-muted text-center">{message}</p>}
+          </form>
+        </div>
       </div>
     );
   }
