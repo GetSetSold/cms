@@ -104,7 +104,13 @@ export async function GET(req: NextRequest) {
         const body = buildAlertEmail(s.criteria_summary || "Your saved search", matchList, s.unsubscribe_token);
         try {
           await cms.functions.invoke("send-email", {
-            body: { lead_id: s.lead_id, subject, body },
+            body: {
+              lead_id: s.lead_id,
+              subject,
+              body,
+              from_email: "noreply@getsetsold.ca",
+              reply_to: "rohit@getsetsold.ca",
+            },
           });
           results[results.length - 1].emailSent = true;
         } catch (e) {

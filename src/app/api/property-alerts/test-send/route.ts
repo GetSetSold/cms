@@ -49,7 +49,13 @@ export async function POST(req: NextRequest) {
   });
 
   const { data, error } = await cms.functions.invoke("send-email", {
-    body: { lead_id: lead.id, subject: "Test: 2 new listings matching your search", body: html },
+    body: {
+      lead_id: lead.id,
+      subject: "Test: 2 new listings matching your search",
+      body: html,
+      from_email: "noreply@getsetsold.ca",
+      reply_to: "rohit@getsetsold.ca",
+    },
   });
 
   if (error) {
