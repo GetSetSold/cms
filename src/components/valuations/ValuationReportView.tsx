@@ -142,6 +142,7 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
   const rec = Number(report.recommended_price) || 0;
   const [calcPrice, setCalcPrice] = useState<number>(rec);
   const [ctaOpen, setCtaOpen] = useState(false);
+  const [navOpen, setNavOpen] = useState(false);
   const [ctaState, setCtaState] = useState<"idle" | "sending" | "done" | "error">("idle");
   const [ctaError, setCtaError] = useState("");
   const fullAddress = `${report.address ?? ""}${report.city ? `, ${report.city}` : ""}`.trim();
@@ -230,7 +231,7 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
   // Section navigator (jump links).
   const navItems: { label: string; id: string }[] = [
     { label: "Subject Property", id: "sec-subject" },
-    { label: "Pricing", id: "sec-pricing" },
+    { label: "Price Recommendation", id: "sec-pricing" },
   ];
   if (actives.length) navItems.push({ label: `Active Listings (${actives.length})`, id: "sec-actives" });
   if (solds.length) navItems.push({ label: `Sold (${solds.length})`, id: "sec-solds" });
@@ -285,11 +286,22 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
       </header>
 
       {/* Section navigator */}
-      <nav className="cma-nav cma-no-print" aria-label="Report sections">
-        {navItems.map((n) => (
-          <a key={n.id} href={`#${n.id}`}>{n.label}</a>
-        ))}
-      </nav>
+      <div className="cma-navwrap cma-no-print">
+        <button type="button" className="cma-navbtn" onClick={() => setNavOpen(!navOpen)} aria-expanded={navOpen} aria-haspopup="true">
+          <span className="cma-navburger" aria-hidden="true"><span /><span /><span /></span>
+          Navigation
+        </button>
+        {navOpen && (
+          <>
+            <div className="cma-navoverlay" onClick={() => setNavOpen(false)} />
+            <nav className="cma-navmenu" aria-label="Report sections">
+              {navItems.map((n) => (
+                <a key={n.id} href={`#${n.id}`} onClick={() => setNavOpen(false)}>{n.label}</a>
+              ))}
+            </nav>
+          </>
+        )}
+      </div>
 
       {/* Subject property */}
       <section id="sec-subject">
@@ -530,23 +542,23 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
       )}
 
       {has("comparison") && (
-        <section className="cma-page cma-valueprop" id="sec-comparison">
-          <div className="cma-vp-eyebrow"><span />The Value Proposition<span /></div>
-          <div className="cma-vp-title">Full Service. <em>Fraction of the Cost.</em></div>
+        <section className="cma-page" id="sec-comparison">
+          <div className="cma-vp-eyebrow">The Value Proposition</div>
+          <div className="cma-vp-title">Full Service. Fraction of the Cost.</div>
           <p className="cma-vp-sub">Why pay 2.5% when you get everything at 1%? Plus free cleaning, photography, weekly reports, and social media promotion included.</p>
-          <div className="cma-vp-table" role="table" aria-label="Service comparison">
-            <div className="cma-vp-head" role="row">
-              <div role="columnheader">Feature</div>
-              <div role="columnheader">Traditional<br />Agent</div>
-              <div role="columnheader" className="cma-vp-hlcell">Rohit Sharma<br />(1%)</div>
-            </div>
-            {COMPARISON.map(([f, t]) => (
-              <div className="cma-vp-row" role="row" key={f}>
-                <div role="cell" className="cma-vp-feat">{f}</div>
-                <div role="cell" className="cma-vp-cell">{t === "yes" ? <span className="cma-vp-yes">✓</span> : <span className="cma-vp-maybe">?</span>}</div>
-                <div role="cell" className="cma-vp-cell cma-vp-hlcell"><span className="cma-vp-yes">✓</span></div>
-              </div>
-            ))}
+          <div className="cma-table-wrap">
+            <table className="cma-vp-table">
+              <thead><tr><th>Feature</th><th className="c">Traditional<br />Agent</th><th className="c cma-vp-hl">Rohit Sharma<br />(1%)</th></tr></thead>
+              <tbody>
+                {COMPARISON.map(([f, t]) => (
+                  <tr key={f}>
+                    <td>{f}</td>
+                    <td className="c">{t === "yes" ? <span className="cma-vp-yes">✓</span> : <span className="cma-vp-maybe">?</span>}</td>
+                    <td className="c cma-vp-hl"><span className="cma-vp-yes">✓</span></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
           <div className="cma-vp-banner">All For Just 1% Listing Fee</div>
         </section>
@@ -759,33 +771,26 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
         .cma-modal-check { width: 56px; height: 56px; border-radius: 50%; background: #16a34a; color: #fff; font-size: 28px; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; }
         .cma footer { background: #fff; border: 1px solid #e2e2e2; border-radius: 12px; padding: 20px 24px; margin-top: 4px; font-size: 13px; text-align: center; color: #555; }
         .cma section { scroll-margin-top: 76px; }
-        /* section navigator */
-        .cma-nav { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; position: sticky; top: 0; z-index: 40; background: #f5f5f5; padding: 10px 2px; }
-        .cma-nav a { font-size: 12px; font-weight: 600; border: 1px solid #ddd; background: #fff; border-radius: 20px; padding: 7px 14px; color: #333; text-decoration: none; white-space: nowrap; }
-        .cma-nav a:hover { background: #111; color: #fff; border-color: #111; }
-        /* value proposition (always dark, like the brand panel) */
-        .cma-valueprop { background: #0d1526 !important; border-color: #0d1526 !important; color: #dfe3ec; }
-        .cma-valueprop h2 { display: none; }
-        .cma-vp-eyebrow { display: flex; align-items: center; justify-content: center; gap: 14px; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; font-weight: 700; color: #c9a24b; margin-bottom: 14px; }
-        .cma-vp-eyebrow span { display: block; width: 44px; height: 2px; background: #c9a24b; }
-        .cma-vp-title { text-align: center; font-size: 30px; font-weight: 800; color: #fff; margin-bottom: 10px; letter-spacing: -0.5px; }
-        .cma-vp-title em { font-style: normal; color: #c9a24b; }
-        .cma-vp-sub { text-align: center; color: #9aa3b5; font-size: 14px; line-height: 1.6; max-width: 580px; margin: 0 auto 22px; }
-        .cma-vp-table { border-top: 1px solid #2a3550; }
-        .cma-vp-head, .cma-vp-row { display: grid; grid-template-columns: 1fr 96px 118px; align-items: center; }
-        .cma-vp-head { font-size: 11px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; color: #fff; }
-        .cma-vp-head > div { padding: 12px 8px; text-align: center; }
-        .cma-vp-head > div:first-child { text-align: left; padding-left: 4px; color: #9aa3b5; }
-        .cma-vp-row { border-top: 1px solid #2a3550; font-size: 14px; }
-        .cma-vp-feat { padding: 11px 8px 11px 4px; color: #dfe3ec; overflow-wrap: break-word; }
-        .cma-vp-cell { text-align: center; padding: 11px 8px; }
-        .cma-vp-hlcell { background: #c9a24b; }
-        .cma-vp-head .cma-vp-hlcell { color: #111; border-radius: 6px 6px 0 0; }
-        .cma-vp-row .cma-vp-hlcell:last-child { border-radius: 0; }
-        .cma-vp-yes { color: #c9a24b; font-weight: 800; font-size: 17px; }
-        .cma-vp-hlcell .cma-vp-yes { color: #111; }
-        .cma-vp-maybe { color: #5a6579; font-weight: 800; font-size: 16px; }
-        .cma-vp-banner { background: #c9a24b; color: #111; text-align: center; font-weight: 800; font-size: 17px; border-radius: 10px; padding: 16px; margin-top: 22px; }
+        /* section navigator (menu button) */
+        .cma-navwrap { position: relative; margin-bottom: 20px; z-index: 40; }
+        .cma-navbtn { display: inline-flex; align-items: center; gap: 10px; border: 1px solid #ddd; background: #fff; border-radius: 10px; padding: 10px 18px; font-size: 14px; font-weight: 700; cursor: pointer; color: #111; }
+        .cma-navbtn:hover { background: #111; color: #fff; border-color: #111; }
+        .cma-navbtn:hover .cma-navburger span { background: #fff; }
+        .cma-navburger { display: inline-flex; flex-direction: column; gap: 3px; }
+        .cma-navburger span { display: block; width: 16px; height: 2px; background: #111; }
+        .cma-navoverlay { position: fixed; inset: 0; z-index: 39; }
+        .cma-navmenu { position: absolute; top: calc(100% + 8px); left: 0; background: #fff; border: 1px solid #e2e2e2; border-radius: 12px; box-shadow: 0 12px 32px rgba(0,0,0,0.14); min-width: 250px; max-width: 90vw; padding: 6px; z-index: 40; max-height: 60vh; overflow-y: auto; }
+        .cma-navmenu a { display: flex; align-items: center; gap: 10px; padding: 10px 14px; font-size: 14px; font-weight: 600; color: #333; text-decoration: none; border-radius: 8px; }
+        .cma-navmenu a:hover { background: #f0f0f0; color: #111; }
+        .cma-navmenu a::before { content: "→"; color: #999; font-size: 13px; }
+        /* value proposition */
+        .cma-vp-eyebrow { text-align: center; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; font-weight: 700; color: #777; margin-bottom: 10px; }
+        .cma-vp-title { text-align: center; font-size: 27px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 8px; }
+        .cma-vp-sub { text-align: center; color: #555; font-size: 14px; line-height: 1.6; max-width: 600px; margin: 0 auto 18px; }
+        .cma-vp-table th.cma-vp-hl, .cma-vp-table td.cma-vp-hl { background: #f5f5f5; }
+        .cma-vp-yes { color: #111; font-weight: 800; font-size: 17px; }
+        .cma-vp-maybe { color: #aaa; font-weight: 800; font-size: 15px; }
+        .cma-vp-banner { background: #111; color: #fff; text-align: center; font-weight: 800; font-size: 17px; border-radius: 10px; padding: 16px; margin-top: 18px; }
         .cma-summary { font-size: 14px !important; line-height: 1.75 !important; }
         /* bar cards: dark color lives in the block header only */
         .cma-bars { display: grid; gap: 12px; }
@@ -867,6 +872,20 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
         .cma-dark .cma-price-row span { color: #999; }
         .cma-dark .cma-theme-toggle, .cma-dark .cma-pdf-btn { background: #fff; border-color: #ddd; color: #111; }
         .cma-dark .cma-theme-toggle:hover, .cma-dark .cma-pdf-btn:hover { background: #eee; }
+        .cma-dark .cma-navbtn { background: #000; border-color: #3a3a3a; color: #f2f2f2; }
+        .cma-dark .cma-navbtn:hover { background: #f5f5f5; color: #111; border-color: #f5f5f5; }
+        .cma-dark .cma-navbtn:hover .cma-navburger span { background: #111; }
+        .cma-dark .cma-navburger span { background: #f2f2f2; }
+        .cma-dark .cma-navmenu { background: #000; border-color: #2e2e2e; }
+        .cma-dark .cma-navmenu a { color: #ddd; }
+        .cma-dark .cma-navmenu a:hover { background: #1e1e1e; color: #fff; }
+        .cma-dark .cma-vp-eyebrow { color: #999; }
+        .cma-dark .cma-vp-title { color: #f2f2f2; }
+        .cma-dark .cma-vp-sub { color: #aaa; }
+        .cma-dark .cma-vp-table th.cma-vp-hl, .cma-dark .cma-vp-table td.cma-vp-hl { background: #1c1c1c; }
+        .cma-dark .cma-vp-yes { color: #f2f2f2; }
+        .cma-dark .cma-vp-maybe { color: #666; }
+        .cma-dark .cma-vp-banner { background: #f5f5f5; color: #111; }
         .cma-dark .cma-theme-toggle .cma-toggle-track { background: #ccc; }
         .cma-dark .cma-theme-toggle.on .cma-toggle-track { background: #0066cc; }
         @media (max-width: 640px) {
@@ -887,9 +906,7 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
           .cma-bars.cols-3, .cma-bars.cols-2 { grid-template-columns: 1fr; }
           .cma-field-row { grid-template-columns: 1fr; }
           .cma-modal { padding: 22px 18px; }
-          .cma-vp-head, .cma-vp-row { grid-template-columns: 1fr 64px 84px; }
-          .cma-vp-row { font-size: 12.5px; }
-          .cma-vp-title { font-size: 24px; }
+          .cma-vp-title { font-size: 22px; }
           .cma-topbar { font-size: 12px; }
           .cma-toolbar { justify-content: center; }
         }
@@ -905,19 +922,9 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
           .cma-bar.hl .cma-bar-top { color: #0066cc !important; }
           .cma-bar-sub { color: #555 !important; }
           .cma-calc-input { border-color: #999; }
-          .cma-nav { display: none !important; }
-          .cma-valueprop { background: #fff !important; border-color: #ddd !important; color: #111 !important; }
-          .cma-vp-title { color: #111 !important; }
-          .cma-vp-sub { color: #555 !important; }
-          .cma-vp-head { color: #111 !important; }
-          .cma-vp-head > div:first-child { color: #777 !important; }
-          .cma-vp-row { border-color: #ddd !important; }
-          .cma-vp-table { border-color: #ddd !important; }
-          .cma-vp-feat { color: #111 !important; }
-          .cma-vp-yes { color: #111 !important; }
-          .cma-vp-maybe { color: #999 !important; }
-          .cma-vp-hlcell { background: #f0f0f0 !important; }
-          .cma-vp-banner { background: #111 !important; color: #fff !important; }
+          .cma-navwrap { display: none !important; }
+          .cma-vp-table th.cma-vp-hl, .cma-vp-table td.cma-vp-hl { background: #f0f0f0 !important; }
+          .cma-vp-banner { background: #111 !important; color: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         }
       `}</style>
 
