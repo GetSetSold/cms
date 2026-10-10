@@ -38,6 +38,7 @@ const DEFAULT_AGENT = {
   brokerage: "Lombard Group Real Estate Inc., Brokerage",
   tagline: "Your Trusted Partner in Real Estate",
   photo: "",
+  photo_svg: "",
   bio: "With over a decade of experience in the Greater Toronto Area's dynamic real estate market, Rohit Sharma has established himself as a trusted advisor for both buyers and sellers. Specializing in residential properties, Rohit combines deep market knowledge with cutting-edge technology to deliver exceptional results. His client-first approach and innovative 1% commission model have saved homeowners over $2 million in commission fees while maintaining full-service quality. Rohit is committed to transparent pricing, honest communication, and ensuring every client feels confident throughout their real estate journey.",
 };
 
@@ -115,7 +116,9 @@ const REVIEWS: [string, string][] = [
 
 const ELFSIGHT_APP_ID = "e705f2da-4d5f-48a0-8e1a-4e33be72155d";
 
-export function ValuationReportView({ report, leadName }: { report: any; leadName?: string }) {
+export type ReportStyle = "cards" | "editorial" | "compact";
+
+export function ValuationReportView({ report, leadName, style = "cards" }: { report: any; leadName?: string; style?: ReportStyle }) {
   const actives: Comp[] = report.active_comps ?? [];
   const solds: Comp[] = report.sold_comps ?? [];
   const upgrades: { description: string; amount: number }[] = report.upgrade_items ?? [];
@@ -297,7 +300,9 @@ export function ValuationReportView({ report, leadName }: { report: any; leadNam
         <section className="cma-page">
           <h2>Meet Your Agent</h2>
           <div className="cma-agent">
-            {agent.photo
+            {agent.photo_svg
+              ? <div className="cma-agent-photo cma-agent-svg" dangerouslySetInnerHTML={{ __html: agent.photo_svg }} />
+              : agent.photo
               ? <img src={agent.photo} alt={agent.name} className="cma-agent-photo" />
               : <div className="cma-agent-photo cma-agent-initials">{agent.name.split(" ").map((w: string) => w[0]).join("").slice(0, 2)}</div>}
             <div>
@@ -421,15 +426,187 @@ export function ValuationReportView({ report, leadName }: { report: any; leadNam
         <div className="cma-fine">This analysis is an opinion of value based on available market data, not an appraisal. Market conditions change; pricing should be reviewed before listing.</div>
       </footer>
 
-      <style>{`
-        .cma { max-width: 800px; margin: 0 auto; padding: 32px 24px; background: #fff; color: #111; font-family: -apple-system, 'Segoe UI', sans-serif; }
-        .cma-head { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #111; padding-bottom: 16px; margin-bottom: 28px; }
+      <style>{reportCSS(style)}</style>
+    </div>
+  );
+}
+
+/** Report styles: "cards" (default), "editorial", "compact". Same HTML, different CSS. */
+function reportCSS(style: ReportStyle): string {
+  if (style === "editorial") return CSS_EDITORIAL;
+  if (style === "compact") return CSS_COMPACT;
+  return CSS_CARDS;
+}
+
+const CSS_EDITORIAL = `
+        .cma { max-width: 680px; margin: 0 auto; padding: 48px 24px; background: #fff; color: #1a1a1a; font-family: Georgia, 'Times New Roman', serif; }
+        .cma-head { text-align: center; border-bottom: 1px solid #ddd; padding-bottom: 28px; margin-bottom: 40px; display: block; }
+        .cma-brand { font-size: 30px; font-weight: 700; letter-spacing: 2px; font-family: -apple-system, 'Segoe UI', sans-serif; }
+        .cma-brand span { color: #0066cc; }
+        .cma-sub { font-size: 13px; color: #888; margin-top: 6px; letter-spacing: 3px; text-transform: uppercase; font-family: -apple-system, 'Segoe UI', sans-serif; }
+        .cma-meta { text-align: center; font-size: 13px; color: #888; margin-top: 12px; font-family: -apple-system, 'Segoe UI', sans-serif; }
+        .cma section { margin-bottom: 44px; }
+        .cma h2 { font-size: 27px; font-weight: 700; border: none; padding: 0; margin: 0 0 6px; }
+        .cma h2::after { content: ""; display: block; width: 56px; height: 3px; background: #111; margin-top: 10px; }
+        .cma section > .cma-notes:first-of-type { font-size: 15px; color: #555; font-style: italic; }
+        .cma-address { font-size: 24px; font-weight: 700; margin-bottom: 8px; }
+        .cma table { width: 100%; border-collapse: collapse; font-size: 14px; font-family: -apple-system, 'Segoe UI', sans-serif; }
+        .cma th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #999; padding: 10px 8px; border-bottom: 1px solid #111; }
+        .cma td { padding: 12px 8px; border-bottom: 1px solid #eee; }
+        .cma td.r, .cma th.r { text-align: right; }
+        .cma td.c, .cma th.c { text-align: center; }
+        .cma-adj { margin-bottom: 16px; }
+        .cma-price-row { display: flex; gap: 28px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; font-family: -apple-system, 'Segoe UI', sans-serif; }
+        .cma-price-row span { display: block; font-size: 11px; color: #999; text-transform: uppercase; letter-spacing: 1px; }
+        .cma-price-row strong { font-size: 18px; }
+        .cma-rec strong { font-size: 34px; color: #0066cc; }
+        .cma-notes { font-size: 14px; color: #444; margin-top: 8px; line-height: 1.7; font-family: -apple-system, 'Segoe UI', sans-serif; }
+        .cma-save td { font-weight: 700; }
+        .cma-fine { font-size: 11px; color: #999; margin-top: 8px; font-family: -apple-system, 'Segoe UI', sans-serif; }
+        .cma-listings { display: grid; grid-template-columns: 1fr; gap: 20px; }
+        .cma-listing { display: flex; gap: 18px; border-bottom: 1px solid #eee; padding-bottom: 20px; }
+        .cma-listing img { width: 180px; height: 120px; object-fit: cover; display: block; flex-shrink: 0; }
+        .cma-noimg { width: 180px; height: 120px; background: #f4f4f4; display: flex; align-items: center; justify-content: center; color: #999; font-size: 12px; flex-shrink: 0; font-family: -apple-system, 'Segoe UI', sans-serif; }
+        .cma-listing-body { padding: 0; }
+        .cma-listing-price { font-size: 21px; font-weight: 800; font-family: -apple-system, 'Segoe UI', sans-serif; }
+        .cma-dom { font-size: 11px; font-weight: 700; background: #111; color: #fff; border-radius: 20px; padding: 2px 9px; margin-left: 8px; }
+        .cma-listing-addr { font-size: 14px; margin: 3px 0 6px; font-family: -apple-system, 'Segoe UI', sans-serif; }
+        .cma-listing-meta { font-size: 12px; color: #777; font-family: -apple-system, 'Segoe UI', sans-serif; }
+        .cma-agent { display: flex; gap: 24px; align-items: flex-start; margin-bottom: 20px; }
+        .cma-agent-photo { width: 130px; height: 130px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+        .cma-agent-svg { overflow: hidden; display: flex; align-items: center; justify-content: center; background: #f4f4f4; }
+        .cma-agent-svg svg { width: 100%; height: 100%; }
+        .cma-agent-initials { background: #111; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 36px; font-weight: 800; font-family: -apple-system, 'Segoe UI', sans-serif; }
+        .cma-agent-name { font-size: 26px; font-weight: 700; }
+        .cma-agent-tag { font-size: 14px; color: #0066cc; font-weight: 600; margin: 4px 0 8px; font-family: -apple-system, 'Segoe UI', sans-serif; }
+        .cma-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-top: 20px; font-family: -apple-system, 'Segoe UI', sans-serif; }
+        .cma-stat { text-align: left; border-top: 2px solid #111; padding-top: 10px; }
+        .cma-stat strong { display: block; font-size: 24px; color: #111; }
+        .cma-stat span { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 1px; }
+        .cma-why { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0 32px; font-family: -apple-system, 'Segoe UI', sans-serif; }
+        .cma-why-card { display: flex; gap: 12px; align-items: flex-start; padding: 14px 0; border-bottom: 1px solid #eee; text-align: left; font-size: 14px; font-weight: 600; }
+        .cma-why-icon { color: #111; flex-shrink: 0; }
+        .cma-cards { display: grid; grid-template-columns: 1fr; gap: 0; font-family: -apple-system, 'Segoe UI', sans-serif; }
+        .cma-card { padding: 16px 0; border-bottom: 1px solid #eee; font-size: 14px; }
+        .cma-card p { color: #555; margin-top: 4px; font-size: 13px; line-height: 1.6; }
+        .cma-mkt-card { display: flex; gap: 14px; align-items: flex-start; }
+        .cma-mkt-icon { color: #111; flex-shrink: 0; margin-top: 2px; }
+        .cma-reasons { columns: 1; font-size: 14px; line-height: 1.5; padding-left: 0; list-style: none; font-family: -apple-system, 'Segoe UI', sans-serif; }
+        .cma-reasons li { display: flex; gap: 14px; align-items: baseline; padding: 12px 0; border-bottom: 1px solid #eee; break-inside: avoid; }
+        .cma-reason-num { font-weight: 800; color: #0066cc; font-size: 13px; flex-shrink: 0; }
+        .cma-reasons li strong { display: block; }
+        .cma-reason-sub { display: block; color: #666; font-size: 13px; margin-top: 2px; font-weight: 400; }
+        .cma-reviews-head { display: flex; gap: 32px; margin-bottom: 20px; font-size: 14px; color: #555; font-family: -apple-system, 'Segoe UI', sans-serif; }
+        .cma-reviews-score { font-size: 30px; font-weight: 800; color: #111; }
+        .cma-reviews { display: grid; grid-template-columns: 1fr; gap: 0; }
+        .cma-review { padding: 20px 0; border-bottom: 1px solid #eee; font-size: 15px; font-style: italic; font-family: Georgia, serif; }
+        .cma-review p { color: #333; line-height: 1.7; margin: 10px 0 12px; }
+        .cma-stars { color: #111; letter-spacing: 3px; font-size: 14px; font-style: normal; }
+        .cma-reviewer { font-weight: 700; font-style: normal; font-family: -apple-system, 'Segoe UI', sans-serif; font-size: 13px; }
+        .cma-nearby { display: grid; grid-template-columns: 1fr; gap: 0; font-family: -apple-system, 'Segoe UI', sans-serif; }
+        .cma-nearby-group { padding: 14px 0; border-bottom: 1px solid #eee; }
+        .cma-nearby-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 14px; }
+        .cma-nearby ul { list-style: none; padding: 0; margin: 0; font-size: 13px; }
+        .cma-nearby li { display: flex; justify-content: space-between; gap: 8px; padding: 5px 0; }
+        .cma-nearby-dist { color: #888; font-size: 12px; }
+        .cma-cta { text-align: center; padding: 40px 0; border-top: 1px solid #111; border-bottom: 1px solid #111; font-family: -apple-system, 'Segoe UI', sans-serif; }
+        .cma-cta-title { font-size: 30px; font-weight: 700; margin-bottom: 8px; font-family: Georgia, serif; }
+        .cma-cta p { color: #555; font-size: 14px; margin-bottom: 20px; }
+        .cma-cta-contact { font-size: 15px; line-height: 1.9; }
+        .cma footer { border-top: 1px solid #ddd; padding-top: 16px; margin-top: 40px; font-size: 13px; text-align: center; color: #888; font-family: -apple-system, 'Segoe UI', sans-serif; }
+        @media (max-width: 640px) { .cma { padding: 32px 18px; } .cma-stats { grid-template-columns: repeat(2, 1fr); } .cma-why { grid-template-columns: 1fr; } .cma-agent { flex-direction: column; } .cma-listing { flex-direction: column; } .cma-listing img { width: 100%; height: 160px; } }
+        @media print { .cma { padding: 0; max-width: none; } .cma-no-print { display: none !important; } .cma-page { page-break-before: always; } }
+`;
+
+const CSS_COMPACT = `
+        .cma { max-width: 860px; margin: 0 auto; padding: 20px 16px; background: #fff; color: #111; font-family: -apple-system, 'Segoe UI', sans-serif; font-size: 13px; }
+        .cma-head { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #111; padding-bottom: 10px; margin-bottom: 16px; }
+        .cma-brand { font-size: 20px; font-weight: 800; }
+        .cma-brand span { color: #0066cc; }
+        .cma-sub { font-size: 11px; color: #777; }
+        .cma-meta { text-align: right; font-size: 11px; color: #777; }
+        .cma section { margin-bottom: 18px; }
+        .cma h2 { font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #111; padding-bottom: 4px; margin: 0 0 10px; }
+        .cma-address { font-size: 17px; font-weight: 700; margin-bottom: 6px; }
+        .cma table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        .cma th { text-align: left; font-size: 10px; text-transform: uppercase; color: #777; padding: 5px 6px; border-bottom: 1px solid #111; }
+        .cma td { padding: 5px 6px; border-bottom: 1px solid #eee; }
+        .cma td.r, .cma th.r { text-align: right; }
+        .cma td.c, .cma th.c { text-align: center; }
+        .cma-adj { margin-bottom: 10px; }
+        .cma-price-row { display: flex; gap: 20px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
+        .cma-price-row span { display: block; font-size: 10px; color: #777; text-transform: uppercase; }
+        .cma-price-row strong { font-size: 15px; }
+        .cma-rec strong { font-size: 24px; color: #0066cc; }
+        .cma-notes { font-size: 12px; color: #444; margin-top: 6px; line-height: 1.5; }
+        .cma-save td { font-weight: 700; }
+        .cma-fine { font-size: 10px; color: #999; margin-top: 6px; }
+        .cma-listings { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .cma-listing { border: 1px solid #e2e2e2; border-radius: 6px; overflow: hidden; }
+        .cma-listing img { width: 100%; height: 90px; object-fit: cover; display: block; }
+        .cma-noimg { height: 90px; background: #f4f4f4; display: flex; align-items: center; justify-content: center; color: #999; font-size: 11px; }
+        .cma-listing-body { padding: 8px 10px; }
+        .cma-listing-price { font-size: 14px; font-weight: 800; }
+        .cma-dom { font-size: 10px; font-weight: 700; background: #111; color: #fff; border-radius: 12px; padding: 1px 7px; margin-left: 6px; }
+        .cma-listing-addr { font-size: 11px; margin: 2px 0 4px; }
+        .cma-listing-meta { font-size: 10px; color: #777; }
+        .cma-agent { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 10px; }
+        .cma-agent-photo { width: 72px; height: 72px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+        .cma-agent-svg { overflow: hidden; display: flex; align-items: center; justify-content: center; background: #f4f4f4; }
+        .cma-agent-svg svg { width: 100%; height: 100%; }
+        .cma-agent-initials { background: #111; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 800; }
+        .cma-agent-name { font-size: 18px; font-weight: 800; }
+        .cma-agent-tag { font-size: 12px; color: #0066cc; font-weight: 600; margin: 2px 0 6px; }
+        .cma-stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 10px; }
+        .cma-stat { border: 1px solid #e2e2e2; border-radius: 6px; padding: 8px 4px; text-align: center; }
+        .cma-stat strong { display: block; font-size: 16px; color: #0066cc; }
+        .cma-stat span { font-size: 9px; color: #777; text-transform: uppercase; }
+        .cma-why { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+        .cma-why-card { border: 1px solid #e2e2e2; border-radius: 6px; padding: 10px 6px; text-align: center; font-size: 11px; font-weight: 600; line-height: 1.3; }
+        .cma-why-icon { display: flex; justify-content: center; margin-bottom: 6px; }
+        .cma-why-icon svg { width: 18px; height: 18px; }
+        .cma-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .cma-card { border: 1px solid #e2e2e2; border-radius: 6px; padding: 10px; font-size: 11px; }
+        .cma-card p { color: #555; margin-top: 3px; font-size: 10px; line-height: 1.4; }
+        .cma-mkt-card { display: flex; gap: 8px; align-items: flex-start; }
+        .cma-mkt-icon { flex-shrink: 0; }
+        .cma-mkt-icon svg { width: 16px; height: 16px; }
+        .cma-reasons { columns: 2; column-gap: 24px; font-size: 11px; line-height: 1.6; padding-left: 0; list-style: none; }
+        .cma-reasons li { display: flex; gap: 8px; align-items: baseline; break-inside: avoid; margin-bottom: 6px; }
+        .cma-reason-num { font-weight: 800; color: #0066cc; font-size: 10px; flex-shrink: 0; }
+        .cma-reasons li strong { display: block; font-size: 11px; }
+        .cma-reason-sub { display: block; color: #666; font-size: 10px; font-weight: 400; }
+        .cma-reviews-head { display: flex; gap: 24px; margin-bottom: 10px; font-size: 12px; color: #555; }
+        .cma-reviews-score { font-size: 22px; font-weight: 800; color: #111; }
+        .cma-reviews { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+        .cma-review { border: 1px solid #e2e2e2; border-radius: 6px; padding: 10px; font-size: 10px; }
+        .cma-review p { color: #333; line-height: 1.5; margin: 6px 0 8px; font-style: italic; }
+        .cma-stars { letter-spacing: 2px; font-size: 11px; }
+        .cma-reviewer { font-weight: 700; font-size: 10px; }
+        .cma-nearby { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .cma-nearby-group { border: 1px solid #e2e2e2; border-radius: 6px; padding: 10px; }
+        .cma-nearby-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 12px; }
+        .cma-nearby ul { list-style: none; padding: 0; margin: 0; font-size: 11px; }
+        .cma-nearby li { display: flex; justify-content: space-between; gap: 6px; padding: 4px 0; border-top: 1px solid #f0f0f0; }
+        .cma-nearby-dist { color: #777; font-size: 10px; white-space: nowrap; }
+        .cma-cta { border: 2px solid #111; border-radius: 8px; padding: 20px; text-align: center; }
+        .cma-cta-title { font-size: 20px; font-weight: 800; margin-bottom: 6px; }
+        .cma-cta p { color: #555; font-size: 12px; margin-bottom: 12px; }
+        .cma-cta-contact { font-size: 13px; line-height: 1.7; }
+        .cma footer { border-top: 2px solid #111; padding-top: 10px; margin-top: 20px; font-size: 11px; }
+        @media (max-width: 640px) { .cma-listings, .cma-why, .cma-cards, .cma-reviews, .cma-nearby { grid-template-columns: 1fr 1fr; } .cma-reasons { columns: 1; } .cma-stats { grid-template-columns: repeat(3, 1fr); } }
+        @media print { .cma { padding: 0; max-width: none; font-size: 11px; } .cma-no-print { display: none !important; } .cma-page { page-break-before: always; } .cma-listing, .cma-why-card, .cma-card, .cma-review { break-inside: avoid; } }
+`;
+
+const CSS_CARDS = `
+        .cma { max-width: 860px; margin: 0 auto; padding: 28px 20px; background: #f1f1f1; color: #111; font-family: -apple-system, 'Segoe UI', sans-serif; }
+        .cma-head { display: flex; justify-content: space-between; align-items: flex-start; background: #fff; border: 1px solid #e2e2e2; border-radius: 12px; padding: 20px 24px; margin-bottom: 20px; }
         .cma-brand { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; }
         .cma-brand span { color: #0066cc; }
         .cma-sub { font-size: 13px; color: #555; margin-top: 2px; }
         .cma-meta { text-align: right; font-size: 13px; color: #555; }
-        .cma section { margin-bottom: 28px; }
-        .cma h2 { font-size: 15px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #ddd; padding-bottom: 6px; margin-bottom: 12px; }
+        .cma section { background: #fff; border: 1px solid #e2e2e2; border-radius: 12px; padding: 24px; margin-bottom: 20px; }
+        .cma h2 { font-size: 19px; font-weight: 800; letter-spacing: 0; text-transform: none; border-bottom: 3px solid #111; padding-bottom: 8px; margin: 0 0 16px; }
         .cma-address { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
         .cma table { width: 100%; border-collapse: collapse; font-size: 13px; }
         .cma th { text-align: left; font-size: 11px; text-transform: uppercase; color: #777; padding: 8px; border-bottom: 2px solid #111; }
@@ -455,6 +632,8 @@ export function ValuationReportView({ report, leadName }: { report: any; leadNam
         .cma-listing-meta { font-size: 12px; color: #666; }
         .cma-agent { display: flex; gap: 20px; align-items: flex-start; margin-bottom: 16px; }
         .cma-agent-photo { width: 110px; height: 110px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+        .cma-agent-svg { overflow: hidden; display: flex; align-items: center; justify-content: center; background: #f4f4f4; }
+        .cma-agent-svg svg { width: 100%; height: 100%; }
         .cma-agent-initials { background: #111; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 800; }
         .cma-agent-name { font-size: 24px; font-weight: 800; }
         .cma-agent-tag { font-size: 14px; color: #0066cc; font-weight: 600; margin: 4px 0 8px; }
@@ -492,8 +671,10 @@ export function ValuationReportView({ report, leadName }: { report: any; leadNam
         .cma-cta-title { font-size: 26px; font-weight: 800; margin-bottom: 8px; }
         .cma-cta p { color: #555; font-size: 14px; margin-bottom: 20px; }
         .cma-cta-contact { font-size: 15px; line-height: 1.9; }
-        .cma footer { border-top: 3px solid #111; padding-top: 12px; margin-top: 32px; font-size: 13px; }
+        .cma footer { background: #fff; border: 1px solid #e2e2e2; border-radius: 12px; padding: 20px 24px; margin-top: 4px; font-size: 13px; }
         @media (max-width: 640px) {
+          .cma { padding: 16px 12px; }
+          .cma section { padding: 18px 16px; }
           .cma-listings { grid-template-columns: 1fr; }
           .cma-why { grid-template-columns: repeat(2, 1fr); }
           .cma-reviews { grid-template-columns: 1fr; }
@@ -503,12 +684,10 @@ export function ValuationReportView({ report, leadName }: { report: any; leadNam
           .cma-agent { flex-direction: column; }
         }
         @media print {
-          .cma { padding: 0; max-width: none; }
+          .cma { padding: 0; max-width: none; background: #fff; }
+          .cma-head, .cma section, .cma footer { border-color: #ddd; }
           .cma-no-print { display: none !important; }
           .cma-page { page-break-before: always; }
           .cma-listing, .cma-why-card, .cma-card, .cma-review { break-inside: avoid; }
         }
-      `}</style>
-    </div>
-  );
-}
+`;

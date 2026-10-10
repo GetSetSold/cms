@@ -1,6 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
+import { SvgPicker } from "@/components/admin/SvgPicker";
+import { sanitizeSvg } from "@/lib/svg";
+import type { SvgAsset } from "@/lib/types";
 
 type ActiveComp = {
   ListingKey: string; ListPrice: number | null; UnparsedAddress: string | null; City: string | null;
@@ -47,6 +51,7 @@ const DEFAULT_AGENT = {
   brokerage: "Lombard Group Real Estate Inc., Brokerage",
   tagline: "Your Trusted Partner in Real Estate",
   photo: "",
+  photo_svg: "",
   bio: "With over a decade of experience in the Greater Toronto Area's dynamic real estate market, Rohit Sharma has established himself as a trusted advisor for both buyers and sellers. Specializing in residential properties, Rohit combines deep market knowledge with cutting-edge technology to deliver exceptional results. His client-first approach and innovative 1% commission model have saved homeowners over $2 million in commission fees while maintaining full-service quality. Rohit is committed to transparent pricing, honest communication, and ensuring every client feels confident throughout their real estate journey.",
 };
 
@@ -64,36 +69,53 @@ function parsePrice(s: string): number | null {
 
 /** Organize pasted raw comp data (MLS copy, PDF text, spreadsheet rows) into structured comps. */
 function parseRawComps(text: string): SoldComp[] {
-  // MLS-style tab-separated table: use column positions, skip header/subject/active rows.
+  // MLS-style tab-separated table: split into records at each MLS# (X123...),
+  // then map fields relative to the status token (handles city in own cell or merged).
   if (text.includes("\t")) {
     const lines = text.split("\n");
-    let i = 0;
-    while (i < lines.length && !/^\s*#\s*\t.*ADDRESS/i.test(lines[i])) i++;
-    i++; // skip header
-    while (i < lines.length && !/^\s*\d+\s*\t/.test(lines[i])) i++; // skip subject block
     const recs: string[][] = [];
     let buf = "";
-    for (; i < lines.length; i++) {
-      buf += (buf ? "\n" : "") + lines[i];
-      if (/X\d{5,}/.test(buf)) {
+    let inRecords = false;
+    const flush = () => {
+      if (buf && /X\d{5,}/.test(buf)) {
         const toks = buf.split(/[\t\n]+/).map((t) => t.trim()).filter(Boolean);
-        if (toks.length >= 10) recs.push(toks);
-        buf = "";
+        if (toks.length >= 6) recs.push(toks);
       }
+      buf = "";
+    };
+    for (const line of lines) {
+      if (/^\s*\d+\s*\t/.test(line)) { // numbered row starts a record
+        flush();
+        inRecords = true;
+        buf = line;
+      } else if (inRecords) {
+        buf += "\n" + line;
+      }
+      // else: skip header / subject preamble
     }
-    return recs
-      .map((t) => ({
-        address: t[1] ?? "",
-        price: parsePrice(t[7] ?? ""),
-        date: /^\d{1,2}\/\d{1,2}\//.test(t[9] ?? "") ? t[9] : "",
-        beds: (t[5] ?? "").replace(/\s+/g, ""),
-        baths: t[6] ?? "",
+    flush();
+    const out: SoldComp[] = [];
+    for (const t of recs) {
+      const si = t.findIndex((tok) => /^(sold conditional|sold|new|active|pending|expired|conditionally sold)/i.test(tok));
+      if (si < 0) continue;
+      const status = t[si];
+      if (!/sold/i.test(status)) continue; // skip active/new listings
+      let o = 1; // offset if "Sold Conditional" split across two tokens
+      if (/^sold$/i.test(status) && /^conditional/i.test(t[si + 1] ?? "")) o = 2;
+      const address = t.slice(1, si).join(" ").replace(/\s+/g, " ").trim();
+      const price = parsePrice(t[si + o + 4] ?? "");
+      const dateTok = t[si + o + 6] ?? "";
+      out.push({
+        address,
+        price,
+        date: /^\d{1,2}\/\d{1,2}\//.test(dateTok) ? dateTok : "",
+        beds: (t[si + o + 2] ?? "").replace(/\s+/g, ""),
+        baths: t[si + o + 3] ?? "",
         sqft: "",
-        dom: /^\d+$/.test(t[10] ?? "") ? t[10] : "",
-        _status: t[2] ?? "",
-      }))
-      .filter((r) => /sold/i.test(r._status) && r.address && r.price)
-      .map(({ _status, ...rest }) => rest);
+        dom: /^\d+$/.test(t[si + o + 7] ?? "") ? t[si + o + 7] : "",
+      });
+    }
+    return out.filter((r) => r.address && r.price);
   }
   // Fallback: one comp per line, freeform.
   return text.split("\n").map((l) => l.trim()).filter(Boolean).map((line) => {
@@ -168,6 +190,11 @@ export default function ValuationBuilder() {
   // Presentation
   const [includeSections, setIncludeSections] = useState<string[]>(PRESENTATION_SECTIONS.map((s) => s.key));
   const [nearbyText, setNearbyText] = useState("");
+  const [svgAssets, setSvgAssets] = useState<SvgAsset[]>([]);
+  useEffect(() => {
+    createClient().from("svg_assets").select("id,name,markup,tags").order("name")
+      .then(({ data }) => { if (data) setSvgAssets(data as SvgAsset[]); });
+  }, []);
   const nearbyToText = (list: { name: string; kind: string; distKm: number }[]) =>
     list.map((p) => `${p.kind} | ${p.name} | ${p.distKm}`).join("\n");
   const parseNearbyText = (text: string) =>
@@ -363,6 +390,11 @@ export default function ValuationBuilder() {
               <button onClick={geocode} disabled={geocoding} className="px-4 rounded-lg border border-line text-sm font-semibold whitespace-nowrap">
                 {geocoding ? "…" : "Locate"}
               </button>
+              {(lat || lng) && (
+                <button onClick={() => { setLat(""); setLng(""); setNearbyText(""); }} className="px-3 rounded-lg border border-line text-sm text-muted whitespace-nowrap" title="Clear located coordinates">
+                  Reset
+                </button>
+              )}
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
@@ -504,7 +536,14 @@ export default function ValuationBuilder() {
             <div><label className={label}>Email</label><input className={input} value={agent.email} onChange={(e) => setAgent({ ...agent, email: e.target.value })} /></div>
           </div>
           <div><label className={label}>Brokerage</label><input className={input} value={agent.brokerage} onChange={(e) => setAgent({ ...agent, brokerage: e.target.value })} /></div>
-          <div><label className={label}>Agent photo URL</label><input className={input} value={agent.photo} onChange={(e) => setAgent({ ...agent, photo: e.target.value })} placeholder="https://…" /></div>
+          <div><label className={label}>Agent photo URL</label><input className={input} value={agent.photo} onChange={(e) => setAgent({ ...agent, photo: e.target.value, photo_svg: "" })} placeholder="https://…" /></div>
+          <div><label className={label}>…or pick from SVG library</label>
+            <SvgPicker value={svgAssets.find((s) => s.markup === agent.photo_svg)?.id ?? null} svgs={svgAssets}
+              onChange={(id) => {
+                const found = svgAssets.find((s) => s.id === id);
+                setAgent({ ...agent, photo_svg: found ? sanitizeSvg(found.markup) : "", photo: found ? "" : agent.photo });
+              }} />
+          </div>
           <div><label className={label}>Tagline</label><input className={input} value={agent.tagline} onChange={(e) => setAgent({ ...agent, tagline: e.target.value })} /></div>
           <div><label className={label}>Bio</label><textarea className={input} rows={5} value={agent.bio} onChange={(e) => setAgent({ ...agent, bio: e.target.value })} /></div>
           <div className="flex gap-2">
