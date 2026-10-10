@@ -23,7 +23,7 @@ export function ManageAlertsClient() {
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [editing, setEditing] = useState<SavedSearch | null>(null);
-  const [editForm, setEditForm] = useState({ city: "", beds: "", baths: "", minPrice: "", maxPrice: "", homeType: "", type: "sale" });
+  const [editForm, setEditForm] = useState({ cities: "", beds: "", baths: "", minPrice: "", maxPrice: "", homeType: "", type: "sale" });
 
   useEffect(() => {
     (async () => {
@@ -104,8 +104,9 @@ export function ManageAlertsClient() {
 
   function openEdit(s: SavedSearch) {
     const c = s.criteria || {};
+    const cities = Array.isArray(c.cities) ? c.cities.join(", ") : (c.city || "");
     setEditForm({
-      city: c.city || "",
+      cities,
       beds: c.beds || "",
       baths: c.baths || "",
       minPrice: c.minPrice || "",
@@ -119,8 +120,9 @@ export function ManageAlertsClient() {
   async function saveEdit(e: React.FormEvent) {
     e.preventDefault();
     if (!editing) return;
-    const criteria: Record<string, string> = {};
-    if (editForm.city) criteria.city = editForm.city;
+    const criteria: Record<string, any> = {};
+    const cityList = editForm.cities.split(",").map((c) => c.trim()).filter(Boolean);
+    if (cityList.length) criteria.cities = cityList;
     if (editForm.beds) criteria.beds = editForm.beds;
     if (editForm.baths) criteria.baths = editForm.baths;
     if (editForm.minPrice) criteria.minPrice = editForm.minPrice;
@@ -131,7 +133,7 @@ export function ManageAlertsClient() {
     const parts: string[] = [];
     if (editForm.beds) parts.push(`${editForm.beds} bed`);
     if (editForm.homeType) parts.push(editForm.homeType);
-    if (editForm.city) parts.push(editForm.city);
+    if (cityList.length) parts.push(cityList.join(", "));
     if (editForm.maxPrice) parts.push(`under $${Number(editForm.maxPrice).toLocaleString()}`);
     if (editForm.minPrice) parts.push(`over $${Number(editForm.minPrice).toLocaleString()}`);
 
@@ -275,7 +277,7 @@ export function ManageAlertsClient() {
             <form onSubmit={saveEdit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium mb-1">City</label>
-                <input type="text" value={editForm.city} onChange={(e) => setEditForm({ ...editForm, city: e.target.value })}
+                <input type="text" value={editForm.cities} onChange={(e) => setEditForm({ ...editForm, cities: e.target.value })}
                   className="w-full rounded-lg border border-line px-3 py-2 text-sm" />
               </div>
               <div className="grid grid-cols-2 gap-3">

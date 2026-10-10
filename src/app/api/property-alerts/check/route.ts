@@ -44,7 +44,13 @@ export async function GET(req: NextRequest) {
       .gte("OriginalEntryTimestamp", since.toISOString())
       .limit(10);
 
-    if (criteria.city) mq = mq.ilike("City", `%${criteria.city}%`);
+    if (criteria.cities && Array.isArray(criteria.cities) && criteria.cities.length) {
+      // Handle city variants (e.g., "Toronto (Downtown)" -> normalized).
+      // For now, use direct match; the check endpoint resolves via rawCitiesFor if needed.
+      mq = mq.in("City", criteria.cities);
+    } else if (criteria.city) {
+      mq = mq.ilike("City", `%${criteria.city}%`);
+    }
     if (criteria.beds) mq = mq.gte("BedroomsTotal", parseInt(criteria.beds));
     if (criteria.baths) mq = mq.gte("BathroomsTotalInteger", parseFloat(criteria.baths));
     if (criteria.minPrice) mq = mq.gte("ListPrice", parseInt(criteria.minPrice));

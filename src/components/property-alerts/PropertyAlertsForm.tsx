@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 /**
  * Property alert signup form (client component).
@@ -8,7 +8,7 @@ import { useState } from "react";
 export function PropertyAlertsForm() {
   const [form, setForm] = useState({
     email: "",
-    city: "",
+    cities: [] as string[],
     beds: "",
     baths: "",
     minPrice: "",
@@ -16,19 +16,39 @@ export function PropertyAlertsForm() {
     homeType: "",
     type: "sale",
   });
+  const [allCities, setAllCities] = useState<string[]>([]);
+  const [citySearch, setCitySearch] = useState("");
   const [status, setStatus] = useState<"idle" | "saving" | "done" | "error">("idle");
   const [message, setMessage] = useState("");
 
+  useEffect(() => {
+    fetch("/api/property-alerts/cities")
+      .then((r) => r.json())
+      .then((d) => setAllCities(d.cities ?? []))
+      .catch(() => {});
+  }, []);
+
   const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }));
+
+  function toggleCity(city: string) {
+    setForm((f) => ({
+      ...f,
+      cities: f.cities.includes(city) ? f.cities.filter((c) => c !== city) : [...f.cities, city],
+    }));
+  }
+
+  const filteredCities = allCities.filter((c) =>
+    c.toLowerCase().includes(citySearch.toLowerCase())
+  ).slice(0, 50);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setStatus("saving");
     setMessage("");
 
-    const criteria: Record<string, string> = {};
-    if (form.city) criteria.city = form.city;
+    const criteria: Record<string, any> = {};
+    if (form.cities.length) criteria.cities = form.cities;
     if (form.beds) criteria.beds = form.beds;
     if (form.baths) criteria.baths = form.baths;
     if (form.minPrice) criteria.minPrice = form.minPrice;
@@ -39,7 +59,7 @@ export function PropertyAlertsForm() {
     const parts: string[] = [];
     if (form.beds) parts.push(`${form.beds} bed`);
     if (form.homeType) parts.push(form.homeType);
-    if (form.city) parts.push(form.city);
+    if (form.cities.length) parts.push(form.cities.join(", "));
     if (form.maxPrice) parts.push(`under $${Number(form.maxPrice).toLocaleString()}`);
     if (form.minPrice) parts.push(`over $${Number(form.minPrice).toLocaleString()}`);
 
@@ -105,8 +125,42 @@ export function PropertyAlertsForm() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1.5">City</label>
-          <input type="text" value={form.city} onChange={set("city")} placeholder="e.g. Hamilton" className={inputCls} />
+          <label className="block text-sm font-medium mb-1.5">Cities {form.cities.length > 0 && `(${form.cities.length} selected)`}</label>
+          <input
+            type="text"
+            value={citySearch}
+            onChange={(e) => setCitySearch(e.target.value)}
+            placeholder="Search cities..."
+            className={inputCls}
+          />
+          {form.cities.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              {form.cities.map((c) => (
+                <span key={c} className="inline-flex items-center gap-1 rounded-full bg-ink px-2.5 py-1 text-xs text-white">
+                  {c}
+                  <button type="button" onClick={() => toggleCity(c)} className="hover:opacity-70">×</button>
+                </span>
+              ))}
+            </div>
+          )}
+          {citySearch && (
+            <div className="mt-1 max-h-40 overflow-y-auto rounded-lg border border-line bg-white shadow-lg">
+              {filteredCities.length === 0 ? (
+                <p className="px-3 py-2 text-sm text-muted">No cities found</p>
+              ) : (
+                filteredCities.map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => { toggleCity(c); setCitySearch(""); }}
+                    className={`block w-full px-3 py-2 text-left text-sm hover:bg-gray-50 ${form.cities.includes(c) ? "font-semibold text-accent" : ""}`}
+                  >
+                    {form.cities.includes(c) ? "✓ " : ""}{c}
+                  </button>
+                ))
+              )}
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-2 gap-4">
