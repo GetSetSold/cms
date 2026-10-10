@@ -814,8 +814,8 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
         .cma-vp-eyebrow { text-align: center; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; font-weight: 700; color: #777; margin-bottom: 10px; }
         .cma-vp-title { text-align: center; font-size: 27px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 8px; }
         .cma-vp-sub { text-align: center; color: #555; font-size: 14px; line-height: 1.6; max-width: 600px; margin: 0 auto 18px; }
-        .cma-vp-table { min-width: 0; table-layout: fixed; }
-        .cma-vp-table .c { width: 72px; }
+        .cma table.cma-vp-table { min-width: 0; table-layout: fixed; width: 100%; }
+        .cma-vp-table th:first-child, .cma-vp-table td:first-child { width: 150px; }
         .cma-vp-table td { overflow-wrap: break-word; }
         .cma-vp-table th.cma-vp-hl, .cma-vp-table td.cma-vp-hl { background: #f5f5f5; }
         .cma-vp-yes { color: #111; font-weight: 800; font-size: 17px; }
@@ -953,7 +953,6 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
           .cma-modal { padding: 22px 18px; }
           .cma-vp-title { font-size: 22px; }
           .cma-vp-table th, .cma-vp-table td { padding: 8px 6px; font-size: 12px; }
-          .cma-vp-table .c { width: 58px; }
           .cma-topbar { font-size: 12px; }
         }
         @media print {
