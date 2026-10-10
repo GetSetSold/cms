@@ -23,7 +23,16 @@ export function ManageAlertsClient() {
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [editing, setEditing] = useState<SavedSearch | null>(null);
-  const [editForm, setEditForm] = useState({ cities: "", beds: "", baths: "", minPrice: "", maxPrice: "", homeType: "", type: "sale" });
+  const [editForm, setEditForm] = useState({ cities: [] as string[], beds: "", baths: "", minPrice: "", maxPrice: "", homeType: "", type: "sale" });
+  const [allCities, setAllCities] = useState<string[]>([]);
+  const [editCitySearch, setEditCitySearch] = useState("");
+
+  useEffect(() => {
+    fetch("/api/property-alerts/cities")
+      .then((r) => r.json())
+      .then((d) => setAllCities(d.cities ?? []))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -104,7 +113,7 @@ export function ManageAlertsClient() {
 
   function openEdit(s: SavedSearch) {
     const c = s.criteria || {};
-    const cities = Array.isArray(c.cities) ? c.cities.join(", ") : (c.city || "");
+    const cities = Array.isArray(c.cities) ? c.cities : (c.city ? [c.city] : []);
     setEditForm({
       cities,
       beds: c.beds || "",
@@ -114,15 +123,22 @@ export function ManageAlertsClient() {
       homeType: c.homeType || "",
       type: c.type || "sale",
     });
+    setEditCitySearch("");
     setEditing(s);
+  }
+
+  function toggleEditCity(city: string) {
+    setEditForm((f) => ({
+      ...f,
+      cities: f.cities.includes(city) ? f.cities.filter((c) => c !== city) : [...f.cities, city],
+    }));
   }
 
   async function saveEdit(e: React.FormEvent) {
     e.preventDefault();
     if (!editing) return;
     const criteria: Record<string, any> = {};
-    const cityList = editForm.cities.split(",").map((c) => c.trim()).filter(Boolean);
-    if (cityList.length) criteria.cities = cityList;
+    if (editForm.cities.length) criteria.cities = editForm.cities;
     if (editForm.beds) criteria.beds = editForm.beds;
     if (editForm.baths) criteria.baths = editForm.baths;
     if (editForm.minPrice) criteria.minPrice = editForm.minPrice;
@@ -133,7 +149,7 @@ export function ManageAlertsClient() {
     const parts: string[] = [];
     if (editForm.beds) parts.push(`${editForm.beds} bed`);
     if (editForm.homeType) parts.push(editForm.homeType);
-    if (cityList.length) parts.push(cityList.join(", "));
+    if (editForm.cities.length) parts.push(editForm.cities.join(", "));
     if (editForm.maxPrice) parts.push(`under $${Number(editForm.maxPrice).toLocaleString()}`);
     if (editForm.minPrice) parts.push(`over $${Number(editForm.minPrice).toLocaleString()}`);
 
@@ -276,9 +292,38 @@ export function ManageAlertsClient() {
             <h3 className="text-lg font-bold mb-4">Edit alert</h3>
             <form onSubmit={saveEdit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-1">City</label>
-                <input type="text" value={editForm.cities} onChange={(e) => setEditForm({ ...editForm, cities: e.target.value })}
-                  className="w-full rounded-lg border border-line px-3 py-2 text-sm" />
+                <label className="block text-sm font-medium mb-1">Cities {editForm.cities.length > 0 && `(${editForm.cities.length})`}</label>
+                <input
+                  type="text"
+                  value={editCitySearch}
+                  onChange={(e) => setEditCitySearch(e.target.value)}
+                  placeholder="Search cities..."
+                  className="w-full rounded-lg border border-line px-3 py-2 text-sm"
+                />
+                {editForm.cities.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {editForm.cities.map((c) => (
+                      <span key={c} className="inline-flex items-center gap-1 rounded-full bg-ink px-2.5 py-1 text-xs text-white">
+                        {c}
+                        <button type="button" onClick={() => toggleEditCity(c)} className="hover:opacity-70">×</button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+                {editCitySearch && (
+                  <div className="mt-1 max-h-32 overflow-y-auto rounded-lg border border-line bg-white shadow-lg">
+                    {allCities.filter((c) => c.toLowerCase().includes(editCitySearch.toLowerCase())).slice(0, 30).map((c) => (
+                      <button
+                        key={c}
+                        type="button"
+                        onClick={() => { toggleEditCity(c); setEditCitySearch(""); }}
+                        className={`block w-full px-3 py-2 text-left text-sm hover:bg-gray-50 ${editForm.cities.includes(c) ? "font-semibold text-accent" : ""}`}
+                      >
+                        {editForm.cities.includes(c) ? "✓ " : ""}{c}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
