@@ -6,6 +6,7 @@ import { themeFontHref, themeVars, themeIconOverrideCSS } from "@/lib/theme";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter, MobileCtaBar } from "@/components/site/SiteFooter";
 import { ListingsBrowser, DEFAULT_CITY, type ListingsSearchParams } from "@/components/listings/ListingsBrowser";
+import { NlpSearchBox } from "@/components/listings/NlpSearchBox";
 
 export const dynamic = "force-dynamic";
 
@@ -40,6 +41,7 @@ export default async function ListingsPage({ searchParams }: { searchParams: Pro
       {themeIconOverrideCSS(settings) ? <style dangerouslySetInnerHTML={{ __html: themeIconOverrideCSS(settings) }} /> : null}
       <SiteHeader settings={settings} logo={logo} />
       <main className="mx-auto w-full max-w-7xl px-5 py-10 md:px-10 md:py-14">
+        <NlpSearchBox basePath="/listings" />
         <ListingsBrowser sp={sp} basePath="/listings" />
       </main>
       <SiteFooter settings={settings} />
