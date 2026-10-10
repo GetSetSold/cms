@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { createMlsClient, rawCitiesFor } from "@/lib/mls";
+import { brandedEmail } from "@/lib/emailTemplate";
 
 /**
  * Check saved searches for new matching listings.
@@ -121,7 +122,7 @@ export async function GET(req: NextRequest) {
 function buildAlertEmail(criteriaSummary: string, matches: any[], unsubscribeToken: string): string {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://cms.rohit-910.workers.dev";
   const cards = matches.map((m) => `
-    <div style="margin:20px 32px;border:1px solid #e5e5e5;border-radius:12px;overflow:hidden;">
+    <div style="margin:20px 0;border:1px solid #e5e5e5;border-radius:12px;overflow:hidden;">
       ${m.photo ? `<img src="${m.photo}" alt="" style="width:100%;height:auto;display:block;">` : ""}
       <div style="padding:16px 20px;">
         <div style="font-size:18px;font-weight:700;color:#111;">$${Number(m.price).toLocaleString()}</div>
@@ -131,30 +132,18 @@ function buildAlertEmail(criteriaSummary: string, matches: any[], unsubscribeTok
       </div>
     </div>`).join("");
 
-  return `<!DOCTYPE html>
-<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
-<div style="max-width:600px;margin:0 auto;background:#ffffff;">
-<div style="background:#111111;color:#ffffff;padding:24px 32px;text-align:center;">
-<div style="font-size:20px;font-weight:700;letter-spacing:1px;">GETSETSOLD<span style="color:#0066cc;">.ca</span></div>
-<div style="font-size:12px;color:#999;margin-top:4px;">New listings matching your search</div>
-</div>
-<div style="padding:28px 32px 8px;">
-<p style="font-size:16px;color:#111;margin:0 0 8px;">Hi there,</p>
-<p style="font-size:14px;color:#333;line-height:1.6;margin:0;">
-<strong>${matches.length} new ${matches.length === 1 ? "listing" : "listings"}</strong> match your saved search:
-<span style="background:#f0f4fa;padding:2px 8px;border-radius:4px;font-size:13px;">${criteriaSummary}</span>
-</p>
-</div>
-${cards}
-<div style="text-align:center;padding:8px 32px 28px;">
-<p style="font-size:13px;color:#666;margin-top:16px;">
-<a href="${siteUrl}/property-alerts/manage" style="color:#0066cc;">Manage your alerts</a> ·
-<a href="${siteUrl}/api/property-alerts/unsubscribe?token=${unsubscribeToken}" style="color:#0066cc;">Unsubscribe</a>
-</p>
-</div>
-<div style="background:#f5f5f5;padding:20px 32px;text-align:center;">
-<p style="font-size:12px;color:#999;margin:0;">GetSetSold.ca · Lombard Group Real Estate Inc., Brokerage<br>You're receiving this because you saved a search on our site.</p>
-</div>
-</div></body></html>`;
+  return brandedEmail({
+    kicker: "NEW LISTINGS FOR YOU",
+    title: `${matches.length} new ${matches.length === 1 ? "listing" : "listings"} matching your search`,
+    greeting: "Hi there,",
+    bodyHtml: `
+      <p style="margin:0 0 16px;">These just hit the market for your saved search:<br>
+      <span style="background:#f0f4fa;padding:2px 8px;border-radius:4px;font-size:13px;">${criteriaSummary}</span></p>
+      ${cards}
+      <p style="margin:24px 0 0;font-size:13px;color:#666;">
+        <a href="${siteUrl}/property-alerts/manage" style="color:#0066cc;">Manage your alerts</a> ·
+        <a href="${siteUrl}/api/property-alerts/unsubscribe?token=${unsubscribeToken}" style="color:#0066cc;">Unsubscribe</a>
+      </p>`,
+    footerNote: "You're receiving this because you saved a property search on GetSetSold.ca.",
+  });
 }
