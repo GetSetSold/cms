@@ -48,23 +48,29 @@ export async function POST(req: NextRequest) {
     footerNote: "You're receiving this because you saved a property search on GetSetSold.ca.",
   });
 
-  const { data, error } = await cms.functions.invoke("send-email", {
-    body: {
+  // Call the Edge Function directly via fetch (bypass supabase client).
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+  
+  const res = await fetch(`${supabaseUrl}/functions/v1/send-email`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${serviceKey}`,
+      "apikey": serviceKey,
+    },
+    body: JSON.stringify({
       lead_id: lead.id,
       subject: "Test: 2 new listings matching your search",
       body: html,
       from_email: "noreply@getsetsold.ca",
       reply_to: "rohit@getsetsold.ca",
-    },
+    }),
   });
 
-  if (error) {
-    // Try to get the actual function error details.
-    return NextResponse.json({ 
-      error: error.message,
-      details: error,
-      lead_id: lead.id,
-    }, { status: 500 });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    return NextResponse.json({ error: `Function returned ${res.status}`, details: data }, { status: 500 });
   }
   return NextResponse.json({ sent: true, to: email, data });
 }
