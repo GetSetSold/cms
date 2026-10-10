@@ -19,9 +19,11 @@ export function ManageAlertsClient() {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"loading" | "login" | "dashboard">("loading");
   const [searches, setSearches] = useState<SavedSearch[]>([]);
-  const [favorites, setFavorites] = useState<string[]>([]);
+  const [favorites, setFavorites] = useState<any[]>([]);
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
+  const [editing, setEditing] = useState<SavedSearch | null>(null);
+  const [editForm, setEditForm] = useState({ city: "", beds: "", baths: "", minPrice: "", maxPrice: "", homeType: "", type: "sale" });
 
   useEffect(() => {
     (async () => {
@@ -39,13 +41,14 @@ export function ManageAlertsClient() {
           .eq("email", userEmail)
           .order("created_at", { ascending: false });
         setSearches(data ?? []);
-        // Load favorites.
-        const { data: favs } = await supabase
-          .from("favorite_listings")
-          .select("listing_key")
-          .eq("user_id", session.user.id)
-          .order("created_at", { ascending: false });
-        setFavorites((favs ?? []).map((f) => f.listing_key));
+        // Load favorites with details.
+        try {
+          const favRes = await fetch("/api/favorites/details");
+          if (favRes.ok) {
+            const favData = await favRes.json();
+            setFavorites(favData.favorites ?? []);
+          }
+        } catch {}
         setStatus("dashboard");
       } else {
         setStatus("login");
@@ -91,6 +94,50 @@ export function ManageAlertsClient() {
     const supabase = createClient();
     await supabase.from("saved_searches").delete().eq("id", id);
     setSearches((s) => s.filter((x) => x.id !== id));
+  }
+
+  function openEdit(s: SavedSearch) {
+    const c = s.criteria || {};
+    setEditForm({
+      city: c.city || "",
+      beds: c.beds || "",
+      baths: c.baths || "",
+      minPrice: c.minPrice || "",
+      maxPrice: c.maxPrice || "",
+      homeType: c.homeType || "",
+      type: c.type || "sale",
+    });
+    setEditing(s);
+  }
+
+  async function saveEdit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editing) return;
+    const criteria: Record<string, string> = {};
+    if (editForm.city) criteria.city = editForm.city;
+    if (editForm.beds) criteria.beds = editForm.beds;
+    if (editForm.baths) criteria.baths = editForm.baths;
+    if (editForm.minPrice) criteria.minPrice = editForm.minPrice;
+    if (editForm.maxPrice) criteria.maxPrice = editForm.maxPrice;
+    if (editForm.homeType) criteria.homeType = editForm.homeType;
+    criteria.type = editForm.type;
+
+    const parts: string[] = [];
+    if (editForm.beds) parts.push(`${editForm.beds} bed`);
+    if (editForm.homeType) parts.push(editForm.homeType);
+    if (editForm.city) parts.push(editForm.city);
+    if (editForm.maxPrice) parts.push(`under $${Number(editForm.maxPrice).toLocaleString()}`);
+    if (editForm.minPrice) parts.push(`over $${Number(editForm.minPrice).toLocaleString()}`);
+
+    const res = await fetch("/api/property-alerts/update", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: editing.id, criteria, criteriaSummary: parts.join(" · ") }),
+    });
+    if (res.ok) {
+      setSearches((ss) => ss.map((x) => x.id === editing.id ? { ...x, criteria, criteria_summary: parts.join(" · ") } : x));
+      setEditing(null);
+    }
   }
 
   if (status === "loading") {
@@ -150,6 +197,10 @@ export function ManageAlertsClient() {
                     className="text-xs px-3 py-1.5 rounded-lg bg-ink text-white hover:opacity-90">
                     View listings
                   </a>
+                  <button onClick={() => openEdit(s)}
+                    className="text-xs px-3 py-1.5 rounded-lg border border-line hover:bg-gray-50">
+                    Edit
+                  </button>
                   <button onClick={() => toggleActive(s.id, s.is_active)}
                     className="text-xs px-3 py-1.5 rounded-lg border border-line hover:bg-gray-50">
                     {s.is_active ? "Pause" : "Resume"}
@@ -168,16 +219,101 @@ export function ManageAlertsClient() {
       {favorites.length > 0 && (
         <div className="mt-10">
           <h2 className="text-xl font-bold mb-4">Your favorite listings ({favorites.length})</h2>
-          <p className="text-sm text-muted mb-4">
-            Listings you've hearted. Click to view details.
-          </p>
-          <div className="grid gap-2">
-            {favorites.map((key) => (
-              <a key={key} href={`/real-estate/${encodeURIComponent(key)}`}
-                className="text-sm text-accent underline hover:no-underline">
-                View listing {key}
-              </a>
+          <div className="space-y-3">
+            {favorites.map((f) => (
+              f.missing ? null : (
+                <a key={f.key} href={`/real-estate/${encodeURIComponent(f.key)}`}
+                  className="flex gap-4 rounded-xl border border-line bg-white p-3 hover:shadow-md transition-shadow">
+                  {f.photo ? (
+                    <img src={f.photo} alt="" className="h-20 w-20 shrink-0 rounded-full object-cover" />
+                  ) : (
+                    <div className="h-20 w-20 shrink-0 rounded-full bg-gray-100" />
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <div className="font-bold text-lg">${Number(f.price).toLocaleString()}</div>
+                    <div className="truncate text-sm">{f.address}, {f.city}</div>
+                    <div className="text-xs text-muted mt-1">
+                      {f.beds ? `${f.beds} bd` : ""}{f.beds && f.baths ? " · " : ""}{f.baths ? `${f.baths} ba` : ""}
+                      {f.mls ? ` · MLS# ${f.mls}` : ""}
+                    </div>
+                  </div>
+                </a>
+              )
             ))}
+          </div>
+        </div>
+      )}
+
+      {editing && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setEditing(null)}>
+          <div className="w-full max-w-md rounded-2xl bg-white p-6" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-lg font-bold mb-4">Edit alert</h3>
+            <form onSubmit={saveEdit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">City</label>
+                <input type="text" value={editForm.city} onChange={(e) => setEditForm({ ...editForm, city: e.target.value })}
+                  className="w-full rounded-lg border border-line px-3 py-2 text-sm" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Beds</label>
+                  <select value={editForm.beds} onChange={(e) => setEditForm({ ...editForm, beds: e.target.value })}
+                    className="w-full rounded-lg border border-line px-3 py-2 text-sm">
+                    <option value="">Any</option>
+                    <option value="1">1+</option><option value="2">2+</option>
+                    <option value="3">3+</option><option value="4">4+</option>
+                    <option value="5">5+</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Baths</label>
+                  <select value={editForm.baths} onChange={(e) => setEditForm({ ...editForm, baths: e.target.value })}
+                    className="w-full rounded-lg border border-line px-3 py-2 text-sm">
+                    <option value="">Any</option>
+                    <option value="1">1+</option><option value="2">2+</option>
+                    <option value="3">3+</option><option value="4">4+</option>
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Min price</label>
+                  <input type="number" value={editForm.minPrice} onChange={(e) => setEditForm({ ...editForm, minPrice: e.target.value })}
+                    className="w-full rounded-lg border border-line px-3 py-2 text-sm" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Max price</label>
+                  <input type="number" value={editForm.maxPrice} onChange={(e) => setEditForm({ ...editForm, maxPrice: e.target.value })}
+                    className="w-full rounded-lg border border-line px-3 py-2 text-sm" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Type</label>
+                  <select value={editForm.homeType} onChange={(e) => setEditForm({ ...editForm, homeType: e.target.value })}
+                    className="w-full rounded-lg border border-line px-3 py-2 text-sm">
+                    <option value="">Any</option>
+                    <option value="detached">Detached</option>
+                    <option value="semi-detached">Semi</option>
+                    <option value="townhouse">Townhouse</option>
+                    <option value="condo">Condo</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Sale/Rent</label>
+                  <select value={editForm.type} onChange={(e) => setEditForm({ ...editForm, type: e.target.value })}
+                    className="w-full rounded-lg border border-line px-3 py-2 text-sm">
+                    <option value="sale">For sale</option>
+                    <option value="rent">For rent</option>
+                  </select>
+                </div>
+              </div>
+              <div className="flex gap-2 pt-2">
+                <button type="submit" className="flex-1 rounded-lg bg-ink py-2.5 text-sm font-semibold text-white">Save</button>
+                <button type="button" onClick={() => setEditing(null)}
+                  className="rounded-lg border border-line px-4 py-2.5 text-sm">Cancel</button>
+              </div>
+            </form>
           </div>
         </div>
       )}

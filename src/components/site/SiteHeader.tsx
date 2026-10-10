@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useRef, useState } from "react";
 import type { SiteSettings, SvgAsset } from "@/lib/types";
 import { Svg } from "./Svg";
+import { HeaderAuth } from "./HeaderAuth";
 
 function PlusMinus({ open }: { open: boolean }) {
   return (
@@ -99,6 +100,7 @@ export function SiteHeader({ settings, logo }: { settings: SiteSettings; logo?: 
         </nav>
 
         <div className="hidden items-center gap-4 md:flex">
+          <HeaderAuth />
           {settings.contact?.phone ? (
             <a
               href={`tel:${settings.contact.phone}`}
