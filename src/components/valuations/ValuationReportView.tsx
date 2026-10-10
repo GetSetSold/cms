@@ -248,11 +248,13 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
 
   const b = branding ?? {};
   const topLine = [
-    b.header_tagline || "Rohit Sharma, REALTOR®",
+    b.header_tagline || "Rohit K Sharma | Real Estate Agent",
     b.header_name || "Lombard Group Real Estate Inc., Brokerage",
-    b.header_phone || "416-605-7488",
+    b.header_phone || "(416)-605-7488",
     b.header_email || "rohit@getsetsold.com",
   ].filter(Boolean).join(" · ");
+  const shortBrand = b.header_tagline || "Rohit K Sharma | Real Estate Agent";
+  const reportDate = report.created_at ? new Date(report.created_at).toISOString().slice(0, 10) : "";
 
   const NEARBY_GROUPS: [string, string, string][] = [
     ["school", "Schools", "cap"],
@@ -262,45 +264,55 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
 
   return (
     <div className={`cma${dark ? " cma-dark" : ""}`}>
-      {/* Toolbar: screen only */}
-      <div className="cma-toolbar cma-no-print">
-        <button type="button" className={`cma-theme-toggle${dark ? " on" : ""}`} onClick={() => setDark(!dark)} aria-pressed={dark} aria-label="Toggle dark mode">
-          <span className="cma-toggle-track"><span className="cma-toggle-knob">{dark ? "☾" : "☀"}</span></span>
-          {dark ? "Dark" : "Light"}
-        </button>
-        <button type="button" className="cma-pdf-btn" onClick={() => window.print()}>⤓ Download PDF</button>
+      {/* Fixed website-style header (screen only) */}
+      <div className="cma-fixedhead cma-no-print">
+        <div className="cma-fh-brand">{topLine}</div>
+        <div className="cma-fh-main">
+          <div className="cma-fh-titles">
+            <div className="cma-fh-brandshort">{shortBrand}</div>
+            <div className="cma-fh-logo">GETSETSOLD<span>.ca</span></div>
+            <div className="cma-fh-title">Comparative Market Analysis</div>
+            <div className="cma-fh-date">{reportDate}</div>
+          </div>
+          <div className="cma-fh-actions">
+            <button type="button" className={`cma-theme-toggle${dark ? " on" : ""}`} onClick={() => setDark(!dark)} aria-pressed={dark} aria-label="Toggle dark mode">
+              <span className="cma-toggle-track"><span className="cma-toggle-knob">{dark ? "☾" : "☀"}</span></span>
+              {dark ? "Dark" : "Light"}
+            </button>
+            <button type="button" className="cma-pdf-btn" onClick={() => window.print()}>⤓ Download PDF</button>
+          </div>
+          <div className="cma-navwrap">
+            <button type="button" className="cma-navbtn" onClick={() => setNavOpen(!navOpen)} aria-expanded={navOpen} aria-haspopup="true">
+              <span className="cma-navburger" aria-hidden="true"><span /><span /><span /></span>
+              Navigation
+            </button>
+            {navOpen && (
+              <>
+                <div className="cma-navoverlay" onClick={() => setNavOpen(false)} />
+                <nav className="cma-navmenu" aria-label="Report sections">
+                  {navItems.map((n) => (
+                    <a key={n.id} href={`#${n.id}`} onClick={() => setNavOpen(false)}>{n.label}</a>
+                  ))}
+                </nav>
+              </>
+            )}
+          </div>
+        </div>
       </div>
 
-      {/* Branding header from Settings → Documents */}
-      <div className="cma-topbar">{topLine}</div>
-
-      <header className="cma-head">
-        <div>
-          <div className="cma-brand">GETSETSOLD<span>.ca</span></div>
-          <div className="cma-sub">Comparative Market Analysis</div>
-        </div>
-        <div className="cma-meta">
-          <div>{new Date(report.created_at).toLocaleDateString()}</div>
-          {leadName && <div>Prepared for {leadName}</div>}
-        </div>
-      </header>
-
-      {/* Section navigator */}
-      <div className="cma-navwrap cma-no-print">
-        <button type="button" className="cma-navbtn" onClick={() => setNavOpen(!navOpen)} aria-expanded={navOpen} aria-haspopup="true">
-          <span className="cma-navburger" aria-hidden="true"><span /><span /><span /></span>
-          Navigation
-        </button>
-        {navOpen && (
-          <>
-            <div className="cma-navoverlay" onClick={() => setNavOpen(false)} />
-            <nav className="cma-navmenu" aria-label="Report sections">
-              {navItems.map((n) => (
-                <a key={n.id} href={`#${n.id}`} onClick={() => setNavOpen(false)}>{n.label}</a>
-              ))}
-            </nav>
-          </>
-        )}
+      {/* Print header (print/PDF only) */}
+      <div className="cma-printhead">
+        <div className="cma-topbar">{topLine}</div>
+        <header className="cma-head">
+          <div>
+            <div className="cma-brand">GETSETSOLD<span>.ca</span></div>
+            <div className="cma-sub">Comparative Market Analysis</div>
+          </div>
+          <div className="cma-meta">
+            <div>{reportDate}</div>
+            {clientName && <div>Prepared for {clientName}</div>}
+          </div>
+        </header>
       </div>
 
       {/* Subject property */}
@@ -661,7 +673,20 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
 
       <style>{`
         .cma { max-width: 860px; margin: 0 auto; padding: 28px 20px; background: #f5f5f5; color: #111; font-family: -apple-system, 'Segoe UI', sans-serif; }
-        .cma-toolbar { display: flex; gap: 10px; justify-content: flex-end; align-items: center; margin-bottom: 16px; }
+        /* fixed website-style header */
+        .cma-fixedhead { position: sticky; top: 0; z-index: 50; margin: -28px -20px 20px; background: #fff; border-bottom: 1px solid #e2e2e2; padding: 10px 24px 12px; }
+        .cma-fh-brand { font-size: 12px; color: #666; padding-bottom: 8px; border-bottom: 1px solid #f0f0f0; margin-bottom: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .cma-fh-main { display: flex; align-items: center; gap: 16px; }
+        .cma-fh-titles { flex: 1; min-width: 0; }
+        .cma-fh-brandshort { display: none; }
+        .cma-fh-logo { font-size: 23px; font-weight: 800; letter-spacing: -0.5px; line-height: 1.15; }
+        .cma-fh-logo span { color: #0066cc; }
+        .cma-fh-title { font-size: 14px; font-weight: 700; margin-top: 2px; }
+        .cma-fh-date { font-size: 12px; color: #777; }
+        .cma-fh-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+        .cma-fixedhead .cma-navwrap { margin-bottom: 0; flex-shrink: 0; }
+        /* print header */
+        .cma-printhead { display: none; }
         .cma-theme-toggle { display: inline-flex; align-items: center; gap: 8px; border: 1px solid #ddd; background: #fff; border-radius: 20px; padding: 6px 14px 6px 6px; font-size: 13px; font-weight: 600; cursor: pointer; }
         .cma-theme-toggle .cma-toggle-track { width: 40px; height: 22px; border-radius: 20px; background: #ddd; position: relative; transition: background 0.2s; flex-shrink: 0; }
         .cma-theme-toggle .cma-toggle-knob { position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; font-size: 11px; transition: left 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.25); }
@@ -770,19 +795,19 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
         .cma-modal-done .cma-cta-btn { margin-bottom: 0; }
         .cma-modal-check { width: 56px; height: 56px; border-radius: 50%; background: #16a34a; color: #fff; font-size: 28px; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; }
         .cma footer { background: #fff; border: 1px solid #e2e2e2; border-radius: 12px; padding: 20px 24px; margin-top: 4px; font-size: 13px; text-align: center; color: #555; }
-        .cma section { scroll-margin-top: 76px; }
+        .cma section { scroll-margin-top: 140px; }
         /* section navigator (menu button) */
-        .cma-navwrap { position: relative; margin-bottom: 20px; z-index: 40; }
+        .cma-navwrap { position: relative; z-index: 40; }
         .cma-navbtn { display: inline-flex; align-items: center; gap: 10px; border: 1px solid #ddd; background: #fff; border-radius: 10px; padding: 10px 18px; font-size: 14px; font-weight: 700; cursor: pointer; color: #111; }
         .cma-navbtn:hover { background: #111; color: #fff; border-color: #111; }
         .cma-navbtn:hover .cma-navburger span { background: #fff; }
         .cma-navburger { display: inline-flex; flex-direction: column; gap: 3px; }
         .cma-navburger span { display: block; width: 16px; height: 2px; background: #111; }
         .cma-navoverlay { position: fixed; inset: 0; z-index: 39; }
-        .cma-navmenu { position: absolute; top: calc(100% + 8px); left: 0; background: #fff; border: 1px solid #e2e2e2; border-radius: 12px; box-shadow: 0 12px 32px rgba(0,0,0,0.14); min-width: 250px; max-width: 90vw; padding: 6px; z-index: 40; max-height: 60vh; overflow-y: auto; }
-        .cma-navmenu a { display: flex; align-items: center; gap: 10px; padding: 10px 14px; font-size: 14px; font-weight: 600; color: #333; text-decoration: none; border-radius: 8px; }
-        .cma-navmenu a:hover { background: #f0f0f0; color: #111; }
-        .cma-navmenu a::before { content: "→"; color: #999; font-size: 13px; }
+        .cma-navmenu { position: absolute; top: calc(100% + 8px); right: 0; background: #fff; border: 1px solid #e2e2e2; border-radius: 12px; box-shadow: 0 12px 32px rgba(0,0,0,0.14); min-width: 250px; max-width: 92vw; padding: 4px 0; z-index: 40; }
+        .cma-navmenu a { display: block; padding: 11px 18px; font-size: 14px; font-weight: 600; color: #333; text-decoration: none; border-bottom: 1px solid #f0f0f0; }
+        .cma-navmenu a:last-child { border-bottom: none; }
+        .cma-navmenu a:hover { background: #f5f5f5; color: #111; }
         /* value proposition */
         .cma-vp-eyebrow { text-align: center; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; font-weight: 700; color: #777; margin-bottom: 10px; }
         .cma-vp-title { text-align: center; font-size: 27px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 8px; }
@@ -817,6 +842,13 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
         /* dark mode: dark color in blocks only — page stays light */
         .cma-dark { background: #f5f5f5; color: #111; }
         .cma-dark .cma-topbar { color: #555; border-color: #e2e2e2; }
+        .cma-dark .cma-fixedhead { background: #141414; border-color: #141414; }
+        .cma-dark .cma-fh-brand { color: #999; border-color: #2e2e2e; }
+        .cma-dark .cma-fh-brandshort { color: #ddd; }
+        .cma-dark .cma-fh-logo { color: #f2f2f2; }
+        .cma-dark .cma-fh-logo span { color: #4da3ff; }
+        .cma-dark .cma-fh-title { color: #f2f2f2; }
+        .cma-dark .cma-fh-date { color: #999; }
         .cma-dark .cma-head, .cma-dark section, .cma-dark footer { background: #141414; border-color: #141414; color: #f2f2f2; }
         .cma-dark h2 { border-color: #f2f2f2; color: #f2f2f2; }
         .cma-dark .cma-brand span { color: #4da3ff; }
@@ -889,7 +921,17 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
         .cma-dark .cma-theme-toggle .cma-toggle-track { background: #ccc; }
         .cma-dark .cma-theme-toggle.on .cma-toggle-track { background: #0066cc; }
         @media (max-width: 640px) {
-          .cma { padding: 16px 12px; overflow-x: hidden; }
+          .cma { padding: 16px 12px; overflow-x: clip; }
+          .cma-fixedhead { margin: -16px -12px 16px; padding: 10px 12px; }
+          .cma-fh-brand { display: none; }
+          .cma-fh-main { flex-wrap: wrap; gap: 10px; }
+          .cma-fh-titles { flex: 1 1 0; }
+          .cma-fh-brandshort { display: block; font-size: 11px; font-weight: 700; }
+          .cma-fh-logo { display: none; }
+          .cma-fh-title { font-size: 12px; margin-top: 1px; }
+          .cma-fh-date { font-size: 11px; }
+          .cma-fh-actions { order: 3; flex: 1 1 100%; }
+          .cma-fh-actions .cma-theme-toggle, .cma-fh-actions .cma-pdf-btn { flex: 1; justify-content: center; }
           .cma section { padding: 18px 16px; }
           .cma-head { flex-direction: column; gap: 10px; }
           .cma-meta { text-align: left; }
@@ -908,12 +950,11 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
           .cma-modal { padding: 22px 18px; }
           .cma-vp-title { font-size: 22px; }
           .cma-topbar { font-size: 12px; }
-          .cma-toolbar { justify-content: center; }
         }
         @media print {
           .cma { padding: 0; max-width: none; background: #fff; color: #111; }
-          .cma-toolbar, .cma-no-print { display: none !important; }
-          .cma-topbar { color: #555; border-color: #eee; }
+          .cma-no-print { display: none !important; }
+          .cma-printhead { display: block; }
           .cma-head, .cma section, .cma footer { border-color: #ddd; background: #fff; }
           .cma-page { page-break-before: always; }
           .cma-listing, .cma-why-card, .cma-card, .cma-review, .cma-reason, .cma-bar, .cma-sold { break-inside: avoid; }
