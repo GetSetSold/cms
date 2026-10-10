@@ -7,20 +7,24 @@ import { createClient } from "@supabase/supabase-js";
  * Body: { email, criteria: {beds, baths, minPrice, maxPrice, city, homeType, type}, criteriaSummary }
  */
 export async function POST(req: NextRequest) {
-  const body = await req.json();
-  const { email, criteria, criteriaSummary } = body;
+  try {
+    const body = await req.json();
+    const { email, criteria, criteriaSummary } = body;
 
-  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return NextResponse.json({ error: "Valid email required" }, { status: 400 });
-  }
-  if (!criteria || typeof criteria !== "object") {
-    return NextResponse.json({ error: "Search criteria required" }, { status: 400 });
-  }
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return NextResponse.json({ error: "Valid email required" }, { status: 400 });
+    }
+    if (!criteria || typeof criteria !== "object") {
+      return NextResponse.json({ error: "Search criteria required" }, { status: 400 });
+    }
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!url || !key) {
+      return NextResponse.json({ error: "Server misconfigured (missing Supabase credentials)" }, { status: 500 });
+    }
+
+    const supabase = createClient(url, key);
 
   // Check for duplicate (same email + same criteria).
   const { data: existing } = await supabase
@@ -81,4 +85,11 @@ export async function POST(req: NextRequest) {
   }
 
   return NextResponse.json({ ok: true, id: data.id });
+  } catch (e) {
+    console.error("property-alerts POST error:", e);
+    return NextResponse.json(
+      { error: e instanceof Error ? e.message : "Server error" },
+      { status: 500 }
+    );
+  }
 }
