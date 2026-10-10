@@ -9,6 +9,7 @@ export function ListingCard({ listing }: { listing: GridListing }) {
       href={`/real-estate/${encodeURIComponent(listing.ListingKey)}/${listingSlug(listing)}`}
       image={listing.Media}
       showFavorite
+      listingKey={listing.ListingKey}
       statusLabel={sale ? "For Sale" : "For Rent"}
       statusTone={sale ? "dark" : "accent"}
       price={priceDisplay(listing)}

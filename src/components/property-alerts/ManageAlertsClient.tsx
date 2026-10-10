@@ -19,6 +19,7 @@ export function ManageAlertsClient() {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"loading" | "login" | "dashboard">("loading");
   const [searches, setSearches] = useState<SavedSearch[]>([]);
+  const [favorites, setFavorites] = useState<string[]>([]);
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
 
@@ -38,6 +39,13 @@ export function ManageAlertsClient() {
           .eq("email", userEmail)
           .order("created_at", { ascending: false });
         setSearches(data ?? []);
+        // Load favorites.
+        const { data: favs } = await supabase
+          .from("favorite_listings")
+          .select("listing_key")
+          .eq("user_id", session.user.id)
+          .order("created_at", { ascending: false });
+        setFavorites((favs ?? []).map((f) => f.listing_key));
         setStatus("dashboard");
       } else {
         setStatus("login");
@@ -87,10 +95,8 @@ export function ManageAlertsClient() {
 
   if (status === "loading") {
     return (
-      <div className="mx-auto w-full max-w-md">
-        <div className="rounded-2xl bg-white p-8 shadow-[0_6px_20px_rgba(20,20,43,0.08)] text-center text-muted">
-          Loading...
-        </div>
+      <div className="mx-auto w-full max-w-md text-center text-muted">
+        Loading...
       </div>
     );
   }
@@ -98,37 +104,34 @@ export function ManageAlertsClient() {
   if (status === "login") {
     return (
       <div className="mx-auto w-full max-w-md">
-        <div className="rounded-2xl bg-white p-8 md:p-10 shadow-[0_6px_20px_rgba(20,20,43,0.08)] text-center">
-          <h1 className="text-2xl font-bold mb-3">Manage your alerts</h1>
-          <p className="text-muted mb-8 text-sm">
-            Enter your email for a secure login link.
-          </p>
-          <form onSubmit={handleLogin} className="space-y-4 text-left">
-            <input
-              type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              className="w-full rounded-lg border border-line bg-white px-4 py-2.5 text-sm focus:border-accent focus:outline-none"
-              disabled={sending}
-            />
-            <button type="submit" disabled={sending || !email.trim()}
-              className="w-full rounded-lg bg-ink py-3 text-sm font-semibold text-white disabled:opacity-50">
-              {sending ? "Sending..." : "Send login link"}
-            </button>
-            {message && <p className="text-sm text-muted text-center">{message}</p>}
-          </form>
-        </div>
+        <h1 className="text-2xl font-bold mb-3 text-center">Manage your alerts</h1>
+        <p className="text-muted mb-8 text-sm text-center">
+          Enter your email for a secure login link.
+        </p>
+        <form onSubmit={handleLogin} className="space-y-4">
+          <input
+            type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@example.com"
+            className="w-full rounded-lg border border-line bg-white px-4 py-2.5 text-sm focus:border-accent focus:outline-none"
+            disabled={sending}
+          />
+          <button type="submit" disabled={sending || !email.trim()}
+            className="w-full rounded-lg bg-ink py-3 text-sm font-semibold text-white disabled:opacity-50">
+            {sending ? "Sending..." : "Send login link"}
+          </button>
+          {message && <p className="text-sm text-muted text-center">{message}</p>}
+        </form>
       </div>
     );
   }
 
   return (
-    <div className="mx-auto w-full max-w-2xl">
-      <div className="rounded-2xl bg-white p-8 md:p-10 shadow-[0_6px_20px_rgba(20,20,43,0.08)]">
-        <h1 className="text-2xl font-bold mb-6">Your property alerts</h1>
+    <div className="mx-auto w-full">
+      <h1 className="text-2xl font-bold mb-6">Your property alerts</h1>
       {searches.length === 0 ? (
-        <p className="text-muted">You have no saved alerts. <a href="/property-alerts" className="text-accent underline">Create one</a>.</p>
+        <p className="text-muted mb-10">You have no saved alerts. <a href="/property-alerts" className="text-accent underline">Create one</a>.</p>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-4 mb-10">
           {searches.map((s) => (
             <div key={s.id} className="rounded-lg border border-line bg-white p-5">
               <div className="flex items-start justify-between gap-4">
@@ -161,7 +164,23 @@ export function ManageAlertsClient() {
           ))}
         </div>
       )}
-      </div>
+
+      {favorites.length > 0 && (
+        <div className="mt-10">
+          <h2 className="text-xl font-bold mb-4">Your favorite listings ({favorites.length})</h2>
+          <p className="text-sm text-muted mb-4">
+            Listings you've hearted. Click to view details.
+          </p>
+          <div className="grid gap-2">
+            {favorites.map((key) => (
+              <a key={key} href={`/real-estate/${encodeURIComponent(key)}`}
+                className="text-sm text-accent underline hover:no-underline">
+                View listing {key}
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
