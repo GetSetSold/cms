@@ -34,6 +34,7 @@ export async function GET(req: NextRequest) {
       key: l.ListingKey,
       mls: l.ListingId,
       price: l.ListPrice ?? l.TotalActualRent,
+      isRent: l.TotalActualRent != null && l.ListPrice == null,
       address: l.UnparsedAddress,
       city: l.City,
       beds: l.BedroomsTotal,

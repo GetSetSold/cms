@@ -219,23 +219,31 @@ export function ManageAlertsClient() {
       {favorites.length > 0 && (
         <div className="mt-10">
           <h2 className="text-xl font-bold mb-4">Your favorite listings ({favorites.length})</h2>
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {favorites.map((f) => (
               f.missing ? null : (
                 <a key={f.key} href={`/real-estate/${encodeURIComponent(f.key)}`}
-                  className="flex gap-4 rounded-xl border border-line bg-white p-3 hover:shadow-md transition-shadow">
-                  {f.photo ? (
-                    <img src={f.photo} alt="" className="h-20 w-20 shrink-0 rounded-full object-cover" />
-                  ) : (
-                    <div className="h-20 w-20 shrink-0 rounded-full bg-gray-100" />
-                  )}
-                  <div className="min-w-0 flex-1">
-                    <div className="font-bold text-lg">${Number(f.price).toLocaleString()}</div>
-                    <div className="truncate text-sm">{f.address}, {f.city}</div>
-                    <div className="text-xs text-muted mt-1">
-                      {f.beds ? `${f.beds} bd` : ""}{f.beds && f.baths ? " · " : ""}{f.baths ? `${f.baths} ba` : ""}
-                      {f.mls ? ` · MLS# ${f.mls}` : ""}
+                  target="_blank" rel="noopener noreferrer"
+                  className="group rounded-[var(--radius-card)] border border-line bg-white overflow-hidden hover:shadow-md transition-shadow">
+                  <div className="relative">
+                    {f.photo ? (
+                      <img src={f.photo} alt="" className="h-40 w-full object-cover" />
+                    ) : (
+                      <div className="h-40 w-full bg-gray-100" />
+                    )}
+                    <span className={`absolute top-2 left-2 text-[11px] font-semibold px-2 py-0.5 rounded ${f.price && f.type === "rent" ? "bg-accent text-white" : "bg-ink text-white"}`}>
+                      {f.isRent ? "For Rent" : "For Sale"}
+                    </span>
+                  </div>
+                  <div className="p-3 flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="font-bold">${Number(f.price).toLocaleString()}</div>
+                      <div className="truncate text-xs text-muted">{f.address}, {f.city}</div>
+                      <div className="text-[11px] text-muted">
+                        {f.beds ? `${f.beds} bd` : ""}{f.beds && f.baths ? " · " : ""}{f.baths ? `${f.baths} ba` : ""}
+                      </div>
                     </div>
+                    <span className="shrink-0 text-ink group-hover:translate-x-0.5 transition-transform">→</span>
                   </div>
                 </a>
               )
