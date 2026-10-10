@@ -34,9 +34,12 @@ export default async function SharedValuationPage({ params }: { params: Promise<
     if (lead) leadName = `${(lead as any).first_name ?? ""} ${(lead as any).last_name ?? ""}`.trim();
   }
 
+  const { data: settings } = await supabase.from("site_settings").select("doc_branding").eq("id", 1).maybeSingle();
+  const branding = (settings as any)?.doc_branding ?? null;
+
   return (
     <div className="min-h-screen bg-gray-100 py-8">
-      <ValuationReportView report={report} leadName={leadName} />
+      <ValuationReportView report={report} leadName={leadName} branding={branding} />
     </div>
   );
 }

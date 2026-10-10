@@ -1,5 +1,6 @@
-/** Black & white CMA report + listing presentation — used by admin print view and public shared link. */
-import type { ReactNode } from "react";
+"use client";
+/** Black & white CMA report + listing presentation — admin print view and public shared link. */
+import { useEffect, useState, type ReactNode } from "react";
 
 type Comp = Record<string, any>;
 
@@ -21,7 +22,6 @@ const ICONS: Record<string, ReactNode> = {
   search: (<svg {...svgProps}><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>),
   sparkle: (<svg {...svgProps}><path d="M12 2l2.4 7.6H22l-6.2 4.5 2.4 7.4-6.2-4.6-6.2 4.6 2.4-7.4L2 9.6h7.6z" /></svg>),
   mega: (<svg {...svgProps}><path d="M3 11l18-7-7 18-2.5-7.5z" /><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6" /></svg>),
-  tag: (<svg {...svgProps}><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" /><circle cx="7" cy="7" r="1.2" /></svg>),
   shield: (<svg {...svgProps}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>),
   clock: (<svg {...svgProps}><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>),
   lamp: (<svg {...svgProps}><path d="M9 2h6l3 8H6z" /><line x1="12" y1="10" x2="12" y2="22" /><path d="M8 22h8" /></svg>),
@@ -110,15 +110,19 @@ const REVIEWS: [string, string][] = [
   ["David & Karen Thompson", "We interviewed several agents before choosing Rohit. His transparent pricing and full-service approach won us over. Our property sold for $25,000 over asking!"],
   ["Lisa Rodriguez", "Rohit's staging consultation transformed our home. Buyers were impressed from the moment they walked in. The open house strategy he implemented brought multiple competing offers."],
   ["Robert & Anne Williams", "Outstanding service at an unbeatable price. Rohit handled everything from professional cleaning to MLS listing. We couldn't be happier with the results and the money we saved."],
-  ["Jennifer Park", "Rohit exceeded all expectations. His knowledge of the market and negotiation skills resulted in a sale well above asking. Highly professional and always available."],
-  ["Amanda & Chris Scott", "From listing to closing, Rohit was exceptional. His 1% commission saved us thousands, and the service was better than agents charging full commission. A true professional."],
 ];
 
 const ELFSIGHT_APP_ID = "e705f2da-4d5f-48a0-8e1a-4e33be72155d";
 
-export type ReportStyle = "cards" | "editorial" | "compact";
+export function ValuationReportView({ report, leadName, branding }: { report: any; leadName?: string; branding?: any }) {
+  const [dark, setDark] = useState(false);
+  // Print/PDF always renders light.
+  useEffect(() => {
+    const off = () => setDark(false);
+    window.addEventListener("beforeprint", off);
+    return () => window.removeEventListener("beforeprint", off);
+  }, []);
 
-export function ValuationReportView({ report, leadName, style = "cards" }: { report: any; leadName?: string; style?: ReportStyle }) {
   const actives: Comp[] = report.active_comps ?? [];
   const solds: Comp[] = report.sold_comps ?? [];
   const upgrades: { description: string; amount: number }[] = report.upgrade_items ?? [];
@@ -130,8 +134,16 @@ export function ValuationReportView({ report, leadName, style = "cards" }: { rep
   const include: string[] = Array.isArray(pres.include) ? pres.include : [];
   const reviewsSource = pres.reviews_source === "static" ? "static" : "elfsight";
   const agent = { ...DEFAULT_AGENT, ...(pres.agent ?? {}) };
-  const nearby: { name: string; kind: string; distKm: number }[] = pres.nearby_places ?? [];
   const has = (k: string) => include.includes(k);
+  const nearby: { name: string; kind: string; distKm: number }[] = pres.nearby_places ?? [];
+
+  const b = branding ?? {};
+  const topLine = [
+    b.header_tagline || "Rohit Sharma, REALTOR®",
+    b.header_name || "Lombard Group Real Estate Inc., Brokerage",
+    b.header_phone || "416-605-7488",
+    b.header_email || "rohit@getsetsold.com",
+  ].filter(Boolean).join(" · ");
 
   const NEARBY_GROUPS: [string, string, string][] = [
     ["school", "Schools", "cap"],
@@ -140,8 +152,18 @@ export function ValuationReportView({ report, leadName, style = "cards" }: { rep
   ];
 
   return (
-    <div className="cma">
-      {/* Header */}
+    <div className={`cma${dark ? " cma-dark" : ""}`}>
+      {/* Toolbar: screen only */}
+      <div className="cma-toolbar cma-no-print">
+        <button type="button" onClick={() => setDark(!dark)} aria-pressed={dark}>
+          {dark ? "☀ Light mode" : "◐ Dark mode"}
+        </button>
+        <button type="button" onClick={() => window.print()}>⤓ Download PDF</button>
+      </div>
+
+      {/* Branding header from Settings → Documents */}
+      <div className="cma-topbar">{topLine}</div>
+
       <header className="cma-head">
         <div>
           <div className="cma-brand">GETSETSOLD<span>.ca</span></div>
@@ -160,7 +182,7 @@ export function ValuationReportView({ report, leadName, style = "cards" }: { rep
         {report.upgrades && <p className="cma-notes"><strong>Notes:</strong> {report.upgrades}</p>}
       </section>
 
-      {/* Active comps — photo cards */}
+      {/* Active comps */}
       {!!actives.length && (
         <section>
           <h2>Active Listings Nearby ({actives.length})</h2>
@@ -217,20 +239,22 @@ export function ValuationReportView({ report, leadName, style = "cards" }: { rep
               </div>
             );
           })()}
-          <table>
-            <thead><tr><th>Address</th><th>Sold price</th><th>Sold date</th><th>Bd/Ba/Sqft</th><th>DOM</th></tr></thead>
-            <tbody>
-              {solds.map((s: any, i: number) => (
-                <tr key={i}>
-                  <td>{s.address}</td>
-                  <td className="r">{money(s.price)}</td>
-                  <td>{s.date || "—"}</td>
-                  <td>{[s.beds && s.beds + "bd", s.baths && s.baths + "ba", s.sqft && String(s.sqft).replace(/,/g, "") + "sf"].filter(Boolean).join(" · ") || "—"}</td>
-                  <td className="r">{s.dom || "—"}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="cma-table-wrap">
+            <table>
+              <thead><tr><th>Address</th><th>Sold price</th><th>Sold date</th><th>Bd/Ba/Sqft</th><th>DOM</th></tr></thead>
+              <tbody>
+                {solds.map((s: any, i: number) => (
+                  <tr key={i}>
+                    <td>{s.address}</td>
+                    <td className="r">{money(s.price)}</td>
+                    <td>{s.date || "—"}</td>
+                    <td>{[s.beds && s.beds + "bd", s.baths && s.baths + "ba", s.sqft && String(s.sqft).replace(/,/g, "") + "sf"].filter(Boolean).join(" · ") || "—"}</td>
+                    <td className="r">{s.dom || "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </section>
       )}
 
@@ -260,21 +284,24 @@ export function ValuationReportView({ report, leadName, style = "cards" }: { rep
 
       {/* Pricing */}
       <section>
-        <h2>Pricing Recommendation</h2>        {!!upgrades.length && (
-          <table className="cma-adj">
-            <thead><tr><th>Upgrade / adjustment</th><th className="r">Value added</th></tr></thead>
-            <tbody>
-              {upgrades.map((u, i) => (
-                <tr key={i}><td>{u.description || "Upgrade"}</td><td className="r">+{money(u.amount)}</td></tr>
-              ))}
-              <tr className="cma-save"><td>Total adjustments</td><td className="r">+{money(upgradeTotal)}</td></tr>
-            </tbody>
-          </table>
+        <h2>Pricing Recommendation</h2>
+        {!!upgrades.length && (
+          <div className="cma-table-wrap">
+            <table className="cma-adj">
+              <thead><tr><th>Upgrade / adjustment</th><th className="r">Value added</th></tr></thead>
+              <tbody>
+                {upgrades.map((u, i) => (
+                  <tr key={i}><td>{u.description || "Upgrade"}</td><td className="r">+{money(u.amount)}</td></tr>
+                ))}
+                <tr className="cma-save"><td>Total adjustments</td><td className="r">+{money(upgradeTotal)}</td></tr>
+              </tbody>
+            </table>
+          </div>
         )}
         <div className="cma-price-row">
-          {report.price_low && <div><span>Range low</span><strong>{money(report.price_low)}</strong></div>}
+          {report.price_low ? <div><span>Range low</span><strong>{money(report.price_low)}</strong></div> : null}
           <div className="cma-rec"><span>Recommended list price</span><strong>{money(report.recommended_price)}</strong></div>
-          {report.price_high && <div><span>Range high</span><strong>{money(report.price_high)}</strong></div>}
+          {report.price_high ? <div><span>Range high</span><strong>{money(report.price_high)}</strong></div> : null}
         </div>
         {report.pricing_notes && <p className="cma-notes">{report.pricing_notes}</p>}
       </section>
@@ -283,13 +310,15 @@ export function ValuationReportView({ report, leadName, style = "cards" }: { rep
       {!!rec && (
         <section>
           <h2>Commission Comparison</h2>
-          <table>
-            <tbody>
-              <tr><td>GetSetSold listing side (1%)</td><td className="r">{money(listFee)}</td></tr>
-              <tr><td>Traditional total (5%)</td><td className="r">{money(tradFee)}</td></tr>
-              <tr className="cma-save"><td>You keep (est. savings on listing side)</td><td className="r">{money(tradFee - Math.round(rec * 0.03))}</td></tr>
-            </tbody>
-          </table>
+          <div className="cma-table-wrap">
+            <table>
+              <tbody>
+                <tr><td>GetSetSold listing side (1%)</td><td className="r">{money(listFee)}</td></tr>
+                <tr><td>Traditional total (5%)</td><td className="r">{money(tradFee)}</td></tr>
+                <tr className="cma-save"><td>You keep (est. savings on listing side)</td><td className="r">{money(tradFee - Math.round(rec * 0.03))}</td></tr>
+              </tbody>
+            </table>
+          </div>
           <p className="cma-fine">Buyer-agent co-op (2% under $1M / 2.5% over) is separate and paid to the buyer's brokerage. HST extra.</p>
         </section>
       )}
@@ -337,14 +366,16 @@ export function ValuationReportView({ report, leadName, style = "cards" }: { rep
       {has("comparison") && (
         <section className="cma-page">
           <h2>GetSetSold vs Traditional</h2>
-          <table>
-            <thead><tr><th>Service</th><th className="c">Traditional</th><th className="c">GetSetSold.ca (Rohit Sharma)</th></tr></thead>
-            <tbody>
-              {COMPARISON.map(([f, t, r]) => (
-                <tr key={f}><td>{f}</td><td className="c">{t ? "✓" : "—"}</td><td className="c"><strong>{r ? "✓" : "—"}</strong></td></tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="cma-table-wrap">
+            <table>
+              <thead><tr><th>Service</th><th className="c">Traditional</th><th className="c">GetSetSold.ca (Rohit Sharma)</th></tr></thead>
+              <tbody>
+                {COMPARISON.map(([f, t, r]) => (
+                  <tr key={f}><td>{f}</td><td className="c">{t ? "✓" : "—"}</td><td className="c"><strong>{r ? "✓" : "—"}</strong></td></tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </section>
       )}
 
@@ -366,15 +397,16 @@ export function ValuationReportView({ report, leadName, style = "cards" }: { rep
       {has("reasons") && (
         <section className="cma-page">
           <h2>20 Reasons to List With Confidence</h2>
-          <p className="cma-notes" style={{ marginBottom: 16 }}>A proven, step-by-step process designed to sell your home faster and for more money.</p>
-          <ol className="cma-reasons">
+          <p className="cma-notes" style={{ marginBottom: 20 }}>A proven, step-by-step process designed to sell your home faster and for more money.</p>
+          <div className="cma-reasons-grid">
             {REASONS.map(([r, sub], i) => (
-              <li key={i}>
-                <span className="cma-reason-num">{String(i + 1).padStart(2, "0")}</span>
-                <span><strong>{r}</strong><span className="cma-reason-sub">{sub}</span></span>
-              </li>
+              <div key={i} className="cma-reason">
+                <div className="cma-reason-num">{String(i + 1).padStart(2, "0")}</div>
+                <div className="cma-reason-title">{r}</div>
+                <div className="cma-reason-sub">{sub}</div>
+              </div>
             ))}
-          </ol>
+          </div>
         </section>
       )}
 
@@ -422,194 +454,27 @@ export function ValuationReportView({ report, leadName, style = "cards" }: { rep
       )}
 
       <footer>
-        <div>{agent.name}, REALTOR® · {agent.brokerage} · {agent.phone} · {agent.email}</div>
+        <div>{topLine}</div>
         <div className="cma-fine">This analysis is an opinion of value based on available market data, not an appraisal. Market conditions change; pricing should be reviewed before listing.</div>
       </footer>
 
-      <style>{reportCSS(style)}</style>
-    </div>
-  );
-}
-
-/** Report styles: "cards" (default), "editorial", "compact". Same HTML, different CSS. */
-function reportCSS(style: ReportStyle): string {
-  if (style === "editorial") return CSS_EDITORIAL;
-  if (style === "compact") return CSS_COMPACT;
-  return CSS_CARDS;
-}
-
-const CSS_EDITORIAL = `
-        .cma { max-width: 680px; margin: 0 auto; padding: 48px 24px; background: #fff; color: #1a1a1a; font-family: Georgia, 'Times New Roman', serif; }
-        .cma-head { text-align: center; border-bottom: 1px solid #ddd; padding-bottom: 28px; margin-bottom: 40px; display: block; }
-        .cma-brand { font-size: 30px; font-weight: 700; letter-spacing: 2px; font-family: -apple-system, 'Segoe UI', sans-serif; }
-        .cma-brand span { color: #0066cc; }
-        .cma-sub { font-size: 13px; color: #888; margin-top: 6px; letter-spacing: 3px; text-transform: uppercase; font-family: -apple-system, 'Segoe UI', sans-serif; }
-        .cma-meta { text-align: center; font-size: 13px; color: #888; margin-top: 12px; font-family: -apple-system, 'Segoe UI', sans-serif; }
-        .cma section { margin-bottom: 44px; }
-        .cma h2 { font-size: 27px; font-weight: 700; border: none; padding: 0; margin: 0 0 6px; }
-        .cma h2::after { content: ""; display: block; width: 56px; height: 3px; background: #111; margin-top: 10px; }
-        .cma section > .cma-notes:first-of-type { font-size: 15px; color: #555; font-style: italic; }
-        .cma-address { font-size: 24px; font-weight: 700; margin-bottom: 8px; }
-        .cma table { width: 100%; border-collapse: collapse; font-size: 14px; font-family: -apple-system, 'Segoe UI', sans-serif; }
-        .cma th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #999; padding: 10px 8px; border-bottom: 1px solid #111; }
-        .cma td { padding: 12px 8px; border-bottom: 1px solid #eee; }
-        .cma td.r, .cma th.r { text-align: right; }
-        .cma td.c, .cma th.c { text-align: center; }
-        .cma-adj { margin-bottom: 16px; }
-        .cma-price-row { display: flex; gap: 28px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; font-family: -apple-system, 'Segoe UI', sans-serif; }
-        .cma-price-row span { display: block; font-size: 11px; color: #999; text-transform: uppercase; letter-spacing: 1px; }
-        .cma-price-row strong { font-size: 18px; }
-        .cma-rec strong { font-size: 34px; color: #0066cc; }
-        .cma-notes { font-size: 14px; color: #444; margin-top: 8px; line-height: 1.7; font-family: -apple-system, 'Segoe UI', sans-serif; }
-        .cma-save td { font-weight: 700; }
-        .cma-fine { font-size: 11px; color: #999; margin-top: 8px; font-family: -apple-system, 'Segoe UI', sans-serif; }
-        .cma-listings { display: grid; grid-template-columns: 1fr; gap: 20px; }
-        .cma-listing { display: flex; gap: 18px; border-bottom: 1px solid #eee; padding-bottom: 20px; }
-        .cma-listing img { width: 180px; height: 120px; object-fit: cover; display: block; flex-shrink: 0; }
-        .cma-noimg { width: 180px; height: 120px; background: #f4f4f4; display: flex; align-items: center; justify-content: center; color: #999; font-size: 12px; flex-shrink: 0; font-family: -apple-system, 'Segoe UI', sans-serif; }
-        .cma-listing-body { padding: 0; }
-        .cma-listing-price { font-size: 21px; font-weight: 800; font-family: -apple-system, 'Segoe UI', sans-serif; }
-        .cma-dom { font-size: 11px; font-weight: 700; background: #111; color: #fff; border-radius: 20px; padding: 2px 9px; margin-left: 8px; }
-        .cma-listing-addr { font-size: 14px; margin: 3px 0 6px; font-family: -apple-system, 'Segoe UI', sans-serif; }
-        .cma-listing-meta { font-size: 12px; color: #777; font-family: -apple-system, 'Segoe UI', sans-serif; }
-        .cma-agent { display: flex; gap: 24px; align-items: flex-start; margin-bottom: 20px; }
-        .cma-agent-photo { width: 130px; height: 130px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
-        .cma-agent-svg { overflow: hidden; display: flex; align-items: center; justify-content: center; background: #f4f4f4; }
-        .cma-agent-svg svg { width: 100%; height: 100%; }
-        .cma-agent-initials { background: #111; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 36px; font-weight: 800; font-family: -apple-system, 'Segoe UI', sans-serif; }
-        .cma-agent-name { font-size: 26px; font-weight: 700; }
-        .cma-agent-tag { font-size: 14px; color: #0066cc; font-weight: 600; margin: 4px 0 8px; font-family: -apple-system, 'Segoe UI', sans-serif; }
-        .cma-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-top: 20px; font-family: -apple-system, 'Segoe UI', sans-serif; }
-        .cma-stat { text-align: left; border-top: 2px solid #111; padding-top: 10px; }
-        .cma-stat strong { display: block; font-size: 24px; color: #111; }
-        .cma-stat span { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 1px; }
-        .cma-why { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0 32px; font-family: -apple-system, 'Segoe UI', sans-serif; }
-        .cma-why-card { display: flex; gap: 12px; align-items: flex-start; padding: 14px 0; border-bottom: 1px solid #eee; text-align: left; font-size: 14px; font-weight: 600; }
-        .cma-why-icon { color: #111; flex-shrink: 0; }
-        .cma-cards { display: grid; grid-template-columns: 1fr; gap: 0; font-family: -apple-system, 'Segoe UI', sans-serif; }
-        .cma-card { padding: 16px 0; border-bottom: 1px solid #eee; font-size: 14px; }
-        .cma-card p { color: #555; margin-top: 4px; font-size: 13px; line-height: 1.6; }
-        .cma-mkt-card { display: flex; gap: 14px; align-items: flex-start; }
-        .cma-mkt-icon { color: #111; flex-shrink: 0; margin-top: 2px; }
-        .cma-reasons { columns: 1; font-size: 14px; line-height: 1.5; padding-left: 0; list-style: none; font-family: -apple-system, 'Segoe UI', sans-serif; }
-        .cma-reasons li { display: flex; gap: 14px; align-items: baseline; padding: 12px 0; border-bottom: 1px solid #eee; break-inside: avoid; }
-        .cma-reason-num { font-weight: 800; color: #0066cc; font-size: 13px; flex-shrink: 0; }
-        .cma-reasons li strong { display: block; }
-        .cma-reason-sub { display: block; color: #666; font-size: 13px; margin-top: 2px; font-weight: 400; }
-        .cma-reviews-head { display: flex; gap: 32px; margin-bottom: 20px; font-size: 14px; color: #555; font-family: -apple-system, 'Segoe UI', sans-serif; }
-        .cma-reviews-score { font-size: 30px; font-weight: 800; color: #111; }
-        .cma-reviews { display: grid; grid-template-columns: 1fr; gap: 0; }
-        .cma-review { padding: 20px 0; border-bottom: 1px solid #eee; font-size: 15px; font-style: italic; font-family: Georgia, serif; }
-        .cma-review p { color: #333; line-height: 1.7; margin: 10px 0 12px; }
-        .cma-stars { color: #111; letter-spacing: 3px; font-size: 14px; font-style: normal; }
-        .cma-reviewer { font-weight: 700; font-style: normal; font-family: -apple-system, 'Segoe UI', sans-serif; font-size: 13px; }
-        .cma-nearby { display: grid; grid-template-columns: 1fr; gap: 0; font-family: -apple-system, 'Segoe UI', sans-serif; }
-        .cma-nearby-group { padding: 14px 0; border-bottom: 1px solid #eee; }
-        .cma-nearby-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 14px; }
-        .cma-nearby ul { list-style: none; padding: 0; margin: 0; font-size: 13px; }
-        .cma-nearby li { display: flex; justify-content: space-between; gap: 8px; padding: 5px 0; }
-        .cma-nearby-dist { color: #888; font-size: 12px; }
-        .cma-cta { text-align: center; padding: 40px 0; border-top: 1px solid #111; border-bottom: 1px solid #111; font-family: -apple-system, 'Segoe UI', sans-serif; }
-        .cma-cta-title { font-size: 30px; font-weight: 700; margin-bottom: 8px; font-family: Georgia, serif; }
-        .cma-cta p { color: #555; font-size: 14px; margin-bottom: 20px; }
-        .cma-cta-contact { font-size: 15px; line-height: 1.9; }
-        .cma footer { border-top: 1px solid #ddd; padding-top: 16px; margin-top: 40px; font-size: 13px; text-align: center; color: #888; font-family: -apple-system, 'Segoe UI', sans-serif; }
-        @media (max-width: 640px) { .cma { padding: 32px 18px; } .cma-stats { grid-template-columns: repeat(2, 1fr); } .cma-why { grid-template-columns: 1fr; } .cma-agent { flex-direction: column; } .cma-listing { flex-direction: column; } .cma-listing img { width: 100%; height: 160px; } }
-        @media print { .cma { padding: 0; max-width: none; } .cma-no-print { display: none !important; } .cma-page { page-break-before: always; } }
-`;
-
-const CSS_COMPACT = `
-        .cma { max-width: 860px; margin: 0 auto; padding: 20px 16px; background: #fff; color: #111; font-family: -apple-system, 'Segoe UI', sans-serif; font-size: 13px; }
-        .cma-head { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #111; padding-bottom: 10px; margin-bottom: 16px; }
-        .cma-brand { font-size: 20px; font-weight: 800; }
-        .cma-brand span { color: #0066cc; }
-        .cma-sub { font-size: 11px; color: #777; }
-        .cma-meta { text-align: right; font-size: 11px; color: #777; }
-        .cma section { margin-bottom: 18px; }
-        .cma h2 { font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #111; padding-bottom: 4px; margin: 0 0 10px; }
-        .cma-address { font-size: 17px; font-weight: 700; margin-bottom: 6px; }
-        .cma table { width: 100%; border-collapse: collapse; font-size: 12px; }
-        .cma th { text-align: left; font-size: 10px; text-transform: uppercase; color: #777; padding: 5px 6px; border-bottom: 1px solid #111; }
-        .cma td { padding: 5px 6px; border-bottom: 1px solid #eee; }
-        .cma td.r, .cma th.r { text-align: right; }
-        .cma td.c, .cma th.c { text-align: center; }
-        .cma-adj { margin-bottom: 10px; }
-        .cma-price-row { display: flex; gap: 20px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
-        .cma-price-row span { display: block; font-size: 10px; color: #777; text-transform: uppercase; }
-        .cma-price-row strong { font-size: 15px; }
-        .cma-rec strong { font-size: 24px; color: #0066cc; }
-        .cma-notes { font-size: 12px; color: #444; margin-top: 6px; line-height: 1.5; }
-        .cma-save td { font-weight: 700; }
-        .cma-fine { font-size: 10px; color: #999; margin-top: 6px; }
-        .cma-listings { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        .cma-listing { border: 1px solid #e2e2e2; border-radius: 6px; overflow: hidden; }
-        .cma-listing img { width: 100%; height: 90px; object-fit: cover; display: block; }
-        .cma-noimg { height: 90px; background: #f4f4f4; display: flex; align-items: center; justify-content: center; color: #999; font-size: 11px; }
-        .cma-listing-body { padding: 8px 10px; }
-        .cma-listing-price { font-size: 14px; font-weight: 800; }
-        .cma-dom { font-size: 10px; font-weight: 700; background: #111; color: #fff; border-radius: 12px; padding: 1px 7px; margin-left: 6px; }
-        .cma-listing-addr { font-size: 11px; margin: 2px 0 4px; }
-        .cma-listing-meta { font-size: 10px; color: #777; }
-        .cma-agent { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 10px; }
-        .cma-agent-photo { width: 72px; height: 72px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
-        .cma-agent-svg { overflow: hidden; display: flex; align-items: center; justify-content: center; background: #f4f4f4; }
-        .cma-agent-svg svg { width: 100%; height: 100%; }
-        .cma-agent-initials { background: #111; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 800; }
-        .cma-agent-name { font-size: 18px; font-weight: 800; }
-        .cma-agent-tag { font-size: 12px; color: #0066cc; font-weight: 600; margin: 2px 0 6px; }
-        .cma-stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 10px; }
-        .cma-stat { border: 1px solid #e2e2e2; border-radius: 6px; padding: 8px 4px; text-align: center; }
-        .cma-stat strong { display: block; font-size: 16px; color: #0066cc; }
-        .cma-stat span { font-size: 9px; color: #777; text-transform: uppercase; }
-        .cma-why { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-        .cma-why-card { border: 1px solid #e2e2e2; border-radius: 6px; padding: 10px 6px; text-align: center; font-size: 11px; font-weight: 600; line-height: 1.3; }
-        .cma-why-icon { display: flex; justify-content: center; margin-bottom: 6px; }
-        .cma-why-icon svg { width: 18px; height: 18px; }
-        .cma-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-        .cma-card { border: 1px solid #e2e2e2; border-radius: 6px; padding: 10px; font-size: 11px; }
-        .cma-card p { color: #555; margin-top: 3px; font-size: 10px; line-height: 1.4; }
-        .cma-mkt-card { display: flex; gap: 8px; align-items: flex-start; }
-        .cma-mkt-icon { flex-shrink: 0; }
-        .cma-mkt-icon svg { width: 16px; height: 16px; }
-        .cma-reasons { columns: 2; column-gap: 24px; font-size: 11px; line-height: 1.6; padding-left: 0; list-style: none; }
-        .cma-reasons li { display: flex; gap: 8px; align-items: baseline; break-inside: avoid; margin-bottom: 6px; }
-        .cma-reason-num { font-weight: 800; color: #0066cc; font-size: 10px; flex-shrink: 0; }
-        .cma-reasons li strong { display: block; font-size: 11px; }
-        .cma-reason-sub { display: block; color: #666; font-size: 10px; font-weight: 400; }
-        .cma-reviews-head { display: flex; gap: 24px; margin-bottom: 10px; font-size: 12px; color: #555; }
-        .cma-reviews-score { font-size: 22px; font-weight: 800; color: #111; }
-        .cma-reviews { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-        .cma-review { border: 1px solid #e2e2e2; border-radius: 6px; padding: 10px; font-size: 10px; }
-        .cma-review p { color: #333; line-height: 1.5; margin: 6px 0 8px; font-style: italic; }
-        .cma-stars { letter-spacing: 2px; font-size: 11px; }
-        .cma-reviewer { font-weight: 700; font-size: 10px; }
-        .cma-nearby { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-        .cma-nearby-group { border: 1px solid #e2e2e2; border-radius: 6px; padding: 10px; }
-        .cma-nearby-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 12px; }
-        .cma-nearby ul { list-style: none; padding: 0; margin: 0; font-size: 11px; }
-        .cma-nearby li { display: flex; justify-content: space-between; gap: 6px; padding: 4px 0; border-top: 1px solid #f0f0f0; }
-        .cma-nearby-dist { color: #777; font-size: 10px; white-space: nowrap; }
-        .cma-cta { border: 2px solid #111; border-radius: 8px; padding: 20px; text-align: center; }
-        .cma-cta-title { font-size: 20px; font-weight: 800; margin-bottom: 6px; }
-        .cma-cta p { color: #555; font-size: 12px; margin-bottom: 12px; }
-        .cma-cta-contact { font-size: 13px; line-height: 1.7; }
-        .cma footer { border-top: 2px solid #111; padding-top: 10px; margin-top: 20px; font-size: 11px; }
-        @media (max-width: 640px) { .cma-listings, .cma-why, .cma-cards, .cma-reviews, .cma-nearby { grid-template-columns: 1fr 1fr; } .cma-reasons { columns: 1; } .cma-stats { grid-template-columns: repeat(3, 1fr); } }
-        @media print { .cma { padding: 0; max-width: none; font-size: 11px; } .cma-no-print { display: none !important; } .cma-page { page-break-before: always; } .cma-listing, .cma-why-card, .cma-card, .cma-review { break-inside: avoid; } }
-`;
-
-const CSS_CARDS = `
-        .cma { max-width: 860px; margin: 0 auto; padding: 28px 20px; background: #f1f1f1; color: #111; font-family: -apple-system, 'Segoe UI', sans-serif; }
+      <style>{`
+        .cma { max-width: 860px; margin: 0 auto; padding: 28px 20px; background: #fff; color: #111; font-family: -apple-system, 'Segoe UI', sans-serif; }
+        .cma-toolbar { display: flex; gap: 10px; justify-content: flex-end; margin-bottom: 16px; }
+        .cma-toolbar button { border: 1px solid #ddd; background: #fff; border-radius: 20px; padding: 8px 16px; font-size: 13px; font-weight: 600; cursor: pointer; }
+        .cma-toolbar button:hover { background: #f4f4f4; }
+        .cma-topbar { text-align: center; font-size: 13px; color: #555; padding: 10px 16px; border-bottom: 1px solid #eee; margin-bottom: 20px; }
         .cma-head { display: flex; justify-content: space-between; align-items: flex-start; background: #fff; border: 1px solid #e2e2e2; border-radius: 12px; padding: 20px 24px; margin-bottom: 20px; }
         .cma-brand { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; }
         .cma-brand span { color: #0066cc; }
         .cma-sub { font-size: 13px; color: #555; margin-top: 2px; }
         .cma-meta { text-align: right; font-size: 13px; color: #555; }
         .cma section { background: #fff; border: 1px solid #e2e2e2; border-radius: 12px; padding: 24px; margin-bottom: 20px; }
-        .cma h2 { font-size: 19px; font-weight: 800; letter-spacing: 0; text-transform: none; border-bottom: 3px solid #111; padding-bottom: 8px; margin: 0 0 16px; }
+        .cma h2 { font-size: 19px; font-weight: 800; letter-spacing: 0; border-bottom: 3px solid #111; padding-bottom: 8px; margin: 0 0 16px; }
         .cma-address { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
-        .cma table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        .cma th { text-align: left; font-size: 11px; text-transform: uppercase; color: #777; padding: 8px; border-bottom: 2px solid #111; }
+        .cma-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .cma table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 480px; }
+        .cma th { text-align: left; font-size: 11px; text-transform: uppercase; color: #777; padding: 8px; border-bottom: 2px solid #111; white-space: nowrap; }
         .cma td { padding: 8px; border-bottom: 1px solid #eee; }
         .cma td.r, .cma th.r { text-align: right; }
         .cma td.c, .cma th.c { text-align: center; }
@@ -622,72 +487,107 @@ const CSS_CARDS = `
         .cma-save td { font-weight: 700; }
         .cma-fine { font-size: 11px; color: #888; margin-top: 8px; }
         .cma-listings { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
-        .cma-listing { border: 1px solid #e2e2e2; border-radius: 10px; overflow: hidden; background: #fff; }
+        .cma-listing { border: 1px solid #e2e2e2; border-radius: 10px; overflow: hidden; background: #fff; min-width: 0; }
         .cma-listing img { width: 100%; height: 150px; object-fit: cover; display: block; }
         .cma-noimg { height: 150px; background: #f4f4f4; display: flex; align-items: center; justify-content: center; color: #999; font-size: 12px; }
         .cma-listing-body { padding: 12px 14px; }
-        .cma-listing-price { font-size: 19px; font-weight: 800; display: flex; align-items: center; gap: 8px; }
-        .cma-dom { font-size: 11px; font-weight: 700; background: #111; color: #fff; border-radius: 20px; padding: 2px 9px; }
-        .cma-listing-addr { font-size: 13px; margin: 3px 0 6px; }
+        .cma-listing-price { font-size: 19px; font-weight: 800; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .cma-dom { font-size: 11px; font-weight: 700; background: #111; color: #fff; border-radius: 20px; padding: 2px 9px; white-space: nowrap; }
+        .cma-listing-addr { font-size: 13px; margin: 3px 0 6px; overflow-wrap: break-word; }
         .cma-listing-meta { font-size: 12px; color: #666; }
         .cma-agent { display: flex; gap: 20px; align-items: flex-start; margin-bottom: 16px; }
         .cma-agent-photo { width: 110px; height: 110px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
         .cma-agent-svg { overflow: hidden; display: flex; align-items: center; justify-content: center; background: #f4f4f4; }
         .cma-agent-svg svg { width: 100%; height: 100%; }
         .cma-agent-initials { background: #111; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 800; }
-        .cma-agent-name { font-size: 24px; font-weight: 800; }
+        .cma-agent-name { font-size: 24px; font-weight: 800; overflow-wrap: break-word; }
         .cma-agent-tag { font-size: 14px; color: #0066cc; font-weight: 600; margin: 4px 0 8px; }
         .cma-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: #ddd; border: 1px solid #ddd; margin-top: 16px; }
-        .cma-stat { background: #fff; padding: 14px 8px; text-align: center; }
+        .cma-stat { background: #fff; padding: 14px 8px; text-align: center; min-width: 0; }
         .cma-stat strong { display: block; font-size: 22px; color: #0066cc; }
         .cma-stat span { font-size: 11px; color: #777; text-transform: uppercase; }
         .cma-why { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-        .cma-why-card { border: 1px solid #e2e2e2; border-radius: 10px; padding: 18px 10px; text-align: center; font-size: 13px; font-weight: 600; line-height: 1.4; background: #fff; }
+        .cma-why-card { border: 1px solid #e2e2e2; border-radius: 10px; padding: 18px 10px; text-align: center; font-size: 13px; font-weight: 600; line-height: 1.4; background: #fff; min-width: 0; }
         .cma-why-icon { display: flex; justify-content: center; color: #111; margin-bottom: 10px; }
         .cma-cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-        .cma-card { border: 1px solid #e2e2e2; border-radius: 10px; padding: 16px; font-size: 13px; background: #fff; }
+        .cma-card { border: 1px solid #e2e2e2; border-radius: 10px; padding: 16px; font-size: 13px; background: #fff; min-width: 0; }
         .cma-card p { color: #555; margin-top: 4px; font-size: 12px; line-height: 1.5; }
         .cma-mkt-card { display: flex; gap: 12px; align-items: flex-start; }
         .cma-mkt-icon { color: #111; flex-shrink: 0; margin-top: 2px; }
-        .cma-reasons { columns: 2; column-gap: 32px; font-size: 13px; line-height: 1.9; padding-left: 0; list-style: none; }
-        .cma-reasons li { display: flex; gap: 10px; align-items: baseline; break-inside: avoid; }
-        .cma-reason-num { font-weight: 800; color: #0066cc; font-size: 12px; flex-shrink: 0; }
-        .cma-reasons li strong { display: block; }
-        .cma-reason-sub { display: block; color: #666; font-size: 12px; margin-top: 2px; line-height: 1.5; }
+        .cma-reasons-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; }
+        .cma-reason { padding: 20px 16px; border-top: 1px solid #eee; min-width: 0; }
+        .cma-reason-num { font-size: 34px; font-weight: 800; color: #0066cc; line-height: 1; margin-bottom: 10px; }
+        .cma-reason-title { font-size: 14px; font-weight: 700; line-height: 1.35; margin-bottom: 6px; }
+        .cma-reason-sub { font-size: 12px; color: #666; line-height: 1.55; }
+        .cma-reviews-head { display: flex; gap: 32px; margin-bottom: 16px; font-size: 14px; color: #555; flex-wrap: wrap; }
+        .cma-reviews-score { font-size: 28px; font-weight: 800; color: #111; }
+        .cma-reviews { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+        .cma-review { border: 1px solid #e2e2e2; border-radius: 10px; padding: 20px; font-size: 13px; background: #fff; min-width: 0; }
+        .cma-review p { color: #333; line-height: 1.65; margin: 10px 0 12px; font-style: italic; overflow-wrap: break-word; }
+        .cma-stars { color: #111; letter-spacing: 3px; font-size: 14px; }
+        .cma-reviewer { font-weight: 700; }
         .cma-nearby { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-        .cma-nearby-group { border: 1px solid #e2e2e2; border-radius: 10px; padding: 16px; }
+        .cma-nearby-group { border: 1px solid #e2e2e2; border-radius: 10px; padding: 16px; min-width: 0; }
         .cma-nearby-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; font-size: 14px; }
         .cma-nearby ul { list-style: none; padding: 0; margin: 0; font-size: 13px; }
         .cma-nearby li { display: flex; justify-content: space-between; gap: 8px; padding: 6px 0; border-top: 1px solid #f0f0f0; }
         .cma-nearby-dist { color: #777; font-size: 12px; white-space: nowrap; }
-        .cma-reviews-head { display: flex; gap: 32px; margin-bottom: 16px; font-size: 14px; color: #555; }
-        .cma-reviews-score { font-size: 28px; font-weight: 800; color: #111; }
-        .cma-reviews { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-        .cma-review { border: 1px solid #e2e2e2; border-radius: 10px; padding: 20px; font-size: 13px; background: #fff; }
-        .cma-review p { color: #333; line-height: 1.65; margin: 10px 0 12px; font-style: italic; }
-        .cma-stars { color: #111; letter-spacing: 3px; font-size: 14px; }
-        .cma-reviewer { font-weight: 700; }
         .cma-cta { border: 2px solid #111; border-radius: 12px; padding: 32px; text-align: center; }
         .cma-cta-title { font-size: 26px; font-weight: 800; margin-bottom: 8px; }
         .cma-cta p { color: #555; font-size: 14px; margin-bottom: 20px; }
-        .cma-cta-contact { font-size: 15px; line-height: 1.9; }
-        .cma footer { background: #fff; border: 1px solid #e2e2e2; border-radius: 12px; padding: 20px 24px; margin-top: 4px; font-size: 13px; }
+        .cma-cta-contact { font-size: 15px; line-height: 1.9; overflow-wrap: break-word; }
+        .cma footer { background: #fff; border: 1px solid #e2e2e2; border-radius: 12px; padding: 20px 24px; margin-top: 4px; font-size: 13px; text-align: center; color: #555; }
+        /* dark mode */
+        .cma-dark { background: #111; color: #f2f2f2; }
+        .cma-dark .cma-topbar { color: #aaa; border-color: #2a2a2a; }
+        .cma-dark .cma-head, .cma-dark section, .cma-dark footer { background: #181818; border-color: #2c2c2c; }
+        .cma-dark h2 { border-color: #f2f2f2; }
+        .cma-dark .cma-sub, .cma-dark .cma-meta { color: #aaa; }
+        .cma-dark .cma-notes, .cma-dark .cma-review p { color: #ccc; }
+        .cma-dark .cma-fine, .cma-dark .cma-listing-meta, .cma-dark .cma-nearby-dist, .cma-dark .cma-reason-sub { color: #999; }
+        .cma-dark th { color: #999; border-color: #f2f2f2; }
+        .cma-dark td { border-color: #2c2c2c; }
+        .cma-dark .cma-table-wrap table { color: #f2f2f2; }
+        .cma-dark .cma-stat { background: #181818; }
+        .cma-dark .cma-stats { background: #2c2c2c; border-color: #2c2c2c; }
+        .cma-dark .cma-listing, .cma-dark .cma-why-card, .cma-dark .cma-card, .cma-dark .cma-review, .cma-dark .cma-nearby-group { background: #181818; border-color: #2c2c2c; }
+        .cma-dark .cma-noimg { background: #222; color: #777; }
+        .cma-dark .cma-card p { color: #aaa; }
+        .cma-dark .cma-why-icon, .cma-dark .cma-mkt-icon { color: #f2f2f2; }
+        .cma-dark .cma-stars, .cma-dark .cma-reviews-score { color: #f2f2f2; }
+        .cma-dark .cma-dom { background: #f2f2f2; color: #111; }
+        .cma-dark .cma-reason { border-color: #2c2c2c; }
+        .cma-dark .cma-cta { border-color: #f2f2f2; }
+        .cma-dark .cma-cta p { color: #aaa; }
+        .cma-dark .cma-toolbar button { background: #1e1e1e; border-color: #333; color: #f2f2f2; }
+        .cma-dark .cma-toolbar button:hover { background: #2a2a2a; }
+        .cma-dark .cma-nearby li { border-color: #2c2c2c; }
         @media (max-width: 640px) {
-          .cma { padding: 16px 12px; }
+          .cma { padding: 16px 12px; overflow-x: hidden; }
           .cma section { padding: 18px 16px; }
+          .cma-head { flex-direction: column; gap: 10px; }
+          .cma-meta { text-align: left; }
           .cma-listings { grid-template-columns: 1fr; }
           .cma-why { grid-template-columns: repeat(2, 1fr); }
           .cma-reviews { grid-template-columns: 1fr; }
           .cma-cards { grid-template-columns: 1fr; }
-          .cma-reasons { columns: 1; }
+          .cma-reasons-grid { grid-template-columns: repeat(2, 1fr); }
           .cma-nearby { grid-template-columns: 1fr; }
           .cma-agent { flex-direction: column; }
+          .cma-stats { grid-template-columns: repeat(2, 1fr); }
+          .cma-topbar { font-size: 12px; }
+          .cma-toolbar { justify-content: center; }
         }
         @media print {
-          .cma { padding: 0; max-width: none; background: #fff; }
-          .cma-head, .cma section, .cma footer { border-color: #ddd; }
-          .cma-no-print { display: none !important; }
+          .cma { padding: 0; max-width: none; background: #fff; color: #111; }
+          .cma-toolbar, .cma-no-print { display: none !important; }
+          .cma-topbar { color: #555; border-color: #eee; }
+          .cma-head, .cma section, .cma footer { border-color: #ddd; background: #fff; }
           .cma-page { page-break-before: always; }
-          .cma-listing, .cma-why-card, .cma-card, .cma-review { break-inside: avoid; }
+          .cma-listing, .cma-why-card, .cma-card, .cma-review, .cma-reason { break-inside: avoid; }
+          .cma-table-wrap { overflow: visible; }
         }
-`;
+      `}</style>
+    </div>
+  );
+}

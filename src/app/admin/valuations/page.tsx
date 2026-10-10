@@ -17,9 +17,6 @@ export default async function ValuationsPage() {
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Valuation Reports</h1>
         <div className="flex gap-2">
-          <Link href="/admin/valuations/styles" className="rounded-lg border border-line px-4 py-2 text-sm font-semibold">
-            Layout styles
-          </Link>
           <Link href="/admin/valuations/new" className="rounded-lg bg-black px-4 py-2 text-sm font-semibold text-white">
             + New report
           </Link>

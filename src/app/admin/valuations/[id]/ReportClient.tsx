@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 import { ValuationReportView } from "@/components/valuations/ValuationReportView";
 
 export default function ReportDetail({ params }: { params: Promise<{ id: string }> }) {
@@ -8,12 +9,17 @@ export default function ReportDetail({ params }: { params: Promise<{ id: string 
   const [id, setId] = useState("");
   const [report, setReport] = useState<any>(null);
   const [leadName, setLeadName] = useState("");
+  const [branding, setBranding] = useState<any>(null);
   const [shareUrl, setShareUrl] = useState("");
   const [busy, setBusy] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleteText, setDeleteText] = useState("");
 
   useEffect(() => { params.then((p) => setId(p.id)); }, [params]);
+  useEffect(() => {
+    createClient().from("site_settings").select("doc_branding").eq("id", 1).maybeSingle()
+      .then(({ data }) => { if ((data as any)?.doc_branding) setBranding((data as any).doc_branding); });
+  }, []);
   useEffect(() => {
     if (!id) return;
     fetch(`/api/valuation-reports/${id}`).then((r) => r.json()).then(async (j) => {
@@ -92,7 +98,7 @@ export default function ReportDetail({ params }: { params: Promise<{ id: string 
         )}
         <span className="text-xs text-muted ml-auto">{report.view_count ?? 0} views</span>
       </div>
-      <ValuationReportView report={report} leadName={leadName} />
+      <ValuationReportView report={report} leadName={leadName} branding={branding} />
     </div>
   );
 }
