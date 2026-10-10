@@ -276,6 +276,10 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
               <div className="cma-fh-date">{reportDate}</div>
             </div>
             <div className="cma-fh-icons">
+              <button type="button" className="cma-fh-iconbtn" onClick={() => setDark(!dark)} aria-pressed={dark} aria-label="Toggle dark mode">{dark ? "☾" : "☀"}</button>
+              <span className="cma-fh-div" aria-hidden="true" />
+              <button type="button" className="cma-fh-iconbtn" onClick={() => window.print()} aria-label="Download PDF">⤓</button>
+              <span className="cma-fh-div" aria-hidden="true" />
               <span className="cma-navrel">
                 <button type="button" className="cma-fh-iconbtn" onClick={() => setNavOpen(!navOpen)} aria-expanded={navOpen} aria-haspopup="true" aria-label="Navigation">☰</button>
                 {navOpen && (
@@ -289,10 +293,6 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
                   </>
                 )}
               </span>
-              <span className="cma-fh-div" aria-hidden="true" />
-              <button type="button" className="cma-fh-iconbtn" onClick={() => setDark(!dark)} aria-pressed={dark} aria-label="Toggle dark mode">{dark ? "☾" : "☀"}</button>
-              <span className="cma-fh-div" aria-hidden="true" />
-              <button type="button" className="cma-fh-iconbtn" onClick={() => window.print()} aria-label="Download PDF">⤓</button>
             </div>
           </div>
         </div>
@@ -666,7 +666,7 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
 
       <footer>
         <div>{topLine}</div>
-        <div className="cma-fine">This analysis is an opinion of value based on available market data, not an appraisal. Market conditions change; pricing should be reviewed before listing.</div>
+        <div className="cma-fine">Opinion of value based on available market data — not an appraisal. Market conditions change; review pricing before listing.</div>
       </footer>
 
       <style>{`
@@ -802,6 +802,9 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
         .cma-vp-eyebrow { text-align: center; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; font-weight: 700; color: #777; margin-bottom: 10px; }
         .cma-vp-title { text-align: center; font-size: 27px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 8px; }
         .cma-vp-sub { text-align: center; color: #555; font-size: 14px; line-height: 1.6; max-width: 600px; margin: 0 auto 18px; }
+        .cma-vp-table { min-width: 0; }
+        .cma-vp-table .c { width: 72px; }
+        .cma-vp-table td { overflow-wrap: break-word; }
         .cma-vp-table th.cma-vp-hl, .cma-vp-table td.cma-vp-hl { background: #f5f5f5; }
         .cma-vp-yes { color: #111; font-weight: 800; font-size: 17px; }
         .cma-vp-maybe { color: #aaa; font-weight: 800; font-size: 15px; }
@@ -915,7 +918,7 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
           .cma-fh-logo { display: none; }
           .cma-fh-title { font-size: 12px; margin-top: 1px; }
           .cma-fh-date { font-size: 11px; }
-          .cma-fh-icons { flex: 1 1 100%; border-top: 1px solid #f0f0f0; padding-top: 4px; }
+          .cma-fh-icons { flex: 1 1 100%; border-top: 1px solid #f0f0f0; padding-top: 4px; justify-content: flex-end; }
           .cma-root.cma-dark .cma-fh-icons { border-color: #2e2e2e; }
           .cma-fh-iconbtn { padding: 8px 14px; }
           .cma section { padding: 18px 16px; }
@@ -935,6 +938,8 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
           .cma-field-row { grid-template-columns: 1fr; }
           .cma-modal { padding: 22px 18px; }
           .cma-vp-title { font-size: 22px; }
+          .cma-vp-table th, .cma-vp-table td { padding: 8px 6px; font-size: 12px; }
+          .cma-vp-table .c { width: 58px; }
           .cma-topbar { font-size: 12px; }
         }
         @media print {
