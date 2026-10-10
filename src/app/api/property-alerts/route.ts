@@ -1,0 +1,64 @@
+import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
+
+/**
+ * Save a property alert (saved search).
+ * POST /api/property-alerts
+ * Body: { email, criteria: {beds, baths, minPrice, maxPrice, city, homeType, type}, criteriaSummary }
+ */
+export async function POST(req: NextRequest) {
+  const body = await req.json();
+  const { email, criteria, criteriaSummary } = body;
+
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return NextResponse.json({ error: "Valid email required" }, { status: 400 });
+  }
+  if (!criteria || typeof criteria !== "object") {
+    return NextResponse.json({ error: "Search criteria required" }, { status: 400 });
+  }
+
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+
+  // Check for duplicate (same email + same criteria).
+  const { data: existing } = await supabase
+    .from("saved_searches")
+    .select("id, is_active")
+    .eq("email", email.toLowerCase().trim())
+    .eq("criteria", criteria)
+    .maybeSingle();
+
+  if (existing) {
+    // Reactivate if it was paused.
+    if (!existing.is_active) {
+      await supabase.from("saved_searches").update({ is_active: true }).eq("id", existing.id);
+    }
+    return NextResponse.json({ ok: true, id: existing.id, alreadyExists: true });
+  }
+
+  // Link to CRM lead if email matches.
+  const { data: lead } = await supabase
+    .from("leads")
+    .select("id")
+    .eq("email", email.toLowerCase().trim())
+    .maybeSingle();
+
+  const { data, error } = await supabase
+    .from("saved_searches")
+    .insert({
+      email: email.toLowerCase().trim(),
+      criteria,
+      criteria_summary: criteriaSummary || null,
+      lead_id: lead?.id || null,
+    })
+    .select("id, unsubscribe_token")
+    .single();
+
+  if (error) {
+    return NextResponse.json({ error: "Couldn't save your alert" }, { status: 500 });
+  }
+
+  return NextResponse.json({ ok: true, id: data.id });
+}
