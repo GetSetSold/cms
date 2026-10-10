@@ -263,43 +263,41 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
   ];
 
   return (
-    <div className={`cma${dark ? " cma-dark" : ""}`}>
+    <div className={`cma-root${dark ? " cma-dark" : ""}`}>
       {/* Fixed website-style header (screen only) */}
       <div className="cma-fixedhead cma-no-print">
-        <div className="cma-fh-brand">{topLine}</div>
-        <div className="cma-fh-main">
-          <div className="cma-fh-titles">
-            <div className="cma-fh-brandshort">{shortBrand}</div>
-            <div className="cma-fh-logo">GETSETSOLD<span>.ca</span></div>
-            <div className="cma-fh-title">Comparative Market Analysis</div>
-            <div className="cma-fh-date">{reportDate}</div>
-          </div>
-          <div className="cma-fh-actions">
-            <button type="button" className={`cma-theme-toggle${dark ? " on" : ""}`} onClick={() => setDark(!dark)} aria-pressed={dark} aria-label="Toggle dark mode">
-              <span className="cma-toggle-track"><span className="cma-toggle-knob">{dark ? "☾" : "☀"}</span></span>
-              {dark ? "Dark" : "Light"}
-            </button>
-            <button type="button" className="cma-pdf-btn" onClick={() => window.print()}>⤓ Download PDF</button>
-          </div>
-          <div className="cma-navwrap">
-            <button type="button" className="cma-navbtn" onClick={() => setNavOpen(!navOpen)} aria-expanded={navOpen} aria-haspopup="true">
-              <span className="cma-navburger" aria-hidden="true"><span /><span /><span /></span>
-              Navigation
-            </button>
-            {navOpen && (
-              <>
-                <div className="cma-navoverlay" onClick={() => setNavOpen(false)} />
-                <nav className="cma-navmenu" aria-label="Report sections">
-                  {navItems.map((n) => (
-                    <a key={n.id} href={`#${n.id}`} onClick={() => setNavOpen(false)}>{n.label}</a>
-                  ))}
-                </nav>
-              </>
-            )}
+        <div className="cma-fh-inner">
+          <div className="cma-fh-brand">{topLine}</div>
+          <div className="cma-fh-main">
+            <div className="cma-fh-titles">
+              <div className="cma-fh-brandshort">{shortBrand}</div>
+              <div className="cma-fh-logo">GETSETSOLD<span>.ca</span></div>
+              <div className="cma-fh-title">Comparative Market Analysis</div>
+              <div className="cma-fh-date">{reportDate}</div>
+            </div>
+            <div className="cma-fh-icons">
+              <span className="cma-navrel">
+                <button type="button" className="cma-fh-iconbtn" onClick={() => setNavOpen(!navOpen)} aria-expanded={navOpen} aria-haspopup="true" aria-label="Navigation">☰</button>
+                {navOpen && (
+                  <>
+                    <div className="cma-navoverlay" onClick={() => setNavOpen(false)} />
+                    <nav className="cma-navmenu" aria-label="Report sections">
+                      {navItems.map((n) => (
+                        <a key={n.id} href={`#${n.id}`} onClick={() => setNavOpen(false)}>{n.label}</a>
+                      ))}
+                    </nav>
+                  </>
+                )}
+              </span>
+              <span className="cma-fh-div" aria-hidden="true" />
+              <button type="button" className="cma-fh-iconbtn" onClick={() => setDark(!dark)} aria-pressed={dark} aria-label="Toggle dark mode">{dark ? "☾" : "☀"}</button>
+              <span className="cma-fh-div" aria-hidden="true" />
+              <button type="button" className="cma-fh-iconbtn" onClick={() => window.print()} aria-label="Download PDF">⤓</button>
+            </div>
           </div>
         </div>
       </div>
-
+      <div className="cma">
       {/* Print header (print/PDF only) */}
       <div className="cma-printhead">
         <div className="cma-topbar">{topLine}</div>
@@ -673,8 +671,10 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
 
       <style>{`
         .cma { max-width: 860px; margin: 0 auto; padding: 28px 20px; background: #f5f5f5; color: #111; font-family: -apple-system, 'Segoe UI', sans-serif; }
-        /* fixed website-style header */
-        .cma-fixedhead { position: sticky; top: 0; z-index: 50; margin: -28px -20px 20px; background: #fff; border-bottom: 1px solid #e2e2e2; padding: 10px 24px 12px; }
+        /* fixed website-style header: full width, content centered */
+        .cma-root { background: #f5f5f5; }
+        .cma-fixedhead { position: sticky; top: 0; z-index: 50; background: #fff; border-bottom: 1px solid #e2e2e2; }
+        .cma-fh-inner { max-width: 860px; margin: 0 auto; padding: 10px 20px 12px; }
         .cma-fh-brand { font-size: 12px; color: #666; padding-bottom: 8px; border-bottom: 1px solid #f0f0f0; margin-bottom: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .cma-fh-main { display: flex; align-items: center; gap: 16px; }
         .cma-fh-titles { flex: 1; min-width: 0; }
@@ -683,17 +683,13 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
         .cma-fh-logo span { color: #0066cc; }
         .cma-fh-title { font-size: 14px; font-weight: 700; margin-top: 2px; }
         .cma-fh-date { font-size: 12px; color: #777; }
-        .cma-fh-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
-        .cma-fixedhead .cma-navwrap { margin-bottom: 0; flex-shrink: 0; }
+        .cma-fh-icons { display: flex; align-items: center; flex-shrink: 0; }
+        .cma-fh-iconbtn { background: none; border: none; padding: 8px 12px; font-size: 19px; line-height: 1; cursor: pointer; color: #111; }
+        .cma-fh-iconbtn:hover { color: #0066cc; }
+        .cma-fh-div { width: 1px; height: 22px; background: #e2e2e2; flex-shrink: 0; }
+        .cma-navrel { position: relative; display: inline-flex; }
         /* print header */
         .cma-printhead { display: none; }
-        .cma-theme-toggle { display: inline-flex; align-items: center; gap: 8px; border: 1px solid #ddd; background: #fff; border-radius: 20px; padding: 6px 14px 6px 6px; font-size: 13px; font-weight: 600; cursor: pointer; }
-        .cma-theme-toggle .cma-toggle-track { width: 40px; height: 22px; border-radius: 20px; background: #ddd; position: relative; transition: background 0.2s; flex-shrink: 0; }
-        .cma-theme-toggle .cma-toggle-knob { position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; font-size: 11px; transition: left 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.25); }
-        .cma-theme-toggle.on .cma-toggle-track { background: #111; }
-        .cma-theme-toggle.on .cma-toggle-knob { left: 20px; }
-        .cma-pdf-btn { border: 1px solid #ddd; background: #fff; border-radius: 20px; padding: 8px 16px; font-size: 13px; font-weight: 600; cursor: pointer; }
-        .cma-pdf-btn:hover, .cma-theme-toggle:hover { background: #eee; }
         .cma-topbar { text-align: center; font-size: 13px; color: #555; padding: 10px 16px; border-bottom: 1px solid #eee; margin-bottom: 20px; }
         .cma-head { display: flex; justify-content: space-between; align-items: flex-start; background: #fff; border: 1px solid #e2e2e2; border-radius: 12px; padding: 20px 24px; margin-bottom: 20px; }
         .cma-brand { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; }
@@ -796,13 +792,7 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
         .cma-modal-check { width: 56px; height: 56px; border-radius: 50%; background: #16a34a; color: #fff; font-size: 28px; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; }
         .cma footer { background: #fff; border: 1px solid #e2e2e2; border-radius: 12px; padding: 20px 24px; margin-top: 4px; font-size: 13px; text-align: center; color: #555; }
         .cma section { scroll-margin-top: 140px; }
-        /* section navigator (menu button) */
-        .cma-navwrap { position: relative; z-index: 40; }
-        .cma-navbtn { display: inline-flex; align-items: center; gap: 10px; border: 1px solid #ddd; background: #fff; border-radius: 10px; padding: 10px 18px; font-size: 14px; font-weight: 700; cursor: pointer; color: #111; }
-        .cma-navbtn:hover { background: #111; color: #fff; border-color: #111; }
-        .cma-navbtn:hover .cma-navburger span { background: #fff; }
-        .cma-navburger { display: inline-flex; flex-direction: column; gap: 3px; }
-        .cma-navburger span { display: block; width: 16px; height: 2px; background: #111; }
+        /* section navigator (icon button + dropdown menu) */
         .cma-navoverlay { position: fixed; inset: 0; z-index: 39; }
         .cma-navmenu { position: absolute; top: calc(100% + 8px); right: 0; background: #fff; border: 1px solid #e2e2e2; border-radius: 12px; box-shadow: 0 12px 32px rgba(0,0,0,0.14); min-width: 250px; max-width: 92vw; padding: 4px 0; z-index: 40; }
         .cma-navmenu a { display: block; padding: 11px 18px; font-size: 14px; font-weight: 600; color: #333; text-decoration: none; border-bottom: 1px solid #f0f0f0; }
@@ -840,98 +830,94 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
         .cma-calc-input:focus { outline: 2px solid #0066cc; border-color: #0066cc; }
         .cma-calc-head { text-align: center; font-size: 13px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: #111; margin: 22px 0 4px; padding-bottom: 10px; border-bottom: 2px solid #111; }
         /* dark mode: dark color in blocks only — page stays light */
-        .cma-dark { background: #f5f5f5; color: #111; }
-        .cma-dark .cma-topbar { color: #555; border-color: #e2e2e2; }
-        .cma-dark .cma-fixedhead { background: #141414; border-color: #141414; }
-        .cma-dark .cma-fh-brand { color: #999; border-color: #2e2e2e; }
-        .cma-dark .cma-fh-brandshort { color: #ddd; }
-        .cma-dark .cma-fh-logo { color: #f2f2f2; }
-        .cma-dark .cma-fh-logo span { color: #4da3ff; }
-        .cma-dark .cma-fh-title { color: #f2f2f2; }
-        .cma-dark .cma-fh-date { color: #999; }
-        .cma-dark .cma-head, .cma-dark section, .cma-dark footer { background: #141414; border-color: #141414; color: #f2f2f2; }
-        .cma-dark h2 { border-color: #f2f2f2; color: #f2f2f2; }
-        .cma-dark .cma-brand span { color: #4da3ff; }
-        .cma-dark .cma-sub, .cma-dark .cma-meta { color: #aaa; }
-        .cma-dark .cma-notes, .cma-dark .cma-review p { color: #ccc; }
-        .cma-dark .cma-fine, .cma-dark .cma-listing-meta, .cma-dark .cma-nearby-dist, .cma-dark .cma-reason-sub, .cma-dark .cma-sold-meta { color: #999; }
-        .cma-dark th { color: #999; border-color: #f2f2f2; }
-        .cma-dark td { border-color: #2e2e2e; }
-        .cma-dark .cma-table-wrap table { color: #f2f2f2; }
-        .cma-dark .cma-listing, .cma-dark .cma-why-card, .cma-dark .cma-card, .cma-dark .cma-review, .cma-dark .cma-nearby-group, .cma-dark .cma-sold { background: #000; border-color: #2e2e2e; }
-        .cma-dark .cma-noimg { background: #1c1c1c; color: #777; }
-        .cma-dark .cma-card p { color: #aaa; }
-        .cma-dark .cma-why-icon, .cma-dark .cma-mkt-icon { color: #f2f2f2; }
-        .cma-dark .cma-stars, .cma-dark .cma-reviews-score { color: #f2f2f2; }
-        .cma-dark .cma-dom { background: #f2f2f2; color: #000; }
-        .cma-dark .cma-reason { border-color: #2e2e2e; }
-        .cma-dark .cma-reason-num { color: #4da3ff; }
-        .cma-dark .cma-reason-num::after { background: #f2f2f2; }
-        .cma-dark .cma-reason-title { color: #f2f2f2; }
-        .cma-dark .cma-cta { border-color: #f2f2f2; }
-        .cma-dark .cma-cta p { color: #aaa; }
-        .cma-dark .cma-bar { background: #000; border-color: #2e2e2e; }
-        .cma-dark .cma-bar-top { background: #f5f5f5; color: #111; }
-        .cma-dark .cma-bar.hl .cma-bar-top { background: #0066cc; color: #fff; }
-        .cma-dark .cma-bar-sub { color: #555; }
-        .cma-dark .cma-bar-label { color: #999; }
-        .cma-dark .cma-calc-label { color: #aaa; }
-        .cma-dark .cma-calc-addr { color: #f2f2f2; }
-        .cma-dark .cma-calc-arrow { color: #4da3ff; }
-        .cma-dark .cma-calc-input { background: #000; border-color: #3a3a3a; color: #f2f2f2; }
-        .cma-dark .cma-calc-head { color: #f2f2f2; border-color: #f2f2f2; }
-        .cma-dark .cma-agent-tag { color: #4da3ff; }
-        .cma-dark .cma-agent-name { color: #f2f2f2; }
-        .cma-dark .cma-address { color: #f2f2f2; }
-        .cma-dark .cma-prepared { color: #aaa; }
-        .cma-dark .cma-prepared strong { color: #f2f2f2; }
-        .cma-dark .cma-kv { border-color: #2e2e2e; }
-        .cma-dark .cma-kv > div { border-color: #2e2e2e; }
-        .cma-dark .cma-kv span { color: #999; }
-        .cma-dark .cma-kv strong { color: #f2f2f2; }
-        .cma-dark .cma-sold-price { color: #4da3ff; }
-        .cma-dark .cma-sold-addr { color: #f2f2f2; }
-        .cma-dark .cma-listing-price { color: #f2f2f2; }
-        .cma-dark .cma-listing-addr { color: #ddd; }
-        .cma-dark .cma-nearby-head strong { color: #f2f2f2; }
-        .cma-dark .cma-nearby li { border-color: #2e2e2e; color: #ddd; }
-        .cma-dark .cma-cta-title { color: #f2f2f2; }
-        .cma-dark .cma-cta-btn { background: #f5f5f5; color: #111; }
-        .cma-dark .cma-cta-btn:hover { background: #0066cc; color: #fff; }
-        .cma-dark .cma-cta-contact { color: #ddd; }
-        .cma-dark .cma-rec strong { color: #4da3ff; }
-        .cma-dark .cma-price-row strong { color: #f2f2f2; }
-        .cma-dark .cma-price-row span { color: #999; }
-        .cma-dark .cma-theme-toggle, .cma-dark .cma-pdf-btn { background: #fff; border-color: #ddd; color: #111; }
-        .cma-dark .cma-theme-toggle:hover, .cma-dark .cma-pdf-btn:hover { background: #eee; }
-        .cma-dark .cma-navbtn { background: #000; border-color: #3a3a3a; color: #f2f2f2; }
-        .cma-dark .cma-navbtn:hover { background: #f5f5f5; color: #111; border-color: #f5f5f5; }
-        .cma-dark .cma-navbtn:hover .cma-navburger span { background: #111; }
-        .cma-dark .cma-navburger span { background: #f2f2f2; }
-        .cma-dark .cma-navmenu { background: #000; border-color: #2e2e2e; }
-        .cma-dark .cma-navmenu a { color: #ddd; }
-        .cma-dark .cma-navmenu a:hover { background: #1e1e1e; color: #fff; }
-        .cma-dark .cma-vp-eyebrow { color: #999; }
-        .cma-dark .cma-vp-title { color: #f2f2f2; }
-        .cma-dark .cma-vp-sub { color: #aaa; }
-        .cma-dark .cma-vp-table th.cma-vp-hl, .cma-dark .cma-vp-table td.cma-vp-hl { background: #1c1c1c; }
-        .cma-dark .cma-vp-yes { color: #f2f2f2; }
-        .cma-dark .cma-vp-maybe { color: #666; }
-        .cma-dark .cma-vp-banner { background: #f5f5f5; color: #111; }
-        .cma-dark .cma-theme-toggle .cma-toggle-track { background: #ccc; }
-        .cma-dark .cma-theme-toggle.on .cma-toggle-track { background: #0066cc; }
+        .cma-root.cma-dark { background: #f5f5f5; color: #111; }
+        .cma-root.cma-dark .cma-topbar { color: #555; border-color: #e2e2e2; }
+        .cma-root.cma-dark .cma-fixedhead { background: #141414; border-color: #141414; }
+        .cma-root.cma-dark .cma-fh-brand { color: #999; border-color: #2e2e2e; }
+        .cma-root.cma-dark .cma-fh-brandshort { color: #ddd; }
+        .cma-root.cma-dark .cma-fh-logo { color: #f2f2f2; }
+        .cma-root.cma-dark .cma-fh-logo span { color: #4da3ff; }
+        .cma-root.cma-dark .cma-fh-title { color: #f2f2f2; }
+        .cma-root.cma-dark .cma-fh-date { color: #999; }
+        .cma-root.cma-dark .cma-head, .cma-root.cma-dark section, .cma-root.cma-dark footer { background: #141414; border-color: #141414; color: #f2f2f2; }
+        .cma-root.cma-dark h2 { border-color: #f2f2f2; color: #f2f2f2; }
+        .cma-root.cma-dark .cma-brand span { color: #4da3ff; }
+        .cma-root.cma-dark .cma-sub, .cma-root.cma-dark .cma-meta { color: #aaa; }
+        .cma-root.cma-dark .cma-notes, .cma-root.cma-dark .cma-review p { color: #ccc; }
+        .cma-root.cma-dark .cma-fine, .cma-root.cma-dark .cma-listing-meta, .cma-root.cma-dark .cma-nearby-dist, .cma-root.cma-dark .cma-reason-sub, .cma-root.cma-dark .cma-sold-meta { color: #999; }
+        .cma-root.cma-dark th { color: #999; border-color: #f2f2f2; }
+        .cma-root.cma-dark td { border-color: #2e2e2e; }
+        .cma-root.cma-dark .cma-table-wrap table { color: #f2f2f2; }
+        .cma-root.cma-dark .cma-listing, .cma-root.cma-dark .cma-why-card, .cma-root.cma-dark .cma-card, .cma-root.cma-dark .cma-review, .cma-root.cma-dark .cma-nearby-group, .cma-root.cma-dark .cma-sold { background: #000; border-color: #2e2e2e; }
+        .cma-root.cma-dark .cma-noimg { background: #1c1c1c; color: #777; }
+        .cma-root.cma-dark .cma-card p { color: #aaa; }
+        .cma-root.cma-dark .cma-why-icon, .cma-root.cma-dark .cma-mkt-icon { color: #f2f2f2; }
+        .cma-root.cma-dark .cma-stars, .cma-root.cma-dark .cma-reviews-score { color: #f2f2f2; }
+        .cma-root.cma-dark .cma-dom { background: #f2f2f2; color: #000; }
+        .cma-root.cma-dark .cma-reason { border-color: #2e2e2e; }
+        .cma-root.cma-dark .cma-reason-num { color: #4da3ff; }
+        .cma-root.cma-dark .cma-reason-num::after { background: #f2f2f2; }
+        .cma-root.cma-dark .cma-reason-title { color: #f2f2f2; }
+        .cma-root.cma-dark .cma-cta { border-color: #f2f2f2; }
+        .cma-root.cma-dark .cma-cta p { color: #aaa; }
+        .cma-root.cma-dark .cma-bar { background: #000; border-color: #2e2e2e; }
+        .cma-root.cma-dark .cma-bar-top { background: #f5f5f5; color: #111; }
+        .cma-root.cma-dark .cma-bar.hl .cma-bar-top { background: #0066cc; color: #fff; }
+        .cma-root.cma-dark .cma-bar-sub { color: #555; }
+        .cma-root.cma-dark .cma-bar-label { color: #999; }
+        .cma-root.cma-dark .cma-calc-label { color: #aaa; }
+        .cma-root.cma-dark .cma-calc-addr { color: #f2f2f2; }
+        .cma-root.cma-dark .cma-calc-arrow { color: #4da3ff; }
+        .cma-root.cma-dark .cma-calc-input { background: #000; border-color: #3a3a3a; color: #f2f2f2; }
+        .cma-root.cma-dark .cma-calc-head { color: #f2f2f2; border-color: #f2f2f2; }
+        .cma-root.cma-dark .cma-agent-tag { color: #4da3ff; }
+        .cma-root.cma-dark .cma-agent-name { color: #f2f2f2; }
+        .cma-root.cma-dark .cma-address { color: #f2f2f2; }
+        .cma-root.cma-dark .cma-prepared { color: #aaa; }
+        .cma-root.cma-dark .cma-prepared strong { color: #f2f2f2; }
+        .cma-root.cma-dark .cma-kv { border-color: #2e2e2e; }
+        .cma-root.cma-dark .cma-kv > div { border-color: #2e2e2e; }
+        .cma-root.cma-dark .cma-kv span { color: #999; }
+        .cma-root.cma-dark .cma-kv strong { color: #f2f2f2; }
+        .cma-root.cma-dark .cma-sold-price { color: #4da3ff; }
+        .cma-root.cma-dark .cma-sold-addr { color: #f2f2f2; }
+        .cma-root.cma-dark .cma-listing-price { color: #f2f2f2; }
+        .cma-root.cma-dark .cma-listing-addr { color: #ddd; }
+        .cma-root.cma-dark .cma-nearby-head strong { color: #f2f2f2; }
+        .cma-root.cma-dark .cma-nearby li { border-color: #2e2e2e; color: #ddd; }
+        .cma-root.cma-dark .cma-cta-title { color: #f2f2f2; }
+        .cma-root.cma-dark .cma-cta-btn { background: #f5f5f5; color: #111; }
+        .cma-root.cma-dark .cma-cta-btn:hover { background: #0066cc; color: #fff; }
+        .cma-root.cma-dark .cma-cta-contact { color: #ddd; }
+        .cma-root.cma-dark .cma-rec strong { color: #4da3ff; }
+        .cma-root.cma-dark .cma-price-row strong { color: #f2f2f2; }
+        .cma-root.cma-dark .cma-price-row span { color: #999; }
+        .cma-root.cma-dark .cma-navmenu { background: #000; border-color: #2e2e2e; }
+        .cma-root.cma-dark .cma-navmenu a { color: #ddd; }
+        .cma-root.cma-dark .cma-navmenu a:hover { background: #1e1e1e; color: #fff; }
+        .cma-root.cma-dark .cma-vp-eyebrow { color: #999; }
+        .cma-root.cma-dark .cma-vp-title { color: #f2f2f2; }
+        .cma-root.cma-dark .cma-vp-sub { color: #aaa; }
+        .cma-root.cma-dark .cma-vp-table th.cma-vp-hl, .cma-root.cma-dark .cma-vp-table td.cma-vp-hl { background: #1c1c1c; }
+        .cma-root.cma-dark .cma-vp-yes { color: #f2f2f2; }
+        .cma-root.cma-dark .cma-vp-maybe { color: #666; }
+        .cma-root.cma-dark .cma-vp-banner { background: #f5f5f5; color: #111; }
+        .cma-root.cma-dark .cma-fh-iconbtn { color: #f2f2f2; }
+        .cma-root.cma-dark .cma-fh-iconbtn:hover { color: #4da3ff; }
+        .cma-root.cma-dark .cma-fh-div { background: #3a3a3a; }
         @media (max-width: 640px) {
           .cma { padding: 16px 12px; overflow-x: clip; }
-          .cma-fixedhead { margin: -16px -12px 16px; padding: 10px 12px; }
+          .cma-fh-inner { padding: 10px 12px; }
           .cma-fh-brand { display: none; }
-          .cma-fh-main { flex-wrap: wrap; gap: 10px; }
-          .cma-fh-titles { flex: 1 1 0; }
+          .cma-fh-main { flex-wrap: wrap; gap: 8px; }
+          .cma-fh-titles { flex: 1 1 100%; }
           .cma-fh-brandshort { display: block; font-size: 11px; font-weight: 700; }
           .cma-fh-logo { display: none; }
           .cma-fh-title { font-size: 12px; margin-top: 1px; }
           .cma-fh-date { font-size: 11px; }
-          .cma-fh-actions { order: 3; flex: 1 1 100%; }
-          .cma-fh-actions .cma-theme-toggle, .cma-fh-actions .cma-pdf-btn { flex: 1; justify-content: center; }
+          .cma-fh-icons { flex: 1 1 100%; border-top: 1px solid #f0f0f0; padding-top: 4px; }
+          .cma-root.cma-dark .cma-fh-icons { border-color: #2e2e2e; }
+          .cma-fh-iconbtn { padding: 8px 14px; }
           .cma section { padding: 18px 16px; }
           .cma-head { flex-direction: column; gap: 10px; }
           .cma-meta { text-align: left; }
@@ -963,7 +949,6 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
           .cma-bar.hl .cma-bar-top { color: #0066cc !important; }
           .cma-bar-sub { color: #555 !important; }
           .cma-calc-input { border-color: #999; }
-          .cma-navwrap { display: none !important; }
           .cma-vp-table th.cma-vp-hl, .cma-vp-table td.cma-vp-hl { background: #f0f0f0 !important; }
           .cma-vp-banner { background: #111 !important; color: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         }
@@ -1008,6 +993,7 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
           </div>
         </div>
       )}
+    </div>
     </div>
   );
 }
