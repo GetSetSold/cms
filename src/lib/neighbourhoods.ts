@@ -168,20 +168,22 @@ export async function listNeighbourhoods(): Promise<Neighbourhood[]> {
  *  Scoped to the city's listings only (1 query) — never scans the full table. */
 export async function getHoodsForCity(city: string): Promise<Neighbourhood[]> {
   const mls = createMlsClient();
-  const variants = await rawCitiesFor(city);
+  // Use pre-aggregated view (fast: ~100 rows instead of 10k).
+  // View groups by normalized city, matching the `city` param from resolveCitySlug.
   const { data, error } = await mls
-    .from("property")
-    .select("CityRegion,SubdivisionName")
-    .in("City", variants)
-    .limit(10000);
+    .from("hood_counts_agg")
+    .select("hood, count")
+    .eq("city", city)
+    .order("count", { ascending: false });
   if (error) throw new Error(`getHoodsForCity: ${error.message}`);
   const pairCounts = new Map<string, number>();
   const displayNames = new Map<string, string>();
-  for (const r of (data ?? []) as HoodRow[]) {
-    const hood = coalesceHood(r);
+  for (const r of (data ?? []) as { hood: string; count: number }[]) {
+    const hood = (r.hood || "").trim();
     if (!hood) continue;
     const slug = hoodSlug(hood);
-    pairCounts.set(slug, (pairCounts.get(slug) ?? 0) + 1);
+    // Multiple raw hoods can slug to the same value; merge their counts.
+    pairCounts.set(slug, (pairCounts.get(slug) ?? 0) + Number(r.count));
     if (!displayNames.has(slug)) displayNames.set(slug, hood);
   }
   return [...pairCounts.entries()]
