@@ -78,7 +78,7 @@ export default async function PreConstructionHub() {
           ]}
         />
 
-        <section className="border-t border-line">
+        <section className="mt-[50px] border-t border-line">
 <div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
           <div className="mb-6 flex items-end justify-between gap-4">
             <PreconSectionHeader eyebrow="Featured" heading="All Pre-Construction Projects" />
@@ -120,7 +120,7 @@ export default async function PreConstructionHub() {
 </section>
 
         {cities.length ? (
-          <section className="border-t border-line">
+          <section className="mt-[50px] border-t border-line">
 <div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
             <PreconSectionHeader eyebrow="Locations" heading="Browse by City" />
             <div className="flex flex-wrap gap-2.5 pt-2">
@@ -140,7 +140,7 @@ export default async function PreConstructionHub() {
 </section>
         ) : null}
 
-        <section className="border-t border-line">
+        <section className="mt-[50px] border-t border-line">
 <div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
           <div className="mb-6 flex items-end justify-between gap-4">
             <PreconSectionHeader eyebrow="Builders" heading="Featured Builders" />
@@ -168,7 +168,7 @@ export default async function PreConstructionHub() {
         </div>
 </section>
 
-        <section className="border-t border-line">
+        <section className="mt-[50px] border-t border-line">
 <div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
           <div className="mb-6 flex items-end justify-between gap-4">
             <PreconSectionHeader eyebrow="Models" heading="Compare floor plans" />
@@ -185,7 +185,7 @@ export default async function PreConstructionHub() {
         </div>
 </section>
 
-        <section className="border-t border-line">
+        <section className="mt-[50px] border-t border-line">
 <div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
           <PreconSectionHeader eyebrow="Advantages" heading="Why Buy Pre-Construction?" />
           <div className="grid grid-cols-1 gap-4 pt-2 sm:grid-cols-2 lg:grid-cols-3">
@@ -199,7 +199,7 @@ export default async function PreConstructionHub() {
         </div>
 </section>
 
-        <section className="border-t border-line">
+        <section className="mt-[50px] border-t border-line">
 <div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
           <PreconSectionHeader eyebrow="FAQ" heading="Frequently Asked Questions" />
           <div className={`mt-2 flex flex-col divide-y divide-line ${card} px-6`}>
@@ -222,7 +222,7 @@ export default async function PreConstructionHub() {
           siteName={settings.site_name}
         />
 
-        <section className="border-t border-line">
+        <section className="mt-[50px] border-t border-line">
 <div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
           <div className="border-t border-line pt-8">
             <h2 className="font-display text-lg font-bold">Pre-Construction Homes, Condos &amp; Townhomes in Ontario</h2>

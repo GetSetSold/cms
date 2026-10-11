@@ -23,7 +23,7 @@ export function PreconLeadSection({
   siteName: string;
 }) {
   return (
-    <section id="lead" className="border-t border-line">
+    <section id="lead" className="mt-[50px] border-t border-line">
       <div className={`${wrap} py-[50px]`}>
         <PreconSectionHeader eyebrow="Get In Touch" heading={heading} />
         <div className="grid gap-10 pt-10 md:grid-cols-2 md:gap-16">

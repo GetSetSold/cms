@@ -67,7 +67,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
         />
 
         {cashback ? (
-          <section className="border-t border-line">
+          <section className="mt-[50px] border-t border-line">
 <div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
             <div className="flex flex-wrap items-center justify-between gap-4 rounded-[20px] border-2 border-dashed border-primary bg-[#f2f7ff] p-6 md:p-7">
               <div>
@@ -82,7 +82,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
         ) : null}
 
         {project.project_description ? (
-          <section className="border-t border-line">
+          <section className="mt-[50px] border-t border-line">
 <div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
             <p className="max-w-3xl whitespace-pre-line text-sm leading-relaxed text-muted md:text-base">{project.project_description}</p>
           </div>
@@ -90,7 +90,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
         ) : null}
 
         {limitedTimePromo ? (
-          <section className="border-t border-line">
+          <section className="mt-[50px] border-t border-line">
 <div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
             <PromoBanner promo={limitedTimePromo} />
           </div>
@@ -98,7 +98,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
         ) : null}
 
         {promos.length ? (
-          <section className="border-t border-line">
+          <section className="mt-[50px] border-t border-line">
 <div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
               {promos.map((promo) => (
@@ -114,7 +114,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
         ) : null}
 
         {(gallery.length || project.main_image_url) ? (
-          <section className="border-t border-line">
+          <section className="mt-[50px] border-t border-line">
 <div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
             <PreconSectionHeader eyebrow="Photos" heading="Image Gallery" />
             <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -129,7 +129,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
         ) : null}
 
         {(project.lat && project.lng) ? (
-          <section className="border-t border-line">
+          <section className="mt-[50px] border-t border-line">
 <div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
             <PreconSectionHeader eyebrow="Where You'll Live" heading="Location" />
             <div className={`grid grid-cols-1 gap-0 overflow-hidden md:grid-cols-[1fr_320px] ${card}`}>
@@ -151,7 +151,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
 </section>
         ) : null}
 
-        <section id="models" className="border-t border-line">
+        <section id="models" className="mt-[50px] border-t border-line">
 <div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
           <PreconSectionHeader eyebrow="Available Homes" heading="Models & Floor Plans" />
           <ModelsTabs models={models} basePath={basePath} cashback={settings.precon_cashback} />
@@ -159,7 +159,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
 </section>
 
         {amenities.length ? (
-          <section className="border-t border-line">
+          <section className="mt-[50px] border-t border-line">
 <div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
             <PreconSectionHeader eyebrow="Features" heading="Amenities & Inclusions" />
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">

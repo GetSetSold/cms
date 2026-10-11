@@ -87,7 +87,7 @@ export default async function ModelPage({ params }: { params: Promise<{ slug: st
         />
 
         {model.description ? (
-          <section className="border-t border-line">
+          <section className="mt-[50px] border-t border-line">
 <div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
             <p className="max-w-3xl whitespace-pre-line text-sm leading-relaxed text-muted md:text-base">{model.description}</p>
           </div>
@@ -95,7 +95,7 @@ export default async function ModelPage({ params }: { params: Promise<{ slug: st
         ) : null}
 
         {limitedTimePromo ? (
-          <section className="border-t border-line">
+          <section className="mt-[50px] border-t border-line">
 <div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
             <PromoBanner promo={limitedTimePromo} />
           </div>
@@ -103,7 +103,7 @@ export default async function ModelPage({ params }: { params: Promise<{ slug: st
         ) : null}
 
         {(gallery.length || model.model_image_url) ? (
-          <section className="border-t border-line">
+          <section className="mt-[50px] border-t border-line">
 <div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
             <PreconSectionHeader eyebrow="Photos" heading="Image Gallery" />
             <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -116,7 +116,7 @@ export default async function ModelPage({ params }: { params: Promise<{ slug: st
         ) : null}
 
         {floorplans.length ? (
-          <section className="border-t border-line">
+          <section className="mt-[50px] border-t border-line">
 <div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
             <PreconSectionHeader eyebrow="Layout" heading="Floor Plans" />
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -132,7 +132,7 @@ export default async function ModelPage({ params }: { params: Promise<{ slug: st
         ) : null}
 
         {paymentPlan && installments.length ? (
-          <section className="border-t border-line">
+          <section className="mt-[50px] border-t border-line">
 <div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
             <PreconSectionHeader eyebrow={paymentPlan.title ?? "Deposit Structure"} heading="Payment Plan" />
             <div className={`flex flex-col divide-y divide-line ${card}`}>
@@ -148,7 +148,7 @@ export default async function ModelPage({ params }: { params: Promise<{ slug: st
         ) : null}
 
         {amenities?.length ? (
-          <section className="border-t border-line">
+          <section className="mt-[50px] border-t border-line">
 <div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
             <PreconSectionHeader eyebrow="Features" heading="Amenities & Inclusions" />
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
@@ -165,7 +165,7 @@ export default async function ModelPage({ params }: { params: Promise<{ slug: st
         ) : null}
 
         {siblings.length ? (
-          <section className="border-t border-line">
+          <section className="mt-[50px] border-t border-line">
 <div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
             <PreconSectionHeader eyebrow="Keep Looking" heading="Similar Homes" />
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">

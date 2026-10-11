@@ -28,14 +28,14 @@ export function PreconAlertsForm() {
 
   if (status === "done") {
     return (
-      <div className="rounded-[var(--radius-lg)] border-[length:var(--border-card-width)] border-line bg-white p-8 text-center shadow-[var(--shadow-card)]" role="status">
+      <div className="py-6 text-center" role="status">
         <p className="font-display text-xl font-bold">{message}</p>
       </div>
     );
   }
 
   return (
-    <form onSubmit={submit} className="rounded-[var(--radius-lg)] border-[length:var(--border-card-width)] border-line bg-white p-6 shadow-[var(--shadow-card)] md:p-8">
+    <form onSubmit={submit}>
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <label className="label">First name<input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Sam" autoComplete="given-name" className="input h-12 text-base" /></label>
