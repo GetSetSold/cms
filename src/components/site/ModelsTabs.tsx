@@ -4,7 +4,7 @@ import Link from "next/link";
 import type { HomeModel } from "@/lib/precon";
 import { getCashbackAmount, formatCashback } from "@/lib/cashback";
 import type { SiteSettings } from "@/lib/types";
-import { CardArrowButton } from "./CardArrowButton";
+import { PreconCardCta } from "./PreconCardCta";
 
 const card = "rounded-[var(--radius-lg)] border-[length:var(--border-card-width)] border-line shadow-[var(--shadow-card)] bg-white";
 
@@ -27,7 +27,6 @@ export function ModelsTabs({ models, basePath, cashback }: { models: HomeModel[]
                 <div className="relative aspect-[4/3] bg-soft">
                   {m.model_image_url ? <img src={m.model_image_url} alt={m.model_name ?? ""} className="h-full w-full object-cover" /> : null}
                   {cb ? <span className="absolute right-3 top-3 flex items-center gap-1 rounded-[var(--radius-label)] bg-gradient-to-r from-[#065f46] to-[#059669] px-2.5 py-1 text-[11px] font-semibold text-white">{formatCashback(cb)} cashback</span> : null}
-                  <CardArrowButton />
                 </div>
                 <div className="flex flex-col gap-1 p-4">
                   <div className="text-base font-bold text-primary">{m.starting_price ? `$${Number(m.starting_price).toLocaleString()}` : "Price TBA"}</div>
@@ -37,6 +36,7 @@ export function ModelsTabs({ models, basePath, cashback }: { models: HomeModel[]
                     {m.bathrooms ? <span>{m.bathrooms} ba</span> : null}
                     {m.sqft ? <span>{m.sqft} sqft</span> : null}
                   </div>
+                  <PreconCardCta label="View Model" />
                 </div>
               </Link>
             );

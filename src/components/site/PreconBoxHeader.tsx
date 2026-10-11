@@ -1,0 +1,104 @@
+import Link from "next/link";
+
+export type PreconCrumb = { label: string; href?: string };
+export type PreconFact = { value: string; label?: string };
+export type PreconCta = { label: string; href: string; variant: "primary" | "ghost" };
+
+const wrap = "mx-auto w-full max-w-7xl px-5 md:px-10";
+
+/** Contained box-style page header: background image + dark scrim, never full-width. */
+export function PreconBoxHeader({
+  crumbs,
+  eyebrow,
+  title,
+  lede,
+  facts,
+  ctas,
+  bgImage,
+  logoUrl,
+  logoAlt,
+}: {
+  crumbs: PreconCrumb[];
+  eyebrow: string;
+  title: string;
+  lede?: React.ReactNode;
+  facts?: PreconFact[];
+  ctas?: PreconCta[];
+  bgImage?: string | null;
+  logoUrl?: string | null;
+  logoAlt?: string;
+}) {
+  return (
+    <div className={`${wrap} pt-6 md:pt-8`}>
+      <header
+        className="relative overflow-hidden rounded-[28px] bg-ink bg-cover bg-center text-white"
+        style={bgImage ? { backgroundImage: `url(${bgImage})` } : undefined}
+      >
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/55 to-black/30" aria-hidden="true" />
+        <div
+          className="absolute -right-24 -top-24 h-[360px] w-[360px] rounded-full"
+          style={{ background: "radial-gradient(circle, rgba(0,102,204,0.30) 0%, rgba(0,102,204,0) 70%)" }}
+          aria-hidden="true"
+        />
+        <div className="relative z-10 flex flex-col items-start gap-4 p-7 md:p-12">
+          <nav className="text-[13px] text-white/55" aria-label="Breadcrumb">
+            {crumbs.map((c, i) => (
+              <span key={`${c.label}-${i}`}>
+                {i > 0 ? <span className="mx-1.5">›</span> : null}
+                {c.href ? (
+                  <Link href={c.href} prefetch={false} className="text-white/75 hover:text-white">
+                    {c.label}
+                  </Link>
+                ) : (
+                  c.label
+                )}
+              </span>
+            ))}
+          </nav>
+          {logoUrl ? (
+            <span className="flex items-center justify-center rounded-[18px] bg-white p-3 shadow-[0_8px_24px_rgba(0,0,0,0.25)]">
+              <img
+                src={logoUrl}
+                alt={logoAlt ?? ""}
+                className="h-auto max-h-[46px] w-auto max-w-[190px] object-contain"
+              />
+            </span>
+          ) : null}
+          <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-[#4d9fff]">{eyebrow}</span>
+          <h1 className="font-display text-3xl font-extrabold tracking-tight md:text-5xl">{title}</h1>
+          {lede ? <div className="max-w-2xl text-[15px] leading-relaxed text-white/70">{lede}</div> : null}
+          {facts?.length ? (
+            <div className="flex flex-wrap gap-2.5 pt-1">
+              {facts.map((f) => (
+                <span
+                  key={f.label ?? f.value}
+                  className="flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-[13px] font-semibold"
+                >
+                  <b className="text-[15px]">{f.value}</b>
+                  {f.label ? <span className="text-[12px] font-medium text-white/60">{f.label}</span> : null}
+                </span>
+              ))}
+            </div>
+          ) : null}
+          {ctas?.length ? (
+            <div className="flex flex-wrap gap-3 pt-2">
+              {ctas.map((c) => (
+                <a
+                  key={c.label}
+                  href={c.href}
+                  className={
+                    c.variant === "primary"
+                      ? "flex h-12 items-center rounded-[var(--radius-btn)] bg-primary px-7 text-[15px] font-bold text-white"
+                      : "flex h-12 items-center rounded-[var(--radius-btn)] border border-white/40 px-7 text-[15px] font-bold text-white"
+                  }
+                >
+                  {c.label}
+                </a>
+              ))}
+            </div>
+          ) : null}
+        </div>
+      </header>
+    </div>
+  );
+}

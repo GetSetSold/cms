@@ -149,6 +149,36 @@ export async function getProjects(): Promise<(Project & { builder: Builder })[]>
   return (projects ?? []).map((p) => ({ ...p, builder: byId.get(p.builder_id)! })).filter((p) => p.builder);
 }
 
+export type ModelWithPath = HomeModel & {
+  project_slug: string | null;
+  project_name: string | null;
+  project_city: string | null;
+  builder_slug: string | null;
+  builder_name: string | null;
+};
+
+/** Every model across all projects, with the slugs needed to link to its page. */
+export async function getAllModels(): Promise<ModelWithPath[]> {
+  const supabase = createPreconClient();
+  const { data: models } = await supabase.from("home_models").select("*").order("model_name");
+  const { data: projects } = await supabase.from("projects").select("id, project_name, slug, city, builder_id");
+  const { data: builders } = await supabase.from("builders").select("id, builder_name, slug");
+  const projById = new Map((projects ?? []).map((p: any) => [p.id, p]));
+  const builderById = new Map((builders ?? []).map((b: any) => [b.id, b]));
+  return ((models ?? []) as HomeModel[]).map((m) => {
+    const proj = m.project_id ? projById.get(m.project_id) : null;
+    const b = proj?.builder_id ? builderById.get(proj.builder_id) : null;
+    return {
+      ...m,
+      project_slug: proj?.slug ?? null,
+      project_name: proj?.project_name ?? null,
+      project_city: proj?.city ?? null,
+      builder_slug: b?.slug ?? null,
+      builder_name: b?.builder_name ?? null,
+    };
+  });
+}
+
 export async function getCities(): Promise<{ city: string; count: number }[]> {
   const supabase = createPreconClient();
   const { data } = await supabase.from("projects").select("city");

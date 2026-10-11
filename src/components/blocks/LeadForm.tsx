@@ -5,6 +5,10 @@ type Props = {
   data: {
     heading?: string; text?: string; form_key?: string; submit_label?: string; success_message?: string;
     show_email?: boolean; show_message?: boolean; show_sms_opt_in?: boolean;
+    /** Split the name field into first/last inputs (still submits a combined `name`). */
+    split_name?: boolean;
+    /** Prefill the message textarea. */
+    default_message?: string;
   };
   pageId?: string;
   siteName: string;
@@ -32,6 +36,19 @@ export function LeadForm({ data, pageId, siteName }: Props) {
     let utm = {};
     try { utm = JSON.parse(sessionStorage.getItem("utm") ?? "{}"); } catch {}
 
+    const payload = JSON.stringify({
+      ...Object.fromEntries(form),
+      // Keep the combined `name` field for the CRM when the name is split.
+      ...(data.split_name
+        ? { name: `${form.get("first_name") ?? ""} ${form.get("last_name") ?? ""}`.trim() }
+        : {}),
+      sms_opt_in: form.get("sms_opt_in") === "on",
+      form_key: data.form_key ?? "contact",
+      page_id: pageId,
+      path: window.location.pathname,
+      utm,
+      elapsed_ms: Date.now() - started.current,
+    });
     const res = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/submit-lead`, {
       method: "POST",
       headers: {
@@ -39,15 +56,7 @@ export function LeadForm({ data, pageId, siteName }: Props) {
         apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
         Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
       },
-      body: JSON.stringify({
-        ...Object.fromEntries(form),
-        sms_opt_in: form.get("sms_opt_in") === "on",
-        form_key: data.form_key ?? "contact",
-        page_id: pageId,
-        path: window.location.pathname,
-        utm,
-        elapsed_ms: Date.now() - started.current,
-      }),
+      body: payload,
     }).catch(() => null);
 
     const body = await res?.json().catch(() => ({}));
@@ -67,13 +76,20 @@ export function LeadForm({ data, pageId, siteName }: Props) {
     <form onSubmit={onSubmit} className="grid gap-3 sm:grid-cols-2">
       {/* Honeypot: hidden from people, bots fill it in */}
       <input type="text" name="website" tabIndex={-1} autoComplete="off" className="hidden" aria-hidden="true" />
-      <label className="label">Name<input name="name" required autoComplete="name" className="input h-12 text-base" /></label>
+      {data.split_name ? (
+        <>
+          <label className="label">First Name<input name="first_name" required autoComplete="given-name" className="input h-12 text-base" /></label>
+          <label className="label">Last Name<input name="last_name" required autoComplete="family-name" className="input h-12 text-base" /></label>
+        </>
+      ) : (
+        <label className="label">Name<input name="name" required autoComplete="name" className="input h-12 text-base" /></label>
+      )}
       <label className="label">Phone<input name="phone" type="tel" autoComplete="tel" className="input h-12 text-base" /></label>
       {data.show_email !== false ? (
         <label className="label sm:col-span-2">Email<input name="email" type="email" autoComplete="email" className="input h-12 text-base" /></label>
       ) : null}
       {data.show_message !== false ? (
-        <label className="label sm:col-span-2">How can we help?<textarea name="message" rows={4} className="textarea text-base" /></label>
+        <label className="label sm:col-span-2">How can we help?<textarea name="message" rows={4} className="textarea text-base" defaultValue={data.default_message} /></label>
       ) : null}
       {data.show_sms_opt_in !== false ? (
         <label className="flex items-start gap-2 text-[13px] leading-snug text-muted sm:col-span-2">

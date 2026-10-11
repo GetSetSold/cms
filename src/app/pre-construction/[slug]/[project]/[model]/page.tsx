@@ -8,8 +8,10 @@ import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter, MobileCtaBar } from "@/components/site/SiteFooter";
 import { LeadForm } from "@/components/blocks/LeadForm";
 import { PromoBanner } from "@/components/site/PromoBanner";
-import { CardArrowButton } from "@/components/site/CardArrowButton";
 import { getCashbackAmount, formatCashback } from "@/lib/cashback";
+import { PreconSectionHeader } from "@/components/site/PreconSectionHeader";
+import { PreconBoxHeader } from "@/components/site/PreconBoxHeader";
+import { PreconCardCta } from "@/components/site/PreconCardCta";
 
 const wrap = "mx-auto w-full max-w-7xl px-5 md:px-10";
 const card = "rounded-[var(--radius-lg)] border-[length:var(--border-card-width)] border-line shadow-[var(--shadow-card)] bg-white";
@@ -37,6 +39,7 @@ export default async function ModelPage({ params }: { params: Promise<{ slug: st
   const { builder, project, model, siblings, floorplans, gallery, limitedTimePromo, paymentPlan, installments } = found;
   const logo = await getLogo(settings);
   const basePath = `/pre-construction/${builderSlug}/${projectSlug}`;
+  const cashback = getCashbackAmount(model.starting_price, settings.precon_cashback);
 
   return (
     <div style={themeVars(settings)} className="bg-ground text-ink">
@@ -45,63 +48,59 @@ export default async function ModelPage({ params }: { params: Promise<{ slug: st
       <SiteHeader settings={settings} logo={logo} />
 
       <main>
-        <div className={`${wrap} pb-4 pt-6 text-sm text-muted`}>
-          <Link href="/pre-construction" prefetch={false}>Pre-Construction</Link> › <Link href={`/pre-construction/${builderSlug}`} prefetch={false}>{builder.builder_name}</Link> › <Link href={basePath} prefetch={false}>{project.project_name}</Link> › {model.model_name}
-        </div>
-
-        <section
-          className="relative flex min-h-[55vh] flex-col justify-end overflow-hidden bg-ink bg-cover bg-center"
-          style={model.model_image_url ? { backgroundImage: `url(${model.model_image_url})` } : undefined}
-        >
-          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-black/10" />
-          <div className={`${wrap} relative z-10 flex flex-col items-start gap-4 py-12`}>
-            {builder.logo_url ? <img src={builder.logo_url} alt={builder.builder_name} className="h-10 w-auto rounded-lg bg-white/90 object-contain p-1.5" /> : null}
-            <h1 className="font-display text-2xl font-extrabold text-white md:text-5xl">{model.model_name}</h1>
-            {model.title && model.title !== model.model_name ? <p className="text-sm text-white/70">{model.title}</p> : null}
-            <p className="text-sm text-white/70">Part of <Link href={basePath} prefetch={false} className="font-medium text-white underline">{project.project_name}</Link> by {builder.builder_name}</p>
-            {(() => {
-              const cb = getCashbackAmount(model.starting_price, settings.precon_cashback);
-              return cb ? (
-                <span className="flex items-center gap-2 rounded-[var(--radius-label)] bg-gradient-to-r from-[#065f46] via-[#059669] to-[#10b981] px-4 py-2 text-sm font-bold text-white">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>
-                  Up to {formatCashback(cb)} Cashback — Exclusive Buyer Perk
+        <PreconBoxHeader
+          crumbs={[
+            { label: "Pre-Construction", href: "/pre-construction" },
+            { label: builder.builder_name, href: `/pre-construction/${builderSlug}` },
+            { label: project.project_name, href: basePath },
+            { label: model.model_name ?? "Model" },
+          ]}
+          eyebrow={`${model.building_type ?? "Home"} Model · ${project.project_name} by ${builder.builder_name}`}
+          title={model.model_name ?? "Model"}
+          lede={
+            <>
+              {model.title && model.title !== model.model_name ? <span className="mb-1 block">{model.title}</span> : null}
+              Part of <Link href={basePath} prefetch={false} className="font-medium text-white underline">{project.project_name}</Link> by {builder.builder_name}
+              {cashback ? (
+                <span className="mt-3 inline-flex items-center gap-2 rounded-[var(--radius-label)] bg-gradient-to-r from-[#065f46] via-[#059669] to-[#10b981] px-4 py-2 text-sm font-bold text-white">
+                  Up to {formatCashback(cashback)} Cashback — Exclusive Buyer Perk
                 </span>
-              ) : null;
-            })()}
-            <div className="flex gap-3 pt-1">
-              <a href="#lead" className="flex h-11 items-center rounded-[var(--radius-btn)] bg-primary px-6 text-sm font-medium text-white md:h-13 md:px-7">Register Interest</a>
-              <a href="#lead" className="flex h-11 items-center rounded-[var(--radius-btn)] border border-white/50 px-6 text-sm font-medium text-white md:h-13 md:px-7">Book a Showing</a>
-            </div>
-          </div>
-        </section>
-
-        <section className={`${wrap} pb-10 pt-10`}>
-          <div className={`grid grid-cols-3 gap-4 p-5 sm:grid-cols-4 md:grid-cols-7 md:p-8 ${card}`}>
-            <Stat label="City" value={project.city} />
-            <Stat label="Price" value={model.starting_price ? `$${Number(model.starting_price).toLocaleString()}` : "TBA"} />
-            <Stat label="Bedrooms" value={model.bedrooms} />
-            <Stat label="Bathrooms" value={model.bathrooms} />
-            <Stat label="Sq Ft" value={model.sqft} />
-            <Stat label="Storeys" value={model.storeys} />
-            <Stat label="Type" value={model.building_type} />
-          </div>
-        </section>
+              ) : null}
+            </>
+          }
+          bgImage={model.model_image_url}
+          logoUrl={builder.logo_url}
+          logoAlt={builder.builder_name}
+          facts={[
+            ...(project.city ? [{ value: project.city, label: "City" }] : []),
+            { value: model.starting_price ? `$${Number(model.starting_price).toLocaleString()}` : "TBA", label: "Price" },
+            ...(model.bedrooms ? [{ value: model.bedrooms, label: "Bedrooms" }] : []),
+            ...(model.bathrooms ? [{ value: model.bathrooms, label: "Bathrooms" }] : []),
+            ...(model.sqft ? [{ value: model.sqft, label: "Sq Ft" }] : []),
+            ...(model.storeys ? [{ value: model.storeys, label: "Storeys" }] : []),
+            ...(model.building_type ? [{ value: model.building_type, label: "Type" }] : []),
+          ]}
+          ctas={[
+            { label: "Register Interest", href: "#lead", variant: "primary" },
+            { label: "Book a Showing", href: "#lead", variant: "ghost" },
+          ]}
+        />
 
         {model.description ? (
-          <section className={`${wrap} pb-10`}>
+          <section className={`${wrap} pt-10`}>
             <p className="max-w-3xl whitespace-pre-line text-sm leading-relaxed text-muted md:text-base">{model.description}</p>
           </section>
         ) : null}
 
         {limitedTimePromo ? (
-          <section className={`${wrap} pb-10`}>
+          <section className={`${wrap} pt-10`}>
             <PromoBanner promo={limitedTimePromo} />
           </section>
         ) : null}
 
         {(gallery.length || model.model_image_url) ? (
-          <section className={`${wrap} flex flex-col gap-5 pb-14`}>
-            <h2 className="text-xl font-extrabold md:text-3xl">Image Gallery</h2>
+          <section className={`${wrap} flex flex-col gap-6 pt-14`}>
+            <PreconSectionHeader eyebrow="Photos" heading="Image Gallery" />
             <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
               {(gallery.length ? gallery.map((g) => g.image_url) : [model.model_image_url]).map((src, i) => (
                 <div key={i} className="aspect-[4/3] overflow-hidden rounded-[var(--radius-md)] bg-soft"><img src={src ?? ""} alt={`${model.model_name} photo ${i + 1}`} className="h-full w-full object-cover" /></div>
@@ -111,8 +110,8 @@ export default async function ModelPage({ params }: { params: Promise<{ slug: st
         ) : null}
 
         {floorplans.length ? (
-          <section className={`${wrap} flex flex-col gap-5 pb-14`}>
-            <h2 className="text-xl font-extrabold md:text-3xl">Floor Plans</h2>
+          <section className={`${wrap} flex flex-col gap-6 pt-14`}>
+            <PreconSectionHeader eyebrow="Layout" heading="Floor Plans" />
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {floorplans.map((fp) => (
                 <div key={fp.id} className={`overflow-hidden ${card}`}>
@@ -125,8 +124,8 @@ export default async function ModelPage({ params }: { params: Promise<{ slug: st
         ) : null}
 
         {paymentPlan && installments.length ? (
-          <section className={`${wrap} flex flex-col gap-4 pb-14`}>
-            <h2 className="text-xl font-extrabold md:text-3xl">Payment Plan{paymentPlan.title ? `: ${paymentPlan.title}` : ""}</h2>
+          <section className={`${wrap} flex flex-col gap-6 pt-14`}>
+            <PreconSectionHeader eyebrow={paymentPlan.title ?? "Deposit Structure"} heading="Payment Plan" />
             <div className={`flex flex-col divide-y divide-line ${card}`}>
               {installments.map((step) => (
                 <div key={step.id} className="flex items-center justify-between px-5 py-3.5">
@@ -139,8 +138,8 @@ export default async function ModelPage({ params }: { params: Promise<{ slug: st
         ) : null}
 
         {siblings.length ? (
-          <section className={`${wrap} flex flex-col gap-5 pb-14`}>
-            <h2 className="text-xl font-extrabold md:text-3xl">Similar Homes</h2>
+          <section className={`${wrap} flex flex-col gap-6 pt-14`}>
+            <PreconSectionHeader eyebrow="Keep Looking" heading="Similar Homes" />
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {siblings.map((m) => {
                 const cb = getCashbackAmount(m.starting_price, settings.precon_cashback);
@@ -149,11 +148,12 @@ export default async function ModelPage({ params }: { params: Promise<{ slug: st
                     <div className="relative aspect-[4/3] bg-soft">
                       {m.model_image_url ? <img src={m.model_image_url} alt={m.model_name ?? ""} className="h-full w-full object-cover" /> : null}
                       {cb ? <span className="absolute right-3 top-3 flex items-center gap-1 rounded-[var(--radius-label)] bg-gradient-to-r from-[#065f46] to-[#059669] px-2.5 py-1 text-[11px] font-semibold text-white">{formatCashback(cb)} cashback</span> : null}
-                      <CardArrowButton />
                     </div>
                     <div className="flex flex-col gap-1 p-4">
                       <div className="text-base font-bold text-primary">{m.starting_price ? `$${Number(m.starting_price).toLocaleString()}` : "Price TBA"}</div>
                       <div className="text-sm font-medium">{m.model_name}</div>
+                      <div className="text-xs text-muted">{project.project_name} · {builder.builder_name}</div>
+                      <PreconCardCta label="View Model" />
                     </div>
                   </Link>
                 );
@@ -162,12 +162,21 @@ export default async function ModelPage({ params }: { params: Promise<{ slug: st
           </section>
         ) : null}
 
-        <section id="lead" className={`${wrap} grid gap-6 pb-16 md:grid-cols-2 md:gap-12`}>
+        <section id="lead" className={`${wrap} grid gap-6 pb-16 pt-14 md:grid-cols-2 md:gap-12`}>
           <div className="flex flex-col gap-3">
-            <h2 className="text-xl font-extrabold md:text-3xl">Interested in This Home?</h2>
-            <p className="text-sm text-muted md:text-lg">From available lots to upgrade options and flexible payment plans — we'll walk you through it all.</p>
+            <PreconSectionHeader eyebrow="Get In Touch" heading="Interested in This Home?" />
+            <p className="text-sm text-muted md:text-base">From available lots to upgrade options and flexible payment plans — we'll walk you through it all.</p>
           </div>
-          <LeadForm data={{ form_key: "precon", heading: "", submit_label: "Get Info" }} siteName={settings.site_name} />
+          <LeadForm
+            data={{
+              form_key: "precon",
+              heading: "",
+              submit_label: "Get Info",
+              split_name: true,
+              default_message: `Hi, I'm interested in the ${model.model_name ?? "model"} at ${project.project_name} by ${builder.builder_name}${project.city ? `, ${project.city}` : ""}${model.starting_price ? ` ($${Number(model.starting_price).toLocaleString()}` : ""}${model.bedrooms ? ` — ${model.bedrooms} bed` : ""}${model.bathrooms ? `, ${model.bathrooms} bath` : ""}${model.sqft ? `, ${model.sqft} sqft` : ""}${model.starting_price ? `)` : ""}. Please send me more details.`,
+            }}
+            siteName={settings.site_name}
+          />
         </section>
       </main>
 
