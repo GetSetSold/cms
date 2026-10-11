@@ -30,6 +30,7 @@ export default async function BuildersPage() {
   const logo = await getLogo(settings);
   const builders = await getBuilders();
   const totalProjects = builders.reduce((n, b) => n + b.project_count, 0);
+  const heroImages = builders.map((b) => b.banner_url).filter(Boolean) as string[];
 
   return (
     <div style={themeVars(settings)} className="bg-ground text-ink">
@@ -42,6 +43,7 @@ export default async function BuildersPage() {
           eyebrow="Pre-Construction Ontario"
           title="Builders behind Ontario's new homes."
           lede="The builders bringing new communities to life across Ontario — browse their projects, floor plans, and VIP incentives."
+          bgImages={heroImages}
           facts={[
             { value: String(builders.length), label: "Builders" },
             { value: String(totalProjects), label: "Projects" },

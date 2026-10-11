@@ -12,6 +12,8 @@ import { PreconLeadSection } from "@/components/site/PreconLeadSection";
 import { getCashbackAmount, formatCashback } from "@/lib/cashback";
 import { PreconSectionHeader } from "@/components/site/PreconSectionHeader";
 import { PreconBoxHeader } from "@/components/site/PreconBoxHeader";
+import { PreconOfferBanner } from "@/components/site/PreconOfferBanner";
+import { amenityIcon } from "@/components/site/PreconAmenityIcons";
 import { seoTitle } from "@/lib/seo";
 
 
@@ -79,14 +81,8 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
         {cashback ? (
           <section className="mt-[50px] border-t border-line">
 <div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
-            <div className="flex flex-wrap items-center justify-between gap-4 rounded-[20px] border-2 border-dashed border-primary bg-[#f2f7ff] p-6 md:p-7">
-              <div>
-                <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-primary">Buyer Cashback Offer</div>
-                <div className="font-display mt-1.5 text-xl font-extrabold md:text-2xl">Up to {formatCashback(cashback)} Cashback — Exclusive Buyer Perk when you buy with us</div>
-                <div className="mt-1 text-sm text-muted">Limited availability — speak with an agent today. No obligation required.</div>
-              </div>
-              <a href="#lead" className="flex h-12 items-center rounded-[var(--radius-btn)] bg-ink px-7 text-sm font-bold text-white">Claim This Offer →</a>
-            </div>
+            <PreconSectionHeader eyebrow="Incentive" heading="Buyer Cashback Offer" />
+            <PreconOfferBanner cashback={cashback} />
           </div>
 </section>
         ) : null}
@@ -94,6 +90,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
         {project.project_description ? (
           <section className="mt-[50px] border-t border-line">
 <div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
+            <PreconSectionHeader eyebrow="Community" heading="About {project.project_name}" />
             <p className="max-w-3xl whitespace-pre-line text-sm leading-relaxed text-muted md:text-base">{project.project_description}</p>
           </div>
 </section>
@@ -102,6 +99,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
         {limitedTimePromo ? (
           <section className="mt-[50px] border-t border-line">
 <div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
+            <PreconSectionHeader eyebrow="Promotion" heading="Limited-Time Offer" />
             <PromoBanner promo={limitedTimePromo} />
           </div>
 </section>
@@ -173,13 +171,16 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
 <div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
             <PreconSectionHeader eyebrow="Features" heading="Amenities & Inclusions" />
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-              {amenities.map((a) => (
+              {amenities.map((a) => {
+                const icon = amenityIcon(a.title);
+                return (
                 <div key={a.id} className={`flex flex-col items-center gap-3 p-6 text-center ${card}`}>
-                  {a.icon_url ? <img src={a.icon_url} alt="" className="h-12 w-12 object-contain" /> : null}
+                  {icon ?? (a.icon_url ? <img src={a.icon_url} alt="" className="h-12 w-12 object-contain" /> : null)}
                   <div className="text-sm font-bold">{a.title}</div>
                   {a.description ? <div className="text-xs text-muted">{a.description}</div> : null}
                 </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 </section>
