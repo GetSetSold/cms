@@ -8,6 +8,7 @@ import { SiteFooter, MobileCtaBar } from "@/components/site/SiteFooter";
 import { PreconBoxHeader } from "@/components/site/PreconBoxHeader";
 import { PreconSectionHeader } from "@/components/site/PreconSectionHeader";
 import { PreconCardCta } from "@/components/site/PreconCardCta";
+import { LeadForm } from "@/components/blocks/LeadForm";
 import { getCashbackAmount, formatCashback } from "@/lib/cashback";
 
 const wrap = "mx-auto w-full max-w-7xl px-5 md:px-10";
@@ -18,24 +19,54 @@ export const metadata: Metadata = {
   description: "VIP access to pre-construction projects across Ontario — floor plans, pricing, and builder incentives, straight from the source.",
 };
 
+const WHY_BUY = [
+  ["Equity Growth", "Lock in today's price and benefit from market appreciation during the construction period. Most buyers see significant equity gains before closing."],
+  ["Full Customization", "Choose your finishes, layouts, and upgrades from the ground up. Personalize every detail to match your lifestyle and taste preferences."],
+  ["Flexible Payments", "Extended deposit structures spread payments over the build timeline, making it easier to manage your finances compared to resale purchases."],
+  ["Tarion Warranty", "All new homes in Ontario come with Tarion warranty coverage, protecting your investment with comprehensive structural and component guarantees."],
+  ["VIP Incentives", "Get exclusive access to developer incentives including bonus upgrades, price reductions, closing cost credits, and free design centre allowances."],
+  ["Energy Efficient", "New builds meet the latest building codes with modern insulation, efficient HVAC systems, and smart home technology built right in."],
+];
+
+const FAQS = [
+  ["What is pre-construction real estate in Ontario?", "Pre-construction real estate refers to homes, condos, and townhomes that are sold before they are built. Buyers secure units at current market prices with flexible deposit structures, often benefiting from VIP pricing, developer incentives, and significant equity appreciation by the time the project is completed."],
+  ["How much deposit is required for a pre-construction home in Ontario?", "Deposit structures vary by builder and project, but typically range from 15% to 25% of the purchase price, spread over the construction timeline. Common structures include 5% at signing with further installments at 30, 60, and 90 days or on occupancy milestones."],
+  ["Is buying pre-construction a good investment in Ontario?", "Pre-construction can be an excellent investment in Ontario due to strong population growth, limited housing supply, and historically rising property values. Buyers lock in today's price and may see 10–20% or more in equity appreciation by completion."],
+  ["What cities in Ontario have the best pre-construction projects?", "Top cities for pre-construction in Ontario include Toronto, Mississauga, Brampton, Vaughan, Milton, Oakville, Hamilton, Ottawa, Markham, and Scarborough. Each city offers a different mix of condo, townhome, and detached opportunities."],
+  ["What is the 10-day rescission period for pre-construction in Ontario?", "Under Ontario's Condominium Act, buyers have a 10-day cooling-off period after signing a purchase agreement for a pre-construction condo. During this period, you can cancel the agreement for any reason and receive a full refund of your deposit."],
+];
+
 export default async function PreConstructionHub() {
   const settings = await getSettings();
   const logo = await getLogo(settings);
   const [projects, builders, cities] = await Promise.all([getProjects(), getBuilders(), getCities()]);
   const featured = projects.slice(0, 6);
   const topBuilders = builders.slice(0, 4);
+  const headerImages = projects.map((p) => p.main_image_url).filter(Boolean) as string[];
+
+  const faqJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: FAQS.map(([q, a]) => ({
+      "@type": "Question",
+      name: q,
+      acceptedAnswer: { "@type": "Answer", text: a },
+    })),
+  };
 
   return (
     <div style={themeVars(settings)} className="bg-ground text-ink">
       <link rel="stylesheet" href={themeFontHref(settings)} />
       {themeIconOverrideCSS(settings) ? <style dangerouslySetInnerHTML={{ __html: themeIconOverrideCSS(settings) }} /> : null}
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
       <SiteHeader settings={settings} logo={logo} />
       <main className="pb-16">
         <PreconBoxHeader
           crumbs={[{ label: "Pre-Construction" }]}
           eyebrow="Pre-Construction Ontario"
-          title="New builds, before everyone else sees them."
+          title="Find Your Dream Home Before It's Built"
           lede="VIP access to pre-construction projects across Ontario — floor plans, pricing, and builder incentives, straight from the source."
+          bgImages={headerImages}
           facts={[
             { value: String(projects.length), label: "Projects" },
             { value: String(builders.length), label: "Builders" },
@@ -43,14 +74,14 @@ export default async function PreConstructionHub() {
           ]}
           ctas={[
             { label: "Get Pre-Con Alerts", href: "/pre-con-alerts", variant: "primary" },
-            { label: "Browse Projects", href: "/projects", variant: "ghost" },
+            { label: "Browse Projects", href: "/project", variant: "ghost" },
           ]}
         />
 
         <section className={`${wrap} pt-14`}>
           <div className="mb-6 flex items-end justify-between gap-4">
-            <PreconSectionHeader eyebrow="Featured" heading="Latest pre-con projects" />
-            <Link href="/projects" prefetch={false} className="shrink-0 text-sm font-bold text-primary">View all projects →</Link>
+            <PreconSectionHeader eyebrow="Featured" heading="All Pre-Construction Projects" />
+            <Link href="/project" prefetch={false} className="shrink-0 text-sm font-bold text-primary">View all projects →</Link>
           </div>
           {featured.length ? (
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -86,10 +117,29 @@ export default async function PreConstructionHub() {
           )}
         </section>
 
+        {cities.length ? (
+          <section className={`${wrap} pt-14`}>
+            <PreconSectionHeader eyebrow="Locations" heading="Browse by City" />
+            <div className="flex flex-wrap gap-2.5 pt-2">
+              {cities.map((c) => (
+                <Link
+                  key={c.city}
+                  href={`/pre-construction/${c.city.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}
+                  prefetch={false}
+                  className="flex h-11 items-center gap-2 rounded-full border border-line bg-white px-5 text-sm font-semibold shadow-[var(--shadow-card)]"
+                >
+                  {c.city}
+                  <span className="rounded-full bg-soft px-2 py-0.5 text-xs font-bold text-muted">{c.count}</span>
+                </Link>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
         <section className={`${wrap} pt-14`}>
           <div className="mb-6 flex items-end justify-between gap-4">
-            <PreconSectionHeader eyebrow="Builders" heading="Build with the best" />
-            <Link href="/builders" prefetch={false} className="shrink-0 text-sm font-bold text-primary">View all builders →</Link>
+            <PreconSectionHeader eyebrow="Builders" heading="Featured Builders" />
+            <Link href="/builder" prefetch={false} className="shrink-0 text-sm font-bold text-primary">View all builders →</Link>
           </div>
           {topBuilders.length ? (
             <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -115,26 +165,74 @@ export default async function PreConstructionHub() {
         <section className={`${wrap} pt-14`}>
           <div className="mb-6 flex items-end justify-between gap-4">
             <PreconSectionHeader eyebrow="Models" heading="Compare floor plans" />
-            <Link href="/models" prefetch={false} className="shrink-0 text-sm font-bold text-primary">View all models →</Link>
+            <Link href="/model" prefetch={false} className="shrink-0 text-sm font-bold text-primary">View all models →</Link>
           </div>
           <div className="flex flex-col items-center gap-4 py-8 text-center">
             <p className="max-w-xl text-[15px] leading-relaxed text-muted">
               Every model across every project — compare layouts, sizes, and starting prices side by side before you visit a sales centre.
             </p>
-            <Link href="/models" prefetch={false} className="flex h-12 items-center rounded-[var(--radius-btn)] bg-ink px-8 text-[15px] font-bold text-white">
+            <Link href="/model" prefetch={false} className="flex h-12 items-center rounded-[var(--radius-btn)] bg-ink px-8 text-[15px] font-bold text-white">
               Browse All Models
             </Link>
           </div>
         </section>
 
-        <section className="px-5 pt-16 text-center md:px-10">
-          <h2 className="font-display text-2xl font-extrabold tracking-tight md:text-3xl">Get VIP access before the public launch.</h2>
-          <p className="mx-auto mt-3 max-w-xl text-[15px] leading-relaxed text-muted">
-            Join the pre-con alert list — floor plans, price lists, and builder incentives in your inbox first.
-          </p>
-          <Link href="/pre-con-alerts" prefetch={false} className="mt-6 inline-flex h-12 items-center rounded-[var(--radius-btn)] bg-ink px-9 text-[15px] font-bold text-white">
-            Get Pre-Con Alerts
-          </Link>
+        <section className={`${wrap} pt-14`}>
+          <PreconSectionHeader eyebrow="Advantages" heading="Why Buy Pre-Construction?" />
+          <div className="grid grid-cols-1 gap-4 pt-2 sm:grid-cols-2 lg:grid-cols-3">
+            {WHY_BUY.map(([title, desc]) => (
+              <div key={title} className={`flex flex-col gap-2 p-6 ${card}`}>
+                <div className="font-display text-[16px] font-bold">{title}</div>
+                <p className="text-sm leading-relaxed text-muted">{desc}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className={`${wrap} pt-14`}>
+          <PreconSectionHeader eyebrow="FAQ" heading="Frequently Asked Questions" />
+          <div className={`mt-2 flex flex-col divide-y divide-line ${card} px-6`}>
+            {FAQS.map(([q, a]) => (
+              <details key={q} className="group py-5">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-[15.5px] font-bold [&::-webkit-details-marker]:hidden">
+                  {q}
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-soft text-lg font-bold transition-transform group-open:rotate-45">+</span>
+                </summary>
+                <p className="pt-3 text-sm leading-relaxed text-muted">{a}</p>
+              </details>
+            ))}
+          </div>
+        </section>
+
+        <section id="lead" className={`${wrap} pt-14`}>
+          <PreconSectionHeader eyebrow="Get In Touch" heading="Ready to Find Your New Home?" />
+          <div className="grid gap-10 pt-10 md:grid-cols-2 md:gap-16">
+            <div className="flex flex-col gap-5">
+              <h3 className="font-display text-xl font-bold md:text-2xl">Let's Find Your Perfect Pre-Construction Home</h3>
+              <p className="text-sm text-muted md:text-base">Our team is ready to connect you with the right project, floor plan, and payment plan to match your lifestyle and budget.</p>
+            </div>
+            <LeadForm
+              data={{
+                form_key: "precon",
+                heading: "Register Your Interest",
+                submit_label: "Let's Connect",
+                split_name: true,
+                default_message: "Hi, I'm interested in pre-construction homes in Ontario. Please send me new project updates, price lists, and VIP incentives.",
+              }}
+              siteName={settings.site_name}
+            />
+          </div>
+        </section>
+
+        <section className={`${wrap} pt-14`}>
+          <div className="border-t border-line pt-8">
+            <h2 className="font-display text-lg font-bold">Pre-Construction Homes, Condos &amp; Townhomes in Ontario</h2>
+            <p className="mt-3 max-w-4xl text-sm leading-relaxed text-muted">
+              GetSetSold tracks pre-construction projects across Ontario — from townhomes and detached homes to condos —
+              with VIP pricing, floor plans, and builder incentives. Browse projects by city or builder, compare models
+              side by side, and register for alerts so you hear about new releases before the public launch.
+            </p>
+          </div>
         </section>
       </main>
       <SiteFooter settings={settings} />

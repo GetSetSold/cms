@@ -49,7 +49,7 @@ export default async function BuilderOrCityPage({ params }: { params: Promise<{ 
           <PreconBoxHeader
             crumbs={[
               { label: "Pre-Construction", href: "/pre-construction" },
-              { label: "Builders", href: "/builders" },
+              { label: "Builders", href: "/builder" },
               { label: builder.builder_name },
             ]}
             eyebrow="Pre-Construction Builder · Ontario"
@@ -208,24 +208,25 @@ export default async function BuilderOrCityPage({ params }: { params: Promise<{ 
       {themeIconOverrideCSS(settings) ? <style dangerouslySetInnerHTML={{ __html: themeIconOverrideCSS(settings) }} /> : null}
       <SiteHeader settings={settings} logo={logo} />
       <main>
-        <div className={`${wrap} pb-4 pt-6 text-sm text-muted`}>
-          <Link href="/pre-construction" prefetch={false}>Pre-Construction</Link> › {cityName}
-        </div>
-        <section className={`${wrap} flex flex-col items-start gap-4 pb-8`}>
-          <h1 className="font-display text-2xl font-extrabold md:text-5xl">Pre-Construction Homes & Condos in {cityName}</h1>
-          <p className="max-w-xl text-sm text-muted md:text-lg">Explore the latest pre-construction communities in {cityName} with VIP pricing, exclusive floor plans, and builder incentives.</p>
-          <div className="flex gap-3 pt-1">
-            <a href="#projects" className="flex h-11 items-center rounded-[var(--radius-btn)] bg-primary px-6 text-sm font-medium text-white md:h-13 md:px-7">View Projects</a>
-            <a href="#lead" className="flex h-11 items-center rounded-[var(--radius-btn)] border border-ink px-6 text-sm font-medium md:h-13 md:px-7">Register for VIP Access</a>
-          </div>
-        </section>
-        <section className={`${wrap} pb-10`}>
-          <div className={`grid grid-cols-2 gap-4 p-5 sm:grid-cols-4 md:p-8 ${card}`}>
-            <div className="flex flex-col gap-0.5"><span className="text-lg font-bold md:text-2xl">{projects.length}</span><span className="text-[11px] text-muted md:text-xs">Projects</span></div>
-            <div className="flex flex-col gap-0.5"><span className="text-lg font-bold md:text-2xl">{builders.length}</span><span className="text-[11px] text-muted md:text-xs">Builders</span></div>
-            <div className="flex flex-col gap-0.5"><span className="text-lg font-bold md:text-2xl">{fromPrice}</span><span className="text-[11px] text-muted md:text-xs">Starting From</span></div>
-          </div>
-        </section>
+        <PreconBoxHeader
+          crumbs={[
+            { label: "Pre-Construction", href: "/pre-construction" },
+            { label: cityName },
+          ]}
+          eyebrow={`Pre-Construction · ${cityName}, Ontario`}
+          title={`Pre-Construction Homes & Condos in ${cityName}`}
+          lede={`Explore the latest pre-construction communities in ${cityName} with VIP pricing, exclusive floor plans, and builder incentives.`}
+          bgImages={projects.map((p) => p.main_image_url)}
+          facts={[
+            { value: String(projects.length), label: "Projects" },
+            { value: String(builders.length), label: "Builders" },
+            { value: fromPrice, label: "Starting From" },
+          ]}
+          ctas={[
+            { label: "View Projects", href: "#projects", variant: "primary" },
+            { label: "Register for VIP Access", href: "#lead", variant: "ghost" },
+          ]}
+        />
         <section id="projects" className={`${wrap} flex flex-col gap-5 pb-14`}>
           <h2 className="text-xl font-extrabold md:text-3xl">Pre-Construction Projects in {cityName}</h2>
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">

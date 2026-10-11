@@ -36,7 +36,7 @@ export default async function ModelPage({ params }: { params: Promise<{ slug: st
   const { slug: builderSlug, project: projectSlug, model: modelSlug } = await params;
   const [settings, found] = await Promise.all([getSettings(), getModel(builderSlug, projectSlug, modelSlug)]);
   if (!found) notFound();
-  const { builder, project, model, siblings, floorplans, gallery, limitedTimePromo, paymentPlan, installments } = found;
+  const { builder, project, model, siblings, floorplans, gallery, limitedTimePromo, paymentPlan, installments, amenities } = found;
   const logo = await getLogo(settings);
   const basePath = `/pre-construction/${builderSlug}/${projectSlug}`;
   const cashback = getCashbackAmount(model.starting_price, settings.precon_cashback);
@@ -131,6 +131,21 @@ export default async function ModelPage({ params }: { params: Promise<{ slug: st
                 <div key={step.id} className="flex items-center justify-between px-5 py-3.5">
                   <span className="text-sm font-medium">{step.description ?? (step.due_days != null ? `${step.due_days} days` : "—")}</span>
                   <span className="text-sm font-bold text-primary">${Number(step.amount).toLocaleString()}</span>
+                </div>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
+        {amenities?.length ? (
+          <section className={`${wrap} flex flex-col gap-6 pt-14`}>
+            <PreconSectionHeader eyebrow="Features" heading="Amenities & Inclusions" />
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+              {amenities.map((a) => (
+                <div key={a.id} className={`flex flex-col items-center gap-3 p-6 text-center ${card}`}>
+                  {a.icon_url ? <img src={a.icon_url} alt="" className="h-12 w-12 object-contain" /> : null}
+                  <div className="text-sm font-bold">{a.title}</div>
+                  {a.description ? <div className="text-xs text-muted">{a.description}</div> : null}
                 </div>
               ))}
             </div>

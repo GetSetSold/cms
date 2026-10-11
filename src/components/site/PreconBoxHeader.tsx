@@ -1,3 +1,5 @@
+"use client";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 
 export type PreconCrumb = { label: string; href?: string };
@@ -6,7 +8,8 @@ export type PreconCta = { label: string; href: string; variant: "primary" | "gho
 
 const wrap = "mx-auto w-full max-w-7xl px-5 md:px-10";
 
-/** Contained box-style page header: background image + dark scrim, never full-width. */
+/** Contained box-style page header: background image(s) + dark scrim, never full-width.
+ *  Pass several `bgImages` and the background crossfades between them automatically. */
 export function PreconBoxHeader({
   crumbs,
   eyebrow,
@@ -15,6 +18,7 @@ export function PreconBoxHeader({
   facts,
   ctas,
   bgImage,
+  bgImages,
   logoUrl,
   logoAlt,
 }: {
@@ -25,15 +29,34 @@ export function PreconBoxHeader({
   facts?: PreconFact[];
   ctas?: PreconCta[];
   bgImage?: string | null;
+  bgImages?: (string | null | undefined)[];
   logoUrl?: string | null;
   logoAlt?: string;
 }) {
+  const images = ((bgImages?.filter(Boolean) as string[]) ?? []).length
+    ? (bgImages!.filter(Boolean) as string[])
+    : bgImage
+      ? [bgImage]
+      : [];
+  const [idx, setIdx] = useState(0);
+
+  useEffect(() => {
+    if (images.length < 2) return;
+    const t = setInterval(() => setIdx((i) => (i + 1) % images.length), 6000);
+    return () => clearInterval(t);
+  }, [images.length]);
+
   return (
     <div className={`${wrap} pt-6 md:pt-8`}>
-      <header
-        className="relative overflow-hidden rounded-[28px] bg-ink bg-cover bg-center text-white"
-        style={bgImage ? { backgroundImage: `url(${bgImage})` } : undefined}
-      >
+      <header className="relative overflow-hidden rounded-[28px] bg-ink text-white">
+        {images.map((src, i) => (
+          <div
+            key={src}
+            className="absolute inset-0 bg-cover bg-center transition-opacity duration-1000"
+            style={{ backgroundImage: `url(${src})`, opacity: images.length === 1 || i === idx % images.length ? 1 : 0 }}
+            aria-hidden="true"
+          />
+        ))}
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/55 to-black/30" aria-hidden="true" />
         <div
           className="absolute -right-24 -top-24 h-[360px] w-[360px] rounded-full"
