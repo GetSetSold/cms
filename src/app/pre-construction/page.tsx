@@ -11,13 +11,23 @@ import { PreconCardCta } from "@/components/site/PreconCardCta";
 import { PreconLeadSection } from "@/components/site/PreconLeadSection";
 import { getCashbackAmount, formatCashback } from "@/lib/cashback";
 
+import { seoTitle } from "@/lib/seo";
+
 const wrap = "mx-auto w-full max-w-7xl px-5 md:px-10";
 const card = "rounded-[var(--radius-lg)] border-[length:var(--border-card-width)] border-line shadow-[var(--shadow-card)] bg-white";
 
-export const metadata: Metadata = {
-  title: "Pre-Construction Homes in Ontario | GetSetSold",
-  description: "VIP access to pre-construction projects across Ontario — floor plans, pricing, and builder incentives, straight from the source.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const title = await seoTitle("Pre-Construction Homes in Ontario");
+  const description = "VIP access to pre-construction projects across Ontario — floor plans, pricing, and builder incentives, straight from the source.";
+  const url = "https://www.getsetsold.ca/pre-construction";
+  return {
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: { title, description, type: "website", url },
+    twitter: { card: "summary_large_image", title, description },
+  };
+}
 
 const WHY_BUY = [
   ["Equity Growth", "Lock in today's price and benefit from market appreciation during the construction period. Most buyers see significant equity gains before closing."],

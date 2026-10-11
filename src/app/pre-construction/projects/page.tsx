@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getSettings, getLogo } from "@/lib/cms";
+import { seoTitle } from "@/lib/seo";
 import { getProjects, getCities } from "@/lib/precon";
 import { themeFontHref, themeVars, themeIconOverrideCSS } from "@/lib/theme";
 import { SiteHeader } from "@/components/site/SiteHeader";
@@ -13,10 +14,18 @@ import { getCashbackAmount, formatCashback } from "@/lib/cashback";
 const wrap = "mx-auto w-full max-w-7xl px-5 md:px-10";
 const card = "rounded-[var(--radius-lg)] border-[length:var(--border-card-width)] border-line shadow-[var(--shadow-card)] bg-white";
 
-export const metadata: Metadata = {
-  title: "Pre-Construction Projects in Ontario | GetSetSold",
-  description: "Browse every pre-construction project across Ontario — towns, detached, and condos with VIP pricing and builder incentives.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const title = await seoTitle("Pre-Construction Projects in Ontario");
+  const description = "Browse every pre-construction project across Ontario — pricing, availability, and VIP incentives.";
+  const url = "https://www.getsetsold.ca/pre-construction/projects";
+  return {
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: { title, description, type: "website", url },
+    twitter: { card: "summary_large_image", title, description },
+  };
+}
 
 export default async function ProjectsPage() {
   const settings = await getSettings();
