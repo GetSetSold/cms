@@ -70,7 +70,7 @@ export default async function BuilderOrCityPage({ params }: { params: Promise<{ 
           />
 
           <section className="border-t border-line">
-<div className="${wrap} py-[50px]">
+<div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
             <PreconSectionHeader eyebrow="The Builder" heading={builder.builder_name} />
             {builder.description ? <p className="max-w-3xl text-sm leading-relaxed md:text-base">{builder.description}</p> : null}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -86,7 +86,7 @@ export default async function BuilderOrCityPage({ params }: { params: Promise<{ 
 
           {promos.length ? (
             <section className="border-t border-line">
-<div className="${wrap} py-[50px]">
+<div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
               <PreconSectionHeader eyebrow="Incentives" heading="Current Builder Incentives" />
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
                 {promos.map((promo) => (
@@ -102,14 +102,14 @@ export default async function BuilderOrCityPage({ params }: { params: Promise<{ 
 
           {limitedTimePromo ? (
             <section className="border-t border-line">
-<div className="${wrap} py-[50px]">
+<div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
               <PromoBanner promo={limitedTimePromo} />
             </div>
 </section>
           ) : null}
 
           <section id="projects" className="border-t border-line">
-<div className="${wrap} py-[50px]">
+<div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
             <PreconSectionHeader eyebrow="Portfolio" heading="Active Projects" />
             {projects.length ? (
               <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -144,7 +144,7 @@ export default async function BuilderOrCityPage({ params }: { params: Promise<{ 
 
           {points.length ? (
             <section className="border-t border-line">
-<div className="${wrap} py-[50px]">
+<div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
               <PreconSectionHeader eyebrow="Locations" heading="Building Across Ontario" />
               <div className={`grid grid-cols-1 gap-0 overflow-hidden md:grid-cols-[1fr_320px] ${card}`}>
                 <div className="h-72 md:h-[420px]"><PointsMap points={points} /></div>
@@ -213,7 +213,7 @@ export default async function BuilderOrCityPage({ params }: { params: Promise<{ 
           ]}
         />
         <section id="projects" className="border-t border-line">
-<div className="${wrap} py-[50px]">
+<div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
           <h2 className="text-xl font-extrabold md:text-3xl">Pre-Construction Projects in {cityName}</h2>
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {projects.map((p) => {
@@ -239,7 +239,7 @@ export default async function BuilderOrCityPage({ params }: { params: Promise<{ 
 </section>
         {points.length ? (
           <section className="border-t border-line">
-<div className="${wrap} py-[50px]">
+<div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
             <h2 className="text-xl font-extrabold md:text-3xl">Project Locations in {cityName}</h2>
             <div className="h-80 overflow-hidden rounded-[var(--radius-lg)] md:h-[420px]"><PointsMap points={points} /></div>
           </div>
@@ -247,7 +247,7 @@ export default async function BuilderOrCityPage({ params }: { params: Promise<{ 
         ) : null}
         {builders.length ? (
           <section className="border-t border-line">
-<div className="${wrap} py-[50px]">
+<div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
             <h2 className="text-xl font-extrabold md:text-3xl">Builders in {cityName}</h2>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
               {builders.map(({ builder: b, count }) => (
@@ -262,7 +262,7 @@ export default async function BuilderOrCityPage({ params }: { params: Promise<{ 
         ) : null}
         {otherCities.length ? (
           <section className="border-t border-line">
-<div className="${wrap} py-[50px]">
+<div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
             <h2 className="text-xl font-extrabold md:text-3xl">Browse Other Cities</h2>
             <div className="flex flex-wrap gap-2">
               {otherCities.map((c) => (

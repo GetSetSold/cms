@@ -42,7 +42,7 @@ export default async function ModelsPage() {
         />
 
         <section className="border-t border-line">
-<div className="${wrap} py-[50px]">
+<div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
           <PreconSectionHeader eyebrow="Catalogue" heading="All Models" />
           {models.length ? (
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">

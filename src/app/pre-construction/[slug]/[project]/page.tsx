@@ -68,7 +68,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
 
         {cashback ? (
           <section className="border-t border-line">
-<div className="${wrap} py-[50px]">
+<div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
             <div className="flex flex-wrap items-center justify-between gap-4 rounded-[20px] border-2 border-dashed border-primary bg-[#f2f7ff] p-6 md:p-7">
               <div>
                 <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-primary">Buyer Cashback Offer</div>
@@ -83,7 +83,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
 
         {project.project_description ? (
           <section className="border-t border-line">
-<div className="${wrap} py-[50px]">
+<div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
             <p className="max-w-3xl whitespace-pre-line text-sm leading-relaxed text-muted md:text-base">{project.project_description}</p>
           </div>
 </section>
@@ -91,7 +91,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
 
         {limitedTimePromo ? (
           <section className="border-t border-line">
-<div className="${wrap} py-[50px]">
+<div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
             <PromoBanner promo={limitedTimePromo} />
           </div>
 </section>
@@ -99,7 +99,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
 
         {promos.length ? (
           <section className="border-t border-line">
-<div className="${wrap} py-[50px]">
+<div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
               {promos.map((promo) => (
                 <div key={promo.id} className={`flex flex-col gap-1 p-4 ${card}`}>
@@ -115,7 +115,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
 
         {(gallery.length || project.main_image_url) ? (
           <section className="border-t border-line">
-<div className="${wrap} py-[50px]">
+<div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
             <PreconSectionHeader eyebrow="Photos" heading="Image Gallery" />
             <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
               {(gallery.length ? gallery.map((g) => g.image_url) : [project.main_image_url]).map((src, i) => (
@@ -130,7 +130,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
 
         {(project.lat && project.lng) ? (
           <section className="border-t border-line">
-<div className="${wrap} py-[50px]">
+<div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
             <PreconSectionHeader eyebrow="Where You'll Live" heading="Location" />
             <div className={`grid grid-cols-1 gap-0 overflow-hidden md:grid-cols-[1fr_320px] ${card}`}>
               <div className="h-72 md:h-[420px]"><PointsMap points={[{ lat: project.lat, lng: project.lng, label: project.project_name, href: "#" }]} /></div>
@@ -152,7 +152,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
         ) : null}
 
         <section id="models" className="border-t border-line">
-<div className="${wrap} py-[50px]">
+<div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
           <PreconSectionHeader eyebrow="Available Homes" heading="Models & Floor Plans" />
           <ModelsTabs models={models} basePath={basePath} cashback={settings.precon_cashback} />
         </div>
@@ -160,7 +160,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
 
         {amenities.length ? (
           <section className="border-t border-line">
-<div className="${wrap} py-[50px]">
+<div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
             <PreconSectionHeader eyebrow="Features" heading="Amenities & Inclusions" />
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
               {amenities.map((a) => (

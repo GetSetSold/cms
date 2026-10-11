@@ -79,7 +79,7 @@ export default async function PreConstructionHub() {
         />
 
         <section className="border-t border-line">
-<div className="${wrap} py-[50px]">
+<div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
           <div className="mb-6 flex items-end justify-between gap-4">
             <PreconSectionHeader eyebrow="Featured" heading="All Pre-Construction Projects" />
             <Link href="/project" prefetch={false} className="shrink-0 text-sm font-bold text-primary">View all projects →</Link>
@@ -121,7 +121,7 @@ export default async function PreConstructionHub() {
 
         {cities.length ? (
           <section className="border-t border-line">
-<div className="${wrap} py-[50px]">
+<div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
             <PreconSectionHeader eyebrow="Locations" heading="Browse by City" />
             <div className="flex flex-wrap gap-2.5 pt-2">
               {cities.map((c) => (
@@ -141,7 +141,7 @@ export default async function PreConstructionHub() {
         ) : null}
 
         <section className="border-t border-line">
-<div className="${wrap} py-[50px]">
+<div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
           <div className="mb-6 flex items-end justify-between gap-4">
             <PreconSectionHeader eyebrow="Builders" heading="Featured Builders" />
             <Link href="/builder" prefetch={false} className="shrink-0 text-sm font-bold text-primary">View all builders →</Link>
@@ -169,7 +169,7 @@ export default async function PreConstructionHub() {
 </section>
 
         <section className="border-t border-line">
-<div className="${wrap} py-[50px]">
+<div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
           <div className="mb-6 flex items-end justify-between gap-4">
             <PreconSectionHeader eyebrow="Models" heading="Compare floor plans" />
             <Link href="/model" prefetch={false} className="shrink-0 text-sm font-bold text-primary">View all models →</Link>
@@ -186,7 +186,7 @@ export default async function PreConstructionHub() {
 </section>
 
         <section className="border-t border-line">
-<div className="${wrap} py-[50px]">
+<div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
           <PreconSectionHeader eyebrow="Advantages" heading="Why Buy Pre-Construction?" />
           <div className="grid grid-cols-1 gap-4 pt-2 sm:grid-cols-2 lg:grid-cols-3">
             {WHY_BUY.map(([title, desc]) => (
@@ -200,7 +200,7 @@ export default async function PreConstructionHub() {
 </section>
 
         <section className="border-t border-line">
-<div className="${wrap} py-[50px]">
+<div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
           <PreconSectionHeader eyebrow="FAQ" heading="Frequently Asked Questions" />
           <div className={`mt-2 flex flex-col divide-y divide-line ${card} px-6`}>
             {FAQS.map(([q, a]) => (
@@ -223,7 +223,7 @@ export default async function PreConstructionHub() {
         />
 
         <section className="border-t border-line">
-<div className="${wrap} py-[50px]">
+<div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
           <div className="border-t border-line pt-8">
             <h2 className="font-display text-lg font-bold">Pre-Construction Homes, Condos &amp; Townhomes in Ontario</h2>
             <p className="mt-3 max-w-4xl text-sm leading-relaxed text-muted">
