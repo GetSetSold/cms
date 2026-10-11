@@ -52,7 +52,7 @@ export function PreconBoxHeader({
 
   return (
     <div className={`${wrap} pt-6 md:pt-8`}>
-      <header className="relative overflow-hidden rounded-[32px] bg-ink text-white">
+      <header className="relative flex min-h-[420px] items-center overflow-hidden rounded-[32px] bg-ink text-white md:min-h-[480px]">
         {images.map((src, i) => (
           <div
             key={src}
@@ -80,7 +80,7 @@ export function PreconBoxHeader({
               />
             </span>
           ) : null}
-          <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-[#4d9fff]">{eyebrow}</span>
+          <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-white">{eyebrow}</span>
           <h1 className="font-display text-3xl font-extrabold tracking-tight md:text-5xl">{title}</h1>
           {lede ? <div className="max-w-2xl text-[15px] leading-relaxed text-white/70">{lede}</div> : null}
           {facts?.length ? (

@@ -84,7 +84,7 @@ export default async function PreConstructionHub() {
 <div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
           <div className="mb-[50px] flex items-end justify-between gap-4">
             <PreconSectionHeader eyebrow="Featured" heading="All Pre-Construction Projects" />
-            <Link href="/project" prefetch={false} className="shrink-0 text-sm font-bold text-primary">View all projects →</Link>
+            <Link href="/pre-construction/projects" prefetch={false} className="shrink-0 text-sm font-bold text-primary">View all projects →</Link>
           </div>
           {featured.length ? (
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -146,7 +146,7 @@ export default async function PreConstructionHub() {
 <div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
           <div className="mb-[50px] flex items-end justify-between gap-4">
             <PreconSectionHeader eyebrow="Builders" heading="Featured Builders" />
-            <Link href="/builder" prefetch={false} className="shrink-0 text-sm font-bold text-primary">View all builders →</Link>
+            <Link href="/pre-construction/builders" prefetch={false} className="shrink-0 text-sm font-bold text-primary">View all builders →</Link>
           </div>
           {topBuilders.length ? (
             <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
