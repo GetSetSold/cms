@@ -179,6 +179,41 @@ export async function getAllModels(): Promise<ModelWithPath[]> {
   });
 }
 
+export type FloorplanWithPath = Floorplan & {
+  model_slug: string | null;
+  model_name: string | null;
+  project_slug: string | null;
+  project_name: string | null;
+  builder_slug: string | null;
+  builder_name: string | null;
+};
+
+/** Every floorplan across all models, with the slugs needed to link to its model page. */
+export async function getAllFloorplans(): Promise<FloorplanWithPath[]> {
+  const supabase = createPreconClient();
+  const { data: floorplans } = await supabase.from("floorplans").select("*").order("floorplan_name");
+  const { data: models } = await supabase.from("home_models").select("id, model_name, slug, project_id");
+  const { data: projects } = await supabase.from("projects").select("id, project_name, slug, builder_id");
+  const { data: builders } = await supabase.from("builders").select("id, builder_name, slug");
+  const modelById = new Map((models ?? []).map((m: any) => [m.id, m]));
+  const projById = new Map((projects ?? []).map((p: any) => [p.id, p]));
+  const builderById = new Map((builders ?? []).map((b: any) => [b.id, b]));
+  return ((floorplans ?? []) as Floorplan[]).map((f) => {
+    const m = f.model_id ? modelById.get(f.model_id) : null;
+    const proj = m?.project_id ? projById.get(m.project_id) : null;
+    const b = proj?.builder_id ? builderById.get(proj.builder_id) : null;
+    return {
+      ...f,
+      model_slug: m?.slug ?? null,
+      model_name: m?.model_name ?? null,
+      project_slug: proj?.slug ?? null,
+      project_name: proj?.project_name ?? null,
+      builder_slug: b?.slug ?? null,
+      builder_name: b?.builder_name ?? null,
+    };
+  }).filter((f) => f.floorplan_image_url);
+}
+
 export async function getCities(): Promise<{ city: string; count: number }[]> {
   const supabase = createPreconClient();
   const { data } = await supabase.from("projects").select("city");

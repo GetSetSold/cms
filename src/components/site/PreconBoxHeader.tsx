@@ -9,7 +9,8 @@ export type PreconCta = { label: string; href: string; variant: "primary" | "gho
 const wrap = "mx-auto w-full max-w-7xl px-5 md:px-10";
 
 /** Contained box-style page header: background image(s) + dark scrim, never full-width.
- *  Pass several `bgImages` and the background crossfades between them automatically. */
+ *  Pass several `bgImages` and the background crossfades between them automatically.
+ *  Breadcrumb renders below the hero (not overlaid) via the `crumbs` prop. */
 export function PreconBoxHeader({
   crumbs,
   eyebrow,
@@ -21,6 +22,7 @@ export function PreconBoxHeader({
   bgImages,
   logoUrl,
   logoAlt,
+  strongScrim,
 }: {
   crumbs: PreconCrumb[];
   eyebrow: string;
@@ -32,6 +34,8 @@ export function PreconBoxHeader({
   bgImages?: (string | null | undefined)[];
   logoUrl?: string | null;
   logoAlt?: string;
+  /** Darker overlay for light/white background images (e.g. floorplans). */
+  strongScrim?: boolean;
 }) {
   const images = ((bgImages?.filter(Boolean) as string[]) ?? []).length
     ? (bgImages!.filter(Boolean) as string[])
@@ -57,27 +61,16 @@ export function PreconBoxHeader({
             aria-hidden="true"
           />
         ))}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/55 to-black/30" aria-hidden="true" />
+        <div
+          className={`absolute inset-0 ${strongScrim ? "bg-gradient-to-t from-black/95 via-black/80 to-black/60" : "bg-gradient-to-t from-black/90 via-black/55 to-black/30"}`}
+          aria-hidden="true"
+        />
         <div
           className="absolute -right-24 -top-24 h-[360px] w-[360px] rounded-[var(--radius-btn,999px)]"
           style={{ background: "radial-gradient(circle, rgba(0,102,204,0.30) 0%, rgba(0,102,204,0) 70%)" }}
           aria-hidden="true"
         />
         <div className="relative z-10 flex flex-col items-start gap-4 p-7 md:p-12">
-          <nav className="inline-flex items-center rounded-[var(--radius-btn,999px)] bg-black/45 px-4 py-2 text-[13px] font-semibold text-white backdrop-blur-sm" aria-label="Breadcrumb">
-            {crumbs.map((c, i) => (
-              <span key={`${c.label}-${i}`} className="flex items-center">
-                {i > 0 ? <span className="mx-1.5 text-white/60">›</span> : null}
-                {c.href ? (
-                  <Link href={c.href} prefetch={false} className="text-white/85 underline decoration-white/30 underline-offset-2 hover:text-white">
-                    {c.label}
-                  </Link>
-                ) : (
-                  <span className="text-white">{c.label}</span>
-                )}
-              </span>
-            ))}
-          </nav>
           {logoUrl ? (
             <span className="flex items-center justify-center rounded-[18px] bg-white p-3 shadow-[0_8px_24px_rgba(0,0,0,0.25)]">
               <img
@@ -122,6 +115,22 @@ export function PreconBoxHeader({
           ) : null}
         </div>
       </header>
+      {crumbs.length ? (
+        <nav className="flex flex-wrap items-center gap-x-1.5 gap-y-1 px-1 pt-4 text-[13px] text-muted" aria-label="Breadcrumb">
+          {crumbs.map((c, i) => (
+            <span key={`${c.label}-${i}`} className="flex items-center gap-1.5">
+              {i > 0 ? <span className="text-muted/50">›</span> : null}
+              {c.href ? (
+                <Link href={c.href} prefetch={false} className="font-medium hover:text-ink hover:underline">
+                  {c.label}
+                </Link>
+              ) : (
+                <span className="font-semibold text-ink">{c.label}</span>
+              )}
+            </span>
+          ))}
+        </nav>
+      ) : null}
     </div>
   );
 }

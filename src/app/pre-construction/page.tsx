@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getSettings, getLogo } from "@/lib/cms";
-import { getProjects, getBuilders, getCities, getAllModels } from "@/lib/precon";
+import { getProjects, getBuilders, getCities, getAllModels, getAllFloorplans } from "@/lib/precon";
 import { themeFontHref, themeVars, themeIconOverrideCSS } from "@/lib/theme";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter, MobileCtaBar } from "@/components/site/SiteFooter";
@@ -39,8 +39,9 @@ const FAQS = [
 export default async function PreConstructionHub() {
   const settings = await getSettings();
   const logo = await getLogo(settings);
-  const [projects, builders, cities, allModels] = await Promise.all([getProjects(), getBuilders(), getCities(), getAllModels()]);
+  const [projects, builders, cities, allModels, allFloorplans] = await Promise.all([getProjects(), getBuilders(), getCities(), getAllModels(), getAllFloorplans()]);
   const featuredModels = allModels.slice(0, 3);
+  const featuredFloorplans = allFloorplans.slice(0, 3);
   const featured = projects.slice(0, 6);
   const topBuilders = builders.slice(0, 4);
   const headerImages = projects.map((p) => p.main_image_url).filter(Boolean) as string[];
@@ -173,7 +174,7 @@ export default async function PreConstructionHub() {
 <div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
           <div className="mb-[50px] flex items-end justify-between gap-4">
             <PreconSectionHeader eyebrow="Models" heading="Compare Home Models and Plans" />
-            <Link href="/model" prefetch={false} className="shrink-0 text-sm font-bold text-primary">View all models →</Link>
+            <Link href="/pre-construction/models" prefetch={false} className="shrink-0 text-sm font-bold text-primary">View all models →</Link>
           </div>
           <p className="max-w-2xl pb-8 text-[15px] leading-relaxed text-muted">
             Compare floor plans — every model across every project, side by side before you visit a sales centre.
@@ -201,6 +202,46 @@ export default async function PreConstructionHub() {
                   </div>
                 </Link>
               ))}
+            </div>
+          ) : null}
+        </div>
+</section>
+
+        <section className="mt-[50px] border-t border-line">
+<div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
+          <div className="mb-[50px] flex items-end justify-between gap-4">
+            <PreconSectionHeader eyebrow="Floor Plans" heading="Browse Floor Plans" />
+            <Link href="/pre-construction/floorplans" prefetch={false} className="shrink-0 text-sm font-bold text-primary">View all floor plans →</Link>
+          </div>
+          <p className="max-w-2xl pb-8 text-[15px] leading-relaxed text-muted">
+            Architectural layouts from every project — study the details before you book a showing.
+          </p>
+          {featuredFloorplans.length ? (
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {featuredFloorplans.map((f) => {
+                const href = f.builder_slug && f.project_slug && f.model_slug
+                  ? `/pre-construction/${f.builder_slug}/${f.project_slug}/${f.model_slug}`
+                  : null;
+                const inner = (
+                  <>
+                    <div className="relative aspect-[4/3] bg-white">
+                      {f.floorplan_image_url ? <img src={f.floorplan_image_url} alt={f.floorplan_name ?? f.model_name ?? ""} className="h-full w-full object-contain" /> : null}
+                    </div>
+                    <div className="flex flex-col gap-1.5 p-5">
+                      <div className="text-[16.5px] font-bold">{f.floorplan_name ?? f.model_name ?? "Floor Plan"}</div>
+                      <div className="text-[13.5px] text-muted">
+                        {[f.model_name, f.project_name, f.builder_name].filter(Boolean).join(" · ")}
+                      </div>
+                      {href ? <PreconCardCta label="View Model" /> : null}
+                    </div>
+                  </>
+                );
+                return href ? (
+                  <Link key={f.id} href={href} prefetch={false} className={`group flex flex-col overflow-hidden ${card}`}>{inner}</Link>
+                ) : (
+                  <div key={f.id} className={`flex flex-col overflow-hidden ${card}`}>{inner}</div>
+                );
+              })}
             </div>
           ) : null}
         </div>
