@@ -11,7 +11,7 @@ import { notFound, redirect } from "next/navigation";
 export const metadata: Metadata = {
   title: "Free Home Valuation — What's Your Home Worth? | GetSetSold.ca",
   description:
-    "Get a free preliminary home valuation based on similar active listings near you and current market direction. No obligation — the real number comes from an in-person walkthrough.",
+    "Get a free preliminary Ontario home valuation based on similar active listings near you and current market direction. No obligation — the real number comes from an in-person walkthrough.",
   alternates: { canonical: "https://www.getsetsold.ca/free-online-home-valuation" },
 };
 
@@ -62,7 +62,7 @@ export default async function HomeValuationPage({
               heading: cfg.heading ?? "What's your home really worth?",
             subheading:
               cfg.subheading ??
-              "A preliminary estimate from what's happening around you right now — active listings, market direction, and your home's details.",
+              "A preliminary estimate from what's happening around you in Ontario right now — active listings, market direction, and your home's details.",
             disclaimer:
               cfg.disclaimer ??
               "This is an automated preliminary estimate based on similar homes currently listed nearby and the HPI market direction — not an appraisal and not a formal comparative market analysis. The real valuation happens in person.",

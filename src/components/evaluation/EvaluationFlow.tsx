@@ -116,7 +116,7 @@ export function EvaluationFlow({ config, mode = "sell" }: { config: EvaluationCo
   };
 
   const modeToggle = (
-    <div className="mx-auto mb-8 flex max-w-[420px] rounded-[var(--radius-btn)] bg-[#e9e9ec] p-1" role="tablist" aria-label="I am">
+    <div className="mx-auto mb-8 flex max-w-[420px] rounded-[var(--radius-btn)] bg-[#e9e9ec] p-1 md:mx-0 md:ml-auto" role="tablist" aria-label="I am">
       <button
         type="button" role="tab" aria-selected={!isBuy}
         onClick={() => { if (isBuy) swapMode(); }}
@@ -424,7 +424,7 @@ export function EvaluationFlow({ config, mode = "sell" }: { config: EvaluationCo
               <p className="mt-4 max-w-md text-[16px] leading-relaxed text-[#333333]/80">{config.subheading}</p>
             </div>
 
-            <div id="hev-form-card" className="order-2 min-w-0 scroll-mt-24 self-center rounded-[var(--radius-lg)] bg-[var(--hev-accent)] p-7 shadow-[var(--shadow-card)] md:order-2 md:col-start-2 md:row-span-2 md:row-start-1 md:self-center md:p-8">
+            <div id="hev-form-card" className="order-2 min-w-0 scroll-mt-24 self-center rounded-[var(--radius-lg)] bg-[#111111] p-7 shadow-[var(--shadow-card)] md:order-2 md:col-start-2 md:row-span-2 md:row-start-1 md:self-center md:p-8">
               {/* Wizard progress */}
               <div className="mb-6">
                 <div className="mb-2 flex items-center justify-between text-[12px] font-semibold text-white/80">
@@ -494,7 +494,7 @@ export function EvaluationFlow({ config, mode = "sell" }: { config: EvaluationCo
                     <button
                       onClick={refineAddress}
                       disabled={refining || !houseNum.trim()}
-                      className="inline-flex h-11 min-w-0 flex-1 items-center justify-center rounded-[var(--radius-btn)] bg-white px-4 text-[14.5px] font-semibold text-[var(--hev-accent)] transition hover:bg-white/90 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="inline-flex h-11 min-w-0 flex-1 items-center justify-center rounded-[var(--radius-btn)] bg-white px-4 text-[14.5px] font-semibold text-[#111111] transition hover:bg-white/90 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       {refining ? "Finding…" : "Pinpoint my address"}
                     </button>
@@ -506,7 +506,7 @@ export function EvaluationFlow({ config, mode = "sell" }: { config: EvaluationCo
               <button
                 onClick={() => { setFormStep(2); document.getElementById("hev-form-card")?.scrollIntoView({ behavior: "smooth", block: "start" }); }}
                 disabled={!picked || locating}
-                className="mt-6 inline-flex h-12 w-full items-center justify-center rounded-[var(--radius-btn)] bg-white px-6 text-[16px] font-semibold text-[var(--hev-accent)] transition hover:bg-white/90 disabled:cursor-not-allowed disabled:opacity-40">
+                className="mt-6 inline-flex h-12 w-full items-center justify-center rounded-[var(--radius-btn)] bg-white px-6 text-[16px] font-semibold text-[#111111] transition hover:bg-white/90 disabled:cursor-not-allowed disabled:opacity-40">
                 Continue
               </button>
               <p className="mt-3.5 text-center text-[12.5px] text-white/70">Free · No obligation</p>
@@ -559,7 +559,7 @@ export function EvaluationFlow({ config, mode = "sell" }: { config: EvaluationCo
                   {RENOVATIONS.map((r) => (
                     <button key={r} type="button" onClick={() => toggleReno(r)}
                       className={`rounded-[var(--radius-btn)] border px-4 py-2 text-[13.5px] font-medium transition ${renos.includes(r)
-                        ? "border-white bg-white text-[var(--hev-accent)]"
+                        ? "border-white bg-white text-[#111111]"
                         : "border-white/40 bg-white/10 text-white hover:bg-white/20"}`}>
                       {r}
                     </button>
@@ -569,7 +569,7 @@ export function EvaluationFlow({ config, mode = "sell" }: { config: EvaluationCo
 
               {evalError && <p className="mt-4 text-[13px] font-medium text-[#ffe1e1]">{evalError}</p>}
               <button onClick={() => runEvaluation()}
-                className="mt-6 inline-flex h-12 w-full items-center justify-center rounded-[var(--radius-btn)] bg-white px-6 text-[16px] font-semibold text-[var(--hev-accent)] transition hover:bg-white/90 disabled:cursor-not-allowed disabled:opacity-40">
+                className="mt-6 inline-flex h-12 w-full items-center justify-center rounded-[var(--radius-btn)] bg-white px-6 text-[16px] font-semibold text-[#111111] transition hover:bg-white/90 disabled:cursor-not-allowed disabled:opacity-40">
                 {isBuy ? "Check the price" : "Get my valuation"}
               </button>
               <p className="mt-3.5 text-center text-[12.5px] text-white/70">
@@ -582,12 +582,12 @@ export function EvaluationFlow({ config, mode = "sell" }: { config: EvaluationCo
               <ul className="space-y-5">
                 {(isBuy
                   ? [
-                      ["What sellers are asking", "Live listings for comparable properties near the home you're eyeing."],
-                      ["What homes really transact at", "The HPI benchmark — the sold side of the equation, by market and home type."],
+                      ["What sellers are asking", "Live Ontario listings for comparable properties near the home you're eyeing."],
+                      ["What homes really transact at", "The HPI benchmark — the sold side of the equation, by Ontario market and home type."],
                       ["Free, under a minute, no obligation", "A price check to start the conversation — the real number comes from the walkthrough."],
                     ]
                   : [
-                      ["What similar homes are listed for", "Live listings near you — what other agents are asking for comparable properties."],
+                      ["What similar homes are listed for", "Live Ontario listings near you — what other agents are asking for comparable properties."],
                       ["Where the market's been heading", "HPI benchmark data shows the recent direction for your area and home type."],
                       ["Free, under a minute, no obligation", "An estimate to start the conversation — the real number comes from the walkthrough."],
                     ]

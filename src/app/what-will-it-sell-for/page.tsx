@@ -11,7 +11,7 @@ import { notFound } from "next/navigation";
 export const metadata: Metadata = {
   title: "What Will It Sell For? — Buyer Price Check | GetSetSold.ca",
   description:
-    "Check what a home will really sell for — live asking prices measured against the HPI benchmark. Free buyer price check, no obligation.",
+    "Check what an Ontario home will really sell for — live asking prices measured against the HPI benchmark. Free buyer price check, no obligation.",
   alternates: { canonical: "https://www.getsetsold.ca/what-will-it-sell-for" },
 };
 
@@ -47,7 +47,7 @@ export default async function BuyerPriceCheckPage() {
               heading: cfg.buyer_heading ?? "What will it actually sell for?",
               subheading:
                 cfg.buyer_subheading ??
-                "A preliminary read on what homes like the one you're eyeing really transact at — live asking prices measured against the HPI benchmark.",
+                "A preliminary read on what homes like the one you're eyeing really transact at across Ontario — live asking prices measured against the HPI benchmark.",
               disclaimer:
                 cfg.disclaimer ??
                 "This is an automated preliminary estimate based on similar homes currently listed nearby and the HPI market direction — not an appraisal and not a formal comparative market analysis. The real valuation happens in person.",
