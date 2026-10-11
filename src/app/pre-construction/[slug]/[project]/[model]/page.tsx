@@ -6,7 +6,7 @@ import { getModel } from "@/lib/precon";
 import { themeFontHref, themeVars, themeIconOverrideCSS } from "@/lib/theme";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter, MobileCtaBar } from "@/components/site/SiteFooter";
-import { LeadForm } from "@/components/blocks/LeadForm";
+import { PreconLeadSection } from "@/components/site/PreconLeadSection";
 import { PromoBanner } from "@/components/site/PromoBanner";
 import { getCashbackAmount, formatCashback } from "@/lib/cashback";
 import { PreconSectionHeader } from "@/components/site/PreconSectionHeader";
@@ -87,30 +87,37 @@ export default async function ModelPage({ params }: { params: Promise<{ slug: st
         />
 
         {model.description ? (
-          <section className={`${wrap} pt-10`}>
+          <section className="border-t border-line">
+<div className="${wrap} py-[50px]">
             <p className="max-w-3xl whitespace-pre-line text-sm leading-relaxed text-muted md:text-base">{model.description}</p>
-          </section>
+          </div>
+</section>
         ) : null}
 
         {limitedTimePromo ? (
-          <section className={`${wrap} pt-10`}>
+          <section className="border-t border-line">
+<div className="${wrap} py-[50px]">
             <PromoBanner promo={limitedTimePromo} />
-          </section>
+          </div>
+</section>
         ) : null}
 
         {(gallery.length || model.model_image_url) ? (
-          <section className={`${wrap} flex flex-col gap-6 pt-14`}>
+          <section className="border-t border-line">
+<div className="${wrap} py-[50px]">
             <PreconSectionHeader eyebrow="Photos" heading="Image Gallery" />
             <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
               {(gallery.length ? gallery.map((g) => g.image_url) : [model.model_image_url]).map((src, i) => (
                 <div key={i} className="aspect-[4/3] overflow-hidden rounded-[var(--radius-md)] bg-soft"><img src={src ?? ""} alt={`${model.model_name} photo ${i + 1}`} className="h-full w-full object-cover" /></div>
               ))}
             </div>
-          </section>
+          </div>
+</section>
         ) : null}
 
         {floorplans.length ? (
-          <section className={`${wrap} flex flex-col gap-6 pt-14`}>
+          <section className="border-t border-line">
+<div className="${wrap} py-[50px]">
             <PreconSectionHeader eyebrow="Layout" heading="Floor Plans" />
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {floorplans.map((fp) => (
@@ -120,11 +127,13 @@ export default async function ModelPage({ params }: { params: Promise<{ slug: st
                 </div>
               ))}
             </div>
-          </section>
+          </div>
+</section>
         ) : null}
 
         {paymentPlan && installments.length ? (
-          <section className={`${wrap} flex flex-col gap-6 pt-14`}>
+          <section className="border-t border-line">
+<div className="${wrap} py-[50px]">
             <PreconSectionHeader eyebrow={paymentPlan.title ?? "Deposit Structure"} heading="Payment Plan" />
             <div className={`flex flex-col divide-y divide-line ${card}`}>
               {installments.map((step) => (
@@ -134,11 +143,13 @@ export default async function ModelPage({ params }: { params: Promise<{ slug: st
                 </div>
               ))}
             </div>
-          </section>
+          </div>
+</section>
         ) : null}
 
         {amenities?.length ? (
-          <section className={`${wrap} flex flex-col gap-6 pt-14`}>
+          <section className="border-t border-line">
+<div className="${wrap} py-[50px]">
             <PreconSectionHeader eyebrow="Features" heading="Amenities & Inclusions" />
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
               {amenities.map((a) => (
@@ -149,11 +160,13 @@ export default async function ModelPage({ params }: { params: Promise<{ slug: st
                 </div>
               ))}
             </div>
-          </section>
+          </div>
+</section>
         ) : null}
 
         {siblings.length ? (
-          <section className={`${wrap} flex flex-col gap-6 pt-14`}>
+          <section className="border-t border-line">
+<div className="${wrap} py-[50px]">
             <PreconSectionHeader eyebrow="Keep Looking" heading="Similar Homes" />
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {siblings.map((m) => {
@@ -174,25 +187,15 @@ export default async function ModelPage({ params }: { params: Promise<{ slug: st
                 );
               })}
             </div>
-          </section>
+          </div>
+</section>
         ) : null}
 
-        <section id="lead" className={`${wrap} grid gap-6 pb-16 pt-14 md:grid-cols-2 md:gap-12`}>
-          <div className="flex flex-col gap-3">
-            <PreconSectionHeader eyebrow="Get In Touch" heading="Interested in This Home?" />
-            <p className="text-sm text-muted md:text-base">From available lots to upgrade options and flexible payment plans — we'll walk you through it all.</p>
-          </div>
-          <LeadForm
-            data={{
-              form_key: "precon",
-              heading: "",
-              submit_label: "Get Info",
-              split_name: true,
-              default_message: `Hi, I'm interested in the ${model.model_name ?? "model"} at ${project.project_name} by ${builder.builder_name}${project.city ? `, ${project.city}` : ""}${model.starting_price ? ` ($${Number(model.starting_price).toLocaleString()}` : ""}${model.bedrooms ? ` — ${model.bedrooms} bed` : ""}${model.bathrooms ? `, ${model.bathrooms} bath` : ""}${model.sqft ? `, ${model.sqft} sqft` : ""}${model.starting_price ? `)` : ""}. Please send me more details.`,
-            }}
-            siteName={settings.site_name}
-          />
-        </section>
+        <PreconLeadSection
+          heading="Interested in This Home?"
+          defaultMessage={`Hi, I'm interested in the ${model.model_name ?? "model"} at ${project.project_name} by ${builder.builder_name}${project.city ? `, ${project.city}` : ""}${model.starting_price ? ` ($${Number(model.starting_price).toLocaleString()}` : ""}${model.bedrooms ? ` — ${model.bedrooms} bed` : ""}${model.bathrooms ? `, ${model.bathrooms} bath` : ""}${model.sqft ? `, ${model.sqft} sqft` : ""}${model.starting_price ? `)` : ""}. Please send me more details.`}
+          siteName={settings.site_name}
+        />
       </main>
 
       <SiteFooter settings={settings} />

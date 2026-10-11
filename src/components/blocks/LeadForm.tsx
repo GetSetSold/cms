@@ -7,6 +7,8 @@ type Props = {
     show_email?: boolean; show_message?: boolean; show_sms_opt_in?: boolean;
     /** Split the name field into first/last inputs (still submits a combined `name`). */
     split_name?: boolean;
+    /** Make phone (and name) fields full width instead of half. */
+    full_width_fields?: boolean;
     /** Prefill the message textarea. */
     default_message?: string;
   };
@@ -78,13 +80,13 @@ export function LeadForm({ data, pageId, siteName }: Props) {
       <input type="text" name="website" tabIndex={-1} autoComplete="off" className="hidden" aria-hidden="true" />
       {data.split_name ? (
         <>
-          <label className="label">First Name<input name="first_name" required autoComplete="given-name" className="input h-12 text-base" /></label>
-          <label className="label">Last Name<input name="last_name" required autoComplete="family-name" className="input h-12 text-base" /></label>
+          <label className={`label ${data.full_width_fields ? "sm:col-span-2" : ""}`}>First Name<input name="first_name" required autoComplete="given-name" className="input h-12 text-base" /></label>
+          <label className={`label ${data.full_width_fields ? "sm:col-span-2" : ""}`}>Last Name<input name="last_name" required autoComplete="family-name" className="input h-12 text-base" /></label>
         </>
       ) : (
         <label className="label">Name<input name="name" required autoComplete="name" className="input h-12 text-base" /></label>
       )}
-      <label className="label">Phone<input name="phone" type="tel" autoComplete="tel" className="input h-12 text-base" /></label>
+      <label className={`label ${data.full_width_fields ? "sm:col-span-2" : ""}`}>Phone<input name="phone" type="tel" autoComplete="tel" className="input h-12 text-base" /></label>
       {data.show_email !== false ? (
         <label className="label sm:col-span-2">Email<input name="email" type="email" autoComplete="email" className="input h-12 text-base" /></label>
       ) : null}

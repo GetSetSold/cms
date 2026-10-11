@@ -58,7 +58,7 @@ export function PreconGridClient({
             <option value="">All Status</option>
             {statuses.map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
-          <label className="flex h-10 items-center gap-1.5 rounded-full border border-line bg-white px-3.5 text-sm">
+          <label className="flex h-10 items-center gap-1.5 rounded-[var(--radius-btn,999px)] border border-line bg-white px-3.5 text-sm">
             <input type="checkbox" checked={vipOnly} onChange={(e) => { setVipOnly(e.target.checked); setVisibleCount(PAGE_SIZE); }} /> VIP only
           </label>
           {hasFilters ? <button onClick={clearAll} className="text-sm font-medium text-primary">Clear All Filters</button> : null}
@@ -97,7 +97,7 @@ export function PreconGridClient({
           <div className="flex flex-wrap gap-2">
             {cities.map((c) => (
               <button key={c.city} onClick={() => { setCity(c.city); setVisibleCount(PAGE_SIZE); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                className={`flex h-9 items-center rounded-full px-4 text-sm font-medium ${city === c.city ? "bg-primary text-white" : "border border-line bg-white"}`}>
+                className={`flex h-9 items-center rounded-[var(--radius-btn,999px)] px-4 text-sm font-medium ${city === c.city ? "bg-primary text-white" : "border border-line bg-white"}`}>
                 {c.city} ({c.count})
               </button>
             ))}

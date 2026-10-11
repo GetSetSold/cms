@@ -7,14 +7,14 @@ import { themeFontHref, themeVars, themeIconOverrideCSS } from "@/lib/theme";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter, MobileCtaBar } from "@/components/site/SiteFooter";
 import { PointsMap } from "@/components/site/PointsMap";
-import { LeadForm } from "@/components/blocks/LeadForm";
 import { getCashbackAmount, formatCashback } from "@/lib/cashback";
 import { PreconSectionHeader } from "@/components/site/PreconSectionHeader";
+import { PreconLeadSection } from "@/components/site/PreconLeadSection";
 import { PreconBoxHeader } from "@/components/site/PreconBoxHeader";
 import { PreconCardCta } from "@/components/site/PreconCardCta";
 import { CardArrowButton } from "@/components/site/CardArrowButton";
 import { PromoBanner } from "@/components/site/PromoBanner";
-import { IconHome, IconBuilding, IconCheckBadge, IconPin, IconClock, IconCalendar, IconFile, IconLock } from "@/components/site/PreconIcons";
+import { IconHome, IconBuilding, IconCheckBadge, IconPin } from "@/components/site/PreconIcons";
 
 const wrap = "mx-auto w-full max-w-7xl px-5 md:px-10";
 const card = "rounded-[var(--radius-lg)] border-[length:var(--border-card-width)] border-line shadow-[var(--shadow-card)] bg-white";
@@ -69,7 +69,8 @@ export default async function BuilderOrCityPage({ params }: { params: Promise<{ 
             ]}
           />
 
-          <section className={`${wrap} flex flex-col gap-6 pt-14`}>
+          <section className="border-t border-line">
+<div className="${wrap} py-[50px]">
             <PreconSectionHeader eyebrow="The Builder" heading={builder.builder_name} />
             {builder.description ? <p className="max-w-3xl text-sm leading-relaxed md:text-base">{builder.description}</p> : null}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -80,10 +81,12 @@ export default async function BuilderOrCityPage({ params }: { params: Promise<{ 
                 </div>
               ))}
             </div>
-          </section>
+          </div>
+</section>
 
           {promos.length ? (
-            <section className={`${wrap} flex flex-col gap-6 pt-14`}>
+            <section className="border-t border-line">
+<div className="${wrap} py-[50px]">
               <PreconSectionHeader eyebrow="Incentives" heading="Current Builder Incentives" />
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
                 {promos.map((promo) => (
@@ -93,16 +96,20 @@ export default async function BuilderOrCityPage({ params }: { params: Promise<{ 
                   </div>
                 ))}
               </div>
-            </section>
+            </div>
+</section>
           ) : null}
 
           {limitedTimePromo ? (
-            <section className={`${wrap} pt-14`}>
+            <section className="border-t border-line">
+<div className="${wrap} py-[50px]">
               <PromoBanner promo={limitedTimePromo} />
-            </section>
+            </div>
+</section>
           ) : null}
 
-          <section id="projects" className={`${wrap} flex flex-col gap-6 pt-14`}>
+          <section id="projects" className="border-t border-line">
+<div className="${wrap} py-[50px]">
             <PreconSectionHeader eyebrow="Portfolio" heading="Active Projects" />
             {projects.length ? (
               <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -132,10 +139,12 @@ export default async function BuilderOrCityPage({ params }: { params: Promise<{ 
                 })}
               </div>
             ) : <p className="text-muted">No active projects at this time.</p>}
-          </section>
+          </div>
+</section>
 
           {points.length ? (
-            <section className={`${wrap} flex flex-col gap-6 pt-14`}>
+            <section className="border-t border-line">
+<div className="${wrap} py-[50px]">
               <PreconSectionHeader eyebrow="Locations" heading="Building Across Ontario" />
               <div className={`grid grid-cols-1 gap-0 overflow-hidden md:grid-cols-[1fr_320px] ${card}`}>
                 <div className="h-72 md:h-[420px]"><PointsMap points={points} /></div>
@@ -149,39 +158,15 @@ export default async function BuilderOrCityPage({ params }: { params: Promise<{ 
                   <a href="#lead" className="flex h-11 items-center justify-center gap-2 rounded-[var(--radius-btn)] bg-primary text-sm font-bold text-white">Find My Community</a>
                 </div>
               </div>
-            </section>
+            </div>
+</section>
           ) : null}
 
-          <section id="lead" className={`${wrap} pb-16 pt-14`}>
-            <PreconSectionHeader eyebrow="Get In Touch" heading="Interested in a New Home?" />
-            <div className="grid gap-10 pt-10 md:grid-cols-2 md:gap-16">
-              <div className="flex flex-col gap-5">
-                <h3 className="font-display text-xl font-bold md:text-2xl">Let's Find Your Perfect Home</h3>
-                <p className="text-sm text-muted md:text-base">Our team is ready to connect you with the right project, floor plan, and payment plan to match your lifestyle and budget.</p>
-                {[
-                  [IconClock, "Fast Response", "We respond to all inquiries within 24 hours."],
-                  [IconCalendar, "Private Showings", "Book a private tour at a time that works for you."],
-                  [IconFile, "Full Brochure", "Get pricing, floor plans, and availability packages."],
-                  [IconLock, "No Obligation", "Your information stays private. No pressure, ever."],
-                ].map(([Icon, title, desc]: any) => (
-                  <div key={title} className="flex items-start gap-3">
-                    <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-soft"><Icon className="h-4 w-4" /></span>
-                    <div><div className="text-sm font-bold">{title}</div><div className="text-xs text-muted">{desc}</div></div>
-                  </div>
-                ))}
-              </div>
-              <LeadForm
-                data={{
-                  form_key: "precon",
-                  heading: "Register Your Interest",
-                  submit_label: "Let's Connect",
-                  split_name: true,
-                  default_message: `Hi, I'm interested in a new home by ${builder.builder_name}. Please send me project details, floor plans, and pricing.`,
-                }}
-                siteName={settings.site_name}
-              />
-            </div>
-          </section>
+          <PreconLeadSection
+            heading="Interested in a New Home?"
+            defaultMessage={`Hi, I'm interested in a new home by ${builder.builder_name}. Please send me project details, floor plans, and pricing.`}
+            siteName={settings.site_name}
+          />
         </main>
         <SiteFooter settings={settings} />
         <MobileCtaBar settings={settings} />
@@ -227,7 +212,8 @@ export default async function BuilderOrCityPage({ params }: { params: Promise<{ 
             { label: "Register for VIP Access", href: "#lead", variant: "ghost" },
           ]}
         />
-        <section id="projects" className={`${wrap} flex flex-col gap-5 pb-14`}>
+        <section id="projects" className="border-t border-line">
+<div className="${wrap} py-[50px]">
           <h2 className="text-xl font-extrabold md:text-3xl">Pre-Construction Projects in {cityName}</h2>
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {projects.map((p) => {
@@ -249,15 +235,19 @@ export default async function BuilderOrCityPage({ params }: { params: Promise<{ 
               );
             })}
           </div>
-        </section>
+        </div>
+</section>
         {points.length ? (
-          <section className={`${wrap} flex flex-col gap-5 pb-14`}>
+          <section className="border-t border-line">
+<div className="${wrap} py-[50px]">
             <h2 className="text-xl font-extrabold md:text-3xl">Project Locations in {cityName}</h2>
             <div className="h-80 overflow-hidden rounded-[var(--radius-lg)] md:h-[420px]"><PointsMap points={points} /></div>
-          </section>
+          </div>
+</section>
         ) : null}
         {builders.length ? (
-          <section className={`${wrap} flex flex-col gap-5 pb-14`}>
+          <section className="border-t border-line">
+<div className="${wrap} py-[50px]">
             <h2 className="text-xl font-extrabold md:text-3xl">Builders in {cityName}</h2>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
               {builders.map(({ builder: b, count }) => (
@@ -267,10 +257,12 @@ export default async function BuilderOrCityPage({ params }: { params: Promise<{ 
                 </Link>
               ))}
             </div>
-          </section>
+          </div>
+</section>
         ) : null}
         {otherCities.length ? (
-          <section className={`${wrap} flex flex-col gap-5 pb-14`}>
+          <section className="border-t border-line">
+<div className="${wrap} py-[50px]">
             <h2 className="text-xl font-extrabold md:text-3xl">Browse Other Cities</h2>
             <div className="flex flex-wrap gap-2">
               {otherCities.map((c) => (
@@ -280,15 +272,14 @@ export default async function BuilderOrCityPage({ params }: { params: Promise<{ 
                 </Link>
               ))}
             </div>
-          </section>
-        ) : null}
-        <section id="lead" className={`${wrap} grid gap-6 pb-16 md:grid-cols-2 md:gap-12`}>
-          <div className="flex flex-col gap-3">
-            <h2 className="text-xl font-extrabold md:text-3xl">Get Priority Access to New Releases</h2>
-            <p className="text-sm text-muted md:text-lg">Register to receive first access to new projects, VIP pricing, and exclusive incentives in {cityName}.</p>
           </div>
-          <LeadForm data={{ form_key: "precon", heading: "", submit_label: "Get Info" }} siteName={settings.site_name} />
-        </section>
+</section>
+        ) : null}
+        <PreconLeadSection
+          heading="Get Priority Access to New Releases"
+          defaultMessage={`Hi, I'm interested in pre-construction homes in ${cityName}. Please send me new project updates, VIP pricing, and exclusive incentives.`}
+          siteName={settings.site_name}
+        />
       </main>
       <SiteFooter settings={settings} />
       <MobileCtaBar settings={settings} />

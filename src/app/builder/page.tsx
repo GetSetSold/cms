@@ -39,7 +39,8 @@ export default async function BuildersPage() {
           ]}
         />
 
-        <section className={`${wrap} flex flex-col gap-6 pt-14`}>
+        <section className="border-t border-line">
+<div className="${wrap} py-[50px]">
           <PreconSectionHeader eyebrow="Directory" heading="All Builders" />
           {builders.length ? (
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -53,7 +54,7 @@ export default async function BuildersPage() {
                     )}
                   </span>
                   <span className="font-display text-[17px] font-bold">{b.builder_name}</span>
-                  <span className="mt-1 inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-[12.5px] font-bold text-primary">
+                  <span className="mt-1 inline-flex items-center gap-2 rounded-[var(--radius-btn,999px)] bg-primary/10 px-4 py-1.5 text-[12.5px] font-bold text-primary">
                     {b.project_count} project{b.project_count === 1 ? "" : "s"}
                     <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M7 17L17 7M7 7h10v10" /></svg>
                   </span>
@@ -63,7 +64,8 @@ export default async function BuildersPage() {
           ) : (
             <p className="text-muted">No builders listed yet.</p>
           )}
-        </section>
+        </div>
+</section>
       </main>
       <SiteFooter settings={settings} />
       <MobileCtaBar settings={settings} />

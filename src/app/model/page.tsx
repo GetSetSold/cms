@@ -41,7 +41,8 @@ export default async function ModelsPage() {
           ]}
         />
 
-        <section className={`${wrap} flex flex-col gap-6 pt-14`}>
+        <section className="border-t border-line">
+<div className="${wrap} py-[50px]">
           <PreconSectionHeader eyebrow="Catalogue" heading="All Models" />
           {models.length ? (
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -67,9 +68,9 @@ export default async function ModelsPage() {
                         {m.project_city ? ` — ${m.project_city}` : ""}
                       </div>
                       <div className="flex flex-wrap gap-2 pt-1.5">
-                        {m.bedrooms ? <span className="rounded-full bg-soft px-3 py-1 text-[12.5px] font-semibold">{m.bedrooms} bd</span> : null}
-                        {m.bathrooms ? <span className="rounded-full bg-soft px-3 py-1 text-[12.5px] font-semibold">{m.bathrooms} ba</span> : null}
-                        {m.sqft ? <span className="rounded-full bg-soft px-3 py-1 text-[12.5px] font-semibold">{m.sqft} sqft</span> : null}
+                        {m.bedrooms ? <span className="rounded-[var(--radius-btn,999px)] bg-soft px-3 py-1 text-[12.5px] font-semibold">{m.bedrooms} bd</span> : null}
+                        {m.bathrooms ? <span className="rounded-[var(--radius-btn,999px)] bg-soft px-3 py-1 text-[12.5px] font-semibold">{m.bathrooms} ba</span> : null}
+                        {m.sqft ? <span className="rounded-[var(--radius-btn,999px)] bg-soft px-3 py-1 text-[12.5px] font-semibold">{m.sqft} sqft</span> : null}
                       </div>
                       {href ? <PreconCardCta label="View Model" /> : null}
                     </div>
@@ -85,7 +86,8 @@ export default async function ModelsPage() {
           ) : (
             <p className="text-muted">No models listed yet.</p>
           )}
-        </section>
+        </div>
+</section>
       </main>
       <SiteFooter settings={settings} />
       <MobileCtaBar settings={settings} />

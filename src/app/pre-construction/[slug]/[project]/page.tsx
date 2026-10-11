@@ -8,11 +8,11 @@ import { SiteFooter, MobileCtaBar } from "@/components/site/SiteFooter";
 import { PointsMap } from "@/components/site/PointsMap";
 import { ModelsTabs } from "@/components/site/ModelsTabs";
 import { PromoBanner } from "@/components/site/PromoBanner";
-import { LeadForm } from "@/components/blocks/LeadForm";
+import { PreconLeadSection } from "@/components/site/PreconLeadSection";
 import { getCashbackAmount, formatCashback } from "@/lib/cashback";
 import { PreconSectionHeader } from "@/components/site/PreconSectionHeader";
 import { PreconBoxHeader } from "@/components/site/PreconBoxHeader";
-import { IconCheckBadge, IconClock, IconCalendar, IconFile, IconLock } from "@/components/site/PreconIcons";
+
 
 const wrap = "mx-auto w-full max-w-7xl px-5 md:px-10";
 const card = "rounded-[var(--radius-lg)] border-[length:var(--border-card-width)] border-line shadow-[var(--shadow-card)] bg-white";
@@ -67,7 +67,8 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
         />
 
         {cashback ? (
-          <section className={`${wrap} pt-10`}>
+          <section className="border-t border-line">
+<div className="${wrap} py-[50px]">
             <div className="flex flex-wrap items-center justify-between gap-4 rounded-[20px] border-2 border-dashed border-primary bg-[#f2f7ff] p-6 md:p-7">
               <div>
                 <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-primary">Buyer Cashback Offer</div>
@@ -76,23 +77,29 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
               </div>
               <a href="#lead" className="flex h-12 items-center rounded-[var(--radius-btn)] bg-ink px-7 text-sm font-bold text-white">Claim This Offer →</a>
             </div>
-          </section>
+          </div>
+</section>
         ) : null}
 
         {project.project_description ? (
-          <section className={`${wrap} pt-10`}>
+          <section className="border-t border-line">
+<div className="${wrap} py-[50px]">
             <p className="max-w-3xl whitespace-pre-line text-sm leading-relaxed text-muted md:text-base">{project.project_description}</p>
-          </section>
+          </div>
+</section>
         ) : null}
 
         {limitedTimePromo ? (
-          <section className={`${wrap} pt-10`}>
+          <section className="border-t border-line">
+<div className="${wrap} py-[50px]">
             <PromoBanner promo={limitedTimePromo} />
-          </section>
+          </div>
+</section>
         ) : null}
 
         {promos.length ? (
-          <section className={`${wrap} flex flex-col gap-3 pt-10`}>
+          <section className="border-t border-line">
+<div className="${wrap} py-[50px]">
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
               {promos.map((promo) => (
                 <div key={promo.id} className={`flex flex-col gap-1 p-4 ${card}`}>
@@ -102,11 +109,13 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
                 </div>
               ))}
             </div>
-          </section>
+          </div>
+</section>
         ) : null}
 
         {(gallery.length || project.main_image_url) ? (
-          <section className={`${wrap} flex flex-col gap-6 pt-14`}>
+          <section className="border-t border-line">
+<div className="${wrap} py-[50px]">
             <PreconSectionHeader eyebrow="Photos" heading="Image Gallery" />
             <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
               {(gallery.length ? gallery.map((g) => g.image_url) : [project.main_image_url]).map((src, i) => (
@@ -115,11 +124,13 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
                 </div>
               ))}
             </div>
-          </section>
+          </div>
+</section>
         ) : null}
 
         {(project.lat && project.lng) ? (
-          <section className={`${wrap} flex flex-col gap-6 pt-14`}>
+          <section className="border-t border-line">
+<div className="${wrap} py-[50px]">
             <PreconSectionHeader eyebrow="Where You'll Live" heading="Location" />
             <div className={`grid grid-cols-1 gap-0 overflow-hidden md:grid-cols-[1fr_320px] ${card}`}>
               <div className="h-72 md:h-[420px]"><PointsMap points={[{ lat: project.lat, lng: project.lng, label: project.project_name, href: "#" }]} /></div>
@@ -136,16 +147,20 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
                 <a href={`https://www.google.com/maps/dir/?api=1&destination=${project.lat},${project.lng}`} target="_blank" rel="noopener" className="flex h-11 items-center justify-center gap-2 rounded-[var(--radius-btn)] bg-ink text-sm font-bold text-white">Get Directions</a>
               </div>
             </div>
-          </section>
+          </div>
+</section>
         ) : null}
 
-        <section id="models" className={`${wrap} flex flex-col gap-6 pt-14`}>
+        <section id="models" className="border-t border-line">
+<div className="${wrap} py-[50px]">
           <PreconSectionHeader eyebrow="Available Homes" heading="Models & Floor Plans" />
           <ModelsTabs models={models} basePath={basePath} cashback={settings.precon_cashback} />
-        </section>
+        </div>
+</section>
 
         {amenities.length ? (
-          <section className={`${wrap} flex flex-col gap-6 pt-14`}>
+          <section className="border-t border-line">
+<div className="${wrap} py-[50px]">
             <PreconSectionHeader eyebrow="Features" heading="Amenities & Inclusions" />
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
               {amenities.map((a) => (
@@ -156,39 +171,15 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
                 </div>
               ))}
             </div>
-          </section>
+          </div>
+</section>
         ) : null}
 
-        <section id="lead" className={`${wrap} pb-16 pt-14`}>
-          <PreconSectionHeader eyebrow="Get In Touch" heading="Interested in This Project?" />
-          <div className="grid gap-10 pt-10 md:grid-cols-2 md:gap-16">
-            <div className="flex flex-col gap-5">
-              <h3 className="font-display text-xl font-bold md:text-2xl">Let's Find Your Perfect Home</h3>
-              <p className="text-sm text-muted md:text-base">Our team is ready to walk you through every detail of this project — from available lots to floor plans, upgrade options, and payment plans.</p>
-              {[
-                [IconClock, "Fast Response", "We respond to all inquiries within 24 hours."],
-                [IconCalendar, "Private Showings", "Book a private tour at a time that works for you."],
-                [IconFile, "Full Brochure", "Get detailed specs, pricing, and floor plan packages."],
-                [IconLock, "No Obligation", "Your information stays private. No pressure, ever."],
-              ].map(([Icon, title, desc]: any) => (
-                <div key={title} className="flex items-start gap-3">
-                  <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-soft"><Icon className="h-4 w-4" /></span>
-                  <div><div className="text-sm font-bold">{title}</div><div className="text-xs text-muted">{desc}</div></div>
-                </div>
-              ))}
-            </div>
-            <LeadForm
-              data={{
-                form_key: "precon",
-                heading: "Register Your Interest",
-                submit_label: "Let's Connect",
-                split_name: true,
-                default_message: `Hi, I'm interested in ${project.project_name} by ${builder.builder_name}${project.city ? ` in ${project.city}` : ""}${project.p_start_price ? ` (from $${Number(project.p_start_price).toLocaleString()})` : ""}. Please send me the price list, floor plans, and availability.`,
-              }}
-              siteName={settings.site_name}
-            />
-          </div>
-        </section>
+        <PreconLeadSection
+          heading="Interested in This Project?"
+          defaultMessage={`Hi, I'm interested in ${project.project_name} by ${builder.builder_name}${project.city ? ` in ${project.city}` : ""}${project.p_start_price ? ` (from $${Number(project.p_start_price).toLocaleString()})` : ""}. Please send me the price list, floor plans, and availability.`}
+          siteName={settings.site_name}
+        />
       </main>
 
       <SiteFooter settings={settings} />

@@ -40,7 +40,8 @@ export default async function ProjectsPage() {
           ]}
         />
 
-        <section className={`${wrap} flex flex-col gap-6 pt-14`}>
+        <section className="border-t border-line">
+<div className="${wrap} py-[50px]">
           <PreconSectionHeader eyebrow="Catalogue" heading="All Projects" />
           {projects.length ? (
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -61,9 +62,9 @@ export default async function ProjectsPage() {
                       <div className="text-[16.5px] font-bold">{p.project_name}</div>
                       <div className="text-[13.5px] text-muted">{p.builder.builder_name}{p.city ? ` · ${p.city}` : ""}</div>
                       <div className="flex flex-wrap gap-2 pt-1.5">
-                        {p.beds ? <span className="rounded-full bg-soft px-3 py-1 text-[12.5px] font-semibold">{p.beds} bd</span> : null}
-                        {p.baths ? <span className="rounded-full bg-soft px-3 py-1 text-[12.5px] font-semibold">{p.baths} ba</span> : null}
-                        {p.sqft ? <span className="rounded-full bg-soft px-3 py-1 text-[12.5px] font-semibold">{p.sqft} sqft</span> : null}
+                        {p.beds ? <span className="rounded-[var(--radius-btn,999px)] bg-soft px-3 py-1 text-[12.5px] font-semibold">{p.beds} bd</span> : null}
+                        {p.baths ? <span className="rounded-[var(--radius-btn,999px)] bg-soft px-3 py-1 text-[12.5px] font-semibold">{p.baths} ba</span> : null}
+                        {p.sqft ? <span className="rounded-[var(--radius-btn,999px)] bg-soft px-3 py-1 text-[12.5px] font-semibold">{p.sqft} sqft</span> : null}
                       </div>
                       <PreconCardCta label="View Project" />
                     </div>
@@ -74,7 +75,8 @@ export default async function ProjectsPage() {
           ) : (
             <p className="text-muted">No projects listed yet.</p>
           )}
-        </section>
+        </div>
+</section>
       </main>
       <SiteFooter settings={settings} />
       <MobileCtaBar settings={settings} />

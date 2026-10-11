@@ -48,32 +48,32 @@ export function PreconBoxHeader({
 
   return (
     <div className={`${wrap} pt-6 md:pt-8`}>
-      <header className="relative overflow-hidden rounded-[28px] bg-ink text-white">
+      <header className="relative overflow-hidden rounded-[32px] bg-ink text-white">
         {images.map((src, i) => (
           <div
             key={src}
-            className="absolute inset-0 bg-cover bg-center transition-opacity duration-1000"
+            className="absolute inset-0 rounded-[32px] bg-cover bg-center transition-opacity duration-1000"
             style={{ backgroundImage: `url(${src})`, opacity: images.length === 1 || i === idx % images.length ? 1 : 0 }}
             aria-hidden="true"
           />
         ))}
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/55 to-black/30" aria-hidden="true" />
         <div
-          className="absolute -right-24 -top-24 h-[360px] w-[360px] rounded-full"
+          className="absolute -right-24 -top-24 h-[360px] w-[360px] rounded-[var(--radius-btn,999px)]"
           style={{ background: "radial-gradient(circle, rgba(0,102,204,0.30) 0%, rgba(0,102,204,0) 70%)" }}
           aria-hidden="true"
         />
         <div className="relative z-10 flex flex-col items-start gap-4 p-7 md:p-12">
-          <nav className="text-[13px] text-white/55" aria-label="Breadcrumb">
+          <nav className="text-[13px] font-semibold text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]" aria-label="Breadcrumb">
             {crumbs.map((c, i) => (
               <span key={`${c.label}-${i}`}>
-                {i > 0 ? <span className="mx-1.5">›</span> : null}
+                {i > 0 ? <span className="mx-1.5 text-white/70">›</span> : null}
                 {c.href ? (
-                  <Link href={c.href} prefetch={false} className="text-white/75 hover:text-white">
+                  <Link href={c.href} prefetch={false} className="text-white/85 underline decoration-white/30 underline-offset-2 hover:text-white">
                     {c.label}
                   </Link>
                 ) : (
-                  c.label
+                  <span className="text-white">{c.label}</span>
                 )}
               </span>
             ))}
@@ -95,7 +95,7 @@ export function PreconBoxHeader({
               {facts.map((f) => (
                 <span
                   key={f.label ?? f.value}
-                  className="flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-[13px] font-semibold"
+                  className="flex items-center gap-2 rounded-[var(--radius-btn,999px)] border border-white/15 bg-white/5 px-4 py-2 text-[13px] font-semibold"
                 >
                   <b className="text-[15px]">{f.value}</b>
                   {f.label ? <span className="text-[12px] font-medium text-white/60">{f.label}</span> : null}
@@ -112,7 +112,7 @@ export function PreconBoxHeader({
                   className={
                     c.variant === "primary"
                       ? "flex h-12 items-center rounded-[var(--radius-btn)] bg-primary px-7 text-[15px] font-bold text-white"
-                      : "flex h-12 items-center rounded-[var(--radius-btn)] border border-white/40 px-7 text-[15px] font-bold text-white"
+                      : "flex h-12 items-center rounded-[var(--radius-btn)] border border-white/60 bg-white/10 px-7 text-[15px] font-bold text-white backdrop-blur-sm"
                   }
                 >
                   {c.label}

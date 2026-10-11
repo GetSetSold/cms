@@ -8,7 +8,7 @@ import { SiteFooter, MobileCtaBar } from "@/components/site/SiteFooter";
 import { PreconBoxHeader } from "@/components/site/PreconBoxHeader";
 import { PreconSectionHeader } from "@/components/site/PreconSectionHeader";
 import { PreconCardCta } from "@/components/site/PreconCardCta";
-import { LeadForm } from "@/components/blocks/LeadForm";
+import { PreconLeadSection } from "@/components/site/PreconLeadSection";
 import { getCashbackAmount, formatCashback } from "@/lib/cashback";
 
 const wrap = "mx-auto w-full max-w-7xl px-5 md:px-10";
@@ -78,7 +78,8 @@ export default async function PreConstructionHub() {
           ]}
         />
 
-        <section className={`${wrap} pt-14`}>
+        <section className="border-t border-line">
+<div className="${wrap} py-[50px]">
           <div className="mb-6 flex items-end justify-between gap-4">
             <PreconSectionHeader eyebrow="Featured" heading="All Pre-Construction Projects" />
             <Link href="/project" prefetch={false} className="shrink-0 text-sm font-bold text-primary">View all projects →</Link>
@@ -102,9 +103,9 @@ export default async function PreConstructionHub() {
                       <div className="text-[16.5px] font-bold">{p.project_name}</div>
                       <div className="text-[13.5px] text-muted">{p.builder.builder_name}{p.city ? ` · ${p.city}` : ""}</div>
                       <div className="flex flex-wrap gap-2 pt-1.5">
-                        {p.beds ? <span className="rounded-full bg-soft px-3 py-1 text-[12.5px] font-semibold">{p.beds} bd</span> : null}
-                        {p.baths ? <span className="rounded-full bg-soft px-3 py-1 text-[12.5px] font-semibold">{p.baths} ba</span> : null}
-                        {p.sqft ? <span className="rounded-full bg-soft px-3 py-1 text-[12.5px] font-semibold">{p.sqft} sqft</span> : null}
+                        {p.beds ? <span className="rounded-[var(--radius-btn,999px)] bg-soft px-3 py-1 text-[12.5px] font-semibold">{p.beds} bd</span> : null}
+                        {p.baths ? <span className="rounded-[var(--radius-btn,999px)] bg-soft px-3 py-1 text-[12.5px] font-semibold">{p.baths} ba</span> : null}
+                        {p.sqft ? <span className="rounded-[var(--radius-btn,999px)] bg-soft px-3 py-1 text-[12.5px] font-semibold">{p.sqft} sqft</span> : null}
                       </div>
                       <PreconCardCta label="View Project" />
                     </div>
@@ -115,10 +116,12 @@ export default async function PreConstructionHub() {
           ) : (
             <p className="text-muted">No projects listed yet.</p>
           )}
-        </section>
+        </div>
+</section>
 
         {cities.length ? (
-          <section className={`${wrap} pt-14`}>
+          <section className="border-t border-line">
+<div className="${wrap} py-[50px]">
             <PreconSectionHeader eyebrow="Locations" heading="Browse by City" />
             <div className="flex flex-wrap gap-2.5 pt-2">
               {cities.map((c) => (
@@ -126,17 +129,19 @@ export default async function PreConstructionHub() {
                   key={c.city}
                   href={`/pre-construction/${c.city.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}
                   prefetch={false}
-                  className="flex h-11 items-center gap-2 rounded-full border border-line bg-white px-5 text-sm font-semibold shadow-[var(--shadow-card)]"
+                  className="flex h-11 items-center gap-2 rounded-[var(--radius-btn,999px)] border border-line bg-white px-5 text-sm font-semibold shadow-[var(--shadow-card)]"
                 >
                   {c.city}
-                  <span className="rounded-full bg-soft px-2 py-0.5 text-xs font-bold text-muted">{c.count}</span>
+                  <span className="rounded-[var(--radius-btn,999px)] bg-soft px-2 py-0.5 text-xs font-bold text-muted">{c.count}</span>
                 </Link>
               ))}
             </div>
-          </section>
+          </div>
+</section>
         ) : null}
 
-        <section className={`${wrap} pt-14`}>
+        <section className="border-t border-line">
+<div className="${wrap} py-[50px]">
           <div className="mb-6 flex items-end justify-between gap-4">
             <PreconSectionHeader eyebrow="Builders" heading="Featured Builders" />
             <Link href="/builder" prefetch={false} className="shrink-0 text-sm font-bold text-primary">View all builders →</Link>
@@ -160,9 +165,11 @@ export default async function PreConstructionHub() {
           ) : (
             <p className="text-muted">No builders listed yet.</p>
           )}
-        </section>
+        </div>
+</section>
 
-        <section className={`${wrap} pt-14`}>
+        <section className="border-t border-line">
+<div className="${wrap} py-[50px]">
           <div className="mb-6 flex items-end justify-between gap-4">
             <PreconSectionHeader eyebrow="Models" heading="Compare floor plans" />
             <Link href="/model" prefetch={false} className="shrink-0 text-sm font-bold text-primary">View all models →</Link>
@@ -175,9 +182,11 @@ export default async function PreConstructionHub() {
               Browse All Models
             </Link>
           </div>
-        </section>
+        </div>
+</section>
 
-        <section className={`${wrap} pt-14`}>
+        <section className="border-t border-line">
+<div className="${wrap} py-[50px]">
           <PreconSectionHeader eyebrow="Advantages" heading="Why Buy Pre-Construction?" />
           <div className="grid grid-cols-1 gap-4 pt-2 sm:grid-cols-2 lg:grid-cols-3">
             {WHY_BUY.map(([title, desc]) => (
@@ -187,44 +196,34 @@ export default async function PreConstructionHub() {
               </div>
             ))}
           </div>
-        </section>
+        </div>
+</section>
 
-        <section className={`${wrap} pt-14`}>
+        <section className="border-t border-line">
+<div className="${wrap} py-[50px]">
           <PreconSectionHeader eyebrow="FAQ" heading="Frequently Asked Questions" />
           <div className={`mt-2 flex flex-col divide-y divide-line ${card} px-6`}>
             {FAQS.map(([q, a]) => (
               <details key={q} className="group py-5">
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-[15.5px] font-bold [&::-webkit-details-marker]:hidden">
                   {q}
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-soft text-lg font-bold transition-transform group-open:rotate-45">+</span>
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[var(--radius-btn,999px)] bg-soft text-lg font-bold transition-transform group-open:rotate-45">+</span>
                 </summary>
                 <p className="pt-3 text-sm leading-relaxed text-muted">{a}</p>
               </details>
             ))}
           </div>
-        </section>
+        </div>
+</section>
 
-        <section id="lead" className={`${wrap} pt-14`}>
-          <PreconSectionHeader eyebrow="Get In Touch" heading="Ready to Find Your New Home?" />
-          <div className="grid gap-10 pt-10 md:grid-cols-2 md:gap-16">
-            <div className="flex flex-col gap-5">
-              <h3 className="font-display text-xl font-bold md:text-2xl">Let's Find Your Perfect Pre-Construction Home</h3>
-              <p className="text-sm text-muted md:text-base">Our team is ready to connect you with the right project, floor plan, and payment plan to match your lifestyle and budget.</p>
-            </div>
-            <LeadForm
-              data={{
-                form_key: "precon",
-                heading: "Register Your Interest",
-                submit_label: "Let's Connect",
-                split_name: true,
-                default_message: "Hi, I'm interested in pre-construction homes in Ontario. Please send me new project updates, price lists, and VIP incentives.",
-              }}
-              siteName={settings.site_name}
-            />
-          </div>
-        </section>
+        <PreconLeadSection
+          heading="Ready to Find Your New Home?"
+          defaultMessage="Hi, I'm interested in pre-construction homes in Ontario. Please send me new project updates, price lists, and VIP incentives."
+          siteName={settings.site_name}
+        />
 
-        <section className={`${wrap} pt-14`}>
+        <section className="border-t border-line">
+<div className="${wrap} py-[50px]">
           <div className="border-t border-line pt-8">
             <h2 className="font-display text-lg font-bold">Pre-Construction Homes, Condos &amp; Townhomes in Ontario</h2>
             <p className="mt-3 max-w-4xl text-sm leading-relaxed text-muted">
@@ -233,7 +232,8 @@ export default async function PreConstructionHub() {
               side by side, and register for alerts so you hear about new releases before the public launch.
             </p>
           </div>
-        </section>
+        </div>
+</section>
       </main>
       <SiteFooter settings={settings} />
       <MobileCtaBar settings={settings} />
