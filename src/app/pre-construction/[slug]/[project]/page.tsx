@@ -90,7 +90,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
         {project.project_description ? (
           <section className="mt-[50px] border-t border-line">
 <div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
-            <PreconSectionHeader eyebrow="Community" heading="About {project.project_name}" />
+            <PreconSectionHeader eyebrow="Community" heading={`About ${project.project_name}`} />
             <p className="max-w-3xl whitespace-pre-line text-sm leading-relaxed text-muted md:text-base">{project.project_description}</p>
           </div>
 </section>
