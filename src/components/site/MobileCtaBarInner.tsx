@@ -1,7 +1,5 @@
 "use client";
 import { usePathname } from "next/navigation";
-import { useState, useEffect } from "react";
-import { createClient } from "@/lib/supabase/client";
 
 const ICONS: Record<string, string> = {
   phone: "M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2",
@@ -33,20 +31,10 @@ export function MobileCtaBarInner({
   layout: "plain" | "active-highlight"; style: "buttons" | "tabs"; barBg: "light" | "dark";
 }) {
   const pathname = usePathname();
-  const [loggedIn, setLoggedIn] = useState(false);
 
-  useEffect(() => {
-    (async () => {
-      const supabase = createClient();
-      const { data: { session } } = await supabase.auth.getSession();
-      setLoggedIn(!!session);
-    })();
-  }, []);
-
-  // Add My Alerts as 4th button when logged in.
-  const allButtons = loggedIn
-    ? [...buttons, { label: "My Alerts", href: "/property-alerts/manage", iconPreset: "star" }]
-    : buttons;
+  // "My Alerts" is always the last button; logged-out taps land on the
+  // manage page's login form.
+  const allButtons = [...buttons, { label: "My Alerts", href: "/property-alerts/manage", iconPreset: "star" }];
 
   const sizing = SIZE[size] ?? SIZE.md;
   const cols = COLS[Math.min(allButtons.length, 5)] ?? COLS[3];
