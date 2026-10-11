@@ -12,6 +12,7 @@ import { PreconLeadSection } from "@/components/site/PreconLeadSection";
 import { getCashbackAmount, formatCashback } from "@/lib/cashback";
 import { PreconSectionHeader } from "@/components/site/PreconSectionHeader";
 import { PreconBoxHeader } from "@/components/site/PreconBoxHeader";
+import { seoTitle } from "@/lib/seo";
 
 
 const wrap = "mx-auto w-full max-w-7xl px-5 md:px-10";
@@ -21,7 +22,16 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug: builder, project } = await params;
   const found = await getProject(builder, project);
   if (!found) return {};
-  return { title: `${found.project.project_name} | Pre-Construction in ${found.project.city ?? "Ontario"}` };
+  const title = await seoTitle(`${found.project.project_name} by ${found.builder.builder_name}`);
+  const description = `${found.project.project_name} — pre-construction in ${found.project.city ?? "Ontario"}. Floor plans, pricing, and VIP buyer incentives.`;
+  const url = `https://www.getsetsold.ca/pre-construction/${builder}/${project}`;
+  return {
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: { title, description, type: "website", url },
+    twitter: { card: "summary_large_image", title, description },
+  };
 }
 
 export default async function ProjectPage({ params }: { params: Promise<{ slug: string; project: string }> }) {

@@ -15,6 +15,7 @@ import { PreconCardCta } from "@/components/site/PreconCardCta";
 import { CardArrowButton } from "@/components/site/CardArrowButton";
 import { PromoBanner } from "@/components/site/PromoBanner";
 import { IconHome, IconBuilding, IconCheckBadge, IconPin } from "@/components/site/PreconIcons";
+import { seoTitle } from "@/lib/seo";
 
 const wrap = "mx-auto w-full max-w-7xl px-5 md:px-10";
 const card = "rounded-[var(--radius-lg)] border-[length:var(--border-card-width)] border-line shadow-[var(--shadow-card)] bg-white";
@@ -22,9 +23,32 @@ const card = "rounded-[var(--radius-lg)] border-[length:var(--border-card-width)
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const builder = await getBuilder(slug);
-  if (builder) return { title: `Pre-Construction Homes by ${builder.builder.builder_name} | Ontario` };
+  if (builder) {
+    const title = await seoTitle(`Pre-Construction Homes by ${builder.builder.builder_name}`);
+    const description = `Explore pre-construction projects by ${builder.builder.builder_name} — floor plans, pricing, and VIP buyer incentives.`;
+    const url = `https://www.getsetsold.ca/pre-construction/${slug}`;
+    return {
+      title,
+      description,
+      alternates: { canonical: url },
+      openGraph: { title, description, type: "website", url },
+      twitter: { card: "summary_large_image", title, description },
+    };
+  }
   const projects = await getProjectsByCitySlug(slug);
-  if (projects.length) return { title: `Pre-Construction Homes & Condos in ${slug.replace(/-/g, " ")} | Ontario` };
+  if (projects.length) {
+    const cityName = slug.replace(/-/g, " ");
+    const title = await seoTitle(`Pre-Construction Homes & Condos in ${cityName}`);
+    const description = `Browse pre-construction projects in ${cityName}, Ontario — floor plans, pricing, and VIP incentives.`;
+    const url = `https://www.getsetsold.ca/pre-construction/${slug}`;
+    return {
+      title,
+      description,
+      alternates: { canonical: url },
+      openGraph: { title, description, type: "website", url },
+      twitter: { card: "summary_large_image", title, description },
+    };
+  }
   return {};
 }
 

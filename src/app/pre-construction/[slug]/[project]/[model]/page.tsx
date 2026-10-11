@@ -12,6 +12,7 @@ import { getCashbackAmount, formatCashback } from "@/lib/cashback";
 import { PreconSectionHeader } from "@/components/site/PreconSectionHeader";
 import { PreconBoxHeader } from "@/components/site/PreconBoxHeader";
 import { PreconCardCta } from "@/components/site/PreconCardCta";
+import { seoTitle } from "@/lib/seo";
 
 const wrap = "mx-auto w-full max-w-7xl px-5 md:px-10";
 const card = "rounded-[var(--radius-lg)] border-[length:var(--border-card-width)] border-line shadow-[var(--shadow-card)] bg-white";
@@ -20,7 +21,16 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug: builder, project, model } = await params;
   const found = await getModel(builder, project, model);
   if (!found) return {};
-  return { title: `${found.model.model_name} | ${found.project.project_name} | Pre-Construction` };
+  const title = await seoTitle(`${found.model.model_name} — ${found.project.project_name} by ${found.builder.builder_name}`);
+  const description = `${found.model.model_name} model at ${found.project.project_name} — floor plan, pricing, and VIP buyer incentives.`;
+  const url = `https://www.getsetsold.ca/pre-construction/${builder}/${project}/${model}`;
+  return {
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: { title, description, type: "website", url },
+    twitter: { card: "summary_large_image", title, description },
+  };
 }
 
 function Stat({ label, value }: { label: string; value: string | number | null }) {
