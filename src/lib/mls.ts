@@ -190,6 +190,53 @@ export async function rawCitiesFor(normalized: string): Promise<string[]> {
   return map.get(normalized) ?? [normalized];
 }
 
+/** A normalized city plus its sub-area raw variants, for grouped dropdowns. */
+export interface CityGroup {
+  name: string;
+  /** Raw values (e.g. "Hamilton (Ancaster)"), excluding the bare city name. */
+  areas: string[];
+}
+
+export async function listCityGroups(): Promise<CityGroup[]> {
+  const map = await getCityMapping();
+  return [...map.entries()]
+    .map(([name, variants]) => ({
+      name,
+      areas: variants
+        .filter((v) => v.toLowerCase() !== name.toLowerCase())
+        .sort((a, b) => a.localeCompare(b)),
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/** Display a raw parenthetical area as "City - Area" (e.g. "Hamilton - Ancaster"). */
+export function displayArea(raw: string): string {
+  const m = raw.match(/^(.*?)\s*\(([^)]+)\)\s*$/);
+  return m ? `${m[1].trim()} - ${m[2].trim()}` : raw;
+}
+
+/**
+ * Resolve one selected city/area name to the raw City values to query.
+ * An EXACT raw match (e.g. "Hamilton (Ancaster)") filters to just that area —
+ * no expansion. A normalized name ("Hamilton") expands to all its variants.
+ * Unknown names pass through raw so the query still attempts them.
+ */
+export async function resolveCitySelection(
+  name: string
+): Promise<{ variants: string[]; display: string }> {
+  const map = await getCityMapping();
+  const lower = name.toLowerCase().trim();
+  for (const variants of map.values()) {
+    const exact = variants.find((v) => v.toLowerCase() === lower);
+    if (exact) return { variants: [exact], display: displayArea(exact) };
+  }
+  for (const [normalized, variants] of map) {
+    if (normalized.toLowerCase() === lower) return { variants, display: normalized };
+  }
+  const trimmed = name.trim();
+  return { variants: [trimmed], display: trimmed };
+}
+
 /** Find a RAW city whose slug matches — used to 301 old parenthetical URLs
  *  (e.g. /toronto-(mimico)-real-estate) to the normalized hub. */
 export async function findRawCityBySlug(slug: string): Promise<string | null> {

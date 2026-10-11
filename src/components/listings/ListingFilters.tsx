@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
+import { displayArea, type CityGroup } from "@/lib/mls";
 
 const BED_OPTIONS = ["", "1", "2", "3", "4", "5"];
 const BATH_OPTIONS = ["", "1", "2", "3", "4"];
@@ -72,12 +73,14 @@ export function ListingFilters({
   sp,
   showCitySearch,
   cities,
+  cityGroups,
   typeCounts,
 }: {
   basePath: string;
   sp: Record<string, string | undefined>;
   showCitySearch?: boolean;
   cities?: string[];
+  cityGroups?: CityGroup[];
   typeCounts?: Record<string, number>;
 }) {
   const router = useRouter();
@@ -85,9 +88,26 @@ export function ListingFilters({
   const [modal, setModal] = useState(false);
   const [minP, setMinP] = useState(sp.minPrice ?? "");
   const [maxP, setMaxP] = useState(sp.maxPrice ?? "");
-  const [cityQ, setCityQ] = useState(sp.city ?? "");
   const [cityFilter, setCityFilter] = useState("");
   const refs = useRef<Record<string, HTMLButtonElement | null>>({});
+
+  // Selection reflected in the URL: ?cities=a,b wins, else single ?city=.
+  const urlCities = (sp.cities ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+  const urlSingleCity = urlCities.length === 0 && sp.city && sp.city !== "all" ? sp.city : null;
+  const urlSelection = urlCities.length > 0 ? urlCities : urlSingleCity ? [urlSingleCity] : [];
+
+  // Dropdown/sheet-local multi-selection, initialized when opened.
+  const [citySel, setCitySel] = useState<string[]>([]);
+  const toggleCitySel = (v: string) =>
+    setCitySel((prev) => (prev.includes(v) ? prev.filter((x) => x !== v) : [...prev, v]));
+
+  const cityPillLabel =
+    urlSelection.length > 1
+      ? `${urlSelection.length} selected`
+      : urlSelection[0]
+        ? displayArea(urlSelection[0])
+        : "City";
+  const cityPillActive = urlSelection.length > 0;
 
   const buildUrl = (patch: Record<string, string | undefined>) => {
     const merged: Record<string, string> = {};
@@ -97,7 +117,7 @@ export function ListingFilters({
       else merged[k] = v;
     }
     // Picking a single city replaces a multi-city selection.
-    if ("city" in patch) delete merged.cities;
+    if (patch.city) delete merged.cities;
     delete merged.page;
     const qs = new URLSearchParams(merged).toString();
     return `${basePath}${qs ? `?${qs}` : ""}`;
@@ -109,8 +129,32 @@ export function ListingFilters({
     setModal(false);
   };
 
-  const toggle = (id: string) => setOpen(open === id ? null : id);
+  const toggle = (id: string) => {
+    if (id === "city" && open !== "city") {
+      setCitySel(urlSelection);
+      setCityFilter("");
+    }
+    setOpen(open === id ? null : id);
+  };
   const close = () => setOpen(null);
+
+  /** Apply the dropdown's multi-city selection. Empty = drop the filter. */
+  const applyCities = () => {
+    go({ city: undefined, cities: citySel.length ? citySel.join(",") : undefined });
+  };
+
+  // Grouped city list for the multi-select: city + its sub-areas.
+  // Falls back to the flat normalized list when groups aren't provided.
+  const groups: CityGroup[] = cityGroups ?? (cities ?? []).map((name) => ({ name, areas: [] }));
+  const q = cityFilter.trim().toLowerCase();
+  const filteredGroups = q
+    ? groups
+        .map((g) => ({
+          ...g,
+          areas: g.areas.filter((a) => displayArea(a).toLowerCase().includes(q)),
+        }))
+        .filter((g) => g.name.toLowerCase().includes(q) || g.areas.length > 0)
+    : groups;
 
   const activeCount = ["minPrice", "maxPrice", "beds", "baths", "homeType", "type"].filter((k) => sp[k]).length;
 
@@ -127,13 +171,6 @@ export function ListingFilters({
   const setRef = (id: string) => (el: HTMLButtonElement | null) => {
     refs.current[id] = el;
   };
-
-  const cityMatches = (cities ?? []).filter((c) => c.toLowerCase().includes(cityFilter.toLowerCase()));
-  // Only cap when searching; empty filter shows the full scrollable list.
-  const cityList = cityFilter ? cityMatches.slice(0, 50) : cityMatches;
-  const multiCities = ((sp as Record<string, string | undefined>).cities ?? "").split(",").map((s) => s.trim()).filter(Boolean);
-  const cityPillLabel = multiCities.length > 1 ? `${multiCities.length} cities` : multiCities[0] ?? (sp.city && sp.city !== "all" ? sp.city : "City");
-  const cityPillActive = multiCities.length > 0 || (!!sp.city && sp.city !== "all");
 
   return (
     <>
@@ -157,23 +194,53 @@ export function ListingFilters({
               {cityPillLabel} ▾
             </button>
             {open === "city" ? (
-              <PortalDropdown anchorRef={{ current: refs.current["city"] }} onClose={close} width={280}>
+              <PortalDropdown anchorRef={{ current: refs.current["city"] }} onClose={close} width={300}>
                 <input
                   value={cityFilter}
                   onChange={(e) => setCityFilter(e.target.value)}
-                  placeholder="Search cities..."
+                  placeholder="Search cities or areas..."
                   autoFocus
                   className="mb-2 w-full rounded-[var(--radius-md)] border border-line px-3 py-2 text-sm outline-none focus:border-muted"
                 />
-                <div className="gss-dd-scroll max-h-56 divide-y divide-line/60 overflow-y-auto">
-                  <button onClick={() => go({ city: "all" })} className="block w-full px-3 py-2 text-left text-sm hover:bg-ground">
+                <div className="gss-dd-scroll max-h-64 overflow-y-auto">
+                  <button onClick={() => go({ city: "all", cities: undefined })} className="block w-full px-3 py-2 text-left text-sm font-medium hover:bg-ground">
                     All cities
                   </button>
-                  {cityList.map((c) => (
-                    <button key={c} onClick={() => go({ city: c })} className={`block w-full px-3 py-2 text-left text-sm hover:bg-ground ${sp.city === c ? "bg-ground font-medium" : ""}`}>
-                      {c}
-                    </button>
+                  {filteredGroups.map((g) => (
+                    <div key={g.name}>
+                      <label className="flex cursor-pointer items-center gap-2.5 px-3 py-2 text-sm font-semibold hover:bg-ground">
+                        <input
+                          type="checkbox"
+                          checked={citySel.includes(g.name)}
+                          onChange={() => toggleCitySel(g.name)}
+                          className="h-4 w-4 shrink-0 accent-black"
+                        />
+                        {g.name}
+                      </label>
+                      {g.areas.map((a) => (
+                        <label key={a} className="flex cursor-pointer items-center gap-2.5 py-2 pl-9 pr-3 text-sm text-ink/80 hover:bg-ground">
+                          <input
+                            type="checkbox"
+                            checked={citySel.includes(a)}
+                            onChange={() => toggleCitySel(a)}
+                            className="h-4 w-4 shrink-0 accent-black"
+                          />
+                          {displayArea(a)}
+                        </label>
+                      ))}
+                    </div>
                   ))}
+                  {filteredGroups.length === 0 ? (
+                    <p className="px-3 py-2 text-sm text-muted">No cities found</p>
+                  ) : null}
+                </div>
+                <div className="mt-2 flex gap-2 border-t border-line/60 pt-2">
+                  <button onClick={applyCities} className="flex-1 rounded-[var(--radius-md)] bg-ink py-2 text-sm font-medium text-white">
+                    Apply{citySel.length > 0 ? ` (${citySel.length})` : ""}
+                  </button>
+                  <button onClick={() => { setCitySel([]); setCityFilter(""); }} className="rounded-[var(--radius-md)] border border-line px-4 py-2 text-sm">
+                    Clear
+                  </button>
                 </div>
               </PortalDropdown>
             ) : null}
@@ -263,7 +330,7 @@ export function ListingFilters({
 
       {/* Mobile filter button */}
       <div className="md:hidden">
-        <button onClick={() => setModal(true)} className="flex items-center gap-2 rounded-[var(--radius-md)] border border-line bg-white px-4 py-2.5 text-sm font-medium">
+        <button onClick={() => { setCitySel(urlSelection); setCityFilter(""); setModal(true); }} className="flex items-center gap-2 rounded-[var(--radius-md)] border border-line bg-white px-4 py-2.5 text-sm font-medium">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M4 6h16M7 12h10M10 18h4" />
           </svg>
@@ -285,9 +352,44 @@ export function ListingFilters({
             </div>
             {showCitySearch ? (
               <div className="mb-5">
-                <label className="mb-2 block text-sm font-medium">City</label>
-                <input value={cityQ} onChange={(e) => setCityQ(e.target.value)} list="cities-mobile" placeholder="Search city" className="w-full rounded-[var(--radius-md)] border border-line px-3 py-2.5 text-sm outline-none focus:border-muted" />
-                <datalist id="cities-mobile">{(cities ?? []).map((c) => <option key={c} value={c} />)}</datalist>
+                <label className="mb-2 block text-sm font-medium">
+                  Cities{citySel.length > 0 ? ` (${citySel.length} selected)` : ""}
+                </label>
+                <input
+                  value={cityFilter}
+                  onChange={(e) => setCityFilter(e.target.value)}
+                  placeholder="Search cities or areas..."
+                  className="mb-2 w-full rounded-[var(--radius-md)] border border-line px-3 py-2.5 text-sm outline-none focus:border-ink"
+                />
+                <div className="max-h-48 overflow-y-auto rounded-[var(--radius-md)] border border-line">
+                  {filteredGroups.map((g) => (
+                    <div key={g.name}>
+                      <label className="flex cursor-pointer items-center gap-2.5 px-3 py-2 text-sm font-semibold hover:bg-ground">
+                        <input
+                          type="checkbox"
+                          checked={citySel.includes(g.name)}
+                          onChange={() => toggleCitySel(g.name)}
+                          className="h-4 w-4 shrink-0 accent-black"
+                        />
+                        {g.name}
+                      </label>
+                      {g.areas.map((a) => (
+                        <label key={a} className="flex cursor-pointer items-center gap-2.5 py-2 pl-9 pr-3 text-sm text-ink/80 hover:bg-ground">
+                          <input
+                            type="checkbox"
+                            checked={citySel.includes(a)}
+                            onChange={() => toggleCitySel(a)}
+                            className="h-4 w-4 shrink-0 accent-black"
+                          />
+                          {displayArea(a)}
+                        </label>
+                      ))}
+                    </div>
+                  ))}
+                  {filteredGroups.length === 0 ? (
+                    <p className="px-3 py-2 text-sm text-muted">No cities found</p>
+                  ) : null}
+                </div>
               </div>
             ) : null}
             <div className="mb-5">
@@ -341,10 +443,10 @@ export function ListingFilters({
               </div>
             </div>
             <div className="flex gap-2">
-              <button onClick={() => go({ minPrice: minP || undefined, maxPrice: maxP || undefined, city: cityQ || undefined })} className="flex-1 rounded-[var(--radius-md)] bg-ink py-3 text-sm font-semibold text-white">
+              <button onClick={() => go({ minPrice: minP || undefined, maxPrice: maxP || undefined, city: undefined, cities: citySel.length ? citySel.join(",") : undefined })} className="flex-1 rounded-[var(--radius-md)] bg-ink py-3 text-sm font-semibold text-white">
                 Show results
               </button>
-              <button onClick={() => { setMinP(""); setMaxP(""); go({ type: undefined, minPrice: undefined, maxPrice: undefined, beds: undefined, baths: undefined, homeType: undefined }); }} className="rounded-[var(--radius-md)] border border-line px-5 py-3 text-sm font-medium">
+              <button onClick={() => { setMinP(""); setMaxP(""); setCitySel([]); go({ type: undefined, minPrice: undefined, maxPrice: undefined, beds: undefined, baths: undefined, homeType: undefined, city: undefined, cities: undefined }); }} className="rounded-[var(--radius-md)] border border-line px-5 py-3 text-sm font-medium">
                 Clear
               </button>
             </div>

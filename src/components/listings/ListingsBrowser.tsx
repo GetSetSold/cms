@@ -1,4 +1,4 @@
-import { createMlsClient, listNormalizedCities, rawCitiesFor, resolveCityName, type GridListing } from "@/lib/mls";
+import { createMlsClient, listNormalizedCities, listCityGroups, resolveCitySelection, type GridListing, type CityGroup } from "@/lib/mls";
 import { listingCardsWithAds } from "@/components/listings/ListingGrid";
 import { getSettings } from "@/lib/cms";
 import { ListingsMap } from "@/components/listings/ListingsMap";
@@ -73,25 +73,25 @@ export async function ListingsBrowser({
   const effectiveCity = fixedCity ?? (hasLocation ? null : multiCityNames.length > 0 ? null : sp.city === ALL_CITIES_SENTINEL ? null : sp.city || DEFAULT_CITY);
   const cityWasDefaulted = !fixedCity && !sp.city && multiCityNames.length === 0 && !hasLocation;
 
-  // Normalized cities expand to all raw variants ("Toronto" -> "Toronto",
-  // "Toronto (Mimico)", ...). Search-box input is resolved the same way.
+  // City/area selection resolves to raw variants. An exact raw match
+  // ("Hamilton (Ancaster)") filters to just that area; a normalized name
+  // ("Hamilton") expands to all its variants.
   let cityVariants: string[] | null = null;
   let multiCityDisplay: string | null = null;
   if (fixedCity) {
-    cityVariants = await rawCitiesFor(fixedCity);
+    cityVariants = (await resolveCitySelection(fixedCity)).variants;
   } else if (!hasLocation && multiCityNames.length > 0) {
     const variantSet = new Set<string>();
     const displayNames: string[] = [];
     for (const name of multiCityNames) {
-      const normalized = await resolveCityName(name);
-      displayNames.push(normalized ?? name);
-      for (const v of await rawCitiesFor(normalized ?? name)) variantSet.add(v);
+      const sel = await resolveCitySelection(name);
+      displayNames.push(sel.display);
+      for (const v of sel.variants) variantSet.add(v);
     }
     cityVariants = [...variantSet];
     multiCityDisplay = displayNames.join(", ");
   } else if (!hasLocation && sp.city && sp.city !== ALL_CITIES_SENTINEL) {
-    const normalized = await resolveCityName(sp.city);
-    if (normalized) cityVariants = await rawCitiesFor(normalized);
+    cityVariants = (await resolveCitySelection(sp.city)).variants;
   }
 
   const mapLimit = view === "map" ? Math.max(perPage, 100) : perPage; // map shows a wider set than one grid page, still bounded
@@ -122,9 +122,10 @@ export async function ListingsBrowser({
   if (sp.maxPrice) query = query.lte(priceCol, Number(sp.maxPrice));
   query = query.order("OriginalEntryTimestamp", { ascending: false });
 
-  const [{ data: listings, count }, cityList, typeCounts] = await Promise.all([
+  const [{ data: listings, count }, cityList, cityGroups, typeCounts] = await Promise.all([
     query,
     fixedCity ? Promise.resolve([]) : listNormalizedCities(),
+    fixedCity ? Promise.resolve([] as CityGroup[]) : listCityGroups(),
     // Reuse precomputed breakdown when available; otherwise scan (cached per request).
     typeBreakdown
       ? Promise.resolve(Object.fromEntries(typeBreakdown.map((t) => [t.label, t.count])))
@@ -176,6 +177,7 @@ export async function ListingsBrowser({
             sp={sp as Record<string, string | undefined>}
             showCitySearch={!fixedCity}
             cities={cities}
+            cityGroups={cityGroups}
             typeCounts={typeCounts}
           />
         </div>

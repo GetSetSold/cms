@@ -7,6 +7,7 @@ import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter, MobileCtaBar } from "@/components/site/SiteFooter";
 import { ListingsBrowser, DEFAULT_CITY, type ListingsSearchParams } from "@/components/listings/ListingsBrowser";
 import { NlpSearchBox } from "@/components/listings/NlpSearchBox";
+import { displayArea } from "@/lib/mls";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +15,7 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
   const sp = await searchParams;
   const { city } = sp;
   const multiNames = (sp.cities ?? "").split(",").map((s) => s.trim()).filter(Boolean);
-  const effective = multiNames.length > 0 ? multiNames.join(", ") : city === "all" ? null : city || DEFAULT_CITY;
+  const effective = multiNames.length > 0 ? multiNames.map(displayArea).join(", ") : city === "all" ? null : city || DEFAULT_CITY;
   const page = Math.max(1, Number(sp.page) || 1);
   const isRent = sp.type === "rent";
   const base = effective
