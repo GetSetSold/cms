@@ -64,8 +64,9 @@ export default async function ModelPage({ params }: { params: Promise<{ slug: st
                 Part of <Link href={basePath} prefetch={false} className="font-medium text-white underline">{project.project_name}</Link> by {builder.builder_name}
               </span>
               {cashback ? (
-                <span className="inline-flex items-center gap-2 rounded-[var(--radius-btn,999px)] bg-gradient-to-r from-[#065f46] via-[#059669] to-[#10b981] px-5 py-2.5 text-sm font-bold text-white">
-                  Up to {formatCashback(cashback)} Cashback — Exclusive Buyer Perk when you buy with us
+                <span className="inline-flex flex-col items-start gap-0.5 rounded-[var(--radius-btn,999px)] bg-gradient-to-r from-[#065f46] via-[#059669] to-[#10b981] px-5 py-2.5 text-sm font-bold text-white">
+                  <span>Up to {formatCashback(cashback)} Cashback — Exclusive Buyer Perk</span>
+                  <span className="text-[12px] font-medium text-white/85">when you buy with us</span>
                 </span>
               ) : null}
             </div>

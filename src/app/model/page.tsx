@@ -23,6 +23,7 @@ export default async function ModelsPage() {
   const logo = await getLogo(settings);
   const models = await getAllModels();
   const projectCount = new Set(models.map((m) => m.project_slug).filter(Boolean)).size;
+  const heroImages = models.map((m) => m.model_image_url).filter(Boolean) as string[];
 
   return (
     <div style={themeVars(settings)} className="bg-ground text-ink">
@@ -35,6 +36,7 @@ export default async function ModelsPage() {
           eyebrow="Pre-Construction Ontario"
           title="Floor plans & models, ready to compare."
           lede="Every model across every project — compare layouts, sizes, and starting prices side by side."
+          bgImages={heroImages}
           facts={[
             { value: String(models.length), label: "Models" },
             { value: String(projectCount), label: "Projects" },
