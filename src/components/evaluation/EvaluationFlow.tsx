@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   ValuationResultView,
   type ValuationSnapshot,
 } from "./ValuationResultView";
+import { BuyerResultView } from "./BuyerResultView";
 
 export interface EvaluationConfig {
   heading: string;
@@ -42,7 +44,10 @@ const ANALYZE_MSGS = [
   "Combining it all into your estimate…",
 ];
 
-export function EvaluationFlow({ config }: { config: EvaluationConfig }) {
+export function EvaluationFlow({ config, mode = "sell" }: { config: EvaluationConfig; mode?: "sell" | "buy" }) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const isBuy = mode === "buy";
   const [step, setStep] = useState<"form" | "analyzing" | "result">("form");
   const [formStep, setFormStep] = useState<1 | 2>(1);
   const [analyzeMsg, setAnalyzeMsg] = useState(ANALYZE_MSGS[0]);
@@ -87,6 +92,83 @@ export function EvaluationFlow({ config }: { config: EvaluationConfig }) {
     const close = (e: MouseEvent) => { if (!wrapRef.current?.contains(e.target as Node)) setDropOpen(false); };
     document.addEventListener("click", close);
     return () => document.removeEventListener("click", close);
+  }, []);
+
+  /** Swap between the seller and buyer routes, carrying the entered details. */
+  const swapMode = () => {
+    const target = isBuy ? "/free-online-home-valuation" : "/what-will-it-sell-for";
+    const q = new URLSearchParams();
+    if (picked && picked.lat != null && picked.lng != null) {
+      q.set("addr", picked.label);
+      q.set("lat", String(picked.lat));
+      q.set("lng", String(picked.lng));
+      if (picked.city) q.set("city", picked.city);
+      q.set("isAddr", picked.isAddress ? "1" : "0");
+      q.set("pt", propertyType);
+      q.set("beds", beds);
+      q.set("baths", baths);
+      if (sqft) q.set("sqft", sqft);
+      q.set("cond", condition);
+      if (renos.length) q.set("renos", renos.join(","));
+    }
+    const qs = q.toString();
+    router.push(qs ? `${target}?${qs}` : target);
+  };
+
+  const modeToggle = (
+    <div className="mx-auto mb-8 flex max-w-[420px] rounded-[var(--radius-btn)] bg-[#e9e9ec] p-1" role="tablist" aria-label="I am">
+      <button
+        type="button" role="tab" aria-selected={!isBuy}
+        onClick={() => { if (isBuy) swapMode(); }}
+        className={`flex-1 rounded-[var(--radius-btn)] px-2 py-3 text-[15px] font-bold transition ${!isBuy ? "bg-[#111111] text-white shadow-[var(--shadow-card)]" : "text-[#666666] hover:text-[#111111]"}`}
+      >
+        I&apos;m selling
+      </button>
+      <button
+        type="button" role="tab" aria-selected={isBuy}
+        onClick={() => { if (!isBuy) swapMode(); }}
+        className={`flex-1 rounded-[var(--radius-btn)] px-2 py-3 text-[15px] font-bold transition ${isBuy ? "bg-[#111111] text-white shadow-[var(--shadow-card)]" : "text-[#666666] hover:text-[#111111]"}`}
+      >
+        I&apos;m buying
+      </button>
+    </div>
+  );
+
+  // Restore details carried over from the other mode's route, then auto-run.
+  const restoredRef = useRef(false);
+  useEffect(() => {
+    if (restoredRef.current) return;
+    const lat = Number(searchParams.get("lat"));
+    const lng = Number(searchParams.get("lng"));
+    const addr = searchParams.get("addr");
+    if (!addr || !isFinite(lat) || !isFinite(lng)) return;
+    restoredRef.current = true;
+    const geo: GeoFeature = {
+      label: addr,
+      lat, lng,
+      city: searchParams.get("city") ?? "",
+      isAddress: searchParams.get("isAddr") !== "0",
+    };
+    const pt = searchParams.get("pt");
+    const cond = searchParams.get("cond");
+    const det = {
+      propertyType: pt && PROPERTY_TYPES.includes(pt) ? pt : PROPERTY_TYPES[0],
+      beds: searchParams.get("beds") ?? "4",
+      baths: searchParams.get("baths") ?? "3",
+      sqft: (searchParams.get("sqft") ?? "").replace(/[^0-9,]/g, ""),
+      condition: cond && CONDITIONS.includes(cond) ? cond : CONDITIONS[1],
+      renos: (searchParams.get("renos") ?? "").split(",").filter((r) => RENOVATIONS.includes(r)),
+    };
+    setPicked(geo);
+    setQuery(geo.label);
+    setPropertyType(det.propertyType);
+    setBeds(det.beds);
+    setBaths(det.baths);
+    setSqft(det.sqft);
+    setCondition(det.condition);
+    setRenos(det.renos);
+    window.setTimeout(() => runEvaluation(geo, det), 80);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const onQuery = (v: string) => {
@@ -197,6 +279,7 @@ export function EvaluationFlow({ config }: { config: EvaluationConfig }) {
     dataAsOf: new Date().toISOString().slice(0, 10),
     disclaimer: config.disclaimer,
     bookingUrl: config.bookingUrl,
+    mode: isBuy ? "buy" : "sell",
   });
 
   /** Persists the valuation and mints its shareable link (fire-and-forget). */
@@ -236,8 +319,13 @@ export function EvaluationFlow({ config }: { config: EvaluationConfig }) {
     ? `${config.bookingUrl}${config.bookingUrl.includes("?") ? "&" : "?"}valuation=${valuationPublicId}`
     : config.bookingUrl;
 
-  const runEvaluation = async () => {
-    if (!picked || picked.lat == null || picked.lng == null) return;
+  const runEvaluation = async (
+    geo?: GeoFeature,
+    det?: { propertyType: string; beds: string; baths: string; sqft: string; condition: string; renos: string[] }
+  ) => {
+    const g = geo ?? picked;
+    if (!g || g.lat == null || g.lng == null) return;
+    const d = det ?? { propertyType, beds, baths, sqft, condition, renos };
     setStep("analyzing"); setEvalError("");
     let i = 0;
     setAnalyzeMsg(ANALYZE_MSGS[0]);
@@ -247,15 +335,15 @@ export function EvaluationFlow({ config }: { config: EvaluationConfig }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          lat: picked.lat, lng: picked.lng, city: picked.city,
-          propertyType, beds, baths, sqft, condition, renovations: renos,
+          lat: g.lat, lng: g.lng, city: g.city,
+          propertyType: d.propertyType, beds: d.beds, baths: d.baths, sqft: d.sqft, condition: d.condition, renovations: d.renos,
         }),
       });
       const body = await res.json();
       if (!res.ok) throw new Error(body.error ?? "Valuation failed.");
       setResult(body);
       setStep("result");
-      saveValuation(body, picked);
+      saveValuation(body, g);
       window.setTimeout(() => document.getElementById("hev-result")?.scrollIntoView({ behavior: "smooth" }), 60);
     } catch (e: any) {
       setEvalError(e.message ?? "Something went wrong.");
@@ -275,11 +363,14 @@ export function EvaluationFlow({ config }: { config: EvaluationConfig }) {
       email: String(form.get("email") ?? ""),
       phone: String(form.get("phone") ?? ""),
       form_key: "home_evaluation",
-      service: "Home Valuation",
+      service: isBuy ? "Buyer Price Check" : "Home Valuation",
       message: picked
-        ? `Home valuation request for ${picked.label} (${propertyType}, ${beds} bed / ${baths} bath${sqft ? `, ${sqft} sq ft` : ""}, ${condition}).`
-        : "Home valuation request.",
+        ? isBuy
+          ? `Buyer price check for ${picked.label} (${propertyType}, ${beds} bed / ${baths} bath${sqft ? `, ${sqft} sq ft` : ""}, ${condition}).`
+          : `Home valuation request for ${picked.label} (${propertyType}, ${beds} bed / ${baths} bath${sqft ? `, ${sqft} sq ft` : ""}, ${condition}).`
+        : isBuy ? "Buyer price check request." : "Home valuation request.",
       custom_fields: {
+        mode: isBuy ? "buy" : "sell",
         address: picked?.label ?? null, lat: picked?.lat ?? null, lng: picked?.lng ?? null,
         property_type: propertyType, beds, baths, sqft: sqft || null, condition, renovations: renos,
         estimate_low: result?.estimate?.low ?? null, estimate_high: result?.estimate?.high ?? null,
@@ -321,10 +412,11 @@ export function EvaluationFlow({ config }: { config: EvaluationConfig }) {
       {/* STEP 1 — form */}
       {step === "form" && (
         <section className="mx-auto max-w-7xl px-5 py-14 md:py-20">
+          {modeToggle}
           <div className="grid grid-cols-1 items-start gap-8 md:grid-cols-2 md:gap-14">
             <div className="order-1 md:col-start-1 md:row-start-1">
               <div className="mb-3 text-[12px] font-bold uppercase tracking-[0.14em] text-[var(--hev-accent)]">
-                Free Home Valuation
+                {isBuy ? "Buyer Price Check" : "Free Home Valuation"}
               </div>
               <h1 className="text-4xl font-extrabold tracking-tight text-[#111111] md:text-[44px] md:leading-[1.12]">
                 {config.heading}
@@ -351,7 +443,7 @@ export function EvaluationFlow({ config }: { config: EvaluationConfig }) {
                       <path d="M3 11l9-8 9 8" /><path d="M5 10v10h5v-6h4v6h5V10" />
                     </svg>
                   </div>
-                  <h2 className="text-[21px] font-bold text-white">Where's your home?</h2>
+                  <h2 className="text-[21px] font-bold text-white">{isBuy ? "Which home are you eyeing?" : "Where's your home?"}</h2>
                   <p className="mb-5 mt-1 text-[14px] text-white/75">Type your address and pick it from the list.</p>
 
                   <label className="mb-1.5 block text-[13px] font-semibold text-white" htmlFor="hev-addr">Street address</label>
@@ -425,8 +517,8 @@ export function EvaluationFlow({ config }: { config: EvaluationConfig }) {
                     className="mb-4 inline-flex items-center gap-1.5 text-[13.5px] font-semibold text-white/85 transition hover:text-white">
                     ← Back
                   </button>
-                  <h2 className="text-[21px] font-bold text-white">Tell us about your home</h2>
-                  <p className="mb-5 mt-1 text-[14px] text-white/75">A few details sharpen your valuation.</p>
+                  <h2 className="text-[21px] font-bold text-white">{isBuy ? "Tell us about the home" : "Tell us about your home"}</h2>
+                  <p className="mb-5 mt-1 text-[14px] text-white/75">{isBuy ? "A few details sharpen the price check." : "A few details sharpen your valuation."}</p>
 
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 [&>*]:min-w-0">
                 <div>
@@ -476,9 +568,9 @@ export function EvaluationFlow({ config }: { config: EvaluationConfig }) {
               </div>
 
               {evalError && <p className="mt-4 text-[13px] font-medium text-[#ffe1e1]">{evalError}</p>}
-              <button onClick={runEvaluation}
+              <button onClick={() => runEvaluation()}
                 className="mt-6 inline-flex h-12 w-full items-center justify-center rounded-[var(--radius-btn)] bg-white px-6 text-[16px] font-semibold text-[var(--hev-accent)] transition hover:bg-white/90 disabled:cursor-not-allowed disabled:opacity-40">
-                Get my valuation
+                {isBuy ? "Check the price" : "Get my valuation"}
               </button>
               <p className="mt-3.5 text-center text-[12.5px] text-white/70">
                 Takes under a minute · Free · No obligation
@@ -488,11 +580,18 @@ export function EvaluationFlow({ config }: { config: EvaluationConfig }) {
             </div>
             <div className="order-3 md:col-start-1 md:row-start-2">
               <ul className="space-y-5">
-                {[
-                  ["What similar homes are listed for", "Live listings near you — what other agents are asking for comparable properties."],
-                  ["Where the market's been heading", "HPI benchmark data shows the recent direction for your area and home type."],
-                  ["Free, under a minute, no obligation", "An estimate to start the conversation — the real number comes from the walkthrough."],
-                ].map(([b, s]) => (
+                {(isBuy
+                  ? [
+                      ["What sellers are asking", "Live listings for comparable properties near the home you're eyeing."],
+                      ["What homes really transact at", "The HPI benchmark — the sold side of the equation, by market and home type."],
+                      ["Free, under a minute, no obligation", "A price check to start the conversation — the real number comes from the walkthrough."],
+                    ]
+                  : [
+                      ["What similar homes are listed for", "Live listings near you — what other agents are asking for comparable properties."],
+                      ["Where the market's been heading", "HPI benchmark data shows the recent direction for your area and home type."],
+                      ["Free, under a minute, no obligation", "An estimate to start the conversation — the real number comes from the walkthrough."],
+                    ]
+                ).map(([b, s]) => (
                   <li key={b} className="flex items-start gap-3.5">
                     <span className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-full bg-[#111111] text-[13px] font-bold text-white">✓</span>
                     <span className="min-w-0"><b className="block text-[15px] text-[#111111]">{b}</b><small className="text-[13.5px] text-[#333333]/70">{s}</small></span>
@@ -516,8 +615,11 @@ export function EvaluationFlow({ config }: { config: EvaluationConfig }) {
       {/* STEP 2+3 — result */}
       {step === "result" && result && (
         <section id="hev-result" className="mx-auto max-w-7xl scroll-mt-24 px-5 py-14">
+          {modeToggle}
           {result && picked && (
-            <ValuationResultView snapshot={buildSnapshot(result, picked)} />
+            isBuy
+              ? <BuyerResultView snapshot={buildSnapshot(result, picked)} bookingUrl={config.bookingUrl} />
+              : <ValuationResultView snapshot={buildSnapshot(result, picked)} />
           )}
 
           {/* Shareable link for this valuation */}
@@ -543,15 +645,17 @@ export function EvaluationFlow({ config }: { config: EvaluationConfig }) {
             <div className="grid grid-cols-1 gap-10 md:grid-cols-2 md:gap-0">
               <div className="flex flex-col justify-center md:pr-10">
                 <span className="mb-3 text-[12px] font-bold uppercase tracking-[0.14em] text-white/50">Next step</span>
-                <h3 className="text-[24px] font-extrabold tracking-tight">Want the real number?</h3>
+                <h3 className="text-[24px] font-extrabold tracking-tight">{isBuy ? "Buying with real numbers?" : "Want the real number?"}</h3>
                 <p className="mt-2.5 text-[14.5px] leading-relaxed text-white/65">
-                  An estimate can't see your kitchen. A 20-minute walkthrough gives you a valuation you can actually price from.
+                  {isBuy
+                    ? "An estimate can't see the kitchen. A 20-minute walkthrough of any home you're eyeing gives you a price you can actually offer from."
+                    : "An estimate can't see your kitchen. A 20-minute walkthrough gives you a valuation you can actually price from."}
                 </p>
                 <a href={bookingHref} target="_blank" rel="noreferrer"
                   className="mt-6 inline-flex h-12 w-full items-center justify-center rounded-[var(--radius-btn)] bg-white px-6 text-[16px] font-semibold text-[#111111] transition hover:bg-white/90">
-                  Book a free in-person valuation
+                  {isBuy ? "Book a buyer consultation" : "Book a free in-person valuation"}
                 </a>
-                {config.virtualCmaUrl && (
+                {!isBuy && config.virtualCmaUrl && (
                   <a href={config.virtualCmaUrl} target="_blank" rel="noreferrer"
                     className="mt-3 inline-flex h-12 w-full items-center justify-center rounded-[var(--radius-btn)] border border-white/25 px-6 text-[15px] font-semibold text-white transition hover:bg-white/10">
                     Request a virtual CMA instead
@@ -570,8 +674,9 @@ export function EvaluationFlow({ config }: { config: EvaluationConfig }) {
                 <form onSubmit={submitLead}>
                   <h3 className="text-[24px] font-extrabold tracking-tight">Get the full breakdown</h3>
                   <p className="mb-4 mt-2 text-[14.5px] text-white/65">
-                    We'll email your detailed estimate — the similar listings, the market notes, and where your
-                    home sits among them — and keep your property details on file.
+                    {isBuy
+                      ? "We'll email your detailed price check — the similar listings, the market notes, and how the asking price compares to the HPI benchmark."
+                      : "We'll email your detailed estimate — the similar listings, the market notes, and where your home sits among them — and keep your property details on file."}
                   </p>
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 [&>*]:min-w-0">
                     <div>

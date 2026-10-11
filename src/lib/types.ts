@@ -105,6 +105,7 @@ export interface SiteSettings {
   brokerage: { name?: string; logo_svg_id?: string | null; address?: string; phone?: string; email?: string };
   home_evaluation: {
     enabled?: boolean; heading?: string; subheading?: string;
+    buyer_heading?: string; buyer_subheading?: string;
     search_radius_km?: number; max_listings?: number; range_pct?: number;
     disclaimer?: string; booking_url?: string; virtual_cma_url?: string;
     geocode_provider?: "maptiler" | "google";

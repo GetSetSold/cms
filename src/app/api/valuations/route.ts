@@ -40,6 +40,7 @@ export async function POST(req: NextRequest) {
         baths: body.baths ?? null,
         sqft: body.sqft ?? null,
         renovations: Array.isArray(body.renovations) ? body.renovations : [],
+        mode: body.mode === "buy" ? "buy" : "sell",
       },
       estimate_low: Math.round(estimate.low),
       estimate_mid: Math.round(estimate.mid),

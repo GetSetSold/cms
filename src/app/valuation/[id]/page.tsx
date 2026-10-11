@@ -9,6 +9,7 @@ import {
   ValuationResultView,
   type ValuationSnapshot,
 } from "@/components/evaluation/ValuationResultView";
+import { BuyerResultView } from "@/components/evaluation/BuyerResultView";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
@@ -46,6 +47,7 @@ function rowToSnapshot(row: any, cfg: any): ValuationSnapshot {
       cfg.disclaimer ??
       "This is an automated preliminary estimate based on similar homes currently listed nearby and the HPI market direction — not an appraisal and not a formal comparative market analysis. The real valuation happens in person.",
     bookingUrl: cfg.booking_url ?? "https://booking.getsetsold.ca",
+    mode: d.mode === "buy" ? "buy" : "sell",
   };
 }
 
@@ -63,6 +65,7 @@ export default async function SharedValuationPage({ params }: { params: Promise<
   const logo = await getLogo(settings);
   const cfg = (settings as any).home_evaluation ?? {};
   const snapshot = rowToSnapshot(data, cfg);
+  const isBuy = snapshot.mode === "buy";
 
   return (
     <div
@@ -83,23 +86,30 @@ export default async function SharedValuationPage({ params }: { params: Promise<
       <SiteHeader settings={settings} logo={logo} />
       <main>
         <section className="mx-auto max-w-7xl scroll-mt-24 px-5 py-14">
-          <ValuationResultView snapshot={snapshot} />
+          {isBuy ? (
+            <BuyerResultView snapshot={snapshot} bookingUrl={snapshot.bookingUrl} />
+          ) : (
+            <ValuationResultView snapshot={snapshot} />
+          )}
 
           <div className="mt-12 rounded-[var(--radius-lg)] bg-[#111111] p-7 text-center text-white shadow-[var(--shadow-card)] md:p-11">
             <span className="mb-3 text-[12px] font-bold uppercase tracking-[0.14em] text-white/50">
               Your turn
             </span>
-            <h3 className="text-[24px] font-extrabold tracking-tight">What's your home worth?</h3>
+            <h3 className="text-[24px] font-extrabold tracking-tight">
+              {isBuy ? "What will it sell for?" : "What's your home worth?"}
+            </h3>
             <p className="mx-auto mt-2.5 max-w-md text-[14.5px] leading-relaxed text-white/65">
-              This valuation was shared with you. Run your own free preliminary estimate — it takes
-              under a minute.
+              {isBuy
+                ? "This price check was shared with you. Run your own free buyer price check — it takes under a minute."
+                : "This valuation was shared with you. Run your own free preliminary estimate — it takes under a minute."}
             </p>
             <div className="mx-auto mt-6 grid max-w-md gap-3">
               <a
-                href="/free-online-home-valuation"
+                href={isBuy ? "/what-will-it-sell-for" : "/free-online-home-valuation"}
                 className="inline-flex h-12 w-full items-center justify-center rounded-[var(--radius-btn)] bg-white px-6 text-[16px] font-semibold text-[#111111] transition hover:bg-white/90"
               >
-                Get my free valuation
+                {isBuy ? "Check a price" : "Get my free valuation"}
               </a>
               <a
                 href={snapshot.bookingUrl}
@@ -107,7 +117,7 @@ export default async function SharedValuationPage({ params }: { params: Promise<
                 rel="noreferrer"
                 className="inline-flex h-12 w-full items-center justify-center rounded-[var(--radius-btn)] border border-white/25 px-6 text-[15px] font-semibold text-white transition hover:bg-white/10"
               >
-                Book a free in-person valuation
+                {isBuy ? "Book a buyer consultation" : "Book a free in-person valuation"}
               </a>
             </div>
           </div>
