@@ -294,9 +294,9 @@ export default async function PreConstructionHub() {
           siteName={settings.site_name}
         />
 
-        <section className="mt-[50px] border-t border-line">
+        <section className="mt-[50px]">
 <div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
-          <div className="border-t border-line pt-8">
+          <div className="pt-2">
             <h2 className="font-display text-lg font-bold">Pre-Construction Homes, Condos &amp; Townhomes in Ontario</h2>
             <p className="mt-3 max-w-4xl text-sm leading-relaxed text-muted">
               GetSetSold tracks pre-construction projects across Ontario — from townhomes and detached homes to condos —
