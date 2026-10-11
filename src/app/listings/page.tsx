@@ -13,7 +13,8 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata({ searchParams }: { searchParams: Promise<ListingsSearchParams> }): Promise<Metadata> {
   const sp = await searchParams;
   const { city } = sp;
-  const effective = city === "all" ? null : city || DEFAULT_CITY;
+  const multiNames = (sp.cities ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+  const effective = multiNames.length > 0 ? multiNames.join(", ") : city === "all" ? null : city || DEFAULT_CITY;
   const page = Math.max(1, Number(sp.page) || 1);
   const isRent = sp.type === "rent";
   const base = effective
@@ -22,10 +23,11 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
   const title = await seoTitle(page > 1 ? `${base} (Page ${page})` : base);
   const description = effective ? `Browse MLS® listings for ${isRent ? "rent" : "sale"} in ${effective}.` : "Browse all MLS® listings.";
   const ogImage = await getAnyOgImage();
+  const canonicalCity = sp.cities ? `/listings?cities=${encodeURIComponent(sp.cities)}` : city ? `/listings?city=${encodeURIComponent(city)}` : "/listings";
   return {
     title,
     description,
-    alternates: { canonical: city ? `/listings?city=${encodeURIComponent(city)}` : "/listings" },
+    alternates: { canonical: canonicalCity },
     ...ogImageMeta(ogImage, title, description),
   };
 }

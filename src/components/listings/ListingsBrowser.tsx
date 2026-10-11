@@ -6,7 +6,7 @@ import { Pagination } from "@/components/listings/Pagination";
 import { ViewToggle } from "@/components/listings/ViewToggle";
 import { ListingFilters } from "@/components/listings/ListingFilters";
 
-export type ListingsSearchParams = { city?: string; type?: string; beds?: string; baths?: string; homeType?: string; minPrice?: string; maxPrice?: string; lat?: string; lng?: string; page?: string; perPage?: string; perRow?: string; view?: string };
+export type ListingsSearchParams = { city?: string; cities?: string; type?: string; beds?: string; baths?: string; homeType?: string; minPrice?: string; maxPrice?: string; lat?: string; lng?: string; page?: string; perPage?: string; perRow?: string; view?: string };
 
 export const DEFAULT_CITY = "Cayuga"; // keeps the very first load from ever querying all ~50k rows
 const ALL_CITIES_SENTINEL = "all";
@@ -65,14 +65,30 @@ export async function ListingsBrowser({
   const from = (page - 1) * perPage;
 
   const hasLocation = !fixedCity && sp.lat && sp.lng && !isNaN(Number(sp.lat)) && !isNaN(Number(sp.lng));
-  const effectiveCity = fixedCity ?? (hasLocation ? null : sp.city === ALL_CITIES_SENTINEL ? null : sp.city || DEFAULT_CITY);
-  const cityWasDefaulted = !fixedCity && !sp.city && !hasLocation;
+  // Multi-city (?cities=Hamilton,Caledonia) — produced by property-alert saved
+  // links. Takes precedence over ?city= when present.
+  const multiCityNames = !fixedCity && !hasLocation
+    ? (sp.cities ?? "").split(",").map((s) => s.trim()).filter(Boolean)
+    : [];
+  const effectiveCity = fixedCity ?? (hasLocation ? null : multiCityNames.length > 0 ? null : sp.city === ALL_CITIES_SENTINEL ? null : sp.city || DEFAULT_CITY);
+  const cityWasDefaulted = !fixedCity && !sp.city && multiCityNames.length === 0 && !hasLocation;
 
   // Normalized cities expand to all raw variants ("Toronto" -> "Toronto",
   // "Toronto (Mimico)", ...). Search-box input is resolved the same way.
   let cityVariants: string[] | null = null;
+  let multiCityDisplay: string | null = null;
   if (fixedCity) {
     cityVariants = await rawCitiesFor(fixedCity);
+  } else if (!hasLocation && multiCityNames.length > 0) {
+    const variantSet = new Set<string>();
+    const displayNames: string[] = [];
+    for (const name of multiCityNames) {
+      const normalized = await resolveCityName(name);
+      displayNames.push(normalized ?? name);
+      for (const v of await rawCitiesFor(normalized ?? name)) variantSet.add(v);
+    }
+    cityVariants = [...variantSet];
+    multiCityDisplay = displayNames.join(", ");
   } else if (!hasLocation && sp.city && sp.city !== ALL_CITIES_SENTINEL) {
     const normalized = await resolveCityName(sp.city);
     if (normalized) cityVariants = await rawCitiesFor(normalized);
@@ -137,7 +153,7 @@ export async function ListingsBrowser({
       <div className="flex flex-col gap-2">
         <nav className="text-sm text-muted" aria-label="Breadcrumb"><a href="/">Home</a> / {fixedCity ? <><a href="/ontario-real-estate">Ontario Real Estate</a> / <span>{fixedCity}</span></> : <span>Search</span>}</nav>
         <h1 className="font-display text-4xl font-extrabold md:text-5xl">
-          {heading ?? (hasLocation ? `${total.toLocaleString()} listings near you` : effectiveCity ? `${total.toLocaleString()} listings in ${effectiveCity}` : `${total.toLocaleString()} listings`)}
+          {heading ?? (hasLocation ? `${total.toLocaleString()} listings near you` : multiCityDisplay ? `${total.toLocaleString()} listings in ${multiCityDisplay}` : effectiveCity ? `${total.toLocaleString()} listings in ${effectiveCity}` : `${total.toLocaleString()} listings`)}
         </h1>
         {hasLocation ? (
           <p className="text-sm text-muted">

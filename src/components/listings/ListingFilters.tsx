@@ -96,6 +96,8 @@ export function ListingFilters({
       if (!v) delete merged[k];
       else merged[k] = v;
     }
+    // Picking a single city replaces a multi-city selection.
+    if ("city" in patch) delete merged.cities;
     delete merged.page;
     const qs = new URLSearchParams(merged).toString();
     return `${basePath}${qs ? `?${qs}` : ""}`;
@@ -129,6 +131,9 @@ export function ListingFilters({
   const cityMatches = (cities ?? []).filter((c) => c.toLowerCase().includes(cityFilter.toLowerCase()));
   // Only cap when searching; empty filter shows the full scrollable list.
   const cityList = cityFilter ? cityMatches.slice(0, 50) : cityMatches;
+  const multiCities = ((sp as Record<string, string | undefined>).cities ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+  const cityPillLabel = multiCities.length > 1 ? `${multiCities.length} cities` : multiCities[0] ?? (sp.city && sp.city !== "all" ? sp.city : "City");
+  const cityPillActive = multiCities.length > 0 || (!!sp.city && sp.city !== "all");
 
   return (
     <>
@@ -148,8 +153,8 @@ export function ListingFilters({
 
         {showCitySearch ? (
           <>
-            <button ref={setRef("city")} onClick={() => toggle("city")} className={pillCls(!!sp.city && sp.city !== "all")}>
-              {sp.city && sp.city !== "all" ? sp.city : "City"} ▾
+            <button ref={setRef("city")} onClick={() => toggle("city")} className={pillCls(cityPillActive)}>
+              {cityPillLabel} ▾
             </button>
             {open === "city" ? (
               <PortalDropdown anchorRef={{ current: refs.current["city"] }} onClose={close} width={280}>
