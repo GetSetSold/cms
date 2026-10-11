@@ -141,7 +141,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
 <div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
             <PreconSectionHeader eyebrow="Where You'll Live" heading="Location" />
             <div className={`grid grid-cols-1 gap-0 overflow-hidden md:grid-cols-[1fr_320px] ${card}`}>
-              <div className="h-72 md:h-[420px]"><PointsMap points={[{ lat: project.lat, lng: project.lng, label: project.project_name, href: "#" }]} /></div>
+              <div className="h-72 md:h-[420px]"><PointsMap points={[{ lat: project.lat, lng: project.lng, label: builder.builder_name, href: "#", logoUrl: builder.logo_url }]} /></div>
               <div className="flex flex-col gap-4 bg-white p-6">
                 <div><h3 className="font-display text-lg font-bold">{project.project_name}</h3><p className="text-xs font-semibold text-primary">{project.city}, Ontario</p></div>
                 <div className="flex flex-col divide-y divide-line">

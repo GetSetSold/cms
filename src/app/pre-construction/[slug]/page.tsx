@@ -63,7 +63,7 @@ export default async function BuilderOrCityPage({ params }: { params: Promise<{ 
   if (found) {
     const { builder, projects, promos, limitedTimePromo } = found;
     const cities = new Set(projects.map((p) => p.city).filter(Boolean));
-    const points = projects.filter((p) => p.lat && p.lng).map((p) => ({ lat: p.lat!, lng: p.lng!, label: p.project_name, href: `/pre-construction/${slug}/${p.slug}` }));
+    const points = projects.filter((p) => p.lat && p.lng).map((p) => ({ lat: p.lat!, lng: p.lng!, label: p.project_name, href: `/pre-construction/${slug}/${p.slug}`, logoUrl: builder.logo_url }));
     return (
       <div style={themeVars(settings)} className="bg-ground text-ink">
         <link rel="stylesheet" href={themeFontHref(settings)} />
@@ -207,7 +207,7 @@ export default async function BuilderOrCityPage({ params }: { params: Promise<{ 
   const buildersMap = new Map<number, { builder: (typeof projects)[number]["builder"]; count: number }>();
   for (const p of projects) { const e = buildersMap.get(p.builder.id); if (e) e.count++; else buildersMap.set(p.builder.id, { builder: p.builder, count: 1 }); }
   const builders = [...buildersMap.values()].sort((a, b) => b.count - a.count);
-  const points = projects.filter((p) => p.lat && p.lng).map((p) => ({ lat: p.lat!, lng: p.lng!, label: p.project_name, href: `/pre-construction/${p.builder.slug}/${p.slug}` }));
+  const points = projects.filter((p) => p.lat && p.lng).map((p) => ({ lat: p.lat!, lng: p.lng!, label: p.project_name, href: `/pre-construction/${p.builder.slug}/${p.slug}`, logoUrl: p.builder?.logo_url }));
   const prices = projects.map((p) => Number(p.p_start_price)).filter((n) => !isNaN(n) && n > 0);
   const fromPrice = prices.length ? `$${Math.min(...prices).toLocaleString()}` : "TBA";
 
