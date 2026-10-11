@@ -64,10 +64,10 @@ export function PreconBoxHeader({
           aria-hidden="true"
         />
         <div className="relative z-10 flex flex-col items-start gap-4 p-7 md:p-12">
-          <nav className="text-[13px] font-semibold text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]" aria-label="Breadcrumb">
+          <nav className="inline-flex items-center rounded-[var(--radius-btn,999px)] bg-black/45 px-4 py-2 text-[13px] font-semibold text-white backdrop-blur-sm" aria-label="Breadcrumb">
             {crumbs.map((c, i) => (
-              <span key={`${c.label}-${i}`}>
-                {i > 0 ? <span className="mx-1.5 text-white/70">›</span> : null}
+              <span key={`${c.label}-${i}`} className="flex items-center">
+                {i > 0 ? <span className="mx-1.5 text-white/60">›</span> : null}
                 {c.href ? (
                   <Link href={c.href} prefetch={false} className="text-white/85 underline decoration-white/30 underline-offset-2 hover:text-white">
                     {c.label}

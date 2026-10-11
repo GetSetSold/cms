@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getSettings, getLogo } from "@/lib/cms";
-import { getProjects, getBuilders, getCities } from "@/lib/precon";
+import { getProjects, getBuilders, getCities, getAllModels } from "@/lib/precon";
 import { themeFontHref, themeVars, themeIconOverrideCSS } from "@/lib/theme";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter, MobileCtaBar } from "@/components/site/SiteFooter";
@@ -39,7 +39,8 @@ const FAQS = [
 export default async function PreConstructionHub() {
   const settings = await getSettings();
   const logo = await getLogo(settings);
-  const [projects, builders, cities] = await Promise.all([getProjects(), getBuilders(), getCities()]);
+  const [projects, builders, cities, allModels] = await Promise.all([getProjects(), getBuilders(), getCities(), getAllModels()]);
+  const featuredModels = allModels.slice(0, 3);
   const featured = projects.slice(0, 6);
   const topBuilders = builders.slice(0, 4);
   const headerImages = projects.map((p) => p.main_image_url).filter(Boolean) as string[];
@@ -80,7 +81,7 @@ export default async function PreConstructionHub() {
 
         <section className="mt-[50px] border-t border-line">
 <div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
-          <div className="mb-6 flex items-end justify-between gap-4">
+          <div className="mb-[50px] flex items-end justify-between gap-4">
             <PreconSectionHeader eyebrow="Featured" heading="All Pre-Construction Projects" />
             <Link href="/project" prefetch={false} className="shrink-0 text-sm font-bold text-primary">View all projects →</Link>
           </div>
@@ -142,7 +143,7 @@ export default async function PreConstructionHub() {
 
         <section className="mt-[50px] border-t border-line">
 <div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
-          <div className="mb-6 flex items-end justify-between gap-4">
+          <div className="mb-[50px] flex items-end justify-between gap-4">
             <PreconSectionHeader eyebrow="Builders" heading="Featured Builders" />
             <Link href="/builder" prefetch={false} className="shrink-0 text-sm font-bold text-primary">View all builders →</Link>
           </div>
@@ -170,18 +171,38 @@ export default async function PreConstructionHub() {
 
         <section className="mt-[50px] border-t border-line">
 <div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
-          <div className="mb-6 flex items-end justify-between gap-4">
-            <PreconSectionHeader eyebrow="Models" heading="Compare floor plans" />
+          <div className="mb-[50px] flex items-end justify-between gap-4">
+            <PreconSectionHeader eyebrow="Models" heading="Compare Home Models and Plans" />
             <Link href="/model" prefetch={false} className="shrink-0 text-sm font-bold text-primary">View all models →</Link>
           </div>
-          <div className="flex flex-col items-center gap-4 py-8 text-center">
-            <p className="max-w-xl text-[15px] leading-relaxed text-muted">
-              Every model across every project — compare layouts, sizes, and starting prices side by side before you visit a sales centre.
-            </p>
-            <Link href="/model" prefetch={false} className="flex h-12 items-center rounded-[var(--radius-btn)] bg-ink px-8 text-[15px] font-bold text-white">
-              Browse All Models
-            </Link>
-          </div>
+          <p className="max-w-2xl pb-8 text-[15px] leading-relaxed text-muted">
+            Compare floor plans — every model across every project, side by side before you visit a sales centre.
+          </p>
+          {featuredModels.length ? (
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {featuredModels.map((m) => (
+                <Link key={m.id} href={`/pre-construction/${m.builder_slug}/${m.project_slug}/${m.slug}`} prefetch={false} className={`group flex flex-col overflow-hidden ${card}`}>
+                  <div className="relative aspect-[4/3] bg-soft">
+                    {m.model_image_url ? <img src={m.model_image_url} alt={m.model_name ?? ""} className="h-full w-full object-cover" /> : null}
+                    {m.building_type ? <span className="absolute left-3 top-3 rounded-[var(--radius-label)] bg-black/75 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-white">{m.building_type}</span> : null}
+                  </div>
+                  <div className="flex flex-col gap-1.5 p-5">
+                    <div className="font-display text-xl font-extrabold">
+                      {m.starting_price ? `$${Number(m.starting_price).toLocaleString()}` : "Price TBA"} <span className="text-[12.5px] font-medium text-muted">starting from</span>
+                    </div>
+                    <div className="text-[16.5px] font-bold">{m.model_name}</div>
+                    <div className="text-[13.5px] text-muted">{m.project_name} · {m.builder_name}</div>
+                    <div className="flex flex-wrap gap-2 pt-1.5">
+                      {m.bedrooms ? <span className="rounded-[var(--radius-btn,999px)] bg-soft px-3 py-1 text-[12.5px] font-semibold">{m.bedrooms} bd</span> : null}
+                      {m.bathrooms ? <span className="rounded-[var(--radius-btn,999px)] bg-soft px-3 py-1 text-[12.5px] font-semibold">{m.bathrooms} ba</span> : null}
+                      {m.sqft ? <span className="rounded-[var(--radius-btn,999px)] bg-soft px-3 py-1 text-[12.5px] font-semibold">{m.sqft} sqft</span> : null}
+                    </div>
+                    <PreconCardCta label="View Model" />
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : null}
         </div>
 </section>
 

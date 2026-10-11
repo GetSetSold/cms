@@ -72,7 +72,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
             <div className="flex flex-wrap items-center justify-between gap-4 rounded-[20px] border-2 border-dashed border-primary bg-[#f2f7ff] p-6 md:p-7">
               <div>
                 <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-primary">Buyer Cashback Offer</div>
-                <div className="font-display mt-1.5 text-xl font-extrabold md:text-2xl">Up to {formatCashback(cashback)} Cashback — Exclusive Buyer Perk</div>
+                <div className="font-display mt-1.5 text-xl font-extrabold md:text-2xl">Up to {formatCashback(cashback)} Cashback — Exclusive Buyer Perk when you buy with us</div>
                 <div className="mt-1 text-sm text-muted">Limited availability — speak with an agent today. No obligation required.</div>
               </div>
               <a href="#lead" className="flex h-12 items-center rounded-[var(--radius-btn)] bg-ink px-7 text-sm font-bold text-white">Claim This Offer →</a>

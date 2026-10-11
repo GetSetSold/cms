@@ -58,15 +58,17 @@ export default async function ModelPage({ params }: { params: Promise<{ slug: st
           eyebrow={`${model.building_type ?? "Home"} Model · ${project.project_name} by ${builder.builder_name}`}
           title={model.model_name ?? "Model"}
           lede={
-            <>
-              {model.title && model.title !== model.model_name ? <span className="mb-1 block">{model.title}</span> : null}
-              Part of <Link href={basePath} prefetch={false} className="font-medium text-white underline">{project.project_name}</Link> by {builder.builder_name}
+            <div className="flex flex-col items-start gap-3">
+              <span>
+                {model.title && model.title !== model.model_name ? <span className="mb-1 block">{model.title}</span> : null}
+                Part of <Link href={basePath} prefetch={false} className="font-medium text-white underline">{project.project_name}</Link> by {builder.builder_name}
+              </span>
               {cashback ? (
-                <span className="mt-3 inline-flex items-center gap-2 rounded-[var(--radius-label)] bg-gradient-to-r from-[#065f46] via-[#059669] to-[#10b981] px-4 py-2 text-sm font-bold text-white">
-                  Up to {formatCashback(cashback)} Cashback — Exclusive Buyer Perk
+                <span className="inline-flex items-center gap-2 rounded-[var(--radius-btn,999px)] bg-gradient-to-r from-[#065f46] via-[#059669] to-[#10b981] px-5 py-2.5 text-sm font-bold text-white">
+                  Up to {formatCashback(cashback)} Cashback — Exclusive Buyer Perk when you buy with us
                 </span>
               ) : null}
-            </>
+            </div>
           }
           bgImage={model.model_image_url}
           logoUrl={builder.logo_url}
