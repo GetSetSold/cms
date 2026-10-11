@@ -37,7 +37,7 @@ export async function GET() {
             ${p.baths ? `<span style="font-size:13px;color:#555;"><strong style="color:#111;">${p.baths}</strong> baths</span>` : ""}
             ${p.sqft ? `<span style="font-size:13px;color:#555;">${p.sqft} sqft</span>` : ""}
           </div>` : ""}
-          <a href="${siteUrl}/pre-con/${p.slug}" style="display:inline-block;margin-top:14px;background:#111111;color:#ffffff;text-decoration:none;padding:10px 28px;border-radius:999px;font-size:14px;font-weight:600;">View Project</a>
+          <a href="${siteUrl}/pre-construction/${p.slug}" style="display:inline-block;margin-top:14px;background:#111111;color:#ffffff;text-decoration:none;padding:10px 28px;border-radius:999px;font-size:14px;font-weight:600;">View Project</a>
         </div>
       </div>`;
     }).join("");
@@ -50,7 +50,7 @@ export async function GET() {
         <p style="margin:0 0 20px;">New pre-construction projects just launched:</p>
         ${cards}
         <p style="margin:24px 0 0;font-size:13px;color:#888;text-align:center;">
-          <a href="${siteUrl}/pre-con" style="color:#0066cc;text-decoration:none;">Browse all pre-con</a>
+          <a href="${siteUrl}/pre-construction" style="color:#0066cc;text-decoration:none;">Browse all pre-con</a>
           <span style="color:#ccc;margin:0 8px;">·</span>
           <a href="${siteUrl}/property-alerts/manage" style="color:#0066cc;text-decoration:none;">Manage alerts</a>
         </p>`,

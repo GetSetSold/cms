@@ -91,11 +91,11 @@ export function buildPreconBroadcastEmail(opts: {
       ${modelHtml ? `<div style="margin:0 0 20px;"><div style="font-size:14px;font-weight:700;color:#111;margin-bottom:10px;">Featured Models</div>${modelHtml}</div>` : ""}
       ${p.project_message ? `<p style="font-size:14px;color:#0066cc;background:#f0f4fa;padding:12px 16px;border-radius:8px;margin:0 0 20px;">${p.project_message}</p>` : ""}
       <div style="text-align:center;margin:24px 0;">
-        <a href="${siteUrl}/pre-con/${p.slug}" style="display:inline-block;background:#111111;color:#ffffff;text-decoration:none;padding:14px 40px;border-radius:999px;font-size:15px;font-weight:600;">View Full Details & Floor Plans</a>
+        <a href="${siteUrl}/pre-construction/${p.slug}" style="display:inline-block;background:#111111;color:#ffffff;text-decoration:none;padding:14px 40px;border-radius:999px;font-size:15px;font-weight:600;">View Full Details & Floor Plans</a>
       </div>
       <p style="font-size:13px;color:#888;text-align:center;margin:20px 0 0;">
         Questions? Reply to this email or call me directly.<br>
-        <a href="${siteUrl}/pre-con" style="color:#0066cc;text-decoration:none;">Browse all pre-con projects</a><br><br>
+        <a href="${siteUrl}/pre-construction" style="color:#0066cc;text-decoration:none;">Browse all pre-con projects</a><br><br>
         <a href="${siteUrl}/api/precon-alerts/unsubscribe?token=${unsubscribeToken}" style="color:#999;text-decoration:underline;font-size:12px;">Unsubscribe from pre-con updates</a>
       </p>`,
     footerNote: "You're receiving this because you subscribed to pre-con updates on GetSetSold.ca.",
