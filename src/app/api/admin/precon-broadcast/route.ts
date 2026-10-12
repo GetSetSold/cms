@@ -50,55 +50,36 @@ export async function POST(req: NextRequest) {
     if (idx > 0) { const [picked] = orderedModels.splice(idx, 1); orderedModels = [picked, ...orderedModels]; }
   }
 
-  // Resolve recipients.
+  // Resolve recipients from precon_subscribers table.
   let recipients: { email: string; first_name: string | null; lead_id: string | null; unsubscribe_token: string; id?: string }[] = [];
   if (test_email) {
-    // Test mode: find or create lead for the test address so send-email works.
     const normalized = test_email.toLowerCase().trim();
-    let leadId: string | null = null;
-    const { data: lead } = await cms.from("leads").select("id, first_name").eq("email", normalized).maybeSingle();
-    if (lead) {
-      leadId = lead.id;
-      recipients = [{ email: normalized, first_name: (lead as any).first_name ?? null, lead_id: leadId, unsubscribe_token: "test" }];
-    } else {
-      const { data: newLead } = await cms.from("leads").insert({
-        email: normalized, service: "buyer", source_path: "/admin/precon-broadcast",
-        custom_fields: { source: "precon-broadcast-test" }, status: "new",
-      }).select("id").single();
-      recipients = [{ email: normalized, first_name: null, lead_id: newLead?.id ?? null, unsubscribe_token: "test" }];
-    }
+    recipients = [{ email: normalized, first_name: null, lead_id: null, unsubscribe_token: "test" }];
   } else {
-    // Query leads with active pre-con subscriptions in payload.
     const price = Number(project.p_start_price) || 0;
     const city = (project.city || "").toLowerCase();
-    const { data: leads, error } = await cms
-      .from("leads")
-      .select("id, payload")
-      .not("payload->precon_subscriptions", "is", null);
+    const { data: subs, error } = await cms
+      .from("precon_subscribers")
+      .select("id, email, first_name, lead_id, filters, unsubscribe_token")
+      .eq("is_active", true);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    recipients = ((leads ?? []) as any[]).flatMap((l: any) => {
-      const subs: any[] = Array.isArray(l.payload?.precon_subscriptions) ? l.payload.precon_subscriptions : [];
-      const email = l.payload?.email;
-      if (!email) return [];
-      const firstName = l.payload?.first_name ?? null;
-      return subs.filter((s: any) => {
-        if (!s.is_active) return false;
-        const f = s.filters || {};
-        if (f.all_projects) return true;
-        if (f.cities?.length && !f.cities.some((c: string) => c.toLowerCase() === city)) return false;
-        if (f.min_price && price < f.min_price) return false;
-        if (f.max_price && price > f.max_price) return false;
-        return true;
-      }).map((s: any) => ({
-        email: String(email).toLowerCase(),
-        first_name: firstName ? String(firstName).split(" ")[0] : null,
-        lead_id: l.id,
-        unsubscribe_token: s.id,
-      }));
-    });
+    recipients = ((subs ?? []) as any[]).filter((s: any) => {
+      const f = s.filters || {};
+      if (f.all_projects) return true;
+      if (f.cities?.length && !f.cities.some((c: string) => c.toLowerCase() === city)) return false;
+      if (f.min_price && price < f.min_price) return false;
+      if (f.max_price && price > f.max_price) return false;
+      return true;
+    }).map((s: any) => ({
+      email: String(s.email).toLowerCase(),
+      first_name: s.first_name ?? null,
+      lead_id: s.lead_id ?? null,
+      unsubscribe_token: s.unsubscribe_token,
+      id: s.id,
+    }));
     // Dedupe by email.
     const seen = new Set<string>();
-    recipients = recipients.filter((r: any) => {
+    recipients = recipients.filter((r) => {
       if (seen.has(r.email)) return false;
       seen.add(r.email);
       return true;
