@@ -67,18 +67,6 @@ export function buildPreconBroadcastEmail(opts: {
       <div style="font-size:13px;color:#aaa;margin-top:6px;">When you buy through GetSetSold.ca</div>
     </div>` : "";
 
-  const modelHtml = models.map((m) => `
-    <div style="margin:0 0 12px;border:1px solid #e8e8e8;border-radius:12px;overflow:hidden;">
-      ${m.model_image_url ? `<img src="${m.model_image_url}" alt="${m.model_name || ""}" style="width:100%;height:140px;object-fit:cover;display:block;">` : ""}
-      <div style="padding:12px 16px;">
-        <div style="font-size:15px;font-weight:700;color:#111;">${m.model_name || "Model"}</div>
-        <div style="font-size:13px;color:#666;margin-top:2px;">
-          ${m.bedrooms ? `${m.bedrooms} bd` : ""}${m.bedrooms && m.bathrooms ? " · " : ""}${m.bathrooms ? `${m.bathrooms} ba` : ""}${m.sqft ? ` · ${m.sqft} sqft` : ""}
-        </div>
-        ${m.starting_price ? `<div style="font-size:14px;font-weight:700;color:#0066cc;margin-top:4px;">From $${Number(m.starting_price).toLocaleString()}</div>` : ""}
-      </div>
-    </div>`).join("");
-
   return brandedEmail({
     kicker: p.vip_release === "Yes" ? "VIP PRE-CON RELEASE" : "FEATURED PRE-CON PROJECT",
     title: p.project_name,
@@ -94,20 +82,29 @@ export function buildPreconBroadcastEmail(opts: {
         ${p.baths ? `<div><div style="font-size:18px;font-weight:700;color:#111;">${p.baths}</div><div style="font-size:12px;color:#888;">Bathrooms</div></div>` : ""}
         ${p.sqft ? `<div><div style="font-size:18px;font-weight:700;color:#111;">${p.sqft}</div><div style="font-size:12px;color:#888;">Sq Ft</div></div>` : ""}
       </div>` : ""}
-      ${promoHtml || modelHtml ? `
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px;">
-        <tr>
-          ${promoHtml ? `
-          <td width="${modelHtml ? "50%" : "100%"}" valign="top" style="padding-right:${modelHtml ? "8px" : "0"};">
-            <div style="font-size:14px;font-weight:700;color:#111;margin-bottom:10px;">Current Incentives</div>${promoHtml}
-          </td>` : ""}
-          ${modelHtml ? `
-          <td width="${promoHtml ? "50%" : "100%"}" valign="top" style="padding-left:${promoHtml ? "8px" : "0"};">
-            <div style="font-size:14px;font-weight:700;color:#111;margin-bottom:10px;">Featured Models</div>${modelHtml}
-          </td>` : ""}
-        </tr>
-      </table>` : ""}
+      ${promoHtml ? `<div style="margin:0 0 20px;"><div style="font-size:14px;font-weight:700;color:#111;margin-bottom:10px;">Current Incentives</div>${promoHtml}</div>` : ""}
       ${cashbackHtml}
+      ${models.length ? `
+      <div style="margin:0 0 20px;">
+        <div style="font-size:14px;font-weight:700;color:#111;margin-bottom:10px;">Featured Models</div>
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+          <tr>
+            ${(models.slice(0, 2)).map((m, i) => `
+            <td width="50%" valign="top" style="padding-${i === 0 ? "right" : "left"}:8px;">
+              <div style="margin:0 0 12px;border:1px solid #e8e8e8;border-radius:12px;overflow:hidden;">
+                ${m.model_image_url ? `<img src="${m.model_image_url}" alt="${m.model_name || ""}" style="width:100%;height:140px;object-fit:cover;display:block;">` : ""}
+                <div style="padding:12px 16px;">
+                  <div style="font-size:15px;font-weight:700;color:#111;">${m.model_name || "Model"}</div>
+                  <div style="font-size:13px;color:#666;margin-top:2px;">
+                    ${m.bedrooms ? `${m.bedrooms} bd` : ""}${m.bedrooms && m.bathrooms ? " · " : ""}${m.bathrooms ? `${m.bathrooms} ba` : ""}${m.sqft ? ` · ${m.sqft} sqft` : ""}
+                  </div>
+                  ${m.starting_price ? `<div style="font-size:14px;font-weight:700;color:#0066cc;margin-top:4px;">From $${Number(m.starting_price).toLocaleString()}</div>` : ""}
+                </div>
+              </div>
+            </td>`).join("")}
+          </tr>
+        </table>
+      </div>` : ""}
       ${p.project_description ? `<p style="font-size:14px;color:#333;line-height:1.7;margin:0 0 20px;">${p.project_description.slice(0, 350)}${p.project_description.length > 350 ? "..." : ""}</p>` : ""}
       ${p.project_message ? `<p style="font-size:14px;color:#0066cc;background:#f0f4fa;padding:12px 16px;border-radius:8px;margin:0 0 20px;">${p.project_message}</p>` : ""}
       <div style="text-align:center;margin:24px 0;">
