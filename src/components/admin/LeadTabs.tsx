@@ -450,11 +450,138 @@ function OverviewPanel({ lead, activities }: { lead: Lead; activities: Activity[
   );
 }
 
-function MatchesPanel() {
+function MatchesPanel({ leadId }: { leadId: string }) {
+  const [mls, setMls] = useState<any[]>([]);
+  const [precon, setPrecon] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [hasSubs, setHasSubs] = useState(false);
+  const [sending, setSending] = useState<string | null>(null);
+  const [note, setNote] = useState("");
+  const [sendTarget, setSendTarget] = useState<{ type: string; listing: any } | null>(null);
+  const [sentOk, setSentOk] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch(`/api/admin/leads/${leadId}/matches`)
+      .then((r) => r.json())
+      .then((d) => {
+        setMls(d.mls ?? []);
+        setPrecon(d.precon ?? []);
+        setHasSubs(!!d.hasSubscriptions);
+      })
+      .finally(() => setLoading(false));
+  }, [leadId]);
+
+  async function sendMatch() {
+    if (!sendTarget) return;
+    setSending("sending");
+    try {
+      const res = await fetch(`/api/admin/leads/${leadId}/send-match`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: sendTarget.type, listing: sendTarget.listing, note: note.trim() || undefined }),
+      });
+      const d = await res.json();
+      if (d.ok) {
+        setSentOk("Sent!");
+        setSendTarget(null);
+        setNote("");
+        setTimeout(() => setSentOk(null), 3000);
+      }
+    } finally { setSending(null); }
+  }
+
+  if (loading) return <p className="py-8 text-center text-sm text-muted">Finding matches…</p>;
+
+  if (!hasSubs) {
+    return (
+      <div className="card flex flex-col items-center gap-3 py-12 text-center">
+        <h2 className="text-lg font-semibold">Complete the criteria to start matching</h2>
+        <p className="max-w-md text-[13px] text-muted">Add a property alert or pre-con subscription from the Subscriptions tab, and matching listings will appear here.</p>
+      </div>
+    );
+  }
+
+  const siteUrl = typeof window !== "undefined" ? window.location.origin : "";
+
   return (
-    <div className="card flex flex-col items-center gap-3 py-12 text-center">
-      <h2 className="text-lg font-semibold">Complete the criteria to start matching</h2>
-      <p className="max-w-md text-[13px] text-muted">Once the target area, property type and budget are confirmed, this tab will pull matching rental listings, resale homes and pre-construction projects for review.</p>
+    <div className="flex flex-col gap-6">
+      {sentOk ? <p className="rounded-lg bg-green-50 p-3 text-sm text-green-800">{sentOk}</p> : null}
+
+      {sendTarget ? (
+        <div className="rounded-lg border border-line bg-white p-4">
+          <p className="mb-2 text-sm font-medium">Send to lead (optional note):</p>
+          <textarea value={note} onChange={(e) => setNote(e.target.value)}
+            placeholder="Add a personal note (e.g. This one just listed, backyard's huge like you wanted)"
+            rows={3} className="w-full rounded border border-line px-3 py-2 text-sm" />
+          <div className="mt-2 flex gap-2">
+            <button onClick={sendMatch} disabled={sending === "sending"}
+              className="rounded bg-[#111] px-4 py-2 text-sm font-medium text-white disabled:opacity-50">
+              {sending === "sending" ? "Sending…" : "Send email"}
+            </button>
+            <button onClick={() => { setSendTarget(null); setNote(""); }} className="text-sm text-muted underline">Cancel</button>
+          </div>
+        </div>
+      ) : null}
+
+      {mls.length > 0 ? (
+        <section>
+          <h3 className="mb-3 text-sm font-semibold">MLS listings ({mls.length})</h3>
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            {mls.map((m) => (
+              <div key={m.key} className="overflow-hidden rounded-lg border border-line bg-white">
+                {m.photo ? <img src={m.photo} alt="" className="h-40 w-full object-cover" /> : null}
+                <div className="p-4">
+                  <div className="flex items-start justify-between">
+                    <div className="text-lg font-bold">
+                      ${Number(m.price).toLocaleString()}{m.isRent ? <span className="text-sm font-normal text-muted">/mo</span> : ""}
+                    </div>
+                    <span className="rounded-full bg-[#f0f4fa] px-2 py-0.5 text-[11px] font-medium text-[#0066cc]">
+                      {m.isRent ? "For Rent" : "For Sale"}
+                    </span>
+                  </div>
+                  <div className="mt-1 text-sm">{m.address}</div>
+                  <div className="text-xs text-muted">{m.city}{m.mls ? ` · MLS# ${m.mls}` : ""}</div>
+                  <div className="mt-1 text-xs text-muted">
+                    {[m.beds ? `${m.beds} bd` : "", m.baths ? `${m.baths} ba` : "", m.type].filter(Boolean).join(" · ")}
+                  </div>
+                  {m.searchSummary ? <div className="mt-1 text-[11px] text-muted">Matches: {m.searchSummary}</div> : null}
+                  <button onClick={() => setSendTarget({ type: "mls", listing: m })}
+                    className="mt-3 w-full rounded bg-[#0066cc] px-4 py-2 text-sm font-medium text-white">
+                    Send to lead
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {precon.length > 0 ? (
+        <section>
+          <h3 className="mb-3 text-sm font-semibold">Pre-con projects ({precon.length})</h3>
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            {precon.map((p) => (
+              <div key={p.slug} className="overflow-hidden rounded-lg border border-line bg-white">
+                {p.image ? <img src={p.image} alt="" className="h-40 w-full object-cover" /> : null}
+                <div className="p-4">
+                  <div className="text-base font-bold">{p.name}</div>
+                  <div className="text-xs text-muted">{p.builder ? `${p.builder} · ` : ""}{p.city}</div>
+                  <div className="mt-1 text-sm font-semibold text-[#0066cc]">
+                    {p.price ? `From $${Number(p.price).toLocaleString()}` : "Price on request"}
+                  </div>
+                  <button onClick={() => setSendTarget({ type: "precon", listing: p })}
+                    className="mt-3 w-full rounded bg-[#0066cc] px-4 py-2 text-sm font-medium text-white">
+                    Send to lead
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {mls.length === 0 && precon.length === 0 ? (
+        <p className="py-8 text-center text-sm text-muted">No matches found. Try broadening the subscription criteria.</p>
+      ) : null}
     </div>
   );
 }
@@ -631,7 +758,7 @@ export function LeadTabs({ lead, activities, queue, enrollments, availableFlows 
       {tab === "subscriptions" ? <LeadSubscriptionsPanel leadId={lead.id} /> : null}
       {tab === "activity" ? <ActivityPanel leadId={lead.id} activities={activities} queue={queue} /> : null}
       {tab === "flows" ? <FlowsPanel leadId={lead.id} enrollments={enrollments} available={availableFlows} /> : null}
-      {tab === "matches" ? <MatchesPanel /> : null}
+      {tab === "matches" ? <MatchesPanel leadId={lead.id} /> : null}
     </div>
   );
 }
