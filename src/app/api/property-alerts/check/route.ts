@@ -99,16 +99,17 @@ export async function GET(req: NextRequest) {
     if (!dryRun && matchList.length > 0) {
       await cms.from("saved_searches").update({ last_notified_at: new Date().toISOString() }).eq("id", s.id);
 
-      // Send email via send-email edge function (requires lead_id).
-      if (s.lead_id) {
+      // Send email via send-email edge function (system mode with to_email).
+      if (s.email) {
         const subject = `${matchList.length} new ${matchList.length === 1 ? "listing" : "listings"} matching your search`;
-        const body = buildAlertEmail(s.criteria_summary || "Your saved search", matchList, s.unsubscribe_token);
+        const html = buildAlertEmail(s.criteria_summary || "Your saved search", matchList, s.unsubscribe_token);
         try {
           await cms.functions.invoke("send-email", {
             body: {
-              lead_id: s.lead_id,
+              to_email: s.email,
               subject,
-              body,
+              html_body: html,
+              body: `${matchList.length} new listings matching your search.`,
               from_email: "noreply@getsetsold.ca",
               reply_to: "rohit@getsetsold.ca",
             },
@@ -118,7 +119,7 @@ export async function GET(req: NextRequest) {
           results[results.length - 1].emailError = e instanceof Error ? e.message : "Failed";
         }
       } else {
-        results[results.length - 1].emailError = "No lead_id linked";
+        results[results.length - 1].emailError = "No email address";
       }
     }
   }
