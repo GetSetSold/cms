@@ -280,11 +280,16 @@ export async function getModel(builderSlug: string, projectSlug: string, modelSl
   const supabase = createPreconClient();
   let planQuery = supabase.from("payment_plans").select("*").eq("project_id", found.project.id).eq("show", true);
   if (model.home_type_id) planQuery = planQuery.eq("home_type_id", model.home_type_id);
-  const [{ data: floorplans }, gallery, { data: paymentPlans }] = await Promise.all([
+  const [{ data: floorplans }, modelGallery, projectGallery, { data: paymentPlans }] = await Promise.all([
     supabase.from("floorplans").select("*").eq("model_id", model.id),
     getImagesFor("home_model", model.id),
+    getImagesFor("project", found.project.id),
     planQuery,
   ]);
+
+  // Model inherits project images (deduplicated, model-specific first)
+  const seen = new Set(modelGallery.map((img: any) => img.id));
+  const gallery = [...modelGallery, ...projectGallery.filter((img: any) => !seen.has(img.id))];
 
   let installments: PaymentInstallment[] = [];
   if (paymentPlans?.length) {
