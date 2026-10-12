@@ -55,13 +55,14 @@ export async function POST(req: NextRequest) {
 
     // Create lead + contact if none exists.
     if (!leadId) {
-      const { data: newContact } = await supabase
+      const { data: newContact, error: contactError } = await supabase
         .from("contacts")
         .insert({ email: normalized, name: firstName?.trim() || null, type: "lead", source: "pre-con-alerts" })
         .select("id")
         .single();
+      if (contactError) return NextResponse.json({ error: "Contact: " + contactError.message }, { status: 500 });
       const contactId = (newContact as any)?.id ?? null;
-      const { data: newLead } = await supabase
+      const { data: newLead, error: leadError } = await supabase
         .from("leads")
         .insert({
           contact_id: contactId,
@@ -71,6 +72,7 @@ export async function POST(req: NextRequest) {
         })
         .select("id, payload")
         .single();
+      if (leadError) return NextResponse.json({ error: "Lead: " + leadError.message }, { status: 500 });
       leadId = (newLead as any)?.id ?? null;
       payload = (newLead as any)?.payload ?? {};
     }
