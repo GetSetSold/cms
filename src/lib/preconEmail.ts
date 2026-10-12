@@ -53,13 +53,47 @@ export function buildPreconBroadcastEmail(opts: {
   const price = p.p_start_price ? `From $${Number(p.p_start_price).toLocaleString()}` : "Price on request";
   const projectUrl = p.builder?.slug ? `${siteUrl}/pre-construction/${p.builder.slug}/${p.slug}` : `${siteUrl}/pre-construction/${p.slug}`;
 
-  const promoHtml = promos.map((promo) => `
-    <div style="background:#ffffff;border:1px solid #dbe7f5;border-radius:10px;padding:14px 16px;margin:0 0 12px;">
-      ${promo.badge ? `<span style="display:inline-block;background:#0066cc;color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:12px;margin-bottom:6px;">${promo.badge}</span>` : ""}
-      <div style="font-size:15px;font-weight:700;color:#111;">${promo.title || ""}</div>
-      ${promo.description ? `<div style="font-size:13px;color:#555;margin-top:4px;">${promo.description}</div>` : ""}
-      ${(promo.bullets ?? []).map((b: string) => `<div style="font-size:13px;color:#333;margin-top:4px;">✓ ${b}</div>`).join("")}
-    </div>`).join("");
+  const promoHtml = (() => {
+    // Split promos: ones with bullets/description (full width) vs badge-only (2-col)
+    const fullWidth: string[] = [];
+    const cards: string[] = [];
+    for (const promo of promos) {
+      const hasBullets = (promo.bullets ?? []).length > 0;
+      const hasDesc = !!promo.description;
+      if (hasBullets || hasDesc) {
+        const bullets = (promo.bullets ?? []).map((b: string, i: number, arr: string[]) => `
+          <div style="font-size:13px;color:#333;padding:8px 0;${i < arr.length - 1 ? "border-bottom:1px solid #f0f0f0;" : ""}">✓ ${b}</div>`).join("");
+        fullWidth.push(`
+          <div style="background:#ffffff;border:1px solid #dbe7f5;border-radius:10px;padding:14px 16px;margin:0 0 12px;">
+            ${promo.badge ? `<span style="display:inline-block;background:#0066cc;color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:12px;margin-bottom:6px;">${promo.badge}</span>` : ""}
+            <div style="font-size:15px;font-weight:700;color:#111;">${promo.title || ""}</div>
+            ${promo.description ? `<div style="font-size:13px;color:#555;margin-top:6px;line-height:1.6;">${promo.description}</div>` : ""}
+            ${bullets ? `<div style="margin-top:8px;">${bullets}</div>` : ""}
+          </div>`);
+      } else {
+        cards.push(`
+          <td width="50%" valign="top" style="padding:0 6px 12px;">
+            <div style="background:#ffffff;border:1px solid #dbe7f5;border-radius:10px;padding:14px 16px;height:100%;">
+              ${promo.badge ? `<span style="display:inline-block;background:#0066cc;color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:12px;margin-bottom:6px;">${promo.badge}</span>` : ""}
+              <div style="font-size:15px;font-weight:700;color:#111;">${promo.title || ""}</div>
+            </div>
+          </td>`);
+      }
+    }
+    let html = fullWidth.join("");
+    if (cards.length) {
+      // Pair cards into rows of 2
+      const rows: string[] = [];
+      for (let i = 0; i < cards.length; i += 2) {
+        const pair = cards.slice(i, i + 2);
+        // If odd number, add empty cell
+        if (pair.length === 1) pair.push(`<td width="50%" style="padding:0 6px 12px;"></td>`);
+        rows.push(`<tr>${pair.join("")}</tr>`);
+      }
+      html += `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 -6px;"><tbody>${rows.join("")}</tbody></table>`;
+    }
+    return html;
+  })();
 
   const cashbackHtml = cashbackAmount ? `
     <div style="background:#0a0a1a;border-radius:10px;padding:16px 20px;margin:0 0 20px;text-align:center;">
@@ -78,11 +112,13 @@ export function buildPreconBroadcastEmail(opts: {
       <p style="font-size:24px;font-weight:800;color:#111;margin:0 0 8px;">${price}</p>
       <p style="font-size:14px;color:#555;margin:0 0 16px;">${p.city || ""}${p.project_status ? ` · ${p.project_status}` : ""}</p>
       ${(p.beds || p.baths || p.sqft) ? `
-      <div style="display:flex;gap:24px;margin:0 0 20px;padding:16px;background:#f8f9fa;border-radius:10px;">
-        ${p.beds ? `<div><div style="font-size:18px;font-weight:700;color:#111;">${p.beds}</div><div style="font-size:12px;color:#888;">Bedrooms</div></div>` : ""}
-        ${p.baths ? `<div><div style="font-size:18px;font-weight:700;color:#111;">${p.baths}</div><div style="font-size:12px;color:#888;">Bathrooms</div></div>` : ""}
-        ${p.sqft ? `<div><div style="font-size:18px;font-weight:700;color:#111;">${p.sqft}</div><div style="font-size:12px;color:#888;">Sq Ft</div></div>` : ""}
-      </div>` : ""}
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px;background:#f8f9fa;border-radius:10px;">
+        <tr>
+          ${p.beds ? `<td width="33%" align="center" valign="top" style="padding:16px 8px;"><div style="font-size:18px;font-weight:700;color:#111;">${p.beds}</div><div style="font-size:12px;color:#888;margin-top:2px;">Bedrooms</div></td>` : ""}
+          ${p.baths ? `<td width="33%" align="center" valign="top" style="padding:16px 8px;"><div style="font-size:18px;font-weight:700;color:#111;">${p.baths}</div><div style="font-size:12px;color:#888;margin-top:2px;">Bathrooms</div></td>` : ""}
+          ${p.sqft ? `<td width="33%" align="center" valign="top" style="padding:16px 8px;"><div style="font-size:18px;font-weight:700;color:#111;">${p.sqft}</div><div style="font-size:12px;color:#888;margin-top:2px;">Sq Ft</div></td>` : ""}
+        </tr>
+      </table>` : ""}
       ${promoHtml ? `<div style="margin:0 0 20px;"><div style="font-size:14px;font-weight:700;color:#111;margin-bottom:10px;">Current Incentives</div>${promoHtml}</div>` : ""}
       ${cashbackHtml}
       ${models.length ? `
