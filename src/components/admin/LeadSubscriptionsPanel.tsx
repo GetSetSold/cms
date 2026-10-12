@@ -26,13 +26,10 @@ type RateSub = {
 };
 
 function typeBadges(c: Alert["criteria"]): string {
-  if (!c) return "";
-  const types: string[] = [];
-  if (c.type === "rent" || c.types?.includes("rent")) types.push("For Rent");
-  if (c.type === "sale" || c.type === "buy" || c.types?.includes("sale") || !c.type) types.push("For Sale");
-  // If no explicit type, default to showing nothing (don't assume)
-  if (!c.type && !c.types) return "";
-  return types.join(" · ");
+  if (!c || !c.type) return "";
+  if (c.type === "rent") return "For Rent";
+  if (c.type === "sale") return "For Sale";
+  return "";
 }
 
 function filterLabel(f: PreconSub["filters"]): string {
@@ -66,6 +63,7 @@ export function LeadSubscriptionsPanel({ leadId }: { leadId: string }) {
   const [paMax, setPaMax] = useState("");
   const [paBeds, setPaBeds] = useState("");
   const [paBaths, setPaBaths] = useState("");
+  const [paHomeType, setPaHomeType] = useState("");
   const [saving, setSaving] = useState(false);
 
   async function load() {
@@ -169,18 +167,19 @@ export function LeadSubscriptionsPanel({ leadId }: { leadId: string }) {
 
   // Property alert CRUD
   function resetPaForm() {
-    setPaCities(""); setPaType("sale"); setPaMin(""); setPaMax(""); setPaBeds(""); setPaBaths("");
+    setPaCities(""); setPaType("sale"); setPaMin(""); setPaMax(""); setPaBeds(""); setPaBaths(""); setPaHomeType("");
   }
 
   function startEditAlert(a: Alert) {
     const c = a.criteria ?? {};
     setEditingAlertId(a.id);
     setPaCities(Array.isArray(c.cities) ? c.cities.join(", ") : (c.city || ""));
-    setPaType(c.type === "rent" ? "rent" : "sale");
+    setPaType(c.type === "rent" ? "rent" : c.type === "sale" ? "sale" : "all");
     setPaMin(c.minPrice ? String(c.minPrice) : "");
     setPaMax(c.maxPrice ? String(c.maxPrice) : "");
     setPaBeds(c.beds || "");
     setPaBaths(c.baths || "");
+    setPaHomeType(c.homeType || "");
   }
 
   async function savePropertyAlert() {
@@ -188,11 +187,12 @@ export function LeadSubscriptionsPanel({ leadId }: { leadId: string }) {
     try {
       const payload = {
         cities: paCities.split(",").map((s) => s.trim()).filter(Boolean),
-        type: paType,
+        type: paType === "all" ? undefined : paType,
         minPrice: paMin ? Number(paMin) : undefined,
         maxPrice: paMax ? Number(paMax) : undefined,
         beds: paBeds || undefined,
         baths: paBaths || undefined,
+        homeType: paHomeType || undefined,
       };
       let res;
       if (editingAlertId) {
@@ -226,29 +226,81 @@ export function LeadSubscriptionsPanel({ leadId }: { leadId: string }) {
 
   function paForm() {
     const inputCls = "rounded border border-line px-3 py-2 text-sm";
+    const selectCls = "rounded border border-line px-3 py-2 text-sm bg-white";
     return (
-      <div className="mb-3 flex flex-col gap-2 rounded-lg border border-line bg-white p-4">
+      <div className="mb-3 flex flex-col gap-3 rounded-lg border border-line bg-white p-4">
         <p className="text-xs text-muted">{editingAlertId ? "Edit property alert:" : "New property alert:"}</p>
-        <div className="flex gap-2">
+
+        {/* All / For Sale / For Rent segmented */}
+        <div className="flex rounded-lg border border-line bg-white p-1">
+          <button type="button" onClick={() => setPaType("all")}
+            className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium ${paType === "all" ? "bg-[#111] text-white" : ""}`}>
+            All
+          </button>
           <button type="button" onClick={() => setPaType("sale")}
-            className={`flex-1 rounded-lg border px-3 py-2 text-sm font-medium ${paType === "sale" ? "border-[#111] bg-[#111] text-white" : "border-line"}`}>
+            className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium ${paType === "sale" ? "bg-[#111] text-white" : ""}`}>
             For Sale
           </button>
           <button type="button" onClick={() => setPaType("rent")}
-            className={`flex-1 rounded-lg border px-3 py-2 text-sm font-medium ${paType === "rent" ? "border-[#111] bg-[#111] text-white" : "border-line"}`}>
+            className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium ${paType === "rent" ? "bg-[#111] text-white" : ""}`}>
             For Rent
           </button>
         </div>
-        <input value={paCities} onChange={(e) => setPaCities(e.target.value)} placeholder="Cities (comma separated, e.g. Hamilton, Caledonia)"
-          className={inputCls} />
-        <div className="flex gap-2">
-          <input value={paMin} onChange={(e) => setPaMin(e.target.value)} placeholder="Min price" type="number" className={`${inputCls} w-1/2`} />
-          <input value={paMax} onChange={(e) => setPaMax(e.target.value)} placeholder="Max price" type="number" className={`${inputCls} w-1/2`} />
+
+        <div className="grid grid-cols-2 gap-2">
+          <input value={paCities} onChange={(e) => setPaCities(e.target.value)}
+            placeholder="City ▾ (e.g. Hamilton, Caledonia)" className={`${inputCls} col-span-2`} />
+
+          <select value={paMin} onChange={(e) => setPaMin(e.target.value)} className={selectCls}>
+            <option value="">Min Price ▾</option>
+            <option value="100000">$100k</option>
+            <option value="200000">$200k</option>
+            <option value="300000">$300k</option>
+            <option value="400000">$400k</option>
+            <option value="500000">$500k</option>
+            <option value="600000">$600k</option>
+            <option value="750000">$750k</option>
+            <option value="1000000">$1M</option>
+            <option value="1500000">$1.5M</option>
+          </select>
+          <select value={paMax} onChange={(e) => setPaMax(e.target.value)} className={selectCls}>
+            <option value="">Max Price ▾</option>
+            <option value="200000">$200k</option>
+            <option value="300000">$300k</option>
+            <option value="400000">$400k</option>
+            <option value="500000">$500k</option>
+            <option value="600000">$600k</option>
+            <option value="750000">$750k</option>
+            <option value="1000000">$1M</option>
+            <option value="1500000">$1.5M</option>
+            <option value="2000000">$2M</option>
+          </select>
+
+          <select value={paBeds} onChange={(e) => setPaBeds(e.target.value)} className={selectCls}>
+            <option value="">Any Beds ▾</option>
+            <option value="1">1+ beds</option>
+            <option value="2">2+ beds</option>
+            <option value="3">3+ beds</option>
+            <option value="4">4+ beds</option>
+            <option value="5">5+ beds</option>
+          </select>
+          <select value={paBaths} onChange={(e) => setPaBaths(e.target.value)} className={selectCls}>
+            <option value="">Any Baths ▾</option>
+            <option value="1">1+ baths</option>
+            <option value="2">2+ baths</option>
+            <option value="3">3+ baths</option>
+            <option value="4">4+ baths</option>
+          </select>
+
+          <select value={paHomeType} onChange={(e) => setPaHomeType(e.target.value)} className={`${selectCls} col-span-2`}>
+            <option value="">Home Type ▾</option>
+            <option value="Detached">Detached</option>
+            <option value="Semi-Detached">Semi-Detached</option>
+            <option value="Townhouse">Townhouse</option>
+            <option value="Condo">Condo / Apartment</option>
+          </select>
         </div>
-        <div className="flex gap-2">
-          <input value={paBeds} onChange={(e) => setPaBeds(e.target.value)} placeholder="Min beds" type="number" className={`${inputCls} w-1/2`} />
-          <input value={paBaths} onChange={(e) => setPaBaths(e.target.value)} placeholder="Min baths" type="number" className={`${inputCls} w-1/2`} />
-        </div>
+
         <div className="flex gap-2">
           <button onClick={savePropertyAlert} disabled={saving}
             className="w-fit rounded bg-[#111] px-4 py-2 text-sm font-medium text-white disabled:opacity-50">
