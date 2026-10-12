@@ -12,6 +12,7 @@ type PreconSub = {
 
 type Alert = {
   id: string;
+  criteria: { type?: string; types?: string[] } | null;
   criteria_summary: string | null;
   is_active: boolean;
   created_at: string;
@@ -23,6 +24,16 @@ type RateSub = {
   is_active: boolean;
   created_at: string;
 };
+
+function typeBadges(c: Alert["criteria"]): string {
+  if (!c) return "";
+  const types: string[] = [];
+  if (c.type === "rent" || c.types?.includes("rent")) types.push("For Rent");
+  if (c.type === "sale" || c.type === "buy" || c.types?.includes("sale") || !c.type) types.push("For Sale");
+  // If no explicit type, default to showing nothing (don't assume)
+  if (!c.type && !c.types) return "";
+  return types.join(" · ");
+}
 
 function filterLabel(f: PreconSub["filters"]): string {
   if (!f || f.all_projects) return "All projects";
@@ -42,6 +53,7 @@ export function LeadSubscriptionsPanel({ leadId }: { leadId: string }) {
   const [rates, setRates] = useState<RateSub[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
+  const [addType, setAddType] = useState<"picker" | "precon" | "property" | "rate" | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [cities, setCities] = useState("");
   const [minPrice, setMinPrice] = useState("");
@@ -72,7 +84,7 @@ export function LeadSubscriptionsPanel({ leadId }: { leadId: string }) {
           max_price: maxPrice ? Number(maxPrice) : undefined,
         }),
       });
-      if (res.ok) { setShowAdd(false); setCities(""); setMinPrice(""); setMaxPrice(""); load(); }
+      if (res.ok) { setShowAdd(false); setAddType(null); setCities(""); setMinPrice(""); setMaxPrice(""); load(); }
     } finally { setSaving(false); }
   }
 
@@ -155,11 +167,48 @@ export function LeadSubscriptionsPanel({ leadId }: { leadId: string }) {
       <section>
         <div className="mb-3 flex items-center justify-between">
           <h3 className="text-sm font-semibold">Pre-con alerts</h3>
-          <button onClick={() => setShowAdd(!showAdd)} className="text-sm text-accent underline">
-            {showAdd ? "Cancel" : "+ Add subscription"}
+          <button onClick={() => { setAddType(addType ? null : "picker"); setShowAdd(false); }} className="text-sm text-accent underline">
+            {addType ? "Cancel" : "+ Add subscription"}
           </button>
         </div>
-        {showAdd ? (
+        {addType === "picker" ? (
+          <div className="mb-3 flex flex-col gap-2 rounded-lg border border-line bg-white p-4">
+            <p className="text-xs text-muted">What type of subscription?</p>
+            <div className="flex flex-col gap-2">
+              <button onClick={() => { setAddType("precon"); setShowAdd(true); }}
+                className="rounded-lg border border-line px-4 py-3 text-left text-sm font-medium hover:bg-gray-50">
+                Pre-con alerts <span className="block text-xs font-normal text-muted">New project launches</span>
+              </button>
+              <button onClick={() => { setAddType("property"); }}
+                className="rounded-lg border border-line px-4 py-3 text-left text-sm font-medium hover:bg-gray-50">
+                Property alert <span className="block text-xs font-normal text-muted">For Sale / For Rent listings</span>
+              </button>
+              <button onClick={() => { setAddType("rate"); }}
+                className="rounded-lg border border-line px-4 py-3 text-left text-sm font-medium hover:bg-gray-50">
+                BoC rate alerts <span className="block text-xs font-normal text-muted">Bank of Canada rate changes</span>
+              </button>
+            </div>
+          </div>
+        ) : null}
+        {addType === "property" ? (
+          <div className="mb-3 rounded-lg border border-line bg-white p-4">
+            <p className="text-sm text-muted">Property alerts are created from the <a href="/property-alerts" className="text-accent underline">public signup form</a>. Use the lead's email there, and it'll link automatically.</p>
+            <button onClick={() => setAddType(null)} className="mt-2 text-sm text-muted underline">Close</button>
+          </div>
+        ) : null}
+        {addType === "rate" ? (
+          <div className="mb-3 rounded-lg border border-line bg-white p-4">
+            <p className="text-sm">Subscribe this lead to BoC rate updates?</p>
+            <div className="mt-2 flex gap-2">
+              <button onClick={() => { addRate(); setAddType(null); }} disabled={saving}
+                className="w-fit rounded bg-[#111] px-4 py-2 text-sm font-medium text-white disabled:opacity-50">
+                {saving ? "Adding…" : "Subscribe"}
+              </button>
+              <button onClick={() => setAddType(null)} className="text-sm text-muted underline">Cancel</button>
+            </div>
+          </div>
+        ) : null}
+        {showAdd && addType === "precon" ? (
           <div className="mb-3 flex flex-col gap-2 rounded-lg border border-line bg-white p-4">
             <p className="text-xs text-muted">Leave blank for all projects, or set filters:</p>
             <input value={cities} onChange={(e) => setCities(e.target.value)} placeholder="Cities (comma separated, e.g. Caledonia, Hamilton)"
@@ -225,12 +274,20 @@ export function LeadSubscriptionsPanel({ leadId }: { leadId: string }) {
         <h3 className="mb-3 text-sm font-semibold">Property alerts</h3>
         {alerts.length === 0 ? <p className="text-sm text-muted">No property alerts.</p> : (
           <ul className="flex flex-col gap-2">
-            {alerts.map((a) => (
-              <li key={a.id} className="rounded-lg border border-line bg-white px-4 py-3">
-                <div className="text-sm font-medium">{a.criteria_summary || "Saved search"}</div>
-                <div className="text-xs text-muted">{a.is_active ? "Active" : "Paused"}</div>
-              </li>
-            ))}
+            {alerts.map((a) => {
+              const badges = typeBadges(a.criteria);
+              return (
+                <li key={a.id} className="rounded-lg border border-line bg-white px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <div className="text-sm font-medium">{a.criteria_summary || "Saved search"}</div>
+                    {badges ? (
+                      <span className="rounded-full bg-[#f0f4fa] px-2 py-0.5 text-[11px] font-medium text-[#0066cc]">{badges}</span>
+                    ) : null}
+                  </div>
+                  <div className="text-xs text-muted">{a.is_active ? "Active" : "Paused"}</div>
+                </li>
+              );
+            })}
           </ul>
         )}
       </section>

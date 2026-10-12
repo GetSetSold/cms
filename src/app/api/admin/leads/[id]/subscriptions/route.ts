@@ -11,7 +11,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const cms = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
 
   const [alerts, precon] = await Promise.all([
-    cms.from("saved_searches").select("id, criteria_summary, is_active, created_at").eq("lead_id", id).order("created_at", { ascending: false }),
+    cms.from("saved_searches").select("id, criteria, criteria_summary, is_active, created_at").eq("lead_id", id).order("created_at", { ascending: false }),
     cms.from("precon_subscribers").select("id, email, filters, is_active, created_at").eq("lead_id", id).order("created_at", { ascending: false }),
   ]);
   const { data: rates } = await cms.from("rate_subscribers").select("id, email, is_active, created_at").eq("lead_id", id).order("created_at", { ascending: false });
