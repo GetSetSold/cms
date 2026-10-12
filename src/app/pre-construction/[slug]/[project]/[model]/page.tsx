@@ -114,6 +114,7 @@ export default async function ModelPage({ params }: { params: Promise<{ slug: st
             <div className="mb-6">
               <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted">Promotion</div>
               <h2 className="font-display mt-1 text-2xl font-extrabold">Limited-Time Offers</h2>
+              <span className="mt-3 block h-[3px] w-12 rounded-[var(--radius-btn,999px)] bg-gradient-to-r from-primary to-primary/20" />
             </div>
             <div className="flex flex-col gap-4">
               {limitedTimePromo ? <PromoBanner promo={limitedTimePromo} /> : null}

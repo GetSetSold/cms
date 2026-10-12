@@ -84,17 +84,32 @@ export function PreconBoxHeader({
           <h1 className="font-display text-3xl font-extrabold tracking-tight md:text-5xl">{title}</h1>
           {lede ? <div className="max-w-2xl text-[15px] leading-relaxed text-white/70">{lede}</div> : null}
           {facts?.length ? (
-            <div className="flex flex-wrap gap-2.5 pt-1">
-              {facts.map((f) => (
-                <span
-                  key={f.label ?? f.value}
-                  className="flex items-center gap-2 rounded-[var(--radius-btn,999px)] border border-white/15 bg-white/5 px-4 py-2 text-[13px] font-semibold"
-                >
-                  <b className="text-[15px]">{f.value}</b>
-                  {f.label ? <span className="text-[12px] font-medium text-white/60">{f.label}</span> : null}
-                </span>
-              ))}
-            </div>
+            <>
+              {/* Mobile: stacked pills, 2-col grid (style A) */}
+              <div className="grid grid-cols-2 gap-2.5 pt-1 md:hidden">
+                {facts.map((f) => (
+                  <span
+                    key={f.label ?? f.value}
+                    className="flex flex-col items-center rounded-[16px] border border-white/20 bg-white/[0.04] px-4 py-3 text-center"
+                  >
+                    <b className="text-[17px] font-bold">{f.value}</b>
+                    {f.label ? <span className="mt-0.5 text-[11px] font-medium uppercase tracking-[0.08em] text-white/55">{f.label}</span> : null}
+                  </span>
+                ))}
+              </div>
+              {/* Desktop: compact chips (style C) */}
+              <div className="hidden flex-wrap gap-2 pt-1 md:flex">
+                {facts.map((f) => (
+                  <span
+                    key={f.label ?? f.value}
+                    className="flex min-w-[110px] flex-1 flex-col items-center rounded-[12px] bg-white/[0.08] px-4 py-2.5 text-center"
+                  >
+                    <b className="text-[15px] font-bold">{f.value}</b>
+                    {f.label ? <span className="mt-0.5 text-[10px] font-medium uppercase tracking-[0.1em] text-white/50">{f.label}</span> : null}
+                  </span>
+                ))}
+              </div>
+            </>
           ) : null}
           {ctas?.length ? (
             <div className="flex flex-wrap gap-3 pt-2">
