@@ -133,7 +133,7 @@ export async function getBuilder(slug: string) {
   if (!builder) return null;
   const [{ data: projects }, { data: promoRows }] = await Promise.all([
     supabase.from("projects").select("*").eq("builder_id", builder.id),
-    supabase.from("promos").select("*").eq("builder_id", builder.id).is("project_id", null),
+    supabase.from("promos").select("*").eq("builder_id", builder.id),
   ]);
   const active = ((promoRows ?? []) as Promo[]).filter(isPromoActive);
   const promos = active.filter((p) => p.promo_type === "builder");
