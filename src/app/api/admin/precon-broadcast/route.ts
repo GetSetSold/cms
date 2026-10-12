@@ -68,13 +68,40 @@ export async function POST(req: NextRequest) {
       recipients = [{ email: normalized, first_name: null, lead_id: newLead?.id ?? null, unsubscribe_token: "test" }];
     }
   } else {
+    // Query leads with active pre-con subscriptions in payload.
     const price = Number(project.p_start_price) || 0;
-    const { data: rpcRecipients, error } = await cms.rpc("get_broadcast_recipients", {
-      p_city: project.city || "",
-      p_price: price,
-    });
+    const city = (project.city || "").toLowerCase();
+    const { data: leads, error } = await cms
+      .from("leads")
+      .select("id, payload, contact:contact_id(email, name)")
+      .not("payload->precon_subscriptions", "is", null);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    recipients = (rpcRecipients ?? []) as any[];
+    recipients = ((leads ?? []) as any[]).flatMap((l: any) => {
+      const subs: any[] = Array.isArray(l.payload?.precon_subscriptions) ? l.payload.precon_subscriptions : [];
+      const email = l.contact?.email;
+      if (!email) return [];
+      return subs.filter((s: any) => {
+        if (!s.is_active) return false;
+        const f = s.filters || {};
+        if (f.all_projects) return true;
+        if (f.cities?.length && !f.cities.some((c: string) => c.toLowerCase() === city)) return false;
+        if (f.min_price && price < f.min_price) return false;
+        if (f.max_price && price > f.max_price) return false;
+        return true;
+      }).map((s: any) => ({
+        email: String(email).toLowerCase(),
+        first_name: l.contact?.name ? String(l.contact.name).split(" ")[0] : null,
+        lead_id: l.id,
+        unsubscribe_token: s.id,
+      }));
+    });
+    // Dedupe by email.
+    const seen = new Set<string>();
+    recipients = recipients.filter((r: any) => {
+      if (seen.has(r.email)) return false;
+      seen.add(r.email);
+      return true;
+    });
   }
 
   if (recipients.length === 0) {

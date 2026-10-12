@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { randomUUID } from "crypto";
 
 /**
  * Public pre-con alert signup.
+ * Stores subscription in leads.payload->precon_subscriptions (no new tables).
  * POST /api/precon-alerts/subscribe { email, firstName?, filters? }
- * filters: { all_projects?: boolean, cities?: string[], min_price?: number, max_price?: number }
  */
 export async function POST(req: NextRequest) {
   try {
@@ -19,7 +20,6 @@ export async function POST(req: NextRequest) {
     const supabase = createClient(url, key);
     const normalized = email.toLowerCase().trim();
 
-    // Normalize filters: default to all projects.
     const cleanFilters = {
       all_projects: filters?.all_projects !== false,
       cities: Array.isArray(filters?.cities) ? filters.cities.filter(Boolean).slice(0, 10) : [],
@@ -30,40 +30,70 @@ export async function POST(req: NextRequest) {
       cleanFilters.all_projects = false;
     }
 
-    // Find or create CRM lead (buyer, source precon).
-    let leadId: string | null = null;
-    const { data: existingLead } = await supabase
-      .from("leads")
+    // Find existing lead via contacts table.
+    const { data: contact } = await supabase
+      .from("contacts")
       .select("id")
       .eq("email", normalized)
       .maybeSingle();
-    if (existingLead) {
-      leadId = existingLead.id;
-    } else {
+
+    let leadId: string | null = null;
+    let payload: any = {};
+    if (contact) {
+      const { data: lead } = await supabase
+        .from("leads")
+        .select("id, payload")
+        .eq("contact_id", (contact as any).id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (lead) {
+        leadId = (lead as any).id;
+        payload = (lead as any).payload ?? {};
+      }
+    }
+
+    // Create lead + contact if none exists.
+    if (!leadId) {
+      const { data: newContact } = await supabase
+        .from("contacts")
+        .insert({ email: normalized, name: firstName?.trim() || null, type: "lead", source: "pre-con-alerts" })
+        .select("id")
+        .single();
+      const contactId = (newContact as any)?.id ?? null;
       const { data: newLead } = await supabase
         .from("leads")
         .insert({
-          email: normalized,
-          service: "buyer",
-          source_path: "/pre-con-alerts",
-          custom_fields: { source: "precon-alert" },
+          contact_id: contactId,
+          form_type: "precon_alert",
+          payload: { source: "precon-alert" },
           status: "new",
         })
-        .select("id")
+        .select("id, payload")
         .single();
-      if (newLead) leadId = newLead.id;
+      leadId = (newLead as any)?.id ?? null;
+      payload = (newLead as any)?.payload ?? {};
     }
 
-    // Check for existing subscription with same filters.
-    // Use RPC to bypass PostgREST schema cache.
-    const { data: subId, error: rpcError } = await supabase.rpc("upsert_precon_subscription", {
-      p_email: normalized,
-      p_first_name: firstName?.trim() || null,
-      p_lead_id: leadId,
-      p_filters: cleanFilters,
-    });
-    if (rpcError) return NextResponse.json({ error: rpcError.message }, { status: 500 });
-    return NextResponse.json({ ok: true, alreadyExists: false, id: subId });
+    if (!leadId) return NextResponse.json({ error: "Could not create lead" }, { status: 500 });
+
+    // Add subscription to payload.
+    const subs: any[] = Array.isArray(payload.precon_subscriptions) ? payload.precon_subscriptions : [];
+    const alreadyExists = subs.some((s: any) => s.is_active);
+    if (!alreadyExists) {
+      subs.push({
+        id: randomUUID(),
+        filters: cleanFilters,
+        is_active: true,
+        created_at: new Date().toISOString(),
+      });
+      const { error } = await supabase.from("leads")
+        .update({ payload: { ...payload, precon_subscriptions: subs } })
+        .eq("id", leadId);
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ ok: true, alreadyExists });
   } catch (e) {
     return NextResponse.json({ error: e instanceof Error ? e.message : "Server error" }, { status: 500 });
   }
