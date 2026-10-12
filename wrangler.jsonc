@@ -9,12 +9,15 @@
   "vars": {
     "NEXT_PUBLIC_SITE_URL": "https://cms.rohit-910.workers.dev",
     "NEXT_PUBLIC_SUPABASE_URL": "https://atmrjimfcydgjonlxzvr.supabase.co",
-    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "REPLACE_WITH_ATMRJIMFCYDGJONLXZVR_ANON_KEY",
     "NEXT_PUBLIC_MLS_SUPABASE_URL": "https://nkjxlwuextxzpeohutxz.supabase.co",
     "NEXT_PUBLIC_MLS_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ranhsd3VleHR4enBlb2h1dHh6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzIzMTI5MDQsImV4cCI6MjA0Nzg4ODkwNH0.S3qHT3l4FDV5T0uPI8q4SDo6O-87ApDILE2OTsWLg_0",
-    "NEXT_PUBLIC_PRECON_SUPABASE_URL": "https://atmrjimfcydgjonlxzvr.supabase.co",
-    "PRECON_SUPABASE_ANON_KEY": "PASTE_THE_ANON_KEY_HERE"
+    "NEXT_PUBLIC_PRECON_SUPABASE_URL": "https://atmrjimfcydgjonlxzvr.supabase.co"
   }
+  // Secrets (set in Cloudflare dashboard, NOT here):
+  // - NEXT_PUBLIC_SUPABASE_ANON_KEY (atmrjimfcydgjonlxzvr anon key)
+  // - SUPABASE_SERVICE_ROLE_KEY (atmrjimfcydgjonlxzvr service_role key)
+  // - PRECON_SUPABASE_ANON_KEY, PRECON_SUPABASE_SERVICE_KEY
+  // - NEXT_PUBLIC_PRECON_SUPABASE_ANON_KEY
   // Custom domain: add in the Cloudflare dashboard (Workers > cms > Settings > Domains)
   // or uncomment:
   // "routes": [{ "pattern": "www.yourdomain.com", "custom_domain": true }]
