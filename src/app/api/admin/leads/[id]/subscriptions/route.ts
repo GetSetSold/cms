@@ -10,11 +10,23 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const { id } = await params;
   const cms = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
 
-  const { data, error } = await cms.rpc("get_lead_subscriptions", { p_lead_id: id });
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  const [alerts, precon] = await Promise.all([
+    cms.from("saved_searches").select("id, criteria_summary, is_active, created_at").eq("lead_id", id).order("created_at", { ascending: false }),
+    cms.rpc("get_lead_precon_subs", { p_lead_id: id }),
+  ]);
+
+  // Fallback: if RPC missing, try direct table query
+  let preconList: any[] = [];
+  if (precon.error) {
+    const direct = await cms.from("precon_subscriptions").select("id, email, filters, is_active, created_at").eq("lead_id", id).order("created_at", { ascending: false });
+    preconList = direct.data ?? [];
+  } else {
+    preconList = (precon.data as any) ?? [];
+  }
+
   return NextResponse.json({
-    propertyAlerts: (data as any)?.propertyAlerts ?? [],
-    precon: (data as any)?.precon ?? [],
+    propertyAlerts: alerts.data ?? [],
+    precon: preconList,
   });
 }
 
