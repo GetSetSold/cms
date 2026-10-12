@@ -65,7 +65,7 @@ export function buildPreconBroadcastEmail(opts: {
     <div style="background:#0a0a1a;border-radius:10px;padding:16px 20px;margin:0 0 20px;text-align:center;">
       <div style="font-size:12px;font-weight:700;letter-spacing:1.5px;color:#fff;margin-bottom:6px;">BUYER CASHBACK OFFER</div>
       <div style="font-size:28px;font-weight:800;color:#fff;">$${cashbackAmount.toLocaleString()} <span style="font-size:16px;font-weight:600;">cashback</span></div>
-      <div style="font-size:13px;color:#aaa;margin-top:6px;">When you buy through GetSetSold.ca</div>
+      <div style="font-size:13px;color:#aaa;margin-top:6px;">When you buy with us</div>
     </div>` : "";
 
   return brandedEmail({
