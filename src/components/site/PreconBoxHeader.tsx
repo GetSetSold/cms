@@ -90,7 +90,7 @@ export function PreconBoxHeader({
                 {facts.map((f) => (
                   <span
                     key={f.label ?? f.value}
-                    className="flex flex-col items-center rounded-[16px] border border-white/20 bg-white/[0.04] px-4 py-3 text-center"
+                    className="flex flex-col items-center rounded-[16px] border border-white/20 bg-white/[0.05] px-4 py-3 text-center"
                   >
                     <b className="text-[17px] font-bold">{f.value}</b>
                     {f.label ? <span className="mt-0.5 text-[11px] font-medium uppercase tracking-[0.08em] text-white/55">{f.label}</span> : null}
@@ -102,7 +102,7 @@ export function PreconBoxHeader({
                 {facts.map((f) => (
                   <span
                     key={f.label ?? f.value}
-                    className="flex min-w-[110px] flex-1 flex-col items-center rounded-[12px] bg-white/[0.08] px-4 py-2.5 text-center"
+                    className="flex min-w-[110px] flex-1 flex-col items-center rounded-[12px] bg-white/[0.10] px-4 py-2.5 text-center"
                   >
                     <b className="text-[15px] font-bold">{f.value}</b>
                     {f.label ? <span className="mt-0.5 text-[10px] font-medium uppercase tracking-[0.1em] text-white/50">{f.label}</span> : null}
@@ -112,15 +112,15 @@ export function PreconBoxHeader({
             </>
           ) : null}
           {ctas?.length ? (
-            <div className="flex flex-wrap gap-3 pt-2">
+            <div className="flex w-full gap-3 pt-2 max-md:flex-row md:w-auto md:flex-wrap">
               {ctas.map((c) => (
                 <a
                   key={c.label}
                   href={c.href}
                   className={
                     c.variant === "primary"
-                      ? "flex h-12 items-center rounded-[var(--radius-btn)] bg-primary px-7 text-[15px] font-bold text-white"
-                      : "flex h-12 items-center rounded-[var(--radius-btn)] border border-white/60 bg-white/10 px-7 text-[15px] font-bold text-white backdrop-blur-sm"
+                      ? "flex h-12 flex-1 items-center justify-center rounded-[var(--radius-btn)] border border-white/40 bg-primary px-4 text-[15px] font-bold text-white md:flex-none md:px-7"
+                      : "flex h-12 flex-1 items-center justify-center rounded-[var(--radius-btn)] border border-white/60 bg-white/10 px-4 text-[15px] font-bold text-white backdrop-blur-sm md:flex-none md:px-7"
                   }
                 >
                   {c.label}
