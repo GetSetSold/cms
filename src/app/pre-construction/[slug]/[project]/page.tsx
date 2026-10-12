@@ -118,6 +118,16 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
                   {promo.badge ? <span className="w-fit rounded-[var(--radius-label)] bg-primary/10 px-2.5 py-1 text-[11px] font-bold text-primary">{promo.badge}</span> : null}
                   <strong className="text-sm">{promo.title}</strong>
                   {promo.description ? <span className="text-xs text-muted">{promo.description}</span> : null}
+                  {(promo.items ?? []).length ? (
+                    <ul className="mt-1 flex flex-col gap-1">
+                      {(promo.items ?? []).map((it) => (
+                        <li key={it.id} className="text-xs text-muted">
+                          {it.badge ? <span className="mr-1.5 font-bold uppercase text-ink">{it.badge}</span> : null}
+                          {it.title}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
                 </div>
               ))}
             </div>
