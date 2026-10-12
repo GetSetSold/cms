@@ -9,6 +9,7 @@ import { AttachedForms } from "./AttachedForms";
 import { FormSubmissionCard } from "./FormSubmissionCard";
 import { AttachFormButton } from "./AttachFormButton";
 import { ShareApplicationButton } from "./ShareApplicationButton";
+import { LeadSubscriptionsPanel } from "./LeadSubscriptionsPanel";
 import { LeadValuations } from "./LeadValuations";
 import { ShareFormButton } from "./ShareFormButton";
 import { ShareManager } from "./ShareManager";
@@ -593,7 +594,7 @@ function CommunicationPanel({ lead }: { lead: Lead }) {
   );
 }
 
-const TABS = ["overview", "form", "communication", "opportunities", "activity", "flows", "matches"] as const;
+const TABS = ["overview", "form", "communication", "opportunities", "subscriptions", "activity", "flows", "matches"] as const;
 type Tab = (typeof TABS)[number];
 
 export function LeadTabs({ lead, activities, queue, enrollments, availableFlows }: {
@@ -602,10 +603,10 @@ export function LeadTabs({ lead, activities, queue, enrollments, availableFlows 
   const [tab, setTab] = useState<Tab>("overview");
   const counts: Record<Tab, number | null> = {
     overview: null, form: Object.keys(lead.custom_fields ?? {}).length || null,
-    communication: null, opportunities: null,
+    communication: null, opportunities: null, subscriptions: null,
     activity: activities.length || null, flows: enrollments.filter((e) => e.status === "active").length || null, matches: null,
   };
-  const titles: Record<Tab, string> = { overview: "Overview", form: "Forms", communication: "Communication", opportunities: "Opportunities", activity: "Activity", flows: "Flows & automations", matches: "Matches" };
+  const titles: Record<Tab, string> = { overview: "Overview", form: "Forms", communication: "Communication", opportunities: "Opportunities", subscriptions: "Subscriptions", activity: "Activity", flows: "Flows & automations", matches: "Matches" };
 
   return (
     <div className="flex flex-col gap-5">
@@ -627,6 +628,7 @@ export function LeadTabs({ lead, activities, queue, enrollments, availableFlows 
       {tab === "form" ? <FormSubmissionPanel lead={lead} /> : null}
       {tab === "communication" ? <CommunicationPanel lead={lead} /> : null}
       {tab === "opportunities" ? <Opportunities leadId={lead.id} /> : null}
+      {tab === "subscriptions" ? <LeadSubscriptionsPanel leadId={lead.id} /> : null}
       {tab === "activity" ? <ActivityPanel leadId={lead.id} activities={activities} queue={queue} /> : null}
       {tab === "flows" ? <FlowsPanel leadId={lead.id} enrollments={enrollments} available={availableFlows} /> : null}
       {tab === "matches" ? <MatchesPanel /> : null}

@@ -15,13 +15,13 @@ export async function GET(req: NextRequest) {
   const supabase = createClient(url, key);
 
   const { data } = await supabase
-    .from("precon_subscribers")
+    .from("precon_subscriptions")
     .select("id")
     .eq("unsubscribe_token", token)
     .maybeSingle();
 
   if (data) {
-    await supabase.from("precon_subscribers").update({ is_active: false }).eq("id", data.id);
+    await supabase.from("precon_subscriptions").update({ is_active: false }).eq("id", data.id);
   }
 
   const site = process.env.NEXT_PUBLIC_SITE_URL || "https://cms.rohit-910.workers.dev";
