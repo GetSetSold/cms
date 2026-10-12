@@ -32,7 +32,7 @@ function Form({ initial, builders, projects, onSave, onCancel }: {
         <label className="label">Start date<input type="date" className="input" value={d.start_date ?? ""} onChange={(e) => set("start_date", e.target.value || null)} /></label>
         <label className="label">End date<input type="date" className="input" value={d.end_date ?? ""} onChange={(e) => set("end_date", e.target.value || null)} /></label>
       </div>
-      <label className="label">Bullets (one per line)<textarea className="textarea" rows={3} value={(d.bullets ?? []).join("\n")} onChange={(e) => set("bullets", e.target.value.split("\n").map((s) => s.trim()).filter(Boolean))} /></label>
+      <label className="label">Bullets (one per line)<textarea className="textarea" rows={3} value={(Array.isArray(d.bullets) ? d.bullets : []).join("\n")} onChange={(e) => set("bullets", e.target.value.split("\n").map((s) => s.trim()).filter(Boolean))} /></label>
       <div className="grid grid-cols-2 gap-3">
         <label className="label">Builder
           <select className="input" value={d.builder_id ?? ""} onChange={(e) => set("builder_id", e.target.value ? Number(e.target.value) : null)}>
