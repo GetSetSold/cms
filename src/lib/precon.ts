@@ -47,10 +47,22 @@ export type HomeModel = {
   project_id: string | null; model_image_url: string | null; phase_id: number | null;
 };
 
+export type PromoItem = {
+  id: string;
+  promo_id: string;
+  title: string | null;
+  badge: string | null;
+  icon_url: string | null;
+  description: string | null;
+  sort_order: number | null;
+  show: boolean | null;
+};
+
 export type Promo = {
   id: string; title: string | null; description: string | null; badge: string | null; show: boolean | null;
   start_date: string | null; end_date: string | null; builder_id: number | null; project_id: string | null;
   bullets: string[] | null; display_page: string | null; promo_type: string | null;
+  items?: PromoItem[];
 };
 
 export type Amenity = { id: string; title: string | null; description: string | null; icon_url: string | null };
@@ -127,6 +139,26 @@ function isPromoActive(p: Promo): boolean {
   return true;
 }
 
+/** Attach visible sub-items to each promo (one query for all). */
+async function withPromoItems(promos: Promo[]): Promise<Promo[]> {
+  const ids = promos.map((p) => p.id);
+  if (!ids.length) return promos;
+  const supabase = createPreconClient();
+  const { data } = await supabase
+    .from("promo_items")
+    .select("*")
+    .in("promo_id", ids)
+    .eq("show", true)
+    .order("sort_order")
+    .order("created_at");
+  const byPromo = new Map<string, PromoItem[]>();
+  for (const it of (data ?? []) as PromoItem[]) {
+    if (!byPromo.has(it.promo_id)) byPromo.set(it.promo_id, []);
+    byPromo.get(it.promo_id)!.push(it);
+  }
+  return promos.map((p) => ({ ...p, items: byPromo.get(p.id) ?? [] }));
+}
+
 /** Check if promo should display on a given page type. Empty/null = show everywhere. */
 function showOnPage(p: Promo, page: "builder" | "project" | "model"): boolean {
   if (!p.display_page) return true;
@@ -141,7 +173,9 @@ export async function getBuilder(slug: string) {
     supabase.from("projects").select("*").eq("builder_id", builder.id),
     supabase.from("promos").select("*").eq("builder_id", builder.id),
   ]);
-  const active = ((promoRows ?? []) as Promo[]).filter(isPromoActive).filter((p) => showOnPage(p, "builder"));
+  const active = await withPromoItems(
+    ((promoRows ?? []) as Promo[]).filter(isPromoActive).filter((p) => showOnPage(p, "builder"))
+  );
   const promos = active.filter((p) => p.promo_type === "builder");
   const limitedTimePromo = active.find((p) => p.promo_type === "limited_time");
   return { builder: builder as Builder, projects: (projects ?? []) as Project[], promos, limitedTimePromo };
@@ -257,10 +291,10 @@ export async function getProject(builderSlug: string, projectSlug: string) {
   const activeJunction = junctionPromoList.filter((p) => p.promo_type === "limited_time").filter(isPromoActive).filter((p) => showOnPage(p, "project"));
   const activeProjectPromos = (projectPromos ?? []).filter(isPromoActive).filter((p) => showOnPage(p, "project"));
   const activeBuilderLimited = ((builderPromos ?? []) as Promo[]).filter((p) => p.promo_type === "limited_time").filter(isPromoActive).filter((p) => showOnPage(p, "project"));
-  const limitedTimePromo = (activeJunction[0] ?? activeProjectPromos[0] ?? activeBuilderLimited[0]) as Promo | undefined;
+  const limitedTimePromo = await withPromoItems([(activeJunction[0] ?? activeProjectPromos[0] ?? activeBuilderLimited[0]) as Promo | undefined].filter(Boolean) as Promo[]).then((r) => r[0]);
 
   // Small builder-wide incentive cards (same ones shown on the builder page).
-  const promos = ((builderPromos ?? []) as Promo[]).filter((p) => p.promo_type === "builder").filter(isPromoActive).filter((p) => showOnPage(p, "project"));
+  const promos = await withPromoItems(((builderPromos ?? []) as Promo[]).filter((p) => p.promo_type === "builder").filter(isPromoActive).filter((p) => showOnPage(p, "project")));
 
   let amenities: Amenity[] = [];
   const amenityIds = (projectAmenities ?? []).map((a) => a.amenity_id);

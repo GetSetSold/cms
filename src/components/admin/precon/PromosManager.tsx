@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import type { Promo } from "@/lib/precon";
+import { PromoItemsManager } from "./PromoItemsManager";
 
 type Builder = { id: number; builder_name: string | null };
 type Project = { id: string; project_name: string | null; builder_id: number | null };
@@ -59,6 +60,7 @@ function Form({ initial, builders, projects, onSave, onCancel }: {
         </label>
       </div>
       <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={d.show ?? true} onChange={(e) => set("show", e.target.checked)} /> Show on site</label>
+      {initial.id ? <PromoItemsManager promoId={initial.id} /> : <p className="text-xs text-muted">Save this promo first, then add sub-items.</p>}
       <div className="flex gap-2">
         <button type="button" className="btn" onClick={onCancel}>Cancel</button>
         <button type="button" className="btn-primary" onClick={() => onSave(d)} disabled={!d.title?.trim()}>Save</button>
