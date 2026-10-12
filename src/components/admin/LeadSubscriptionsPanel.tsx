@@ -26,6 +26,22 @@ type RateSub = {
   created_at: string;
 };
 
+function alertLabel(a: Alert): string {
+  // Prefer showing actual cities from criteria over the stored summary
+  const c = a.criteria ?? {};
+  const cities = Array.isArray(c.cities) ? c.cities : c.city ? [c.city] : [];
+  if (cities.length > 0) {
+    const parts = [cities.join(", ")];
+    if (c.minPrice || c.maxPrice) {
+      const lo = c.minPrice ? `$${Number(c.minPrice).toLocaleString()}` : "";
+      const hi = c.maxPrice ? `$${Number(c.maxPrice).toLocaleString()}` : "";
+      parts.push(`${lo}–${hi}`.replace(/^–/, "Under "));
+    }
+    return parts.join(" · ");
+  }
+  return a.criteria_summary || "Saved search";
+}
+
 function typeBadges(c: Alert["criteria"]): string {
   if (!c || !c.type) return "";
   if (c.type === "rent") return "For Rent";
@@ -429,7 +445,7 @@ export function LeadSubscriptionsPanel({ leadId }: { leadId: string }) {
                 <li key={a.id} className="flex items-center justify-between rounded-lg border border-line bg-white px-4 py-3">
                   <div>
                     <div className="flex items-center gap-2">
-                      <div className="text-sm font-medium">{a.criteria_summary || "Saved search"}</div>
+                      <div className="text-sm font-medium">{alertLabel(a)}</div>
                       {badges ? (
                         <span className="rounded-full bg-[#f0f4fa] px-2 py-0.5 text-[11px] font-medium text-[#0066cc]">{badges}</span>
                       ) : null}

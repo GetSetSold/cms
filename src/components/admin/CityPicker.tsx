@@ -67,7 +67,7 @@ export function CityPicker({ selected, onChange }: { selected: string[]; onChang
             </button>
             {filtered.length === 0 ? (
               <p className="px-3 py-2 text-sm text-muted">No cities found</p>
-            ) : filtered.slice(0, 100).map((city) => (
+            ) : filtered.map((city) => (
               <label key={city} className="flex cursor-pointer items-center gap-2 px-3 py-1.5 text-sm hover:bg-gray-50">
                 <input type="checkbox" checked={temp.includes(city)} onChange={() => toggle(city)}
                   className="h-4 w-4 rounded" />
