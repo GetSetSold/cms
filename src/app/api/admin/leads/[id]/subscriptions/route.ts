@@ -57,10 +57,25 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   try { await requireStaff(["admin", "editor"]); }
   catch { return NextResponse.json({ error: "Not authorized." }, { status: 401 }); }
   const body = await req.json();
-  const { subscription_id, is_active } = body;
+  const { subscription_id, is_active, filters } = body;
   if (!subscription_id) return NextResponse.json({ error: "subscription_id required" }, { status: 400 });
   const cms = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
-  const { error } = await cms.from("precon_subscribers").update({ is_active: !!is_active }).eq("id", subscription_id);
+
+  const update: any = {};
+  if (typeof is_active === "boolean") update.is_active = is_active;
+  if (filters && typeof filters === "object") {
+    const clean = {
+      all_projects: filters.all_projects !== false,
+      cities: Array.isArray(filters.cities) ? filters.cities.filter(Boolean).slice(0, 10) : [],
+      min_price: typeof filters.min_price === "number" && filters.min_price > 0 ? Math.round(filters.min_price) : null,
+      max_price: typeof filters.max_price === "number" && filters.max_price > 0 ? Math.round(filters.max_price) : null,
+    };
+    if (clean.cities.length || clean.min_price || clean.max_price) clean.all_projects = false;
+    update.filters = clean;
+  }
+  if (Object.keys(update).length === 0) return NextResponse.json({ error: "Nothing to update" }, { status: 400 });
+
+  const { error } = await cms.from("precon_subscribers").update(update).eq("id", subscription_id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
 }

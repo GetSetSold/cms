@@ -34,6 +34,7 @@ export function LeadSubscriptionsPanel({ leadId }: { leadId: string }) {
   const [precon, setPrecon] = useState<PreconSub[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [cities, setCities] = useState("");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
@@ -63,6 +64,39 @@ export function LeadSubscriptionsPanel({ leadId }: { leadId: string }) {
         }),
       });
       if (res.ok) { setShowAdd(false); setCities(""); setMinPrice(""); setMaxPrice(""); load(); }
+    } finally { setSaving(false); }
+  }
+
+  async function startEdit(s: PreconSub) {
+    setEditingId(s.id);
+    setShowAdd(false);
+    setCities((s.filters.cities ?? []).join(", "));
+    setMinPrice(s.filters.min_price ? String(s.filters.min_price) : "");
+    setMaxPrice(s.filters.max_price ? String(s.filters.max_price) : "");
+  }
+
+  function cancelEdit() {
+    setEditingId(null);
+    setCities(""); setMinPrice(""); setMaxPrice("");
+  }
+
+  async function saveEdit() {
+    if (!editingId) return;
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/admin/leads/${leadId}/subscriptions`, {
+        method: "PATCH", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          subscription_id: editingId,
+          filters: {
+            all_projects: !cities.trim() && !minPrice && !maxPrice,
+            cities: cities.split(",").map((c) => c.trim()).filter(Boolean),
+            min_price: minPrice ? Number(minPrice) : undefined,
+            max_price: maxPrice ? Number(maxPrice) : undefined,
+          },
+        }),
+      });
+      if (res.ok) { cancelEdit(); load(); }
     } finally { setSaving(false); }
   }
 
@@ -112,17 +146,41 @@ export function LeadSubscriptionsPanel({ leadId }: { leadId: string }) {
         {precon.length === 0 ? <p className="text-sm text-muted">No pre-con subscriptions.</p> : (
           <ul className="flex flex-col gap-2">
             {precon.map((s) => (
-              <li key={s.id} className="flex items-center justify-between rounded-lg border border-line bg-white px-4 py-3">
-                <div>
-                  <div className="text-sm font-medium">{filterLabel(s.filters)}</div>
-                  <div className="text-xs text-muted">{s.email} · {s.is_active ? "Active" : "Paused"}</div>
-                </div>
-                <div className="flex gap-2">
-                  <button onClick={() => toggle(s.id, s.is_active)} className="text-xs text-accent underline">
-                    {s.is_active ? "Pause" : "Resume"}
-                  </button>
-                  <button onClick={() => remove(s.id)} className="text-xs text-red-600 underline">Remove</button>
-                </div>
+              <li key={s.id} className="rounded-lg border border-line bg-white px-4 py-3">
+                {editingId === s.id ? (
+                  <div className="flex flex-col gap-2">
+                    <p className="text-xs text-muted">Edit filters (blank for all projects):</p>
+                    <input value={cities} onChange={(e) => setCities(e.target.value)} placeholder="Cities (comma separated)"
+                      className="rounded border border-line px-3 py-2 text-sm" />
+                    <div className="flex gap-2">
+                      <input value={minPrice} onChange={(e) => setMinPrice(e.target.value)} placeholder="Min price" type="number"
+                        className="w-1/2 rounded border border-line px-3 py-2 text-sm" />
+                      <input value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} placeholder="Max price" type="number"
+                        className="w-1/2 rounded border border-line px-3 py-2 text-sm" />
+                    </div>
+                    <div className="flex gap-2">
+                      <button onClick={saveEdit} disabled={saving}
+                        className="w-fit rounded bg-[#111] px-4 py-2 text-sm font-medium text-white disabled:opacity-50">
+                        {saving ? "Saving…" : "Save"}
+                      </button>
+                      <button onClick={cancelEdit} className="text-sm text-muted underline">Cancel</button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-sm font-medium">{filterLabel(s.filters)}</div>
+                      <div className="text-xs text-muted">{s.email} · {s.is_active ? "Active" : "Paused"}</div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button onClick={() => startEdit(s)} className="text-xs text-accent underline">Edit</button>
+                      <button onClick={() => toggle(s.id, s.is_active)} className="text-xs text-accent underline">
+                        {s.is_active ? "Pause" : "Resume"}
+                      </button>
+                      <button onClick={() => remove(s.id)} className="text-xs text-red-600 underline">Remove</button>
+                    </div>
+                  </div>
+                )}
               </li>
             ))}
           </ul>
