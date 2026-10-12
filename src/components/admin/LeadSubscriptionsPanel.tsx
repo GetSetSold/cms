@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { CityPicker } from "./CityPicker";
 
 type PreconSub = {
   id: string;
@@ -57,7 +58,7 @@ export function LeadSubscriptionsPanel({ leadId }: { leadId: string }) {
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   // Property alert form fields
-  const [paCities, setPaCities] = useState("");
+  const [paCities, setPaCities] = useState<string[]>([]);
   const [paType, setPaType] = useState("sale");
   const [paMin, setPaMin] = useState("");
   const [paMax, setPaMax] = useState("");
@@ -167,13 +168,13 @@ export function LeadSubscriptionsPanel({ leadId }: { leadId: string }) {
 
   // Property alert CRUD
   function resetPaForm() {
-    setPaCities(""); setPaType("sale"); setPaMin(""); setPaMax(""); setPaBeds(""); setPaBaths(""); setPaHomeType("");
+    setPaCities([]); setPaType("sale"); setPaMin(""); setPaMax(""); setPaBeds(""); setPaBaths(""); setPaHomeType("");
   }
 
   function startEditAlert(a: Alert) {
     const c = a.criteria ?? {};
     setEditingAlertId(a.id);
-    setPaCities(Array.isArray(c.cities) ? c.cities.join(", ") : (c.city || ""));
+    setPaCities(Array.isArray(c.cities) ? c.cities : (c.city ? [c.city] : []));
     setPaType(c.type === "rent" ? "rent" : c.type === "sale" ? "sale" : "all");
     setPaMin(c.minPrice ? String(c.minPrice) : "");
     setPaMax(c.maxPrice ? String(c.maxPrice) : "");
@@ -186,7 +187,7 @@ export function LeadSubscriptionsPanel({ leadId }: { leadId: string }) {
     setSaving(true);
     try {
       const payload = {
-        cities: paCities.split(",").map((s) => s.trim()).filter(Boolean),
+        cities: paCities,
         type: paType === "all" ? undefined : paType,
         minPrice: paMin ? Number(paMin) : undefined,
         maxPrice: paMax ? Number(paMax) : undefined,
@@ -248,8 +249,7 @@ export function LeadSubscriptionsPanel({ leadId }: { leadId: string }) {
         </div>
 
         <div className="grid grid-cols-2 gap-2">
-          <input value={paCities} onChange={(e) => setPaCities(e.target.value)}
-            placeholder="City ▾ (e.g. Hamilton, Caledonia)" className={`${inputCls} col-span-2`} />
+          <CityPicker selected={paCities} onChange={setPaCities} />
 
           <select value={paMin} onChange={(e) => setPaMin(e.target.value)} className={selectCls}>
             <option value="">Min Price ▾</option>
