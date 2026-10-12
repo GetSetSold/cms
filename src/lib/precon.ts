@@ -288,13 +288,17 @@ export async function getProject(builderSlug: string, projectSlug: string) {
   }
 
   // Limited-time banner: junction-linked first, then direct project_id, then builder-wide fallback.
-  const activeJunction = junctionPromoList.filter((p) => p.promo_type === "limited_time").filter(isPromoActive).filter((p) => showOnPage(p, "project"));
-  const activeProjectPromos = (projectPromos ?? []).filter(isPromoActive).filter((p) => showOnPage(p, "project"));
-  const activeBuilderLimited = ((builderPromos ?? []) as Promo[]).filter((p) => p.promo_type === "limited_time").filter(isPromoActive).filter((p) => showOnPage(p, "project"));
-  const limitedTimePromo = await withPromoItems([(activeJunction[0] ?? activeProjectPromos[0] ?? activeBuilderLimited[0]) as Promo | undefined].filter(Boolean) as Promo[]).then((r) => r[0]);
+  // Pool includes model-visible promos too so getModel can pick them up.
+  const pageVisible = (p: Promo) => showOnPage(p, "project") || showOnPage(p, "model");
+  const activeJunction = junctionPromoList.filter((p) => p.promo_type === "limited_time").filter(isPromoActive).filter(pageVisible);
+  const activeProjectPromos = (projectPromos ?? []).filter(isPromoActive).filter(pageVisible);
+  const activeBuilderLimited = ((builderPromos ?? []) as Promo[]).filter((p) => p.promo_type === "limited_time").filter(isPromoActive).filter(pageVisible);
+  const limitedTimePool = await withPromoItems([(activeJunction[0] ?? activeProjectPromos[0] ?? activeBuilderLimited[0]) as Promo | undefined].filter(Boolean) as Promo[]);
+  const limitedTimePromo = limitedTimePool.find((p) => showOnPage(p, "project"));
 
   // Small builder-wide incentive cards (same ones shown on the builder page).
-  const promos = await withPromoItems(((builderPromos ?? []) as Promo[]).filter((p) => p.promo_type === "builder").filter(isPromoActive).filter((p) => showOnPage(p, "project")));
+  const promoPool = await withPromoItems(((builderPromos ?? []) as Promo[]).filter((p) => p.promo_type === "builder").filter(isPromoActive).filter(pageVisible));
+  const promos = promoPool.filter((p) => showOnPage(p, "project"));
 
   let amenities: Amenity[] = [];
   const amenityIds = (projectAmenities ?? []).map((a) => a.amenity_id);
@@ -307,6 +311,9 @@ export async function getProject(builderSlug: string, projectSlug: string) {
     builder: builder as Builder, project: project as Project,
     phases: (phases ?? []) as Phase[], models: (models ?? []) as HomeModel[],
     promos, limitedTimePromo, amenities, gallery,
+    // Full pool (project + model visible) so getModel can pick model promos.
+    _promoPool: promoPool,
+    _limitedTimePool: limitedTimePool,
   };
 }
 
@@ -340,8 +347,8 @@ export async function getModel(builderSlug: string, projectSlug: string, modelSl
   return {
     builder: found.builder, project: found.project, model, siblings,
     floorplans: (floorplans ?? []) as Floorplan[], gallery,
-    limitedTimePromo: found.limitedTimePromo && showOnPage(found.limitedTimePromo, "model") ? found.limitedTimePromo : undefined,
-    promos: (found.promos ?? []).filter((p: Promo) => showOnPage(p, "model")),
+    limitedTimePromo: (found._limitedTimePool ?? []).find((p: Promo) => showOnPage(p, "model")),
+    promos: (found._promoPool ?? []).filter((p: Promo) => showOnPage(p, "model")),
     paymentPlan: paymentPlans?.[0] as PaymentPlan | undefined, installments,
     amenities: found.amenities,
   };
