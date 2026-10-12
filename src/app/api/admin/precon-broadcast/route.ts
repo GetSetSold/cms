@@ -116,11 +116,6 @@ export async function POST(req: NextRequest) {
   const failures: { email: string; error: string }[] = [];
 
   for (const r of recipients) {
-    if (!r.lead_id) {
-      failed++;
-      failures.push({ email: r.email, error: "No linked lead" });
-      continue;
-    }
     const html = buildPreconBroadcastEmail({
       project, promos: (promos ?? []) as any, models: orderedModels,
       siteUrl,
