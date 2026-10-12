@@ -10,6 +10,7 @@ import { PointsMap } from "@/components/site/PointsMap";
 import { getCashbackAmount, formatCashback } from "@/lib/cashback";
 import { PreconSectionHeader } from "@/components/site/PreconSectionHeader";
 import { PreconLeadSection } from "@/components/site/PreconLeadSection";
+import { amenityIconFromUrl } from "@/components/site/PreconAmenityIcons";
 import { PreconBoxHeader } from "@/components/site/PreconBoxHeader";
 import { PreconCardCta } from "@/components/site/PreconCardCta";
 import { CardArrowButton } from "@/components/site/CardArrowButton";
@@ -112,23 +113,48 @@ export default async function BuilderOrCityPage({ params }: { params: Promise<{ 
             <section className="mt-[50px] border-t border-line">
 <div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
               <PreconSectionHeader eyebrow="Incentives" heading="Current Builder Incentives" />
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
-                {promos.map((promo) => (
-                  <div key={promo.id} className="flex flex-col gap-2 rounded-[var(--radius-md)] border border-line bg-white p-5 pl-6" style={{ borderLeftWidth: 4, borderLeftColor: "var(--color-primary)" }}>
-                    {promo.badge ? <span className="w-fit rounded-[var(--radius-label)] bg-primary/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-primary">{promo.badge}</span> : null}
-                    <strong className="text-sm">{promo.title}</strong>
-                    {(promo.items ?? []).length ? (
-                      <ul className="mt-1 flex flex-col gap-1.5">
-                        {(promo.items ?? []).map((it) => (
-                          <li key={it.id} className="text-xs text-muted">
-                            {it.badge ? <span className="mr-1.5 font-bold uppercase text-ink">{it.badge}</span> : null}
-                            {it.title}
-                          </li>
-                        ))}
-                      </ul>
-                    ) : null}
-                  </div>
-                ))}
+              <div className="flex flex-col gap-8">
+                {promos.map((promo) => {
+                  const items = (promo.items ?? []).filter((it) => it.show !== false);
+                  if (items.length) {
+                    // Promo with sub-items: header + item blocks in a row
+                    return (
+                      <div key={promo.id}>
+                        <div className="mb-3 flex items-center gap-2">
+                          {promo.badge ? <span className="rounded-[var(--radius-label)] bg-primary/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-primary">{promo.badge}</span> : null}
+                          <strong className="text-base">{promo.title}</strong>
+                        </div>
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
+                          {items.map((it) => {
+                            const iconEl = amenityIconFromUrl(it.icon_url, it.title);
+                            return (
+                            <div key={it.id} className="flex flex-col gap-2 rounded-[var(--radius-md)] border border-line bg-white p-5">
+                              {iconEl ? (
+                                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-soft [&>svg]:h-5 [&>svg]:w-5">
+                                  {iconEl}
+                                </span>
+                              ) : null}
+                              {it.badge ? <span className="w-fit rounded-[var(--radius-label)] bg-soft px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-muted">{it.badge}</span> : null}
+                              <strong className="text-sm">{it.title}</strong>
+                              {it.description ? <span className="text-xs text-muted">{it.description}</span> : null}
+                            </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  }
+                  // Plain promo: single card
+                  return (
+                    <div key={promo.id} className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
+                      <div className="flex flex-col gap-2 rounded-[var(--radius-md)] border border-line bg-white p-5 pl-6" style={{ borderLeftWidth: 4, borderLeftColor: "var(--color-primary)" }}>
+                        {promo.badge ? <span className="w-fit rounded-[var(--radius-label)] bg-primary/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-primary">{promo.badge}</span> : null}
+                        <strong className="text-sm">{promo.title}</strong>
+                        {promo.description ? <span className="text-xs text-muted">{promo.description}</span> : null}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 </section>
