@@ -126,7 +126,7 @@ export async function POST(req: NextRequest) {
     try {
       const { error } = await cms.functions.invoke("send-email", {
         body: {
-          lead_id: r.lead_id,
+          to_email: r.email,
           subject,
           body: html,
           from_email: "noreply@getsetsold.ca",
