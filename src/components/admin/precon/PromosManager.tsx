@@ -113,7 +113,7 @@ export function PromosManager({ initial, builders, projects }: {
       {[...groups.entries()].map(([bid, promos]) => (
         <div key={bid} className="overflow-hidden rounded-2xl bg-white">
           <div className="border-b border-line bg-ground/50 px-4 py-3">
-            <span className="text-sm font-bold">All Promos for {builderName(bid)}</span>
+            <span className="text-sm font-bold">Promos for {builderName(bid)}</span>
             <span className="ml-2 text-xs text-muted">{promos.length} promos</span>
           </div>
           <table className="w-full text-left">
