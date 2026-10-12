@@ -1,19 +1,19 @@
 "use client";
 import { useEffect, useState } from "react";
+import { LibraryPicker } from "./LibraryPicker";
 
 type Img = { id: string; image_url: string | null; alt_text: string | null; sort_order: number | null };
 type Assignment = { id: string; image_id: string | null; related_type: string; related_id: string };
-type Named = { id: string; name: string };
+type Named = { id: string; name: string; kind: string };
 
 function AssignModal({ image, onClose, onSave }: {
   image: Img;
   onClose: () => void;
   onSave: (assignments: { related_type: string; related_id: string }[]) => void;
 }) {
-  const [builders, setBuilders] = useState<Named[]>([]);
-  const [projects, setProjects] = useState<Named[]>([]);
-  const [models, setModels] = useState<Named[]>([]);
+  const [places, setPlaces] = useState<Named[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [picking, setPicking] = useState(false);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -23,9 +23,12 @@ function AssignModal({ image, onClose, onSave }: {
       fetch("/api/admin/precon/models").then((r) => r.json()).catch(() => ({ models: [] })),
       fetch(`/api/admin/precon/image-assignments?image_id=${image.id}`).then((r) => r.json()).catch(() => ({})),
     ]).then(([b, p, m, a]) => {
-      setBuilders((b.builders ?? []).map((x: any) => ({ id: String(x.id), name: x.builder_name ?? x.id })));
-      setProjects((p.projects ?? []).map((x: any) => ({ id: x.id, name: x.project_name ?? x.id })));
-      setModels((m.models ?? []).map((x: any) => ({ id: x.id, name: x.model_name ?? x.id })));
+      const all: Named[] = [
+        ...((b.builders ?? []).map((x: any) => ({ id: String(x.id), name: x.builder_name ?? x.id, kind: "Builder" }))),
+        ...((p.projects ?? []).map((x: any) => ({ id: x.id, name: x.project_name ?? x.id, kind: "Project" }))),
+        ...((m.models ?? []).map((x: any) => ({ id: x.id, name: x.model_name ?? x.id, kind: "Model" }))),
+      ];
+      setPlaces(all);
       const existing = a.assignments ?? a.image_assignments ?? [];
       setSelected(new Set(existing.map((x: Assignment) => `${x.related_type}:${x.related_id}`)));
     });
@@ -48,42 +51,28 @@ function AssignModal({ image, onClose, onSave }: {
     setSaving(false);
   }
 
-  function Section({ title, type, items }: { title: string; type: string; items: Named[] }) {
-    if (!items.length) return null;
-    return (
-      <div>
-        <div className="mb-2 text-xs font-bold uppercase tracking-wide text-muted">{title}</div>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-          {items.map((item) => {
-            const key = `${type}:${item.id}`;
-            const active = selected.has(key);
-            return (
-              <button
-                key={key}
-                type="button"
-                onClick={() => toggle(key)}
-                className={`rounded-xl border px-3 py-2.5 text-left text-sm ${active ? "border-primary bg-primary/10 font-bold" : "border-line bg-white"}`}
-              >
-                <span className="mr-1.5">{active ? "✅" : "⚪"}</span>
-                {item.name}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-    );
-  }
+  const kindToType: Record<string, string> = { Builder: "builder", Project: "project", Model: "home_model" };
+  const selectedPlaces = places.filter((pl) => selected.has(`${kindToType[pl.kind]}:${pl.id}`));
+  const available = places.filter((pl) => !selected.has(`${kindToType[pl.kind]}:${pl.id}`));
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
-      <div className="max-h-[85vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-ground p-6" onClick={(e) => e.stopPropagation()}>
+      <div className="max-h-[85vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-ground p-6" onClick={(e) => e.stopPropagation()}>
         <div className="mb-1 text-base font-bold">Assign image</div>
-        <p className="mb-4 text-sm text-muted">Tick every place this image should appear.</p>
+        <p className="mb-4 text-sm text-muted">Choose where this image appears.</p>
         {image.image_url ? <img src={image.image_url} alt="" className="mb-4 h-24 w-auto rounded-lg object-cover" /> : null}
-        <div className="flex flex-col gap-5">
-          <Section title="Builders" type="builder" items={builders} />
-          <Section title="Projects" type="project" items={projects} />
-          <Section title="Models" type="home_model" items={models} />
+        <div className="mb-3 flex items-center justify-between">
+          <span className="text-xs font-bold uppercase tracking-wide text-muted">Assigned to ({selectedPlaces.length})</span>
+          <button type="button" className="rounded-full bg-ink px-3 py-1 text-xs font-bold text-white" onClick={() => setPicking(true)}>+ Add</button>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {selectedPlaces.map((pl) => (
+            <span key={`${pl.kind}:${pl.id}`} className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-xs font-medium">
+              <span className="text-muted">{pl.kind}</span> {pl.name}
+              <button type="button" onClick={() => toggle(`${kindToType[pl.kind]}:${pl.id}`)} className="ml-1 text-muted hover:text-red-700" aria-label="Remove">×</button>
+            </span>
+          ))}
+          {!selectedPlaces.length ? <span className="text-xs text-muted">Not assigned anywhere yet.</span> : null}
         </div>
         <div className="mt-6 flex gap-2">
           <button type="button" className="btn" onClick={onClose}>Cancel</button>
@@ -91,6 +80,21 @@ function AssignModal({ image, onClose, onSave }: {
             {saving ? "Saving…" : "Save Assignments"}
           </button>
         </div>
+        {picking ? (
+          <LibraryPicker
+            title="Assign image to…"
+            items={available}
+            getSearchText={(pl) => `${pl.name} ${pl.kind}`}
+            renderItem={(pl) => (
+              <>
+                <span className="rounded bg-soft px-2 py-0.5 text-[11px] font-bold uppercase text-muted">{pl.kind}</span>
+                <span className="text-sm">{pl.name}</span>
+              </>
+            )}
+            onPick={(pl) => toggle(`${kindToType[pl.kind]}:${pl.id}`)}
+            onClose={() => setPicking(false)}
+          />
+        ) : null}
       </div>
     </div>
   );
