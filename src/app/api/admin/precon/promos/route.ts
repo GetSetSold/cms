@@ -6,7 +6,7 @@ export async function GET() {
   try { await requireStaff(["admin", "editor"]); }
   catch { return NextResponse.json({ error: "Not authorized." }, { status: 401 }); }
   const supabase = createPreconServiceClient();
-  const { data, error } = await supabase.from("promos").select("*").order("created_at", { ascending: false });
+  const { data, error } = await supabase.from("promos").select("*").order("title");
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ promos: data });
 }

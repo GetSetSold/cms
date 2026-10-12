@@ -10,7 +10,7 @@ export default async function PreconAdminPage() {
     supabase.from("projects").select("*").order("project_name"),
     supabase.from("home_models").select("*").order("model_name"),
     supabase.from("amenities").select("*").order("title"),
-    supabase.from("promos").select("*").order("created_at", { ascending: false }),
+    supabase.from("promos").select("*").order("title"),
   ]);
   return (
     <PreconAdminTabs
