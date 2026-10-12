@@ -17,8 +17,13 @@ create index if not exists precon_subscriptions_email_idx on public.precon_subsc
 create index if not exists precon_subscriptions_lead_idx on public.precon_subscriptions (lead_id);
 create index if not exists precon_subscriptions_token_idx on public.precon_subscriptions (unsubscribe_token);
 
--- Migrate existing subscribers as "all projects" subscriptions.
-insert into public.precon_subscriptions (lead_id, email, first_name, filters, is_active, unsubscribe_token)
-select lead_id, email, first_name, '{"all_projects": true}'::jsonb, is_active, unsubscribe_token
-from public.precon_subscribers
-on conflict do nothing;
+-- Migrate existing subscribers as "all projects" subscriptions (if the old table exists).
+do $$
+begin
+  if exists (select 1 from information_schema.tables where table_schema = 'public' and table_name = 'precon_subscribers') then
+    insert into public.precon_subscriptions (lead_id, email, first_name, filters, is_active, unsubscribe_token)
+    select lead_id, email, first_name, '{"all_projects": true}'::jsonb, is_active, unsubscribe_token
+    from public.precon_subscribers
+    on conflict do nothing;
+  end if;
+end $$;
