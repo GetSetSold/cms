@@ -55,31 +55,15 @@ export async function POST(req: NextRequest) {
     }
 
     // Check for existing subscription with same filters.
-    const { data: existing } = await supabase
-      .from("precon_subscriptions")
-      .select("id, is_active")
-      .eq("email", normalized)
-      .maybeSingle();
-
-    if (existing) {
-      // Update filters and reactivate.
-      await supabase.from("precon_subscriptions").update({
-        is_active: true,
-        filters: cleanFilters,
-        first_name: firstName?.trim() || null,
-        lead_id: leadId,
-      }).eq("id", existing.id);
-      return NextResponse.json({ ok: true, alreadyExists: true });
-    }
-
-    const { error } = await supabase.from("precon_subscriptions").insert({
-      email: normalized,
-      first_name: firstName?.trim() || null,
-      lead_id: leadId,
-      filters: cleanFilters,
+    // Use RPC to bypass PostgREST schema cache.
+    const { data: subId, error: rpcError } = await supabase.rpc("upsert_precon_subscription", {
+      p_email: normalized,
+      p_first_name: firstName?.trim() || null,
+      p_lead_id: leadId,
+      p_filters: cleanFilters,
     });
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    return NextResponse.json({ ok: true });
+    if (rpcError) return NextResponse.json({ error: rpcError.message }, { status: 500 });
+    return NextResponse.json({ ok: true, alreadyExists: false, id: subId });
   } catch (e) {
     return NextResponse.json({ error: e instanceof Error ? e.message : "Server error" }, { status: 500 });
   }
