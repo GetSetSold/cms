@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { randomUUID } from "crypto";
 
 /**
  * Public pre-con alert signup.
- * Stores subscription in leads.payload->precon_subscriptions.
- * No contacts table dependency.
+ * Uses precon_subscriptions table directly.
  */
 export async function POST(req: NextRequest) {
   try {
@@ -30,49 +28,30 @@ export async function POST(req: NextRequest) {
       cleanFilters.all_projects = false;
     }
 
-    // Find existing lead by email in payload.
-    const { data: leads } = await supabase
-      .from("leads")
-      .select("id, payload")
-      .eq("payload->>email", normalized)
-      .limit(1);
+    // Check existing.
+    const { data: existing } = await supabase
+      .from("precon_subscriptions")
+      .select("id, is_active")
+      .eq("email", normalized)
+      .maybeSingle();
 
-    let leadId: string | null = (leads as any[])?.[0]?.id ?? null;
-    let payload: any = (leads as any[])?.[0]?.payload ?? {};
-
-    if (!leadId) {
-      const { data: newLead, error: leadError } = await supabase
-        .from("leads")
-        .insert({
-          form_type: "precon_alert",
-          payload: { email: normalized, first_name: firstName?.trim() || null, source: "precon-alert" },
-          status: "new",
-        })
-        .select("id, payload")
-        .single();
-      if (leadError) return NextResponse.json({ error: "Lead: " + leadError.message }, { status: 500 });
-      leadId = (newLead as any)?.id ?? null;
-      payload = (newLead as any)?.payload ?? {};
+    if (existing) {
+      if (!(existing as any).is_active) {
+        await supabase.from("precon_subscriptions")
+          .update({ is_active: true, filters: cleanFilters })
+          .eq("id", (existing as any).id);
+      }
+      return NextResponse.json({ ok: true, alreadyExists: true });
     }
 
-    if (!leadId) return NextResponse.json({ error: "Could not create lead" }, { status: 500 });
-
-    const subs: any[] = Array.isArray(payload.precon_subscriptions) ? payload.precon_subscriptions : [];
-    const alreadyExists = subs.some((s: any) => s.is_active);
-    if (!alreadyExists) {
-      subs.push({
-        id: randomUUID(),
-        filters: cleanFilters,
-        is_active: true,
-        created_at: new Date().toISOString(),
-      });
-      const { error } = await supabase.from("leads")
-        .update({ payload: { ...payload, precon_subscriptions: subs } })
-        .eq("id", leadId);
-      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
-    return NextResponse.json({ ok: true, alreadyExists });
+    const { error } = await supabase.from("precon_subscriptions").insert({
+      email: normalized,
+      first_name: firstName?.trim() || null,
+      filters: cleanFilters,
+      is_active: true,
+    });
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ ok: true, alreadyExists: false });
   } catch (e) {
     return NextResponse.json({ error: e instanceof Error ? e.message : "Server error" }, { status: 500 });
   }
