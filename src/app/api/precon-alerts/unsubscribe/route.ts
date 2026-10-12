@@ -14,15 +14,7 @@ export async function GET(req: NextRequest) {
   if (!url || !key) return NextResponse.json({ error: "Server misconfigured" }, { status: 500 });
   const supabase = createClient(url, key);
 
-  const { data } = await supabase
-    .from("precon_subscriptions")
-    .select("id")
-    .eq("unsubscribe_token", token)
-    .maybeSingle();
-
-  if (data) {
-    await supabase.from("precon_subscriptions").update({ is_active: false }).eq("id", data.id);
-  }
+  const { error } = await supabase.rpc("precon_unsubscribe", { p_token: token });
 
   const site = process.env.NEXT_PUBLIC_SITE_URL || "https://cms.rohit-910.workers.dev";
   return NextResponse.redirect(`${site}/pre-con-alerts/unsubscribed`);
