@@ -12,7 +12,7 @@ export async function GET() {
   catch { return NextResponse.json({ error: "Not authorized." }, { status: 401 }); }
 
   const { data, error } = await cms()
-    .from("precon_subscribers")
+    .from("precon_subscriptions")
     .select("id, email, first_name, is_active, created_at")
     .order("created_at", { ascending: false });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -46,13 +46,13 @@ export async function POST(req: NextRequest) {
     if (newLead) leadId = newLead.id;
   }
 
-  const { data: existing } = await db.from("precon_subscribers").select("id, is_active").eq("email", normalized).maybeSingle();
+  const { data: existing } = await db.from("precon_subscriptions").select("id, is_active").eq("email", normalized).maybeSingle();
   if (existing) {
-    if (!existing.is_active) await db.from("precon_subscribers").update({ is_active: true }).eq("id", existing.id);
+    if (!existing.is_active) await db.from("precon_subscriptions").update({ is_active: true }).eq("id", existing.id);
     return NextResponse.json({ ok: true, alreadyExists: true });
   }
 
-  const { data, error } = await db.from("precon_subscribers").insert({
+  const { data, error } = await db.from("precon_subscriptions").insert({
     email: normalized, first_name: firstName?.trim() || null, lead_id: leadId,
   }).select("id").single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -66,7 +66,7 @@ export async function DELETE(req: NextRequest) {
 
   const id = req.nextUrl.searchParams.get("id");
   if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
-  const { error } = await cms().from("precon_subscribers").delete().eq("id", id);
+  const { error } = await cms().from("precon_subscriptions").delete().eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
 }
