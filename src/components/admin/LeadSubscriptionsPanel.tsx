@@ -12,7 +12,7 @@ type PreconSub = {
 
 type Alert = {
   id: string;
-  criteria: { type?: string; types?: string[] } | null;
+  criteria: Record<string, any> | null;
   criteria_summary: string | null;
   is_active: boolean;
   created_at: string;
@@ -55,9 +55,17 @@ export function LeadSubscriptionsPanel({ leadId }: { leadId: string }) {
   const [showAdd, setShowAdd] = useState(false);
   const [addType, setAddType] = useState<"picker" | "precon" | "property" | "rate" | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingAlertId, setEditingAlertId] = useState<string | null>(null);
   const [cities, setCities] = useState("");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
+  // Property alert form fields
+  const [paCities, setPaCities] = useState("");
+  const [paType, setPaType] = useState("sale");
+  const [paMin, setPaMin] = useState("");
+  const [paMax, setPaMax] = useState("");
+  const [paBeds, setPaBeds] = useState("");
+  const [paBaths, setPaBaths] = useState("");
   const [saving, setSaving] = useState(false);
 
   async function load() {
@@ -159,6 +167,99 @@ export function LeadSubscriptionsPanel({ leadId }: { leadId: string }) {
     load();
   }
 
+  // Property alert CRUD
+  function resetPaForm() {
+    setPaCities(""); setPaType("sale"); setPaMin(""); setPaMax(""); setPaBeds(""); setPaBaths("");
+  }
+
+  function startEditAlert(a: Alert) {
+    const c = a.criteria ?? {};
+    setEditingAlertId(a.id);
+    setPaCities(Array.isArray(c.cities) ? c.cities.join(", ") : (c.city || ""));
+    setPaType(c.type === "rent" ? "rent" : "sale");
+    setPaMin(c.minPrice ? String(c.minPrice) : "");
+    setPaMax(c.maxPrice ? String(c.maxPrice) : "");
+    setPaBeds(c.beds || "");
+    setPaBaths(c.baths || "");
+  }
+
+  async function savePropertyAlert() {
+    setSaving(true);
+    try {
+      const payload = {
+        cities: paCities.split(",").map((s) => s.trim()).filter(Boolean),
+        type: paType,
+        minPrice: paMin ? Number(paMin) : undefined,
+        maxPrice: paMax ? Number(paMax) : undefined,
+        beds: paBeds || undefined,
+        baths: paBaths || undefined,
+      };
+      let res;
+      if (editingAlertId) {
+        res = await fetch(`/api/admin/leads/${leadId}/property-alert`, {
+          method: "PATCH", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ search_id: editingAlertId, ...payload }),
+        });
+      } else {
+        res = await fetch(`/api/admin/leads/${leadId}/property-alert`, {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      }
+      if (res.ok) { setEditingAlertId(null); setAddType(null); resetPaForm(); load(); }
+    } finally { setSaving(false); }
+  }
+
+  async function toggleAlert(id: string, is_active: boolean) {
+    await fetch(`/api/admin/leads/${leadId}/property-alert`, {
+      method: "PATCH", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ search_id: id, is_active: !is_active }),
+    });
+    load();
+  }
+
+  async function removeAlert(id: string) {
+    if (!confirm("Remove this property alert?")) return;
+    await fetch(`/api/admin/leads/${leadId}/property-alert?search_id=${id}`, { method: "DELETE" });
+    load();
+  }
+
+  function paForm() {
+    const inputCls = "rounded border border-line px-3 py-2 text-sm";
+    return (
+      <div className="mb-3 flex flex-col gap-2 rounded-lg border border-line bg-white p-4">
+        <p className="text-xs text-muted">{editingAlertId ? "Edit property alert:" : "New property alert:"}</p>
+        <div className="flex gap-2">
+          <button type="button" onClick={() => setPaType("sale")}
+            className={`flex-1 rounded-lg border px-3 py-2 text-sm font-medium ${paType === "sale" ? "border-[#111] bg-[#111] text-white" : "border-line"}`}>
+            For Sale
+          </button>
+          <button type="button" onClick={() => setPaType("rent")}
+            className={`flex-1 rounded-lg border px-3 py-2 text-sm font-medium ${paType === "rent" ? "border-[#111] bg-[#111] text-white" : "border-line"}`}>
+            For Rent
+          </button>
+        </div>
+        <input value={paCities} onChange={(e) => setPaCities(e.target.value)} placeholder="Cities (comma separated, e.g. Hamilton, Caledonia)"
+          className={inputCls} />
+        <div className="flex gap-2">
+          <input value={paMin} onChange={(e) => setPaMin(e.target.value)} placeholder="Min price" type="number" className={`${inputCls} w-1/2`} />
+          <input value={paMax} onChange={(e) => setPaMax(e.target.value)} placeholder="Max price" type="number" className={`${inputCls} w-1/2`} />
+        </div>
+        <div className="flex gap-2">
+          <input value={paBeds} onChange={(e) => setPaBeds(e.target.value)} placeholder="Min beds" type="number" className={`${inputCls} w-1/2`} />
+          <input value={paBaths} onChange={(e) => setPaBaths(e.target.value)} placeholder="Min baths" type="number" className={`${inputCls} w-1/2`} />
+        </div>
+        <div className="flex gap-2">
+          <button onClick={savePropertyAlert} disabled={saving}
+            className="w-fit rounded bg-[#111] px-4 py-2 text-sm font-medium text-white disabled:opacity-50">
+            {saving ? "Saving…" : editingAlertId ? "Save changes" : "Add alert"}
+          </button>
+          <button onClick={() => { setEditingAlertId(null); setAddType(null); resetPaForm(); }} className="text-sm text-muted underline">Cancel</button>
+        </div>
+      </div>
+    );
+  }
+
   if (loading) return <p className="text-sm text-muted">Loading subscriptions…</p>;
 
   return (
@@ -190,12 +291,7 @@ export function LeadSubscriptionsPanel({ leadId }: { leadId: string }) {
             </div>
           </div>
         ) : null}
-        {addType === "property" ? (
-          <div className="mb-3 rounded-lg border border-line bg-white p-4">
-            <p className="text-sm text-muted">Property alerts are created from the <a href="/property-alerts" className="text-accent underline">public signup form</a>. Use the lead's email there, and it'll link automatically.</p>
-            <button onClick={() => setAddType(null)} className="mt-2 text-sm text-muted underline">Close</button>
-          </div>
-        ) : null}
+        {addType === "property" ? paForm() : null}
         {addType === "rate" ? (
           <div className="mb-3 rounded-lg border border-line bg-white p-4">
             <p className="text-sm">Subscribe this lead to BoC rate updates?</p>
@@ -269,22 +365,32 @@ export function LeadSubscriptionsPanel({ leadId }: { leadId: string }) {
         )}
       </section>
 
-      {/* Property alerts (read-only here; managed via /property-alerts/manage) */}
+      {/* Property alerts */}
       <section>
         <h3 className="mb-3 text-sm font-semibold">Property alerts</h3>
-        {alerts.length === 0 ? <p className="text-sm text-muted">No property alerts.</p> : (
+        {editingAlertId ? paForm() : null}
+        {alerts.length === 0 && !editingAlertId ? <p className="text-sm text-muted">No property alerts.</p> : (
           <ul className="flex flex-col gap-2">
             {alerts.map((a) => {
               const badges = typeBadges(a.criteria);
               return (
-                <li key={a.id} className="rounded-lg border border-line bg-white px-4 py-3">
-                  <div className="flex items-center gap-2">
-                    <div className="text-sm font-medium">{a.criteria_summary || "Saved search"}</div>
-                    {badges ? (
-                      <span className="rounded-full bg-[#f0f4fa] px-2 py-0.5 text-[11px] font-medium text-[#0066cc]">{badges}</span>
-                    ) : null}
+                <li key={a.id} className="flex items-center justify-between rounded-lg border border-line bg-white px-4 py-3">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <div className="text-sm font-medium">{a.criteria_summary || "Saved search"}</div>
+                      {badges ? (
+                        <span className="rounded-full bg-[#f0f4fa] px-2 py-0.5 text-[11px] font-medium text-[#0066cc]">{badges}</span>
+                      ) : null}
+                    </div>
+                    <div className="text-xs text-muted">{a.is_active ? "Active" : "Paused"}</div>
                   </div>
-                  <div className="text-xs text-muted">{a.is_active ? "Active" : "Paused"}</div>
+                  <div className="flex gap-2">
+                    <button onClick={() => startEditAlert(a)} className="text-xs text-accent underline">Edit</button>
+                    <button onClick={() => toggleAlert(a.id, a.is_active)} className="text-xs text-accent underline">
+                      {a.is_active ? "Pause" : "Resume"}
+                    </button>
+                    <button onClick={() => removeAlert(a.id)} className="text-xs text-red-600 underline">Remove</button>
+                  </div>
                 </li>
               );
             })}
