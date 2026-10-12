@@ -128,7 +128,8 @@ export async function POST(req: NextRequest) {
         body: {
           to_email: r.email,
           subject,
-          body: html,
+          html_body: html,
+          body: `Hi ${r.first_name || "there"},\n\nNew pre-con update: ${project.project_name}`,
           from_email: "noreply@getsetsold.ca",
           reply_to: "rohit@getsetsold.ca",
         },
