@@ -45,19 +45,27 @@ export function buildPreconBroadcastEmail(opts: {
   siteUrl: string;
   greeting: string;
   unsubscribeToken: string;
+  cashbackAmount?: number | null;
 }): string {
-  const { project: p, promos, models, siteUrl, greeting, unsubscribeToken } = opts;
+  const { project: p, promos, models, siteUrl, greeting, unsubscribeToken, cashbackAmount } = opts;
 
   const builderName = p.builder?.builder_name || "";
   const price = p.p_start_price ? `From $${Number(p.p_start_price).toLocaleString()}` : "Price on request";
 
   const promoHtml = promos.map((promo) => `
-    <div style="background:#fff8e1;border:1px solid #ffe082;border-radius:10px;padding:14px 16px;margin:0 0 12px;">
-      ${promo.badge ? `<span style="display:inline-block;background:#f57f17;color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:12px;margin-bottom:6px;">${promo.badge}</span>` : ""}
+    <div style="background:#ffffff;border:1px solid #dbe7f5;border-radius:10px;padding:14px 16px;margin:0 0 12px;">
+      ${promo.badge ? `<span style="display:inline-block;background:#0066cc;color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:12px;margin-bottom:6px;">${promo.badge}</span>` : ""}
       <div style="font-size:15px;font-weight:700;color:#111;">${promo.title || ""}</div>
       ${promo.description ? `<div style="font-size:13px;color:#555;margin-top:4px;">${promo.description}</div>` : ""}
       ${(promo.bullets ?? []).map((b: string) => `<div style="font-size:13px;color:#333;margin-top:4px;">✓ ${b}</div>`).join("")}
     </div>`).join("");
+
+  const cashbackHtml = cashbackAmount ? `
+    <div style="background:#0a0a1a;border-radius:10px;padding:16px 20px;margin:0 0 20px;text-align:center;">
+      <div style="font-size:12px;font-weight:700;letter-spacing:1.5px;color:#fff;margin-bottom:6px;">BUYER CASHBACK OFFER</div>
+      <div style="font-size:28px;font-weight:800;color:#fff;">$${cashbackAmount.toLocaleString()} <span style="font-size:16px;font-weight:600;">cashback</span></div>
+      <div style="font-size:13px;color:#aaa;margin-top:6px;">When you buy through GetSetSold.ca</div>
+    </div>` : "";
 
   const modelHtml = models.map((m) => `
     <div style="margin:0 0 12px;border:1px solid #e8e8e8;border-radius:12px;overflow:hidden;">
@@ -87,6 +95,7 @@ export function buildPreconBroadcastEmail(opts: {
         ${p.sqft ? `<div><div style="font-size:18px;font-weight:700;color:#111;">${p.sqft}</div><div style="font-size:12px;color:#888;">Sq Ft</div></div>` : ""}
       </div>` : ""}
       ${promoHtml ? `<div style="margin:0 0 20px;"><div style="font-size:14px;font-weight:700;color:#111;margin-bottom:10px;">Current Incentives</div>${promoHtml}</div>` : ""}
+      ${cashbackHtml}
       ${p.project_description ? `<p style="font-size:14px;color:#333;line-height:1.7;margin:0 0 20px;">${p.project_description.slice(0, 350)}${p.project_description.length > 350 ? "..." : ""}</p>` : ""}
       ${modelHtml ? `<div style="margin:0 0 20px;"><div style="font-size:14px;font-weight:700;color:#111;margin-bottom:10px;">Featured Models</div>${modelHtml}</div>` : ""}
       ${p.project_message ? `<p style="font-size:14px;color:#0066cc;background:#f0f4fa;padding:12px 16px;border-radius:8px;margin:0 0 20px;">${p.project_message}</p>` : ""}

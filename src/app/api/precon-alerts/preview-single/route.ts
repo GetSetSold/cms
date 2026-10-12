@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createPreconClient } from "@/lib/precon";
 import { buildPreconBroadcastEmail } from "@/lib/preconEmail";
+import { getSettings } from "@/lib/cms";
+import { getCashbackAmount } from "@/lib/cashback";
 
 /**
  * Preview a single-project pre-con broadcast email.
@@ -39,6 +41,7 @@ export async function GET(req: NextRequest) {
       siteUrl,
       greeting: "Hi there,",
       unsubscribeToken: "preview",
+      cashbackAmount: getCashbackAmount(p.p_start_price, (await getSettings()).precon_cashback),
     });
 
     return new NextResponse(html, { headers: { "Content-Type": "text/html" } });

@@ -3,6 +3,8 @@ import { createClient } from "@supabase/supabase-js";
 import { requireStaff } from "@/lib/auth";
 import { createPreconServiceClient } from "@/lib/precon";
 import { buildPreconBroadcastEmail } from "@/lib/preconEmail";
+import { getSettings } from "@/lib/cms";
+import { getCashbackAmount } from "@/lib/cashback";
 
 const SEND_DELAY_MS = 1500; // stagger between sends to avoid provider throttling
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -93,6 +95,7 @@ export async function POST(req: NextRequest) {
       siteUrl,
       greeting: `Hi ${r.first_name || "there"},`,
       unsubscribeToken: r.unsubscribe_token,
+      cashbackAmount: getCashbackAmount(project.p_start_price, (await getSettings()).precon_cashback),
     });
     try {
       const { error } = await cms.functions.invoke("send-email", {
