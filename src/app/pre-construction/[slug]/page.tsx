@@ -96,7 +96,7 @@ export default async function BuilderOrCityPage({ params }: { params: Promise<{ 
           <section className="mt-[50px] border-t border-line">
 <div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
             <PreconSectionHeader eyebrow="The Builder" heading={builder.builder_name} />
-            {builder.description ? <p className="max-w-3xl text-sm leading-relaxed md:text-base">{builder.description}</p> : null}
+            {builder.description ? <p className="max-w-none text-sm leading-relaxed md:text-base">{builder.description}</p> : null}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               {[[IconHome, projects.length, "Active Projects"], [IconBuilding, cities.size, "Communities"], [IconCheckBadge, "Ontario", "Coverage Area"]].map(([Icon, value, label]: any) => (
                 <div key={label} className="flex items-center gap-3 rounded-[var(--radius-md)] bg-soft p-4">

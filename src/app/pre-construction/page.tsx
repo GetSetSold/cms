@@ -86,7 +86,7 @@ export default async function PreConstructionHub() {
           ]}
           ctas={[
             { label: "Get Pre-Con Alerts", href: "/pre-con-alerts", variant: "primary" },
-            { label: "Browse Projects", href: "/project", variant: "ghost" },
+            { label: "Browse Projects", href: "/pre-construction/projects", variant: "ghost" },
           ]}
         />
 

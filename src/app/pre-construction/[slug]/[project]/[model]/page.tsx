@@ -103,7 +103,7 @@ export default async function ModelPage({ params }: { params: Promise<{ slug: st
           <section className="mt-[50px] border-t border-line">
 <div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
             <PreconSectionHeader eyebrow="The Model" heading={model.model_name ?? "Model Details"} />
-            <p className="max-w-3xl whitespace-pre-line text-sm leading-relaxed text-muted md:text-base">{model.description}</p>
+            <p className="max-w-none whitespace-pre-line text-sm leading-relaxed text-muted md:text-base">{model.description}</p>
           </div>
 </section>
         ) : null}
