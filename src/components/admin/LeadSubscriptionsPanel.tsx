@@ -17,6 +17,13 @@ type Alert = {
   created_at: string;
 };
 
+type RateSub = {
+  id: string;
+  email: string;
+  is_active: boolean;
+  created_at: string;
+};
+
 function filterLabel(f: PreconSub["filters"]): string {
   if (!f || f.all_projects) return "All projects";
   const parts: string[] = [];
@@ -32,6 +39,7 @@ function filterLabel(f: PreconSub["filters"]): string {
 export function LeadSubscriptionsPanel({ leadId }: { leadId: string }) {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [precon, setPrecon] = useState<PreconSub[]>([]);
+  const [rates, setRates] = useState<RateSub[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -47,6 +55,7 @@ export function LeadSubscriptionsPanel({ leadId }: { leadId: string }) {
       const d = await res.json();
       setAlerts(d.propertyAlerts ?? []);
       setPrecon(d.precon ?? []);
+      setRates(d.rates ?? []);
     } finally { setLoading(false); }
   }
   useEffect(() => { load(); }, [leadId]);
@@ -111,6 +120,30 @@ export function LeadSubscriptionsPanel({ leadId }: { leadId: string }) {
   async function remove(id: string) {
     if (!confirm("Remove this pre-con subscription?")) return;
     await fetch(`/api/admin/leads/${leadId}/subscriptions?subscription_id=${id}`, { method: "DELETE" });
+    load();
+  }
+
+  async function toggleRate(id: string, is_active: boolean) {
+    await fetch(`/api/admin/leads/${leadId}/rate-subscription`, {
+      method: "PATCH", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ subscription_id: id, is_active: !is_active }),
+    });
+    load();
+  }
+
+  async function addRate() {
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/admin/leads/${leadId}/rate-subscription`, {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: "{}",
+      });
+      if (res.ok) load();
+    } finally { setSaving(false); }
+  }
+
+  async function removeRate(id: string) {
+    if (!confirm("Remove this rate subscription?")) return;
+    await fetch(`/api/admin/leads/${leadId}/rate-subscription?subscription_id=${id}`, { method: "DELETE" });
     load();
   }
 
@@ -196,6 +229,36 @@ export function LeadSubscriptionsPanel({ leadId }: { leadId: string }) {
               <li key={a.id} className="rounded-lg border border-line bg-white px-4 py-3">
                 <div className="text-sm font-medium">{a.criteria_summary || "Saved search"}</div>
                 <div className="text-xs text-muted">{a.is_active ? "Active" : "Paused"}</div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      {/* Bank of Canada rate alerts */}
+      <section>
+        <div className="mb-3 flex items-center justify-between">
+          <h3 className="text-sm font-semibold">Bank of Canada rate alerts</h3>
+          {rates.length === 0 ? (
+            <button onClick={addRate} disabled={saving} className="text-sm text-accent underline disabled:opacity-50">
+              + Subscribe
+            </button>
+          ) : null}
+        </div>
+        {rates.length === 0 ? <p className="text-sm text-muted">Not subscribed.</p> : (
+          <ul className="flex flex-col gap-2">
+            {rates.map((r) => (
+              <li key={r.id} className="flex items-center justify-between rounded-lg border border-line bg-white px-4 py-3">
+                <div>
+                  <div className="text-sm font-medium">Rate updates</div>
+                  <div className="text-xs text-muted">{r.email} · {r.is_active ? "Active" : "Paused"}</div>
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={() => toggleRate(r.id, r.is_active)} className="text-xs text-accent underline">
+                    {r.is_active ? "Pause" : "Resume"}
+                  </button>
+                  <button onClick={() => removeRate(r.id)} className="text-xs text-red-600 underline">Remove</button>
+                </div>
               </li>
             ))}
           </ul>

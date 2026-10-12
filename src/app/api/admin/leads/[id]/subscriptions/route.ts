@@ -14,10 +14,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     cms.from("saved_searches").select("id, criteria_summary, is_active, created_at").eq("lead_id", id).order("created_at", { ascending: false }),
     cms.from("precon_subscribers").select("id, email, filters, is_active, created_at").eq("lead_id", id).order("created_at", { ascending: false }),
   ]);
+  const { data: rates } = await cms.from("rate_subscribers").select("id, email, is_active, created_at").eq("lead_id", id).order("created_at", { ascending: false });
 
   return NextResponse.json({
     propertyAlerts: alerts.data ?? [],
     precon: precon.data ?? [],
+    rates: rates ?? [],
   });
 }
 
