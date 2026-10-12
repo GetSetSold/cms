@@ -119,28 +119,44 @@ export function ModelsManager({ initial, projects }: { initial: HomeModel[]; pro
       {editing ? <Form initial={editing} projects={projects} onCancel={() => setEditing(null)} onSave={save} /> : null}
       <div className="overflow-hidden rounded-2xl bg-white">
         <table className="w-full text-left">
-          <thead className="border-b border-line text-xs uppercase tracking-wide text-muted"><tr><th className="w-10 p-4"></th><th className="p-4">Model</th><th className="p-4">Project</th><th className="p-4"></th></tr></thead>
+          <thead className="border-b border-line text-xs uppercase tracking-wide text-muted"><tr><th className="w-10 p-4"></th><th className="p-4">Model</th><th className="p-4"></th></tr></thead>
           <tbody>
-            {rows.map((r) => (
-              <Fragment key={r.id}>
-                <tr className="border-b border-line/60">
-                  <td className="p-4">
-                    <button type="button" aria-label="Toggle floor plans" onClick={() => setExpanded(expanded === r.id ? null : r.id)} className="flex h-6 w-6 items-center justify-center text-muted hover:text-ink">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" className={`transition-transform ${expanded === r.id ? "rotate-90" : ""}`}><path d="m9 6 6 6-6 6" /></svg>
-                    </button>
-                  </td>
-                  <td className="p-4 font-medium">{r.model_name}</td>
-                  <td className="p-4 text-muted">{projectName(r.project_id)}</td>
-                  <td className="p-4"><div className="flex gap-3 text-xs"><button className="font-medium text-primary" onClick={() => setEditing(r)}>Edit</button><button className="font-medium text-red-700" onClick={() => remove(r.id)}>Delete</button></div></td>
-                </tr>
-                {expanded === r.id ? (
-                  <tr className="border-b border-line/60 bg-ground/50">
-                    <td colSpan={4} className="p-4"><FloorplansManager modelId={r.id} /></td>
+            {(() => {
+              const groups = new Map<string, typeof rows>();
+              rows.forEach((r) => {
+                const key = r.project_id ?? "none";
+                if (!groups.has(key)) groups.set(key, []);
+                groups.get(key)!.push(r);
+              });
+              return [...groups.entries()].map(([pid, items]) => (
+                <Fragment key={pid}>
+                  <tr className="bg-ground/70">
+                    <td colSpan={3} className="px-4 py-2 text-xs font-bold uppercase tracking-wide text-muted">
+                      {pid === "none" ? "No project" : projectName(pid)} ({items.length})
+                    </td>
                   </tr>
-                ) : null}
-              </Fragment>
-            ))}
-            {!rows.length ? <tr><td colSpan={4} className="p-8 text-center text-muted">No models yet.</td></tr> : null}
+                  {items.map((r) => (
+                    <Fragment key={r.id}>
+                      <tr className="border-b border-line/60">
+                        <td className="p-4">
+                          <button type="button" aria-label="Toggle floor plans" onClick={() => setExpanded(expanded === r.id ? null : r.id)} className="flex h-6 w-6 items-center justify-center text-muted hover:text-ink">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" className={`transition-transform ${expanded === r.id ? "rotate-90" : ""}`}><path d="m9 6 6 6-6 6" /></svg>
+                          </button>
+                        </td>
+                        <td className="p-4 font-medium">{r.model_name}</td>
+                        <td className="p-4"><div className="flex gap-3 text-xs"><button className="font-medium text-primary" onClick={() => setEditing(r)}>Edit</button><button className="font-medium text-red-700" onClick={() => remove(r.id)}>Delete</button></div></td>
+                      </tr>
+                      {expanded === r.id ? (
+                        <tr className="border-b border-line/60 bg-ground/50">
+                          <td colSpan={3} className="p-4"><FloorplansManager modelId={r.id} /></td>
+                        </tr>
+                      ) : null}
+                    </Fragment>
+                  ))}
+                </Fragment>
+              ));
+            })()}
+            {!rows.length ? <tr><td colSpan={3} className="p-8 text-center text-muted">No models yet.</td></tr> : null}
           </tbody>
         </table>
       </div>

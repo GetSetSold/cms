@@ -2,7 +2,13 @@
 import { useState } from "react";
 import type { Promo } from "@/lib/precon";
 
-function Form({ initial, onSave, onCancel }: { initial: Partial<Promo>; onSave: (d: Partial<Promo>) => void; onCancel: () => void }) {
+function Form({ initial, builders, projects, onSave, onCancel }: {
+  initial: Partial<Promo>;
+  builders: { id: number; builder_name: string | null }[];
+  projects: { id: string; project_name: string | null }[];
+  onSave: (d: Partial<Promo>) => void;
+  onCancel: () => void;
+}) {
   const [d, setD] = useState<Partial<Promo>>(initial);
   const set = (k: keyof Promo, v: any) => setD((x) => ({ ...x, [k]: v }));
   return (
@@ -24,6 +30,20 @@ function Form({ initial, onSave, onCancel }: { initial: Partial<Promo>; onSave: 
         <label className="label">End date<input type="date" className="input" value={d.end_date ?? ""} onChange={(e) => set("end_date", e.target.value || null)} /></label>
       </div>
       <label className="label">Bullets (one per line)<textarea className="textarea" rows={3} value={(d.bullets ?? []).join("\n")} onChange={(e) => set("bullets", e.target.value.split("\n").map((s) => s.trim()).filter(Boolean))} /></label>
+      <div className="grid grid-cols-2 gap-3">
+        <label className="label">Builder
+          <select className="input" value={d.builder_id ?? ""} onChange={(e) => set("builder_id", e.target.value ? Number(e.target.value) : null)}>
+            <option value="">— None —</option>
+            {builders.map((b) => <option key={b.id} value={b.id}>{b.builder_name}</option>)}
+          </select>
+        </label>
+        <label className="label">Project (optional)
+          <select className="input" value={d.project_id ?? ""} onChange={(e) => set("project_id", e.target.value || null)}>
+            <option value="">— Builder-wide —</option>
+            {projects.map((p) => <option key={p.id} value={p.id}>{p.project_name}</option>)}
+          </select>
+        </label>
+      </div>
       <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={d.show ?? true} onChange={(e) => set("show", e.target.checked)} /> Show on site</label>
       <div className="flex gap-2">
         <button type="button" className="btn" onClick={onCancel}>Cancel</button>
@@ -33,7 +53,11 @@ function Form({ initial, onSave, onCancel }: { initial: Partial<Promo>; onSave: 
   );
 }
 
-export function PromosManager({ initial }: { initial: Promo[] }) {
+export function PromosManager({ initial, builders, projects }: {
+  initial: Promo[];
+  builders: { id: number; builder_name: string | null }[];
+  projects: { id: string; project_name: string | null }[];
+}) {
   const [rows, setRows] = useState(initial);
   const [editing, setEditing] = useState<Partial<Promo> | null>(null);
   const [error, setError] = useState("");
@@ -61,7 +85,7 @@ export function PromosManager({ initial }: { initial: Promo[] }) {
     <div className="flex flex-col gap-5">
       <button className="btn-primary self-start" onClick={() => setEditing({ promo_type: "limited_time", show: true })}>+ Add promo</button>
       {error ? <p className="text-sm text-red-700">{error}</p> : null}
-      {editing ? <Form initial={editing} onCancel={() => setEditing(null)} onSave={save} /> : null}
+      {editing ? <Form initial={editing} builders={builders} projects={projects} onCancel={() => setEditing(null)} onSave={save} /> : null}
       <div className="overflow-hidden rounded-2xl bg-white">
         <table className="w-full text-left">
           <thead className="border-b border-line text-xs uppercase tracking-wide text-muted"><tr><th className="p-4">Promo</th><th className="p-4">Type</th><th className="p-4">Dates</th><th className="p-4"></th></tr></thead>

@@ -6,9 +6,10 @@ import { ProjectsManager } from "@/components/admin/precon/ProjectsManager";
 import { ModelsManager } from "@/components/admin/precon/ModelsManager";
 import { AmenitiesManager } from "@/components/admin/precon/AmenitiesManager";
 import { PromosManager } from "@/components/admin/precon/PromosManager";
+import { ImagesManager } from "@/components/admin/precon/ImagesManager";
 import type { Builder, Project, HomeModel, Amenity, Promo } from "@/lib/precon";
 
-const TABS = ["Builders", "Projects", "Models", "Amenities", "Promos"] as const;
+const TABS = ["Builders", "Projects", "Models", "Amenities", "Promos", "Images"] as const;
 
 export function PreconAdminTabs({ data }: {
   data: { builders: Builder[]; projects: Project[]; models: HomeModel[]; amenities: Amenity[]; promos: Promo[] };
@@ -33,7 +34,8 @@ export function PreconAdminTabs({ data }: {
         {tab === "Projects" ? <ProjectsManager initial={data.projects} builders={data.builders} /> : null}
         {tab === "Models" ? <ModelsManager initial={data.models} projects={data.projects} /> : null}
         {tab === "Amenities" ? <AmenitiesManager initial={data.amenities} /> : null}
-        {tab === "Promos" ? <PromosManager initial={data.promos} /> : null}
+        {tab === "Promos" ? <PromosManager initial={data.promos} builders={data.builders} projects={data.projects} /> : null}
+        {tab === "Images" ? <ImagesManager /> : null}
       </div>
     </>
   );
