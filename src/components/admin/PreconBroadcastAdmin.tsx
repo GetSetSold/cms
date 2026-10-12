@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 
 type Project = { id: string; slug: string; project_name: string; city: string | null };
+type Model = { slug: string; model_name: string };
 type Subscriber = { id: string; email: string; first_name: string | null; is_active: boolean; created_at: string };
 type Broadcast = { id: string; project_name: string; sent_count: number; failed_count: number; created_at: string };
 
@@ -11,6 +12,9 @@ export function PreconBroadcastAdmin() {
   const [subs, setSubs] = useState<Subscriber[]>([]);
   const [history, setHistory] = useState<Broadcast[]>([]);
   const [projectSlug, setProjectSlug] = useState("");
+  const [modelSlug, setModelSlug] = useState("");
+  const [models, setModels] = useState<Model[]>([]);
+  const [preview, setPreview] = useState<{ email: string; first_name: string | null }[] | null>(null);
   const [testEmail, setTestEmail] = useState("");
   const [newEmail, setNewEmail] = useState("");
   const [newName, setNewName] = useState("");
@@ -29,6 +33,31 @@ export function PreconBroadcastAdmin() {
     setHistory(h.broadcasts ?? []);
   }
   useEffect(() => { refresh(); }, []);
+
+  // Load models when a project is picked.
+  useEffect(() => {
+    setModelSlug(""); setModels([]); setPreview(null);
+    if (!projectSlug) return;
+    const proj = projects.find((p) => p.slug === projectSlug);
+    if (!proj) return;
+    fetch("/api/admin/precon/models")
+      .then((r) => r.json())
+      .then((d) => setModels(((d.models ?? []) as any[])
+        .filter((m: any) => String(m.project_id) === proj.id)
+        .map((m: any) => ({ slug: m.slug, model_name: m.model_name }))))
+      .catch(() => {});
+  }, [projectSlug, projects]);
+
+  async function loadPreview() {
+    if (!projectSlug) return;
+    setPreview(null);
+    const res = await fetch("/api/admin/precon-broadcast", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ project_slug: projectSlug, preview_only: true }),
+    });
+    const d = await res.json();
+    if (res.ok) setPreview(d.recipients ?? []);
+  }
 
   async function addSubscriber(e: React.FormEvent) {
     e.preventDefault();
@@ -66,7 +95,7 @@ export function PreconBroadcastAdmin() {
     try {
       const res = await fetch("/api/admin/precon-broadcast", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ project_slug: projectSlug }),
+        body: JSON.stringify({ project_slug: projectSlug, model_slug: modelSlug || undefined }),
       });
       const d = await res.json();
       setResult(res.ok
@@ -92,11 +121,35 @@ export function PreconBroadcastAdmin() {
               <option key={p.slug} value={p.slug}>{p.project_name}{p.city ? ` — ${p.city}` : ""}</option>
             ))}
           </select>
+          {models.length > 0 && (
+            <select value={modelSlug} onChange={(e) => setModelSlug(e.target.value)} className={inputCls}>
+              <option value="">Whole project</option>
+              {models.map((m) => (
+                <option key={m.slug} value={m.slug}>Spotlight: {m.model_name}</option>
+              ))}
+            </select>
+          )}
           {projectSlug && (
             <a href={`/api/precon-alerts/preview-single?slug=${projectSlug}`} target="_blank" rel="noreferrer"
               className="text-sm text-accent underline">Preview email</a>
           )}
         </div>
+
+        {projectSlug && (
+          <div className="mt-3">
+            <button onClick={loadPreview} className="text-sm text-accent underline">
+              {preview ? "Refresh recipient list" : "See who will receive this"}
+            </button>
+            {preview && (
+              <div className="mt-2 max-h-40 overflow-y-auto rounded-lg border border-line bg-gray-50 p-3 text-sm">
+                <p className="mb-2 font-medium">{preview.length} recipient{preview.length === 1 ? "" : "s"} (matched by their subscription filters):</p>
+                {preview.map((r, i) => (
+                  <div key={i} className="py-0.5 text-muted">{r.email}{r.first_name ? ` — ${r.first_name}` : ""}</div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         <h2 className="font-bold mt-6 mb-1">2. Test it</h2>
         <div className="flex flex-wrap gap-3 items-center">

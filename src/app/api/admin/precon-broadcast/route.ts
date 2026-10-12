@@ -11,14 +11,16 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 /**
  * Admin: broadcast a single project to all active pre-con subscribers.
- * POST /api/admin/precon-broadcast { project_slug, test_email? }
+ * POST /api/admin/precon-broadcast { project_slug, test_email?, preview_only?, model_slug? }
  * If test_email is given, only that address gets the email (no logging).
+ * If preview_only is true, returns the recipient list without sending.
+ * If model_slug is given, the email highlights that specific model.
  */
 export async function POST(req: NextRequest) {
   try { await requireStaff(["admin", "editor"]); }
   catch { return NextResponse.json({ error: "Not authorized." }, { status: 401 }); }
 
-  const { project_slug, test_email } = await req.json();
+  const { project_slug, test_email, preview_only, model_slug } = await req.json();
   if (!project_slug) return NextResponse.json({ error: "project_slug required" }, { status: 400 });
 
   const cms = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
@@ -40,6 +42,13 @@ export async function POST(req: NextRequest) {
   const { data: models } = await precon
     .from("home_models").select("model_name, bedrooms, bathrooms, sqft, starting_price, model_image_url, slug")
     .eq("project_id", project.id).limit(2);
+
+  // If a specific model is picked, put it first.
+  let orderedModels = (models ?? []) as any[];
+  if (model_slug) {
+    const idx = orderedModels.findIndex((m: any) => m.slug === model_slug);
+    if (idx > 0) { const [picked] = orderedModels.splice(idx, 1); orderedModels = [picked, ...orderedModels]; }
+  }
 
   // Resolve recipients.
   let recipients: { email: string; first_name: string | null; lead_id: string | null; unsubscribe_token: string; id?: string }[] = [];
@@ -81,6 +90,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, sent: 0, failed: 0, message: "No recipients" });
   }
 
+  // Preview mode: return who would receive it.
+  if (preview_only) {
+    return NextResponse.json({
+      ok: true,
+      count: recipients.length,
+      recipients: recipients.map((r: any) => ({ email: r.email, first_name: r.first_name })),
+    });
+  }
+
   // Create broadcast log (skip for test).
   let broadcastId: string | null = null;
   if (!test_email) {
@@ -90,7 +108,10 @@ export async function POST(req: NextRequest) {
     broadcastId = b?.id ?? null;
   }
 
-  const subject = `${project.project_name} — new pre-con ${project.vip_release === "Yes" ? "VIP release" : "project"}`;
+  const featuredModel = model_slug ? orderedModels[0] : null;
+  const subject = featuredModel
+    ? `${featuredModel.model_name} at ${project.project_name} — new pre-con ${project.vip_release === "Yes" ? "VIP release" : "project"}`
+    : `${project.project_name} — new pre-con ${project.vip_release === "Yes" ? "VIP release" : "project"}`;
   let sent = 0, failed = 0;
   const failures: { email: string; error: string }[] = [];
 
@@ -101,7 +122,7 @@ export async function POST(req: NextRequest) {
       continue;
     }
     const html = buildPreconBroadcastEmail({
-      project, promos: (promos ?? []) as any, models: (models ?? []) as any,
+      project, promos: (promos ?? []) as any, models: orderedModels,
       siteUrl,
       greeting: `Hi ${r.first_name || "there"},`,
       unsubscribeToken: r.unsubscribe_token,
