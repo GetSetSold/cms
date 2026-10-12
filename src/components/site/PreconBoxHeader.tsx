@@ -119,8 +119,8 @@ export function PreconBoxHeader({
                   href={c.href}
                   className={
                     c.variant === "primary"
-                      ? "flex h-12 flex-1 items-center justify-center rounded-[var(--radius-btn)] border border-white/40 bg-primary px-4 text-[15px] font-bold text-white md:flex-none md:px-7"
-                      : "flex h-12 flex-1 items-center justify-center rounded-[var(--radius-btn)] border border-white/60 bg-white/10 px-4 text-[15px] font-bold text-white backdrop-blur-sm md:flex-none md:px-7"
+                      ? "flex h-12 flex-1 items-center justify-center whitespace-nowrap rounded-[var(--radius-btn)] border border-white/40 bg-primary px-3 text-[13px] font-bold text-white md:flex-none md:px-7 md:text-[15px]"
+                      : "flex h-12 flex-1 items-center justify-center whitespace-nowrap rounded-[var(--radius-btn)] border border-white/60 bg-white/10 px-3 text-[13px] font-bold text-white backdrop-blur-sm md:flex-none md:px-7 md:text-[15px]"
                   }
                 >
                   {c.label}
