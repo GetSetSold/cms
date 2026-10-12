@@ -114,12 +114,12 @@ export function ListingCardShell(d: ListingCardData) {
   );
 
   return d.href ? (
-    <Link href={d.href} prefetch={false} className="group relative flex min-w-0 flex-col overflow-hidden rounded-[var(--radius-lg)] border-[length:var(--border-card-width)] border-line bg-white shadow-[var(--shadow-card)]">
+    <Link href={d.href} prefetch={false} className="group relative flex h-full min-w-0 flex-col overflow-hidden rounded-[var(--radius-lg)] border-[length:var(--border-card-width)] border-line bg-white shadow-[var(--shadow-card)]">
       {body}
       <CardArrowButton />
     </Link>
   ) : (
-    <div className="group relative flex flex-col overflow-hidden rounded-[var(--radius-lg)] border-[length:var(--border-card-width)] border-line bg-white shadow-[var(--shadow-card)]">
+    <div className="group relative flex h-full flex-col overflow-hidden rounded-[var(--radius-lg)] border-[length:var(--border-card-width)] border-line bg-white shadow-[var(--shadow-card)]">
       {body}
     </div>
   );

@@ -207,7 +207,7 @@ export function ListingFilters({
                     All cities
                   </button>
                   {filteredGroups.map((g) => (
-                    <div key={g.name}>
+                    <div key={g.name} className="border-b border-line/60 last:border-0">
                       <label className="flex cursor-pointer items-center gap-2.5 px-3 py-2 text-sm font-semibold hover:bg-ground">
                         <input
                           type="checkbox"
@@ -363,7 +363,7 @@ export function ListingFilters({
                 />
                 <div className="max-h-48 overflow-y-auto rounded-[var(--radius-md)] border border-line">
                   {filteredGroups.map((g) => (
-                    <div key={g.name}>
+                    <div key={g.name} className="border-b border-line/60 last:border-0">
                       <label className="flex cursor-pointer items-center gap-2.5 px-3 py-2 text-sm font-semibold hover:bg-ground">
                         <input
                           type="checkbox"

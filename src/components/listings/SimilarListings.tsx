@@ -71,7 +71,7 @@ export function SimilarListings({ listings }: { listings: GridListing[] }) {
       <div className="-mx-5 px-5">
         <div
           ref={scrollRef}
-          className="hidden overflow-x-auto pb-8 lg:flex"
+          className="hidden overflow-x-auto pb-8 lg:flex lg:items-stretch"
           style={{ scrollbarWidth: "none", gap: "max(20px, calc((100% - 1120px) / 3))" }}
         >
           {listings.map((l) => (
