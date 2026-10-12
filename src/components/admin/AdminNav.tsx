@@ -10,6 +10,7 @@ const ITEMS: { href: string; label: string; roles: Role[]; icon: string }[] = [
   { href: "/admin/sold-history", label: "Sold History", roles: ["admin", "editor"], icon: "M9 11l3 3L22 4 M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" },
   { href: "/admin/featured-listings", label: "Featured Listings", roles: ["admin", "editor"], icon: "M12 2l2.9 6.9 7.1.6-5.4 4.7 1.7 7-6.3-3.9-6.3 3.9 1.7-7L2 9.5l7.1-.6z" },
   { href: "/admin/precon", label: "Pre-Con", roles: ["admin", "editor"], icon: "M3 21h18M5 21V7l7-4 7 4v14M9 9h1M9 13h1M14 9h1M14 13h1" },
+  { href: "/admin/precon-broadcast", label: "Pre-Con Broadcast", roles: ["admin", "editor"], icon: "M22 2L11 13 M22 2l-7 20-4-9-9-4z" },
   { href: "/admin/leads", label: "Leads", roles: ["admin", "sales"], icon: "M9 11.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6 M16 5.5a3 3 0 0 1 0 5.5 M18 14c2 .8 3 2.8 3 6" },
   { href: "/admin/svgs", label: "SVG library", roles: ["admin", "editor"], icon: "M3 4h18v16H3z M21 16l-5-5-9 9" },
   { href: "/admin/forms", label: "Forms", roles: ["admin", "editor"], icon: "M4 5h16v3H4z M4 12h16v7H4z M8 15h2" },

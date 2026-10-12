@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
 
   try {
     const precon = createPreconClient();
-    let query = precon.from("projects").select("*, builder:builder_id(builder_name, logo_url)");
+    let query = precon.from("projects").select("*, builder:builder_id(builder_name, logo_url, slug)");
     if (slug) query = query.eq("slug", slug);
     const { data: projects } = await query.order("created_at", { ascending: false }).limit(1);
 

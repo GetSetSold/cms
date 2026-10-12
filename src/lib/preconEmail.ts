@@ -14,7 +14,7 @@ export type PreconBroadcastProject = {
   vip_release: string | null;
   project_message: string | null;
   project_description: string | null;
-  builder?: { builder_name: string; logo_url: string | null } | null;
+  builder?: { builder_name: string; logo_url: string | null; slug?: string | null } | null;
 };
 
 export type PreconPromo = {
@@ -51,6 +51,7 @@ export function buildPreconBroadcastEmail(opts: {
 
   const builderName = p.builder?.builder_name || "";
   const price = p.p_start_price ? `From $${Number(p.p_start_price).toLocaleString()}` : "Price on request";
+  const projectUrl = p.builder?.slug ? `${siteUrl}/pre-construction/${p.builder.slug}/${p.slug}` : `${siteUrl}/pre-construction/${p.slug}`;
 
   const promoHtml = promos.map((promo) => `
     <div style="background:#ffffff;border:1px solid #dbe7f5;border-radius:10px;padding:14px 16px;margin:0 0 12px;">
@@ -108,8 +109,8 @@ export function buildPreconBroadcastEmail(opts: {
       ${p.project_description ? `<p style="font-size:14px;color:#333;line-height:1.7;margin:0 0 20px;">${p.project_description.slice(0, 350)}${p.project_description.length > 350 ? "..." : ""}</p>` : ""}
       ${p.project_message ? `<p style="font-size:14px;color:#0066cc;background:#f0f4fa;padding:12px 16px;border-radius:8px;margin:0 0 20px;">${p.project_message}</p>` : ""}
       <div style="text-align:center;margin:24px 0;">
-        <a href="${siteUrl}/pre-construction/${p.slug}#lead" style="display:inline-block;background:#0066cc;color:#ffffff;text-decoration:none;padding:14px 40px;border-radius:999px;font-size:15px;font-weight:600;margin:0 6px 10px;">I'm Interested — Register Now</a><br>
-        <a href="${siteUrl}/pre-construction/${p.slug}" style="display:inline-block;background:#111111;color:#ffffff;text-decoration:none;padding:14px 40px;border-radius:999px;font-size:15px;font-weight:600;margin:0 6px;">View Full Details & Floor Plans</a>
+        <a href="${projectUrl}#lead" style="display:inline-block;background:#0066cc;color:#ffffff;text-decoration:none;padding:14px 40px;border-radius:999px;font-size:15px;font-weight:600;margin:0 6px 10px;">I'm Interested — Register Now</a><br>
+        <a href="${projectUrl}" style="display:inline-block;background:#111111;color:#ffffff;text-decoration:none;padding:14px 40px;border-radius:999px;font-size:15px;font-weight:600;margin:0 6px;">View Full Details & Floor Plans</a>
       </div>
       <p style="font-size:13px;color:#888;text-align:center;margin:20px 0 0;">
         Questions? Reply to this email or call me directly.<br>

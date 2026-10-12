@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
   // Load project + promos + models.
   const { data: projects } = await precon
     .from("projects")
-    .select("*, builder:builder_id(builder_name, logo_url)")
+    .select("*, builder:builder_id(builder_name, logo_url, slug)")
     .eq("slug", project_slug)
     .limit(1);
   const project: any = projects?.[0];
