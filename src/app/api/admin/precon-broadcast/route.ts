@@ -73,13 +73,14 @@ export async function POST(req: NextRequest) {
     const city = (project.city || "").toLowerCase();
     const { data: leads, error } = await cms
       .from("leads")
-      .select("id, payload, contact:contact_id(email, name)")
+      .select("id, payload")
       .not("payload->precon_subscriptions", "is", null);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     recipients = ((leads ?? []) as any[]).flatMap((l: any) => {
       const subs: any[] = Array.isArray(l.payload?.precon_subscriptions) ? l.payload.precon_subscriptions : [];
-      const email = l.contact?.email;
+      const email = l.payload?.email;
       if (!email) return [];
+      const firstName = l.payload?.first_name ?? null;
       return subs.filter((s: any) => {
         if (!s.is_active) return false;
         const f = s.filters || {};
@@ -90,7 +91,7 @@ export async function POST(req: NextRequest) {
         return true;
       }).map((s: any) => ({
         email: String(email).toLowerCase(),
-        first_name: l.contact?.name ? String(l.contact.name).split(" ")[0] : null,
+        first_name: firstName ? String(firstName).split(" ")[0] : null,
         lead_id: l.id,
         unsubscribe_token: s.id,
       }));

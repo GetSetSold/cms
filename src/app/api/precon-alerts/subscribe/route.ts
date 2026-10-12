@@ -4,8 +4,8 @@ import { randomUUID } from "crypto";
 
 /**
  * Public pre-con alert signup.
- * Stores subscription in leads.payload->precon_subscriptions (no new tables).
- * POST /api/precon-alerts/subscribe { email, firstName?, filters? }
+ * Stores subscription in leads.payload->precon_subscriptions.
+ * No contacts table dependency.
  */
 export async function POST(req: NextRequest) {
   try {
@@ -30,44 +30,22 @@ export async function POST(req: NextRequest) {
       cleanFilters.all_projects = false;
     }
 
-    // Find existing lead via contacts table.
-    const { data: contact } = await supabase
-      .from("contacts")
-      .select("id")
-      .eq("email", normalized)
-      .maybeSingle();
+    // Find existing lead by email in payload.
+    const { data: leads } = await supabase
+      .from("leads")
+      .select("id, payload")
+      .eq("payload->>email", normalized)
+      .limit(1);
 
-    let leadId: string | null = null;
-    let payload: any = {};
-    if (contact) {
-      const { data: lead } = await supabase
-        .from("leads")
-        .select("id, payload")
-        .eq("contact_id", (contact as any).id)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (lead) {
-        leadId = (lead as any).id;
-        payload = (lead as any).payload ?? {};
-      }
-    }
+    let leadId: string | null = (leads as any[])?.[0]?.id ?? null;
+    let payload: any = (leads as any[])?.[0]?.payload ?? {};
 
-    // Create lead + contact if none exists.
     if (!leadId) {
-      const { data: newContact, error: contactError } = await supabase
-        .from("contacts")
-        .insert({ email: normalized, name: firstName?.trim() || null, type: "lead", source: "pre-con-alerts" })
-        .select("id")
-        .single();
-      if (contactError) return NextResponse.json({ error: "Contact: " + contactError.message }, { status: 500 });
-      const contactId = (newContact as any)?.id ?? null;
       const { data: newLead, error: leadError } = await supabase
         .from("leads")
         .insert({
-          contact_id: contactId,
           form_type: "precon_alert",
-          payload: { source: "precon-alert" },
+          payload: { email: normalized, first_name: firstName?.trim() || null, source: "precon-alert" },
           status: "new",
         })
         .select("id, payload")
@@ -79,7 +57,6 @@ export async function POST(req: NextRequest) {
 
     if (!leadId) return NextResponse.json({ error: "Could not create lead" }, { status: 500 });
 
-    // Add subscription to payload.
     const subs: any[] = Array.isArray(payload.precon_subscriptions) ? payload.precon_subscriptions : [];
     const alreadyExists = subs.some((s: any) => s.is_active);
     if (!alreadyExists) {
