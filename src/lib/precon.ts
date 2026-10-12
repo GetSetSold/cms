@@ -229,20 +229,29 @@ export async function getProject(builderSlug: string, projectSlug: string) {
   const { data: project } = await supabase.from("projects").select("*").eq("builder_id", builder.id).eq("slug", projectSlug).maybeSingle();
   if (!project) return null;
 
-  const [{ data: phases }, { data: models }, { data: projectPromos }, { data: builderPromos }, { data: projectAmenities }, gallery] = await Promise.all([
+  const [{ data: phases }, { data: models }, { data: projectPromos }, { data: junctionPromos }, { data: builderPromos }, { data: projectAmenities }, gallery] = await Promise.all([
     supabase.from("phases").select("*").eq("project_id", project.id),
     supabase.from("home_models").select("*").eq("project_id", project.id),
     supabase.from("promos").select("*").eq("project_id", project.id).eq("promo_type", "limited_time"),
+    supabase.from("promo_projects").select("promo_id").eq("project_id", project.id),
     supabase.from("promos").select("*").eq("builder_id", builder.id).is("project_id", null),
     supabase.from("project_amenities").select("amenity_id").eq("project_id", project.id),
     getImagesFor("project", project.id),
   ]);
 
-  // Limited-time banner: a promo tied directly to this project, or — if none — a
-  // builder-wide limited_time promo (matches the reference site's fallback).
+  // Junction-linked promos (multi-project)
+  let junctionPromoList: Promo[] = [];
+  const junctionIds = ((junctionPromos ?? []) as { promo_id: string }[]).map((r) => r.promo_id);
+  if (junctionIds.length) {
+    const { data } = await supabase.from("promos").select("*").in("id", junctionIds);
+    junctionPromoList = (data ?? []) as Promo[];
+  }
+
+  // Limited-time banner: junction-linked first, then direct project_id, then builder-wide fallback.
+  const activeJunction = junctionPromoList.filter((p) => p.promo_type === "limited_time").filter(isPromoActive);
   const activeProjectPromos = (projectPromos ?? []).filter(isPromoActive);
   const activeBuilderLimited = ((builderPromos ?? []) as Promo[]).filter((p) => p.promo_type === "limited_time").filter(isPromoActive);
-  const limitedTimePromo = (activeProjectPromos[0] ?? activeBuilderLimited[0]) as Promo | undefined;
+  const limitedTimePromo = (activeJunction[0] ?? activeProjectPromos[0] ?? activeBuilderLimited[0]) as Promo | undefined;
 
   // Small builder-wide incentive cards (same ones shown on the builder page).
   const promos = ((builderPromos ?? []) as Promo[]).filter((p) => p.promo_type === "builder").filter(isPromoActive);

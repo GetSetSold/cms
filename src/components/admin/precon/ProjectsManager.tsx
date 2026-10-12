@@ -4,6 +4,7 @@ import type { Project, Builder } from "@/lib/precon";
 import { PaymentPlansManager } from "./PaymentPlansManager";
 import { GalleryManager } from "./GalleryManager";
 import { ProjectAmenitiesManager } from "./ProjectAmenitiesManager";
+import { ProjectPromosManager } from "./ProjectPromosManager";
 
 const slugify = (s: string) => s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 
@@ -298,6 +299,7 @@ export function ProjectsManager({ initial, builders }: { initial: Project[]; bui
                       <div className="flex flex-col gap-5">
                         <PaymentPlansManager projectId={r.id} />
                         <ProjectAmenitiesManager projectId={r.id} />
+                        <ProjectPromosManager projectId={r.id} />
                         <GalleryManager relatedType="project" relatedId={r.id} />
                       </div>
                     </td>
