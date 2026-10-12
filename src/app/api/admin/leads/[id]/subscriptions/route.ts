@@ -10,14 +10,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const { id } = await params;
   const cms = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
 
-  const [alerts, precon] = await Promise.all([
-    cms.from("saved_searches").select("id, criteria_summary, is_active, created_at").eq("lead_id", id).order("created_at", { ascending: false }),
-    cms.from("precon_subscriptions").select("id, email, filters, is_active, created_at").eq("lead_id", id).order("created_at", { ascending: false }),
-  ]);
-
+  const { data, error } = await cms.rpc("get_lead_subscriptions", { p_lead_id: id });
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({
-    propertyAlerts: alerts.data ?? [],
-    precon: precon.data ?? [],
+    propertyAlerts: (data as any)?.propertyAlerts ?? [],
+    precon: (data as any)?.precon ?? [],
   });
 }
 
@@ -28,10 +25,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const body = await req.json();
   const cms = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
 
-  // Add a pre-con subscription for this lead.
-  const { data: lead } = await cms.from("leads").select("id, email, first_name").eq("id", id).single();
-  if (!lead) return NextResponse.json({ error: "Lead not found" }, { status: 404 });
-
   const filters = {
     all_projects: body.all_projects !== false,
     cities: Array.isArray(body.cities) ? body.cities.filter(Boolean).slice(0, 10) : [],
@@ -40,14 +33,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   };
   if (filters.cities.length || filters.min_price || filters.max_price) filters.all_projects = false;
 
-  const { data, error } = await cms.from("precon_subscriptions").insert({
-    lead_id: id,
-    email: (lead as any).email,
-    first_name: (lead as any).first_name ?? null,
-    filters,
-  }).select("id").single();
+  const { data, error } = await cms.rpc("add_precon_subscription", { p_lead_id: id, p_filters: filters });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ ok: true, id: data.id });
+  return NextResponse.json({ ok: true, id: data });
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -57,7 +45,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const { subscription_id, is_active } = body;
   if (!subscription_id) return NextResponse.json({ error: "subscription_id required" }, { status: 400 });
   const cms = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
-  const { error } = await cms.from("precon_subscriptions").update({ is_active: !!is_active }).eq("id", subscription_id);
+  const { error } = await cms.rpc("toggle_precon_subscription", { p_id: subscription_id, p_active: !!is_active });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
 }
@@ -69,7 +57,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   const subscription_id = searchParams.get("subscription_id");
   if (!subscription_id) return NextResponse.json({ error: "subscription_id required" }, { status: 400 });
   const cms = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
-  const { error } = await cms.from("precon_subscriptions").delete().eq("id", subscription_id);
+  const { error } = await cms.rpc("delete_precon_subscription", { p_id: subscription_id });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
 }

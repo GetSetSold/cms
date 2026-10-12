@@ -68,22 +68,13 @@ export async function POST(req: NextRequest) {
       recipients = [{ email: normalized, first_name: null, lead_id: newLead?.id ?? null, unsubscribe_token: "test" }];
     }
   } else {
-    const { data: subs, error } = await cms
-      .from("precon_subscriptions")
-      .select("id, email, first_name, lead_id, unsubscribe_token, filters")
-      .eq("is_active", true);
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    // Filter by subscription criteria: all_projects OR matching city/price.
     const price = Number(project.p_start_price) || 0;
-    const city = (project.city || "").toLowerCase();
-    recipients = (subs ?? []).filter((s: any) => {
-      const f = s.filters || {};
-      if (f.all_projects) return true;
-      if (f.cities?.length && !f.cities.some((c: string) => c.toLowerCase() === city)) return false;
-      if (f.min_price && price < f.min_price) return false;
-      if (f.max_price && price > f.max_price) return false;
-      return true;
+    const { data: rpcRecipients, error } = await cms.rpc("get_broadcast_recipients", {
+      p_city: project.city || "",
+      p_price: price,
     });
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    recipients = (rpcRecipients ?? []) as any[];
   }
 
   if (recipients.length === 0) {
