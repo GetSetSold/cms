@@ -286,6 +286,7 @@ export async function getModel(builderSlug: string, projectSlug: string, modelSl
   return {
     builder: found.builder, project: found.project, model, siblings,
     floorplans: (floorplans ?? []) as Floorplan[], gallery, limitedTimePromo: found.limitedTimePromo,
+    promos: found.promos,
     paymentPlan: paymentPlans?.[0] as PaymentPlan | undefined, installments,
     amenities: found.amenities,
   };

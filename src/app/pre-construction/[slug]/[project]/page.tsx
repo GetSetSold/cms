@@ -99,7 +99,10 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
         {limitedTimePromo ? (
           <section className="mt-[50px] border-t border-line">
 <div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
-            <PreconSectionHeader eyebrow="Promotion" heading="Limited-Time Offer" />
+            <div className="mb-6">
+              <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted">Promotion</div>
+              <h2 className="font-display mt-1 text-2xl font-extrabold">Limited-Time Offers</h2>
+            </div>
             <PromoBanner promo={limitedTimePromo} />
           </div>
 </section>

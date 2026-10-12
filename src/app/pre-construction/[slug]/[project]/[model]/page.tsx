@@ -46,7 +46,7 @@ export default async function ModelPage({ params }: { params: Promise<{ slug: st
   const { slug: builderSlug, project: projectSlug, model: modelSlug } = await params;
   const [settings, found] = await Promise.all([getSettings(), getModel(builderSlug, projectSlug, modelSlug)]);
   if (!found) notFound();
-  const { builder, project, model, siblings, floorplans, gallery, limitedTimePromo, paymentPlan, installments, amenities } = found;
+  const { builder, project, model, siblings, floorplans, gallery, limitedTimePromo, promos, paymentPlan, installments, amenities } = found;
   const logo = await getLogo(settings);
   const basePath = `/pre-construction/${builderSlug}/${projectSlug}`;
   const cashback = getCashbackAmount(model.starting_price, settings.precon_cashback);
@@ -75,8 +75,8 @@ export default async function ModelPage({ params }: { params: Promise<{ slug: st
               </span>
               {cashback ? (
                 <span className="inline-flex flex-col items-start gap-0.5 rounded-[var(--radius-btn,999px)] bg-gradient-to-r from-[#065f46] via-[#059669] to-[#10b981] px-5 py-2.5 text-sm font-bold text-white">
-                  <span>Up to {formatCashback(cashback)} Cashback — Exclusive Buyer Perk</span>
-                  <span className="text-[12px] font-medium text-white/85">when you buy with us</span>
+                  <span>Up to {formatCashback(cashback)} Cashback</span>
+                  <span className="text-[12px] font-medium text-white/85">— Exclusive Buyer Perk when you buy with us</span>
                 </span>
               ) : null}
             </div>
@@ -102,15 +102,23 @@ export default async function ModelPage({ params }: { params: Promise<{ slug: st
         {model.description ? (
           <section className="mt-[50px] border-t border-line">
 <div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
+            <PreconSectionHeader eyebrow="The Model" heading={model.model_name ?? "Model Details"} />
             <p className="max-w-3xl whitespace-pre-line text-sm leading-relaxed text-muted md:text-base">{model.description}</p>
           </div>
 </section>
         ) : null}
 
-        {limitedTimePromo ? (
+        {limitedTimePromo || promos?.length ? (
           <section className="mt-[50px] border-t border-line">
 <div className="mx-auto w-full max-w-7xl px-5 md:px-10 py-[50px]">
-            <PromoBanner promo={limitedTimePromo} />
+            <div className="mb-6">
+              <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted">Promotion</div>
+              <h2 className="font-display mt-1 text-2xl font-extrabold">Limited-Time Offers</h2>
+            </div>
+            <div className="flex flex-col gap-4">
+              {limitedTimePromo ? <PromoBanner promo={limitedTimePromo} /> : null}
+              {(promos ?? []).map((p) => <PromoBanner key={p.id} promo={p} />)}
+            </div>
           </div>
 </section>
         ) : null}
