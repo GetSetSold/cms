@@ -94,13 +94,25 @@ export function buildPreconBroadcastEmail(opts: {
         ${p.baths ? `<div><div style="font-size:18px;font-weight:700;color:#111;">${p.baths}</div><div style="font-size:12px;color:#888;">Bathrooms</div></div>` : ""}
         ${p.sqft ? `<div><div style="font-size:18px;font-weight:700;color:#111;">${p.sqft}</div><div style="font-size:12px;color:#888;">Sq Ft</div></div>` : ""}
       </div>` : ""}
-      ${promoHtml ? `<div style="margin:0 0 20px;"><div style="font-size:14px;font-weight:700;color:#111;margin-bottom:10px;">Current Incentives</div>${promoHtml}</div>` : ""}
+      ${promoHtml || modelHtml ? `
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px;">
+        <tr>
+          ${promoHtml ? `
+          <td width="${modelHtml ? "50%" : "100%"}" valign="top" style="padding-right:${modelHtml ? "8px" : "0"};">
+            <div style="font-size:14px;font-weight:700;color:#111;margin-bottom:10px;">Current Incentives</div>${promoHtml}
+          </td>` : ""}
+          ${modelHtml ? `
+          <td width="${promoHtml ? "50%" : "100%"}" valign="top" style="padding-left:${promoHtml ? "8px" : "0"};">
+            <div style="font-size:14px;font-weight:700;color:#111;margin-bottom:10px;">Featured Models</div>${modelHtml}
+          </td>` : ""}
+        </tr>
+      </table>` : ""}
       ${cashbackHtml}
       ${p.project_description ? `<p style="font-size:14px;color:#333;line-height:1.7;margin:0 0 20px;">${p.project_description.slice(0, 350)}${p.project_description.length > 350 ? "..." : ""}</p>` : ""}
-      ${modelHtml ? `<div style="margin:0 0 20px;"><div style="font-size:14px;font-weight:700;color:#111;margin-bottom:10px;">Featured Models</div>${modelHtml}</div>` : ""}
       ${p.project_message ? `<p style="font-size:14px;color:#0066cc;background:#f0f4fa;padding:12px 16px;border-radius:8px;margin:0 0 20px;">${p.project_message}</p>` : ""}
       <div style="text-align:center;margin:24px 0;">
-        <a href="${siteUrl}/pre-construction/${p.slug}" style="display:inline-block;background:#111111;color:#ffffff;text-decoration:none;padding:14px 40px;border-radius:999px;font-size:15px;font-weight:600;">View Full Details & Floor Plans</a>
+        <a href="${siteUrl}/pre-construction/${p.slug}#lead" style="display:inline-block;background:#0066cc;color:#ffffff;text-decoration:none;padding:14px 40px;border-radius:999px;font-size:15px;font-weight:600;margin:0 6px 10px;">I'm Interested — Register Now</a><br>
+        <a href="${siteUrl}/pre-construction/${p.slug}" style="display:inline-block;background:#111111;color:#ffffff;text-decoration:none;padding:14px 40px;border-radius:999px;font-size:15px;font-weight:600;margin:0 6px;">View Full Details & Floor Plans</a>
       </div>
       <p style="font-size:13px;color:#888;text-align:center;margin:20px 0 0;">
         Questions? Reply to this email or call me directly.<br>
