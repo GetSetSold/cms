@@ -5,12 +5,51 @@ import type { Amenity } from "@/lib/precon";
 function Form({ initial, onSave, onCancel }: { initial: Partial<Amenity>; onSave: (d: Partial<Amenity>) => void; onCancel: () => void }) {
   const [d, setD] = useState<Partial<Amenity>>(initial);
   const set = (k: keyof Amenity, v: any) => setD((x) => ({ ...x, [k]: v }));
+  const [iconMode, setIconMode] = useState<"url" | "svg" | "library">(
+    (d.icon_url ?? "").startsWith("<svg") || (d.icon_url ?? "").startsWith("svg:")
+      ? "svg"
+      : (d.icon_url ?? "").startsWith("icon:")
+        ? "library"
+        : "url"
+  );
   return (
     <div className="card flex max-w-3xl flex-col gap-3">
       <strong className="text-base">{initial.id ? "Edit amenity" : "Add amenity"}</strong>
       <label className="label">Title<input className="input" value={d.title ?? ""} onChange={(e) => set("title", e.target.value)} /></label>
       <label className="label">Description<textarea className="textarea" rows={2} value={d.description ?? ""} onChange={(e) => set("description", e.target.value)} /></label>
-      <label className="label">Icon URL<input className="input" value={d.icon_url ?? ""} onChange={(e) => set("icon_url", e.target.value)} /></label>
+      <div className="label">Icon
+        <div className="flex gap-2 pt-1">
+          {(["url", "svg", "library"] as const).map((m) => (
+            <button
+              key={m}
+              type="button"
+              onClick={() => setIconMode(m)}
+              className={`rounded-full px-4 py-1.5 text-xs font-bold ${iconMode === m ? "bg-ink text-white" : "bg-soft text-muted"}`}
+            >
+              {m === "url" ? "Image URL" : m === "svg" ? "Paste SVG" : "Icon Library"}
+            </button>
+          ))}
+        </div>
+      </div>
+      {iconMode === "url" ? (
+        <label className="label">Icon URL<input className="input" placeholder="https://…" value={(d.icon_url ?? "").startsWith("http") ? d.icon_url ?? "" : ""} onChange={(e) => set("icon_url", e.target.value)} /></label>
+      ) : iconMode === "svg" ? (
+        <label className="label">Paste SVG code<textarea className="textarea font-mono text-xs" rows={4} placeholder="<svg …>…</svg>" value={(d.icon_url ?? "").replace(/^svg:/, "")} onChange={(e) => set("icon_url", e.target.value.trim().startsWith("<") ? `svg:${e.target.value.trim()}` : e.target.value)} /></label>
+      ) : (
+        <label className="label">Choose icon
+          <select className="input" value={(d.icon_url ?? "").replace(/^icon:/, "")} onChange={(e) => set("icon_url", e.target.value ? `icon:${e.target.value}` : "")}>
+            <option value="">— None —</option>
+            <option value="pool">Pool</option>
+            <option value="gym">Gym / Fitness</option>
+            <option value="park">Park / Green space</option>
+            <option value="clubhouse">Clubhouse</option>
+            <option value="playground">Playground</option>
+            <option value="trail">Trails</option>
+            <option value="security">Security / Gated</option>
+            <option value="concierge">Concierge</option>
+          </select>
+        </label>
+      )}
       <div className="flex gap-2">
         <button type="button" className="btn" onClick={onCancel}>Cancel</button>
         <button type="button" className="btn-primary" onClick={() => onSave(d)} disabled={!d.title?.trim()}>Save</button>

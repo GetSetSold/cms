@@ -13,7 +13,7 @@ import { getCashbackAmount, formatCashback } from "@/lib/cashback";
 import { PreconSectionHeader } from "@/components/site/PreconSectionHeader";
 import { PreconBoxHeader } from "@/components/site/PreconBoxHeader";
 import { PreconOfferBanner } from "@/components/site/PreconOfferBanner";
-import { amenityIcon } from "@/components/site/PreconAmenityIcons";
+import { amenityIconFromUrl } from "@/components/site/PreconAmenityIcons";
 import { seoTitle } from "@/lib/seo";
 
 
@@ -176,10 +176,10 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
             <PreconSectionHeader eyebrow="Features" heading="Amenities & Inclusions" />
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
               {amenities.map((a) => {
-                const icon = amenityIcon(a.title);
+                const icon = amenityIconFromUrl(a.icon_url, a.title);
                 return (
                 <div key={a.id} className={`flex flex-col items-center gap-3 p-6 text-center ${card}`}>
-                  {icon ?? (a.icon_url ? <img src={a.icon_url} alt="" className="h-12 w-12 object-contain" /> : null)}
+                  {icon ?? (a.icon_url && !a.icon_url.startsWith("icon:") && !a.icon_url.startsWith("svg:") && !a.icon_url.trim().startsWith("<svg") ? <img src={a.icon_url} alt="" className="h-12 w-12 object-contain" /> : null)}
                   <div className="text-sm font-bold">{a.title}</div>
                   {a.description ? <div className="text-xs text-muted">{a.description}</div> : null}
                 </div>

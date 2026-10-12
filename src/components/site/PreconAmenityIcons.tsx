@@ -86,3 +86,21 @@ export function amenityIcon(title: string | null): ReactElement | null {
   }
   return null;
 }
+
+/** Resolve an amenity's icon_url to a renderable element.
+ *  Supports: `icon:<name>` (library), `svg:<svg…>` (pasted SVG), plain URL, or null (auto-match by title). */
+export function amenityIconFromUrl(iconUrl: string | null, title: string | null): ReactElement | null {
+  if (!iconUrl) return amenityIcon(title);
+  if (iconUrl.startsWith("icon:")) {
+    const key = iconUrl.slice(5);
+    return ICONS[key] ?? amenityIcon(title);
+  }
+  if (iconUrl.startsWith("svg:")) {
+    const svg = iconUrl.slice(4);
+    return <span className="inline-flex h-8 w-8 items-center justify-center [&>svg]:h-8 [&>svg]:w-8" dangerouslySetInnerHTML={{ __html: svg }} />;
+  }
+  if (iconUrl.trim().startsWith("<svg")) {
+    return <span className="inline-flex h-8 w-8 items-center justify-center [&>svg]:h-8 [&>svg]:w-8" dangerouslySetInnerHTML={{ __html: iconUrl }} />;
+  }
+  return null; // plain URL — caller renders <img>
+}
