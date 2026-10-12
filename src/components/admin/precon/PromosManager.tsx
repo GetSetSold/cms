@@ -88,20 +88,28 @@ export function PromosManager({ initial, builders, projects }: {
       {editing ? <Form initial={editing} builders={builders} projects={projects} onCancel={() => setEditing(null)} onSave={save} /> : null}
       <div className="overflow-hidden rounded-2xl bg-white">
         <table className="w-full text-left">
-          <thead className="border-b border-line text-xs uppercase tracking-wide text-muted"><tr><th className="p-4">Promo</th><th className="p-4">Type</th><th className="p-4">Dates</th><th className="p-4"></th></tr></thead>
+          <thead className="border-b border-line text-xs uppercase tracking-wide text-muted"><tr><th className="p-4">Promo</th><th className="p-4"></th></tr></thead>
           <tbody>
-            {rows.map((r) => (
+            {rows.map((r) => {
+              const builder = builders.find((b) => b.id === r.builder_id);
+              const project = projects.find((p) => p.id === r.project_id);
+              return (
               <tr key={r.id} className="border-b border-line/60 last:border-0">
                 <td className="p-4">
                   <div className="font-medium">{r.title}</div>
-                  {r.badge ? <span className="mt-1 inline-block rounded bg-soft px-2 py-0.5 text-[11px] font-bold">{r.badge}</span> : null}
+                  <div className="mt-1 flex flex-wrap gap-1.5">
+                    {r.badge ? <span className="inline-block rounded bg-soft px-2 py-0.5 text-[11px] font-bold">{r.badge}</span> : null}
+                    <span className="inline-block rounded bg-soft px-2 py-0.5 text-[11px]">{r.promo_type}</span>
+                    {builder ? <span className="inline-block rounded bg-blue-50 px-2 py-0.5 text-[11px] text-blue-700">🏢 {builder.builder_name}</span> : null}
+                    {project ? <span className="inline-block rounded bg-green-50 px-2 py-0.5 text-[11px] text-green-700">📌 {project.project_name}</span> : <span className="inline-block rounded bg-soft px-2 py-0.5 text-[11px] text-muted">Builder-wide</span>}
+                  </div>
+                  <div className="mt-1 text-xs text-muted">{r.start_date ?? "—"} → {r.end_date ?? "—"}</div>
                 </td>
-                <td className="p-4 text-sm text-muted">{r.promo_type}</td>
-                <td className="p-4 text-sm text-muted">{r.start_date ?? "—"} → {r.end_date ?? "—"}</td>
                 <td className="p-4"><div className="flex gap-3 text-xs"><button className="font-medium text-primary" onClick={() => setEditing(r)}>Edit</button><button className="font-medium text-red-700" onClick={() => remove(r.id)}>Delete</button></div></td>
               </tr>
-            ))}
-            {!rows.length ? <tr><td colSpan={4} className="p-8 text-center text-muted">No promos yet.</td></tr> : null}
+              );
+            })}
+            {!rows.length ? <tr><td colSpan={2} className="p-8 text-center text-muted">No promos yet.</td></tr> : null}
           </tbody>
         </table>
       </div>
