@@ -127,6 +127,12 @@ function isPromoActive(p: Promo): boolean {
   return true;
 }
 
+/** Check if promo should display on a given page type. Empty/null = show everywhere. */
+function showOnPage(p: Promo, page: "builder" | "project" | "model"): boolean {
+  if (!p.display_page) return true;
+  return p.display_page.split(",").map((s) => s.trim()).includes(page);
+}
+
 export async function getBuilder(slug: string) {
   const supabase = createPreconClient();
   const { data: builder } = await supabase.from("builders").select("*").eq("slug", slug).maybeSingle();
@@ -135,7 +141,7 @@ export async function getBuilder(slug: string) {
     supabase.from("projects").select("*").eq("builder_id", builder.id),
     supabase.from("promos").select("*").eq("builder_id", builder.id),
   ]);
-  const active = ((promoRows ?? []) as Promo[]).filter(isPromoActive);
+  const active = ((promoRows ?? []) as Promo[]).filter(isPromoActive).filter((p) => showOnPage(p, "builder"));
   const promos = active.filter((p) => p.promo_type === "builder");
   const limitedTimePromo = active.find((p) => p.promo_type === "limited_time");
   return { builder: builder as Builder, projects: (projects ?? []) as Project[], promos, limitedTimePromo };
@@ -248,13 +254,13 @@ export async function getProject(builderSlug: string, projectSlug: string) {
   }
 
   // Limited-time banner: junction-linked first, then direct project_id, then builder-wide fallback.
-  const activeJunction = junctionPromoList.filter((p) => p.promo_type === "limited_time").filter(isPromoActive);
-  const activeProjectPromos = (projectPromos ?? []).filter(isPromoActive);
-  const activeBuilderLimited = ((builderPromos ?? []) as Promo[]).filter((p) => p.promo_type === "limited_time").filter(isPromoActive);
+  const activeJunction = junctionPromoList.filter((p) => p.promo_type === "limited_time").filter(isPromoActive).filter((p) => showOnPage(p, "project"));
+  const activeProjectPromos = (projectPromos ?? []).filter(isPromoActive).filter((p) => showOnPage(p, "project"));
+  const activeBuilderLimited = ((builderPromos ?? []) as Promo[]).filter((p) => p.promo_type === "limited_time").filter(isPromoActive).filter((p) => showOnPage(p, "project"));
   const limitedTimePromo = (activeJunction[0] ?? activeProjectPromos[0] ?? activeBuilderLimited[0]) as Promo | undefined;
 
   // Small builder-wide incentive cards (same ones shown on the builder page).
-  const promos = ((builderPromos ?? []) as Promo[]).filter((p) => p.promo_type === "builder").filter(isPromoActive);
+  const promos = ((builderPromos ?? []) as Promo[]).filter((p) => p.promo_type === "builder").filter(isPromoActive).filter((p) => showOnPage(p, "project"));
 
   let amenities: Amenity[] = [];
   const amenityIds = (projectAmenities ?? []).map((a) => a.amenity_id);
@@ -299,8 +305,9 @@ export async function getModel(builderSlug: string, projectSlug: string, modelSl
 
   return {
     builder: found.builder, project: found.project, model, siblings,
-    floorplans: (floorplans ?? []) as Floorplan[], gallery, limitedTimePromo: found.limitedTimePromo,
-    promos: found.promos,
+    floorplans: (floorplans ?? []) as Floorplan[], gallery,
+    limitedTimePromo: found.limitedTimePromo && showOnPage(found.limitedTimePromo, "model") ? found.limitedTimePromo : undefined,
+    promos: (found.promos ?? []).filter((p: Promo) => showOnPage(p, "model")),
     paymentPlan: paymentPlans?.[0] as PaymentPlan | undefined, installments,
     amenities: found.amenities,
   };

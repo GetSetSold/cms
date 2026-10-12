@@ -34,6 +34,17 @@ function Form({ initial, builders, projects, onSave, onCancel }: {
       </div>
       <label className="label">Bullets (one per line)<textarea className="textarea" rows={3} value={(Array.isArray(d.bullets) ? d.bullets : []).join("\n")} onChange={(e) => set("bullets", e.target.value.split("\n").map((s) => s.trim()).filter(Boolean))} /></label>
       <div className="grid grid-cols-2 gap-3">
+        <label className="label">Display Page
+          <select className="input" value={d.display_page ?? ""} onChange={(e) => set("display_page", e.target.value || null)}>
+            <option value="">— All pages —</option>
+            <option value="builder">Builder page</option>
+            <option value="project">Project page</option>
+            <option value="model">Model page</option>
+            <option value="builder,project">Builder + Project</option>
+            <option value="project,model">Project + Model</option>
+            <option value="builder,project,model">Builder + Project + Model</option>
+          </select>
+        </label>
         <label className="label">Builder
           <select className="input" value={d.builder_id ?? ""} onChange={(e) => set("builder_id", e.target.value ? Number(e.target.value) : null)}>
             <option value="">— None —</option>
