@@ -117,18 +117,34 @@ export default async function PostPage({ params, searchParams }: { params: Promi
               {post.cover_svg_id ? <Svg asset={svgs[post.cover_svg_id]} fill className="mb-8 aspect-[16/9] overflow-hidden rounded-[var(--radius-lg)]" /> : null}
 
               {post.content_blocks?.length ? (
-                <div className="flex flex-col gap-8">
-                  {post.content_blocks.map((block: any) => (
-                    <section key={block.id}>
-                      {block.header && (
-                        <h2 className="text-xl font-semibold mb-4 pb-2 border-b-2 border-ink">{block.header}</h2>
-                      )}
-                      {block.image_svg_id && svgs[block.image_svg_id] ? (
-                        <Svg asset={svgs[block.image_svg_id]} fill className="mb-4 aspect-[16/9] overflow-hidden rounded-[var(--radius-lg)]" />
-                      ) : null}
-                      <div className="prose-post" dangerouslySetInnerHTML={{ __html: renderMarkdown(block.content) }} />
-                    </section>
-                  ))}
+                <div className="flex flex-col gap-6">
+                  {post.content_blocks.map((block: any) => {
+                    const bg = block.bg || "gray";
+                    const bgStyle =
+                      bg === "black" ? { background: "#1a1a1a", color: "#fff" } :
+                      bg === "blue" ? { background: "#0066cc", color: "#fff" } :
+                      bg === "white" ? { background: "#fff" } :
+                      { background: "#f7f7f7" };
+                    const is2col = block.layout === "2col";
+                    return (
+                      <section key={block.id}
+                        className="p-6 md:p-8 rounded-[var(--radius-lg)]"
+                        style={bgStyle}>
+                        {block.header && (
+                          <h2 className="text-xl font-semibold mb-4 pb-2 border-b-2"
+                            style={{ borderColor: bg === "black" || bg === "blue" ? "rgba(255,255,255,0.3)" : "#1a1a1a" }}>
+                            {block.header}
+                          </h2>
+                        )}
+                        <div className={is2col ? "grid md:grid-cols-2 gap-6" : ""}>
+                          {block.image_svg_id && svgs[block.image_svg_id] ? (
+                            <Svg asset={svgs[block.image_svg_id]} fill className="mb-4 md:mb-0 aspect-[16/9] overflow-hidden rounded-[var(--radius-md)]" />
+                          ) : null}
+                          <div className="prose-post" dangerouslySetInnerHTML={{ __html: renderMarkdown(block.content) }} />
+                        </div>
+                      </section>
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="prose-post" dangerouslySetInnerHTML={{ __html: html }} />

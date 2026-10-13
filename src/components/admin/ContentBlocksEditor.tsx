@@ -7,6 +7,8 @@ export interface ContentBlock {
   header: string;
   content: string;
   image_svg_id?: string | null;
+  layout?: "1col" | "2col";
+  bg?: "gray" | "white" | "black" | "blue";
 }
 
 const TOOLS: { label: string; wrap?: [string, string]; line?: string }[] = [
@@ -130,6 +132,25 @@ export function ContentBlocksEditor({
               </select>
             </label>
           )}
+
+          <div className="flex gap-3 mb-2">
+            <label className="label flex-1">Layout
+              <select className="input" value={block.layout || "1col"}
+                onChange={(e) => update(block.id, { layout: e.target.value as "1col" | "2col" })}>
+                <option value="1col">1 column</option>
+                <option value="2col">2 columns</option>
+              </select>
+            </label>
+            <label className="label flex-1">Background
+              <select className="input" value={block.bg || "gray"}
+                onChange={(e) => update(block.id, { bg: e.target.value as ContentBlock["bg"] })}>
+                <option value="gray">Light gray #f7f7f7</option>
+                <option value="white">White</option>
+                <option value="black">Black</option>
+                <option value="blue">Blue</option>
+              </select>
+            </label>
+          </div>
 
           {previewId === block.id ? (
             <div className="rounded-lg border border-line bg-ground p-4">

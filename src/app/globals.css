@@ -76,14 +76,16 @@ body { background: var(--c-ground); color: var(--c-ink); font-family: var(--font
 .prose-post a { color: var(--c-primary); text-decoration: underline; }
 .prose-post strong { font-weight: 600; }
 
-.prose-post .callout { display: flex; gap: 12px; padding: 18px 20px; border-radius: 0; align-items: flex-start; }
-.prose-post .callout-icon { flex-shrink: 0; width: 22px; height: 22px; border-radius: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: white; margin-top: 1px; }
-.prose-post .callout-tip { background: #E4F0EE; }
-.prose-post .callout-tip .callout-icon { background: #0A4540; }
-.prose-post .callout-warning { background: #FBEBDD; }
-.prose-post .callout-warning .callout-icon { background: #8A3F12; }
-.prose-post .callout-note { background: #E6E9F7; }
-.prose-post .callout-note .callout-icon { background: #2B3A8C; }
+.prose-post .callout { display: flex; gap: 12px; padding: 18px 20px; border-radius: var(--radius-md); align-items: flex-start; }
+.prose-post .callout-icon { flex-shrink: 0; width: 22px; height: 22px; border-radius: var(--radius-btn); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: white; margin-top: 1px; }
+.prose-post .callout-tip { background: #f7f7f7; border: 1px solid #e5e5e5; }
+.prose-post .callout-tip .callout-icon { background: #1a1a1a; }
+.prose-post .callout-warning { background: #1a1a1a; color: #fff; }
+.prose-post .callout-warning .callout-icon { background: #fff; color: #1a1a1a; }
+.prose-post .callout-warning a { color: #93c5fd; }
+.prose-post .callout-note { background: #0066cc; color: #fff; }
+.prose-post .callout-note .callout-icon { background: #fff; color: #0066cc; }
+.prose-post .callout-note a { color: #fff; text-decoration: underline; }
 
 /* Blocks placed inside a merged header+block card: the card owns the width and
    padding, so a block's own page-width wrapper (max-w-7xl + side/vertical padding)
