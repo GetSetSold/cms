@@ -67,7 +67,7 @@ body { background: var(--c-ground); color: var(--c-ink); font-family: var(--font
 .prose-post ul.checklist li { display: flex; align-items: flex-start; gap: 10px; }
 .prose-post .check-mark { flex-shrink: 0; width: 20px; height: 20px; border-radius: 0; background: var(--c-primary); color: white; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; margin-top: 2px; }
 
-.prose-post .content-box { padding: 20px 24px; border-radius: 0; color: #14142B; }
+.prose-post .content-box { padding: 20px 24px; border-radius: var(--radius-md); color: #14142B; }
 .prose-post .content-box p { margin: 0; }
 .prose-post .box-row { display: grid; grid-template-columns: 1fr; gap: 16px; align-items: stretch; }
 .prose-post .box-row .content-box { height: 100%; }

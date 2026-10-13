@@ -54,8 +54,10 @@ const CALLOUT: Record<string, { cls: string; icon: string }> = {
 
 const BOX_BG: Record<string, string> = {
   light: "#F4F2FC", // theme's own light tint — matches the rest of the site
-  gray: "#F1F1EF",
+  gray: "#f7f7f7",
   white: "#FFFFFF",
+  black: "#1a1a1a",
+  blue: "#0066cc",
 };
 
 export function renderMarkdown(md: string): string {
@@ -104,10 +106,8 @@ export function renderMarkdown(md: string): string {
   for (const raw of lines) {
     const line = raw.trimEnd();
 
-    // ::: box [light|gray|white]  … content …  :::
-    // A light/gray/white background only, by design — this syntax always
-    // keeps dark, readable text, so there's no contrast case to get wrong.
-    const boxStart = /^:::\s*box\s*(light|gray|white)?\s*$/i.exec(line.trim());
+    // ::: box [light|gray|white|black|blue]  … content …  :::
+    const boxStart = /^:::\s*box\s*(light|gray|white|black|blue)?\s*$/i.exec(line.trim());
     if (boxStart && !box) { flushPara(); flushList(); flushQuote(); box = { bg: (boxStart[1] || "light").toLowerCase(), lines: [] }; continue; }
     if (box && line.trim() === ":::") {
       const html = `<div>${inline(box.lines.join(" "))}</div>`;
@@ -140,17 +140,20 @@ export function renderMarkdown(md: string): string {
   // unpaired box just stays full width) — this is what makes "two boxes
   // together" become a real side-by-side layout instead of two stacked ones.
   const out: string[] = [];
+  const isDark = (bg: string) => bg === "#1a1a1a" || bg === "#0066cc";
   for (let i = 0; i < rawBlocks.length; i++) {
     const cur = rawBlocks[i];
     if (!cur.startsWith(BOX_MARK)) { out.push(cur); continue; }
     const next = rawBlocks[i + 1];
     const curParsed = parseBox(cur);
+    const curStyle = `background:${curParsed.bg}${isDark(curParsed.bg) ? ";color:#fff" : ""}`;
     if (next && next.startsWith(BOX_MARK)) {
       const nextParsed = parseBox(next);
-      out.push(`<div class="box-row"><div class="content-box" style="background:${curParsed.bg}">${curParsed.html}</div><div class="content-box" style="background:${nextParsed.bg}">${nextParsed.html}</div></div>`);
+      const nextStyle = `background:${nextParsed.bg}${isDark(nextParsed.bg) ? ";color:#fff" : ""}`;
+      out.push(`<div class="box-row"><div class="content-box" style="${curStyle}">${curParsed.html}</div><div class="content-box" style="${nextStyle}">${nextParsed.html}</div></div>`);
       i++; // consumed both
     } else {
-      out.push(`<div class="content-box" style="background:${curParsed.bg}">${curParsed.html}</div>`);
+      out.push(`<div class="content-box" style="${curStyle}">${curParsed.html}</div>`);
     }
   }
   return out.join("\n");
