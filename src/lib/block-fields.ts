@@ -88,6 +88,8 @@ export const BLOCK_FIELDS: Record<string, Field[]> = {
     { key: "show_email", label: "Ask for email", type: "boolean" },
     { key: "show_message", label: "Ask for a message", type: "boolean" },
     { key: "show_sms_opt_in", label: "Show SMS consent checkbox", type: "boolean" },
+    { key: "form_align", label: "Layout", type: "select", options: ["left", "center", "full"] },
+    t("form_max_width", "Form max width (px, for centered layout)"),
   ],
   rich_text: [t("heading", "Heading"), ta("body", "Text (blank line = new paragraph)")],
   text_svg: [

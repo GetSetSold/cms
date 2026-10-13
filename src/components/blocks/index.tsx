@@ -511,13 +511,49 @@ function Cta({ data, ctx }: BlockProps) {
 async function LeadFormBlock({ data, ctx }: BlockProps) {
   const supabase = await createClient();
   const { data: form } = await supabase.from("forms").select("*").eq("slug", "general-contact").eq("is_active", true).maybeSingle();
+  const align = data.form_align || "left"; // "left" | "center" | "full"
+  const maxWidth = data.form_max_width ? `${data.form_max_width}px` : undefined;
+
+  const formEl = form
+    ? <CmsFormRenderer form={form as CmsForm} pageId={ctx.page?.id} />
+    : <LeadForm data={data} pageId={ctx.page?.id} siteName={ctx.settings.site_name} />;
+
+  // Full width: form spans entire block width
+  if (align === "full") {
+    return (
+      <div className={`${bw(ctx)} flex flex-col gap-6 py-16 md:py-20`}>
+        <div className="flex flex-col gap-4">
+          <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2>
+          {data.text ? <p className={`text-lg ${muted(ctx)}`}>{data.text}</p> : null}
+        </div>
+        <div className="w-full">{formEl}</div>
+      </div>
+    );
+  }
+
+  // Centered: heading centered, form centered with max-width
+  if (align === "center") {
+    return (
+      <div className={`${bw(ctx)} flex flex-col items-center gap-6 py-16 md:py-20`}>
+        <div className="flex max-w-2xl flex-col items-center gap-4 text-center">
+          <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2>
+          {data.text ? <p className={`text-lg ${muted(ctx)}`}>{data.text}</p> : null}
+        </div>
+        <div className="w-full" style={maxWidth ? { maxWidth } : undefined}>
+          <div className="mx-auto w-full max-w-xl">{formEl}</div>
+        </div>
+      </div>
+    );
+  }
+
+  // Left (default): 2-col on desktop, stacked on mobile
   return (
     <div className={`${bw(ctx)} grid gap-8 py-16 md:grid-cols-2 md:gap-12 md:py-20`}>
       <div className="flex flex-col gap-4">
         <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2>
         {data.text ? <p className={`text-lg ${muted(ctx)}`}>{data.text}</p> : null}
       </div>
-      {form ? <CmsFormRenderer form={form as CmsForm} pageId={ctx.page?.id} /> : <LeadForm data={data} pageId={ctx.page?.id} siteName={ctx.settings.site_name} />}
+      {formEl}
     </div>
   );
 }
