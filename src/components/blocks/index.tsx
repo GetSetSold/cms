@@ -737,12 +737,43 @@ async function CustomForm({ data, ctx }: BlockProps) {
   const { data: form } = await supabase.from("forms").select("*").eq("slug", data.form_slug).eq("is_active", true).maybeSingle();
   if (!form) return null;
 
+  const align = data.form_align || "left"; // "left" | "center" | "full"
+  const maxWidth = data.form_max_width ? `${data.form_max_width}px` : undefined;
+  const formEl = <CmsFormRenderer form={form as CmsForm} pageId={ctx.page?.id} />;
+
+  // Full width
+  if (align === "full") {
+    return (
+      <div className={`${bw(ctx)} flex flex-col gap-6 py-7 md:py-20`}>
+        {data.heading ? <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2> : null}
+        {data.text ? <p className={`text-lg ${muted(ctx)}`}>{data.text}</p> : null}
+        <div className="w-full">{formEl}</div>
+      </div>
+    );
+  }
+
+  // Centered
+  if (align === "center") {
+    return (
+      <div className={`${bw(ctx)} flex flex-col items-center gap-6 py-7 md:py-20`}>
+        <div className="flex max-w-2xl flex-col items-center gap-4 text-center">
+          {data.heading ? <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2> : null}
+          {data.text ? <p className={`text-lg ${muted(ctx)}`}>{data.text}</p> : null}
+        </div>
+        <div className="w-full" style={maxWidth ? { maxWidth } : undefined}>
+          <div className="mx-auto w-full max-w-xl">{formEl}</div>
+        </div>
+      </div>
+    );
+  }
+
+  // Left (default)
   return (
     <div className={`${bw(ctx)} flex flex-col gap-6 py-7 md:py-20`}>
       {data.heading ? <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2> : null}
       {data.text ? <p className={`max-w-xl text-lg ${muted(ctx)}`}>{data.text}</p> : null}
       <div className={form.layout === "sidebar" ? "w-full" : "max-w-2xl"}>
-        <CmsFormRenderer form={form as CmsForm} pageId={ctx.page?.id} />
+        {formEl}
       </div>
     </div>
   );

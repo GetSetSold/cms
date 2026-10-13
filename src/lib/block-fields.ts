@@ -135,6 +135,8 @@ export const BLOCK_FIELDS: Record<string, Field[]> = {
     { key: "form_slug", label: "Form", type: "form" },
     t("heading", "Heading"),
     ta("text", "Intro text"),
+    { key: "form_align", label: "Layout", type: "select", options: ["left", "center", "full"] },
+    t("form_max_width", "Form max width (px, for centered layout)"),
   ],
   icon_card: [
     { key: "svg_id", label: "Icon", type: "svg" },
