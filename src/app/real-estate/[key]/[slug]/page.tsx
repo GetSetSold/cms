@@ -21,6 +21,7 @@ import { ShareButton } from "@/components/listings/ShareButton";
 import { ListingMarketPulse } from "@/components/listings/ListingMarketPulse";
 import { RealtorAttribution } from "@/components/listings/RealtorAttribution";
 import { LocationDescription, PropertySummary, LandAndLot, ConstructionExterior, SystemsUtilities, Financials, FieldTable, RoomsBlock, MapDirections } from "@/components/listings/ListingDetailBlocks";
+import { ListingFaq } from "@/components/listings/ListingFaq";
 import { createClient } from "@/lib/supabase/server";
 import type { CmsForm } from "@/lib/types";
 
@@ -219,6 +220,8 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
             <ConstructionExterior listing={listing} />
 
             <Financials listing={listing} sale={sale} />
+
+            <ListingFaq listing={listing} />
             </div>
           </div>
 
