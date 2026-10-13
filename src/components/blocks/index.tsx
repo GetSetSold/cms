@@ -44,8 +44,20 @@ const headingCls = (compact?: boolean) => (compact ? h2Compact : h2);
 const cardShadow = "border-[length:var(--border-card-width)] border-line shadow-[var(--shadow-card)]";
 const cardLg = `rounded-[var(--radius-lg)] ${cardShadow}`;
 const cardMd = `rounded-[var(--radius-md)] ${cardShadow}`;
+const renderInlineLinks = (text: string) => {
+  // Parse [link text](/url) markdown-style links
+  const parts = text.split(/(\[[^\]]+\]\([^)]+\))/g);
+  return parts.map((part, i) => {
+    const match = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+    if (match) {
+      return <a key={i} href={match[2]} className="text-[#0066cc] underline hover:text-[#0052a3]">{match[1]}</a>;
+    }
+    return <span key={i}>{part}</span>;
+  });
+};
+
 const paragraphs = (text?: string) =>
-  (text ?? "").split(/\n{2,}/).filter(Boolean).map((p, i) => <p key={i}>{p}</p>);
+  (text ?? "").split(/\n{2,}/).filter(Boolean).map((p, i) => <p key={i}>{renderInlineLinks(p)}</p>);
 // Luminance check for custom badge/backdrop colors — picks readable text.
 function isDarkHex(hex: string): boolean {
   const h = hex.trim().replace("#", "");

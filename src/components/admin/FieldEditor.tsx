@@ -1,7 +1,48 @@
 "use client";
+import { useState } from "react";
 import type { Field } from "@/lib/block-fields";
 import type { SvgAsset, CmsForm } from "@/lib/types";
 import { SvgPicker } from "./SvgPicker";
+
+function LinkHelper({ onInsert }: { onInsert: (markdown: string) => void }) {
+  const [pages, setPages] = useState<{ title: string; url: string }[]>([]);
+  const [open, setOpen] = useState(false);
+  const [text, setText] = useState("");
+
+  async function load() {
+    if (pages.length) { setOpen(true); return; }
+    try {
+      const r = await fetch("/api/admin/pages-list");
+      const d = await r.json();
+      setPages(d.pages ?? []);
+    } catch {}
+    setOpen(true);
+  }
+
+  return (
+    <div className="relative">
+      <button type="button" onClick={load} className="text-xs text-[#0066cc] underline">
+        + Insert link
+      </button>
+      {open ? (
+        <div className="absolute z-50 mt-1 w-72 rounded-lg border border-line bg-white p-3 shadow-lg">
+          <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Link text"
+            className="mb-2 w-full rounded border border-line px-2 py-1 text-sm" />
+          <div className="max-h-48 overflow-y-auto">
+            {pages.map((p) => (
+              <button key={p.url} type="button"
+                onClick={() => { onInsert(`[${text || p.title}](${p.url})`); setOpen(false); setText(""); }}
+                className="block w-full truncate px-2 py-1 text-left text-sm hover:bg-gray-50">
+                {p.title}
+              </button>
+            ))}
+          </div>
+          <button type="button" onClick={() => setOpen(false)} className="mt-2 text-xs text-muted underline">Close</button>
+        </div>
+      ) : null}
+    </div>
+  );
+}
 
 type Props = { fields: Field[]; value: Record<string, any>; onChange: (v: Record<string, any>) => void; svgs: SvgAsset[]; forms?: CmsForm[] };
 
@@ -16,7 +57,16 @@ export function FieldEditor({ fields, value, onChange, svgs, forms = [] }: Props
           case "text":
             return <label key={f.key} className="label">{f.label}<input className="input" value={v ?? ""} onChange={(e) => set(f.key, e.target.value)} /></label>;
           case "textarea":
-            return <label key={f.key} className="label">{f.label}<textarea rows={3} className="textarea" value={v ?? ""} onChange={(e) => set(f.key, e.target.value)} /></label>;
+            return (
+              <label key={f.key} className="label">
+                <div className="flex items-center justify-between">
+                  <span>{f.label}</span>
+                  <LinkHelper onInsert={(md) => set(f.key, (v ?? "") + (v ? " " : "") + md)} />
+                </div>
+                <textarea rows={3} className="textarea" value={v ?? ""} onChange={(e) => set(f.key, e.target.value)} />
+                <span className="text-[11px] text-muted">Tip: use [link text](/page-url) for inline links</span>
+              </label>
+            );
           case "code":
             return <label key={f.key} className="label">{f.label}<textarea rows={12} className="textarea font-mono text-xs" spellCheck={false} value={v ?? ""} onChange={(e) => set(f.key, e.target.value)} /></label>;
           case "boolean":
