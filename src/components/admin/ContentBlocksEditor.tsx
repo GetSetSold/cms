@@ -153,10 +153,10 @@ export function ContentBlocksEditor({
               </select>
             </label>
             <label className="label flex-1">Background
-              <select className="input" value={block.bg || "gray"}
+              <select className="input" value={block.bg || "white"}
                 onChange={(e) => update(block.id, { bg: e.target.value as ContentBlock["bg"] })}>
-                <option value="gray">Light gray #f7f7f7</option>
                 <option value="white">White</option>
+                <option value="gray">Light gray #f7f7f7</option>
                 <option value="black">Black</option>
                 <option value="blue">Blue</option>
               </select>
