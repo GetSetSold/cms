@@ -44,7 +44,8 @@ const headingCls = (compact?: boolean) => (compact ? h2Compact : h2);
 const cardShadow = "border-[length:var(--border-card-width)] border-line shadow-[var(--shadow-card)]";
 const cardLg = `rounded-[var(--radius-lg)] ${cardShadow}`;
 const cardMd = `rounded-[var(--radius-md)] ${cardShadow}`;
-const renderInlineLinks = (text: string) => {
+export const renderInlineLinks = (text: string | undefined) => {
+  if (!text) return null;
   // Parse [link text](/url) markdown-style links
   const parts = text.split(/(\[[^\]]+\]\([^)]+\))/g);
   return parts.map((part, i) => {
@@ -133,17 +134,17 @@ function Hero({ data, ctx }: BlockProps) {
           {data.subheading_items.map((it: any, i: number) => (
             <li key={i} className="flex items-start gap-3 text-left">
               <span className={`mt-0.5 flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-[var(--radius-label)] text-[12px] font-bold ${dark ? "bg-white text-ink" : "bg-ink text-white"}`} aria-hidden="true">✓</span>
-              <span className={`text-[15px] leading-relaxed ${dark ? "text-ground/85" : "text-ink/80"}`}>{it.text}</span>
+              <span className={`text-[15px] leading-relaxed ${dark ? "text-ground/85" : "text-ink/80"}`}>{renderInlineLinks(it.text)}</span>
             </li>
           ))}
         </ul>
       ) : data.subheading ? (
         compact ? (
-          <p className={`max-w-xl text-sm leading-relaxed ${dark ? "text-ground/75" : "text-muted"}`}>{data.subheading}</p>
+          <p className={`max-w-xl text-sm leading-relaxed ${dark ? "text-ground/75" : "text-muted"}`}>{renderInlineLinks(data.subheading)}</p>
         ) : (
           <>
             <div className={`h-px w-full border-t ${dark ? "border-white/15" : "border-line"}`} />
-            <p className={`max-w-xl text-lg font-semibold leading-relaxed ${dark ? "text-ground" : "text-ink"}`}>{data.subheading}</p>
+            <p className={`max-w-xl text-lg font-semibold leading-relaxed ${dark ? "text-ground" : "text-ink"}`}>{renderInlineLinks(data.subheading)}</p>
           </>
         )
       ) : null}
@@ -326,7 +327,7 @@ function Services({ data, ctx }: BlockProps) {
               <Svg asset={ctx.svgs[s.svg_id]} className="aspect-square w-22 shrink-0 overflow-hidden rounded-[var(--radius-md)] md:aspect-[360/220] md:w-full" />
               <div className="flex flex-col gap-1.5 md:p-2">
                 <h3 className="text-base font-semibold md:text-[22px]">{s.title}</h3>
-                <p className="text-sm leading-relaxed text-muted md:text-base">{s.text}</p>
+                <p className="text-sm leading-relaxed text-muted md:text-base">{renderInlineLinks(s.text)}</p>
                 {s.href ? (
                   <span className="mt-2 inline-flex w-fit items-center gap-1 rounded-[var(--radius-label)] border border-line px-3.5 py-1.5 text-[13px] font-medium text-primary transition group-hover:bg-primary group-hover:text-white">
                     {s.link_label || "Learn more"} →
@@ -368,7 +369,7 @@ function Features({ data, ctx }: BlockProps) {
                 </div>
               )}
               <h3 className={`text-xl font-semibold ${heading(ctx)}`}>{f.title}</h3>
-              <p className={`leading-relaxed ${muted(ctx)}`}>{f.text}</p>
+              <p className={`leading-relaxed ${muted(ctx)}`}>{renderInlineLinks(f.text)}</p>
               {f.href ? (
                 <span className={`mt-1 inline-flex h-10 w-fit items-center rounded-[var(--radius-label)] px-5 text-sm font-medium ${btnCls}`}>
                   {f.link_label || "Learn more"} →
@@ -447,7 +448,7 @@ function Faq({ data, ctx }: BlockProps) {
             <summary className={`flex cursor-pointer list-none items-center justify-between gap-4 text-lg font-medium md:text-xl ${heading(ctx)}`}>
               {f.q}<span className="text-2xl transition group-open:rotate-45">+</span>
             </summary>
-            <p className={`pt-3 leading-relaxed ${muted(ctx)}`}>{f.a}</p>
+            <p className={`pt-3 leading-relaxed ${muted(ctx)}`}>{renderInlineLinks(f.a)}</p>
           </details>
         ))}
       </div>
@@ -507,7 +508,7 @@ function Cta({ data, ctx }: BlockProps) {
       <div className={`flex flex-col items-start gap-6 rounded-[28px] p-8 md:flex-row md:items-center md:justify-between md:p-14 ${dark ? "bg-white/10 border border-white/20" : "bg-soft"}`}>
         <div className="flex flex-col gap-3">
           <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2>
-          {data.text ? <p className={`text-lg ${muted(ctx)}`}>{data.text}</p> : null}
+          {data.text ? <p className={`text-lg ${muted(ctx)}`}>{renderInlineLinks(data.text)}</p> : null}
         </div>
         <Button link={data.button} dark={dark} />
       </div>
@@ -536,7 +537,7 @@ async function LeadFormBlock({ data, ctx }: BlockProps) {
       <div className={`${bw(ctx)} flex flex-col gap-6 py-16 md:py-20`}>
         <div className="flex flex-col gap-4">
           <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2>
-          {data.text ? <p className={`text-lg ${muted(ctx)}`}>{data.text}</p> : null}
+          {data.text ? <p className={`text-lg ${muted(ctx)}`}>{renderInlineLinks(data.text)}</p> : null}
         </div>
         <div className="w-full">{formEl}</div>
       </div>
@@ -549,7 +550,7 @@ async function LeadFormBlock({ data, ctx }: BlockProps) {
       <div className={`${bw(ctx)} flex flex-col items-center gap-6 py-16 md:py-20`}>
         <div className="flex max-w-2xl flex-col items-center gap-4 text-center">
           <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2>
-          {data.text ? <p className={`text-lg ${muted(ctx)}`}>{data.text}</p> : null}
+          {data.text ? <p className={`text-lg ${muted(ctx)}`}>{renderInlineLinks(data.text)}</p> : null}
         </div>
         <div className="w-full" style={maxWidth ? { maxWidth } : undefined}>
           <div className="mx-auto w-full max-w-xl">{formEl}</div>
@@ -563,7 +564,7 @@ async function LeadFormBlock({ data, ctx }: BlockProps) {
     <div className={`${bw(ctx)} grid gap-8 py-16 md:grid-cols-2 md:gap-12 md:py-20`}>
       <div className="flex flex-col gap-4">
         <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2>
-        {data.text ? <p className={`text-lg ${muted(ctx)}`}>{data.text}</p> : null}
+        {data.text ? <p className={`text-lg ${muted(ctx)}`}>{renderInlineLinks(data.text)}</p> : null}
       </div>
       {formEl}
     </div>
@@ -758,7 +759,7 @@ async function CustomForm({ data, ctx }: BlockProps) {
     return (
       <div className={`${bw(ctx)} flex flex-col gap-6 py-7 md:py-20`}>
         {data.heading ? <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2> : null}
-        {data.text ? <p className={`text-lg ${muted(ctx)}`}>{data.text}</p> : null}
+        {data.text ? <p className={`text-lg ${muted(ctx)}`}>{renderInlineLinks(data.text)}</p> : null}
         <div className="w-full">{formEl}</div>
       </div>
     );
@@ -770,7 +771,7 @@ async function CustomForm({ data, ctx }: BlockProps) {
       <div className={`${bw(ctx)} flex flex-col items-center gap-6 py-7 md:py-20`}>
         <div className="flex max-w-2xl flex-col items-center gap-4 text-center">
           {data.heading ? <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2> : null}
-          {data.text ? <p className={`text-lg ${muted(ctx)}`}>{data.text}</p> : null}
+          {data.text ? <p className={`text-lg ${muted(ctx)}`}>{renderInlineLinks(data.text)}</p> : null}
         </div>
         <div className="w-full" style={maxWidth ? { maxWidth } : undefined}>
           <div className="mx-auto w-full max-w-xl">{formEl}</div>
@@ -783,7 +784,7 @@ async function CustomForm({ data, ctx }: BlockProps) {
   return (
     <div className={`${bw(ctx)} flex flex-col gap-6 py-7 md:py-20`}>
       {data.heading ? <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2> : null}
-      {data.text ? <p className={`max-w-xl text-lg ${muted(ctx)}`}>{data.text}</p> : null}
+      {data.text ? <p className={`max-w-xl text-lg ${muted(ctx)}`}>{renderInlineLinks(data.text)}</p> : null}
       <div className={form.layout === "sidebar" ? "w-full" : "max-w-2xl"}>
         {formEl}
       </div>
@@ -817,7 +818,7 @@ function IconCard({ data, ctx }: BlockProps) {
     >
       {art ? <Svg asset={art} label={art.name} className="h-10 w-10 md:h-14 md:w-14" style={iconStyle} colorOverride={data.icon_color} /> : null}
       {data.heading ? <h3 className={`text-lg font-semibold md:text-xl ${dark ? "text-ground" : ""}`}>{data.heading}</h3> : null}
-      {data.text ? <p className={`text-[13px] leading-relaxed md:text-base ${dark ? "text-ground/75" : "text-muted"}`}>{data.text}</p> : null}
+      {data.text ? <p className={`text-[13px] leading-relaxed md:text-base ${dark ? "text-ground/75" : "text-muted"}`}>{renderInlineLinks(data.text)}</p> : null}
       {data.link?.label ? (
         <Link href={data.link.href} className={`mt-1 inline-flex h-10 items-center rounded-[var(--radius-btn)] px-5 text-sm font-medium transition ${btnCls}`}>
           {data.link.label}

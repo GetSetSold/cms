@@ -1,5 +1,5 @@
 import { contrastRatio } from "@/lib/color";
-import type { BlockCtx } from "./index";
+import { renderInlineLinks, type BlockCtx } from "./index";
 
 export type FaqStyle = "lines" | "numbered" | "cards";
 export const FAQ_STYLES: string[] = ["lines", "numbered", "cards"];
@@ -57,7 +57,7 @@ export function FaqList({ items, style, columns, ctx }: { items: Item[]; style: 
               <span aria-hidden className={`text-2xl leading-none transition-transform group-open:rotate-45 ${head}`}>+</span>
             </span>
           </summary>
-          <p className={`pb-7 pl-14 pr-14 leading-relaxed md:pb-9 md:pl-[4.75rem] md:pr-20 md:text-lg ${body}`}>{f.a}</p>
+          <p className={`pb-7 pl-14 pr-14 leading-relaxed md:pb-9 md:pl-[4.75rem] md:pr-20 md:text-lg ${body}`}>{renderInlineLinks(f.a)}</p>
         </details>
       );
     }
@@ -70,7 +70,7 @@ export function FaqList({ items, style, columns, ctx }: { items: Item[]; style: 
               <svg aria-hidden width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>
             </span>
           </summary>
-          <p className={`mt-4 pr-14 leading-relaxed md:text-lg ${body}`}>{f.a}</p>
+          <p className={`mt-4 pr-14 leading-relaxed md:text-lg ${body}`}>{renderInlineLinks(f.a)}</p>
         </details>
       );
     }
@@ -80,7 +80,7 @@ export function FaqList({ items, style, columns, ctx }: { items: Item[]; style: 
           <h3 className={`text-lg font-semibold ${q} ${head}`}>{f.q}</h3>
           <span aria-hidden className={`text-3xl leading-none transition-transform group-open:rotate-45 ${head}`}>+</span>
         </summary>
-        <p className={`pt-4 pr-10 leading-relaxed md:text-lg ${body}`}>{f.a}</p>
+        <p className={`pt-4 pr-10 leading-relaxed md:text-lg ${body}`}>{renderInlineLinks(f.a)}</p>
       </details>
     );
   };
