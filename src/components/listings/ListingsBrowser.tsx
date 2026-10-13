@@ -1,4 +1,4 @@
-import { createMlsClient, listNormalizedCities, listCityGroups, resolveCitySelection, type GridListing, type CityGroup } from "@/lib/mls";
+import { createMlsClient, listNormalizedCities, listCityGroups, resolveCitySelection, rawCitiesFor, type GridListing, type CityGroup } from "@/lib/mls";
 import { listingCardsWithAds } from "@/components/listings/ListingGrid";
 import { getSettings } from "@/lib/cms";
 import { ListingsMap } from "@/components/listings/ListingsMap";
@@ -42,7 +42,7 @@ async function getCachedTypeCounts(
 }
 
 export async function ListingsBrowser({
-  sp, basePath, fixedCity, heading, typeBreakdown,
+  sp, basePath, fixedCity, heading, typeBreakdown, totalOverride,
 }: {
   sp: ListingsSearchParams;
   basePath: string;
@@ -51,6 +51,9 @@ export async function ListingsBrowser({
   heading?: string;
   /** Precomputed type counts (from city stats) — avoids a 10k-row scan. */
   typeBreakdown?: { label: string; count: number }[];
+  /** When set, display this as the total instead of the filtered query count
+   *  (e.g. city pages show the true active listing count from stats). */
+  totalOverride?: number;
 }) {
   const mls = createMlsClient();
 
@@ -76,10 +79,13 @@ export async function ListingsBrowser({
   // City/area selection resolves to raw variants. An exact raw match
   // ("Hamilton (Ancaster)") filters to just that area; a normalized name
   // ("Hamilton") expands to all its variants.
+  // On city hub pages (fixedCity), use rawCitiesFor to get ALL variants
+  // (e.g. "Toronto", "Toronto (Mimico)", ...). resolveCitySelection would
+  // return only the exact match, under-counting listings.
   let cityVariants: string[] | null = null;
   let multiCityDisplay: string | null = null;
   if (fixedCity) {
-    cityVariants = (await resolveCitySelection(fixedCity)).variants;
+    cityVariants = await rawCitiesFor(fixedCity);
   } else if (!hasLocation && multiCityNames.length > 0) {
     const variantSet = new Set<string>();
     const displayNames: string[] = [];
@@ -165,8 +171,8 @@ export async function ListingsBrowser({
           <p className="text-sm text-muted">
             Showing {DEFAULT_CITY} by default. <a href={hrefFor({ city: ALL_CITIES_SENTINEL })} className="font-medium text-primary">Search all cities</a> instead.
           </p>
-        ) : fixedCity ? null : (
-          <p className="text-muted">{total.toLocaleString()} properties available</p>
+        ) : (
+          <p className="text-muted">{(totalOverride ?? total).toLocaleString()} properties available</p>
         )}
       </div>
 

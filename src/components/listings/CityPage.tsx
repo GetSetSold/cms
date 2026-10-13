@@ -76,7 +76,7 @@ export async function CityPageContent({
       <SiteHeader settings={settings} logo={logo} />
       <main className="mx-auto w-full max-w-7xl px-5 py-10 md:px-10 md:py-14">
         <Suspense fallback={<SkeletonGrid count={12} />}>
-          <ListingsBrowser sp={sp} basePath={cityUrl} fixedCity={city} heading={`Homes for sale in ${city}`} typeBreakdown={stats.typeBreakdown} />
+          <ListingsBrowser sp={sp} basePath={cityUrl} fixedCity={city} heading={`Homes for sale in ${city}`} typeBreakdown={stats.typeBreakdown} totalOverride={stats.activeCount} />
         </Suspense>
         <Suspense fallback={<SkeletonBlock className="mt-12" />}>
           <CityStatsSection stats={stats} />
