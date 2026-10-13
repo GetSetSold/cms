@@ -465,7 +465,7 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
                     </div>
           </section>
         )}
-        {tab === "evaluation" && (
+        {tab === "evaluation" && (<>
           <section className="flex flex-col gap-3 border border-line bg-white p-4 md:p-5">
             <h2 className="text-base font-semibold">Home valuation <span className="font-normal text-muted">— /free-online-home-valuation</span></h2>
             <p className="text-xs text-muted">Address search powers the picker — choose a provider below. MapTiler needs the <code>MAPTILER_API_KEY</code> Cloudflare secret; Google Places needs <code>GOOGLE_PLACES_API_KEY</code>. If the selected provider's key is missing, it falls back to the other automatically.</p>
@@ -493,7 +493,12 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
               <label className="label">Virtual CMA URL <span className="font-normal text-muted">(blank hides the button)</span><input className="input" value={s.home_evaluation?.virtual_cma_url ?? ""} onChange={(e) => set("home_evaluation", { ...s.home_evaluation, virtual_cma_url: e.target.value })} placeholder="https://…" /></label>
             </div>
           </section>
-        )}
+          <section className="flex flex-col gap-3 border border-line bg-white p-4 md:p-5">
+            <h2 className="text-base font-semibold">Listing pages</h2>
+            <p className="text-xs text-muted">StatsCan neighbourhood demographics appear on each listing after the map. Data is matched by postal code (dissemination area), falling back to city-level when DA data isn't available.</p>
+            <label className="label flex flex-row items-center gap-2">Show demographics section<input type="checkbox" checked={s.show_demographics !== false} onChange={(e) => set("show_demographics", e.target.checked)} className="h-4 w-4" /></label>
+          </section>
+        </>)}
         {tab === "content" && (<>
           <section className="flex flex-col gap-3 border border-line bg-white p-4 md:p-5">
             <h2 className="text-base font-semibold">Blog sidebar CTA</h2>

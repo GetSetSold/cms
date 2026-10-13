@@ -19,6 +19,7 @@ import { PromoBanner } from "@/components/listings/PromoBanner";
 import { PaymentEstimate } from "@/components/listings/PaymentEstimate";
 import { ShareButton } from "@/components/listings/ShareButton";
 import { ListingMarketPulse } from "@/components/listings/ListingMarketPulse";
+import { ListingDemographics } from "@/components/listings/ListingDemographics";
 import { RealtorAttribution } from "@/components/listings/RealtorAttribution";
 import { LocationDescription, PropertySummary, LandAndLot, ConstructionExterior, SystemsUtilities, Financials, FieldTable, RoomsBlock, MapDirections } from "@/components/listings/ListingDetailBlocks";
 import { ListingFaq } from "@/components/listings/ListingFaq";
@@ -241,6 +242,12 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
             </div>
           ) : null;
         })()}
+
+        {settings.show_demographics !== false ? (
+          <div className="mt-10">
+            <ListingDemographics postalCode={listing.PostalCode} city={listing.City} />
+          </div>
+        ) : null}
 
         {(() => {
           // HPI is sales data — hide on rental listings.

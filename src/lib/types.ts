@@ -119,6 +119,8 @@ export interface SiteSettings {
   };
   social_links: { size?: "xs" | "sm" | "md" | "lg"; items: { svg_id: string; href: string; label?: string }[] };
   mls_office_key?: string;
+  /** Show StatsCan neighbourhood demographics on listing pages (after map, before Market Pulse). */
+  show_demographics?: boolean;
   precon_cashback?: { enabled: boolean; type: "percent" | "flat"; value: number };
   scripts: { ga4_id?: string };
   /** Sitewide custom code (chat widgets, pixels): injected on every page. Admin → Settings → Custom code. */
@@ -142,8 +144,7 @@ export interface SiteSettings {
     boc_ad_enabled?: boolean;
     guides_ad_enabled?: boolean;
     calculators_ad_enabled?: boolean;
-    listing_ad_enabled?: boolean;
-  };
+    listing_ad_enabled?: boolean;  };
   promo?: {
     buyer_enabled?: boolean;
     tenant_enabled?: boolean;
