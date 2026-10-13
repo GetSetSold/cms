@@ -1,46 +1,81 @@
 "use client";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { Field } from "@/lib/block-fields";
 import type { SvgAsset, CmsForm } from "@/lib/types";
 import { SvgPicker } from "./SvgPicker";
 
-function LinkHelper({ onInsert }: { onInsert: (markdown: string) => void }) {
+function TextareaWithLink({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
   const [pages, setPages] = useState<{ title: string; url: string }[]>([]);
   const [open, setOpen] = useState(false);
-  const [text, setText] = useState("");
+  const [linkText, setLinkText] = useState("");
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  async function load() {
-    if (pages.length) { setOpen(true); return; }
-    try {
-      const r = await fetch("/api/admin/pages-list");
-      const d = await r.json();
-      setPages(d.pages ?? []);
-    } catch {}
+  async function togglePicker(e: React.MouseEvent) {
+    e.stopPropagation();
+    if (open) { setOpen(false); return; }
+    if (!pages.length) {
+      try {
+        const r = await fetch("/api/admin/pages-list");
+        const d = await r.json();
+        setPages(d.pages ?? []);
+      } catch {}
+    }
     setOpen(true);
   }
 
+  function insertLink(url: string, title: string) {
+    const ta = textareaRef.current;
+    const text = linkText.trim() || title;
+    const md = `[${text}](${url})`;
+    if (ta) {
+      const start = ta.selectionStart ?? value.length;
+      const end = ta.selectionEnd ?? value.length;
+      const next = value.slice(0, start) + md + value.slice(end);
+      onChange(next);
+      // Restore cursor after inserted text
+      setTimeout(() => {
+        ta.focus();
+        ta.setSelectionRange(start + md.length, start + md.length);
+      }, 0);
+    } else {
+      onChange((value ? value + " " : "") + md);
+    }
+    setOpen(false);
+    setLinkText("");
+  }
+
   return (
-    <div className="relative">
-      <button type="button" onClick={(e) => { e.stopPropagation(); load(); }} className="text-xs text-[#0066cc] underline">
-        + Insert link
-      </button>
-      {open ? (
-        <div className="absolute right-0 z-50 mt-1 w-72 rounded-lg border border-line bg-white p-3 shadow-lg" onClick={(e) => e.stopPropagation()}>
-          <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Link text"
-            className="mb-2 w-full rounded border border-line px-2 py-1 text-sm" />
-          <div className="max-h-48 overflow-y-auto">
-            {pages.map((p) => (
-              <button key={p.url} type="button"
-                onClick={(e) => { e.stopPropagation(); onInsert(`[${text || p.title}](${p.url})`); setOpen(false); setText(""); }}
-                className="block w-full truncate px-2 py-1 text-left text-sm hover:bg-gray-50">
-                {p.title}
-              </button>
-            ))}
-          </div>
-          <button type="button" onClick={(e) => { e.stopPropagation(); setOpen(false); }} className="mt-2 text-xs text-muted underline">Close</button>
+    <label className="label">
+      <div className="flex items-center justify-between">
+        <span>{label}</span>
+        <div className="relative">
+          <button type="button" onClick={togglePicker} className="text-xs text-[#0066cc] underline">
+            + Insert link
+          </button>
+          {open ? (
+            <div className="absolute right-0 z-50 mt-1 w-72 rounded-lg border border-line bg-white p-3 shadow-lg" onClick={(e) => e.stopPropagation()}>
+              <input value={linkText} onChange={(e) => setLinkText(e.target.value)} placeholder="Link text (optional)"
+                className="mb-2 w-full rounded border border-line px-2 py-1 text-sm"
+                onClick={(e) => e.stopPropagation()} />
+              <div className="max-h-48 overflow-y-auto">
+                {pages.length === 0 ? (
+                  <p className="px-2 py-1 text-sm text-muted">Loading…</p>
+                ) : pages.map((p) => (
+                  <button key={p.url} type="button"
+                    onClick={(e) => { e.stopPropagation(); insertLink(p.url, p.title); }}
+                    className="block w-full truncate px-2 py-1 text-left text-sm hover:bg-gray-50">
+                    {p.title}
+                  </button>
+                ))}
+              </div>
+              <button type="button" onClick={(e) => { e.stopPropagation(); setOpen(false); }} className="mt-2 text-xs text-muted underline">Close</button>
+            </div>
+          ) : null}
         </div>
-      ) : null}
-    </div>
+      </div>
+      <textarea ref={textareaRef} rows={3} className="textarea" value={value ?? ""} onChange={(e) => onChange(e.target.value)} />
+      <span className="text-[11px] text-muted">Tip: use [link text](/page-url) for inline links</span>
+    </label>
   );
 }
 
@@ -58,14 +93,7 @@ export function FieldEditor({ fields, value, onChange, svgs, forms = [] }: Props
             return <label key={f.key} className="label">{f.label}<input className="input" value={v ?? ""} onChange={(e) => set(f.key, e.target.value)} /></label>;
           case "textarea":
             return (
-              <label key={f.key} className="label">
-                <div className="flex items-center justify-between">
-                  <span>{f.label}</span>
-                  <LinkHelper onInsert={(md) => set(f.key, (v ?? "") + (v ? " " : "") + md)} />
-                </div>
-                <textarea rows={3} className="textarea" value={v ?? ""} onChange={(e) => set(f.key, e.target.value)} />
-                <span className="text-[11px] text-muted">Tip: use [link text](/page-url) for inline links</span>
-              </label>
+              <TextareaWithLink key={f.key} label={f.label} value={v ?? ""} onChange={(val) => set(f.key, val)} />
             );
           case "code":
             return <label key={f.key} className="label">{f.label}<textarea rows={12} className="textarea font-mono text-xs" spellCheck={false} value={v ?? ""} onChange={(e) => set(f.key, e.target.value)} /></label>;
