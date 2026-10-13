@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Field } from "@/lib/block-fields";
 import type { SvgAsset, CmsForm } from "@/lib/types";
 import { SvgPicker } from "./SvgPicker";
@@ -9,10 +9,21 @@ function TextareaWithLink({ label, value, onChange }: { label: string; value: st
   const [open, setOpen] = useState(false);
   const [linkText, setLinkText] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
 
-  async function togglePicker(e: React.MouseEvent) {
-    e.stopPropagation();
-    if (open) { setOpen(false); return; }
+  // Close on outside click
+  useEffect(() => {
+    if (!open) return;
+    function handler(e: MouseEvent) {
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open ]);
+
+  async function openPicker() {
     if (!pages.length) {
       try {
         const r = await fetch("/api/admin/pages-list");
@@ -45,37 +56,35 @@ function TextareaWithLink({ label, value, onChange }: { label: string; value: st
   }
 
   return (
-    <label className="label">
+    <div className="label">
       <div className="flex items-center justify-between">
         <span>{label}</span>
-        <div className="relative">
-          <button type="button" onClick={togglePicker} className="text-xs text-[#0066cc] underline">
-            + Insert link
+        <div className="relative" ref={wrapRef}>
+          <button type="button" onClick={open ? () => setOpen(false) : openPicker} className="text-xs text-[#0066cc] underline">
+            {open ? "Close" : "+ Insert link"}
           </button>
           {open ? (
-            <div className="absolute right-0 z-50 mt-1 w-72 rounded-lg border border-line bg-white p-3 shadow-lg" onClick={(e) => e.stopPropagation()}>
+            <div className="absolute right-0 z-50 mt-1 w-72 rounded-lg border border-line bg-white p-3 shadow-lg">
               <input value={linkText} onChange={(e) => setLinkText(e.target.value)} placeholder="Link text (optional)"
-                className="mb-2 w-full rounded border border-line px-2 py-1 text-sm"
-                onClick={(e) => e.stopPropagation()} />
+                className="mb-2 w-full rounded border border-line px-2 py-1 text-sm" />
               <div className="max-h-48 overflow-y-auto">
                 {pages.length === 0 ? (
                   <p className="px-2 py-1 text-sm text-muted">Loading…</p>
                 ) : pages.map((p) => (
                   <button key={p.url} type="button"
-                    onClick={(e) => { e.stopPropagation(); insertLink(p.url, p.title); }}
+                    onClick={() => insertLink(p.url, p.title)}
                     className="block w-full truncate px-2 py-1 text-left text-sm hover:bg-gray-50">
                     {p.title}
                   </button>
                 ))}
               </div>
-              <button type="button" onClick={(e) => { e.stopPropagation(); setOpen(false); }} className="mt-2 text-xs text-muted underline">Close</button>
             </div>
           ) : null}
         </div>
       </div>
       <textarea ref={textareaRef} rows={3} className="textarea" value={value ?? ""} onChange={(e) => onChange(e.target.value)} />
       <span className="text-[11px] text-muted">Tip: use [link text](/page-url) for inline links</span>
-    </label>
+    </div>
   );
 }
 
