@@ -25,7 +25,7 @@ function LinkHelper({ onInsert }: { onInsert: (markdown: string) => void }) {
         + Insert link
       </button>
       {open ? (
-        <div className="absolute z-50 mt-1 w-72 rounded-lg border border-line bg-white p-3 shadow-lg">
+        <div className="absolute right-0 z-50 mt-1 w-72 rounded-lg border border-line bg-white p-3 shadow-lg">
           <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Link text"
             className="mb-2 w-full rounded border border-line px-2 py-1 text-sm" />
           <div className="max-h-48 overflow-y-auto">
