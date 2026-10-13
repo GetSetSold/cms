@@ -863,14 +863,14 @@ function ProcessSteps({ data, ctx }: BlockProps) {
         <div className="flex flex-col gap-2">
           {data.eyebrow ? <div className="text-[11px] font-semibold uppercase tracking-wide text-accent">{data.eyebrow}</div> : null}
           {data.heading ? <h2 className={`text-[22px] font-semibold leading-snug tracking-tight md:text-[28px] ${heading(ctx)}`}>{data.heading}</h2> : null}
-          {data.subline ? <p className={`text-sm leading-relaxed ${muted(ctx)}`}>{data.subline}</p> : null}
+          {data.subline ? <p className={`text-sm leading-relaxed ${muted(ctx)}`}>{renderInlineLinks(data.subline)}</p> : null}
         </div>
         <div className={`grid border-t ${mobileCols} ${desktopCols} ${mobileDivide} md:divide-y-0 md:divide-x ${dividerCls}`}>
           {items.map((it: any, i: number) => (
             <div key={i} className={`flex flex-col gap-1.5 border-b p-5 ${dividerCls}`}>
               <div className={`text-xs font-semibold [font-variant-numeric:tabular-nums]`} style={{ color: accent }}>{String(i + 1).padStart(2, "0")}</div>
-              <h3 className={`text-sm font-semibold leading-snug ${heading(ctx)}`}>{it.title}</h3>
-              {it.text ? <p className={`text-[13px] leading-relaxed ${muted(ctx)}`}>{it.text}</p> : null}
+              <h3 className={`text-sm font-semibold leading-snug ${heading(ctx)}`}>{renderInlineLinks(it.title)}</h3>
+              {it.text ? <p className={`text-[13px] leading-relaxed ${muted(ctx)}`}>{renderInlineLinks(it.text)}</p> : null}
             </div>
           ))}
         </div>
@@ -886,7 +886,7 @@ function ProcessSteps({ data, ctx }: BlockProps) {
         {data.subline ? (
           <>
             <div className={`h-px w-full border-t ${dividerCls}`} />
-            <p className={`text-lg font-semibold ${heading(ctx)}`}>{data.subline}</p>
+            <p className={`text-lg font-semibold ${heading(ctx)}`}>{renderInlineLinks(data.subline)}</p>
           </>
         ) : null}
       </div>
@@ -896,8 +896,8 @@ function ProcessSteps({ data, ctx }: BlockProps) {
             {/* The mock shows this dot at every breakpoint (just repositioned on mobile), not desktop-only. */}
             <span aria-hidden className="absolute -top-[5px] left-6 h-[9px] w-[9px] rounded-[var(--radius-label)] md:left-9" style={{ background: accent, boxShadow: `0 0 0 5px ${dotRing}` }} />
             <div className="font-display text-5xl font-bold leading-none md:text-6xl" style={{ color: accent }}>{String(i + 1).padStart(2, "0")}</div>
-            <h3 className={`text-lg font-semibold leading-snug md:text-xl ${heading(ctx)}`}>{it.title}</h3>
-            {it.text ? <p className={`text-[15px] leading-relaxed md:text-base ${muted(ctx)}`}>{it.text}</p> : null}
+            <h3 className={`text-lg font-semibold leading-snug md:text-xl ${heading(ctx)}`}>{renderInlineLinks(it.title)}</h3>
+            {it.text ? <p className={`text-[15px] leading-relaxed md:text-base ${muted(ctx)}`}>{renderInlineLinks(it.text)}</p> : null}
           </div>
         ))}
       </div>
@@ -1163,7 +1163,7 @@ function SectionHeader({ data, ctx }: BlockProps) {
       <div className={`${outer} flex flex-col gap-2 py-6 md:py-10 ${centered ? "items-center text-center" : "items-start text-left"}`}>
         {data.eyebrow ? <div className="text-[11px] font-semibold uppercase tracking-wide text-accent">{data.eyebrow}</div> : null}
         {data.heading ? <h2 className={`text-[22px] font-semibold leading-snug tracking-tight md:text-[28px] ${heading(ctx)}`}>{data.heading}</h2> : null}
-        {data.subline ? <p className={`text-sm leading-relaxed ${muted(ctx)}`}>{data.subline}</p> : null}
+        {data.subline ? <p className={`text-sm leading-relaxed ${muted(ctx)}`}>{renderInlineLinks(data.subline)}</p> : null}
       </div>
     );
   }
@@ -1176,7 +1176,7 @@ function SectionHeader({ data, ctx }: BlockProps) {
       {data.eyebrow ? <div className="text-sm font-semibold uppercase tracking-wide text-primary">{data.eyebrow}</div> : null}
       {data.heading ? <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2> : null}
       <div className={`h-px w-full border-t ${ctx.dark ? "border-white/15" : "border-line"}`} />
-      {data.subline ? <p className={`text-lg font-semibold ${heading(ctx)}`}>{data.subline}</p> : null}
+      {data.subline ? <p className={`text-lg font-semibold ${heading(ctx)}`}>{renderInlineLinks(data.subline)}</p> : null}
     </div>
   );
 }
