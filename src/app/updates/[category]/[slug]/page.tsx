@@ -117,7 +117,7 @@ export default async function PostPage({ params, searchParams }: { params: Promi
               {post.cover_svg_id ? <Svg asset={svgs[post.cover_svg_id]} fill className="mb-8 aspect-[16/9] overflow-hidden rounded-[var(--radius-lg)]" /> : null}
 
               {post.content_blocks?.length ? (
-                <div className="flex flex-col gap-10">
+                <>
                   {post.content_blocks.map((block: any) => {
                     const bg = block.bg || "white";
                     const bgStyle =
@@ -128,7 +128,7 @@ export default async function PostPage({ params, searchParams }: { params: Promi
                     const is2col = block.layout === "2col";
                     return (
                       <section key={block.id}
-                        className="p-6 md:p-10 rounded-[var(--radius-lg)] shadow-[0_2px_12px_rgba(0,0,0,0.04)]"
+                        className="p-6 md:p-10 rounded-[var(--radius-lg)] shadow-[0_2px_12px_rgba(0,0,0,0.04)] mb-10 last:mb-0"
                         style={bgStyle}>
                         {block.header && (
                           <h2 className="text-xl font-semibold mb-4 pb-2 border-b-2"
@@ -145,7 +145,7 @@ export default async function PostPage({ params, searchParams }: { params: Promi
                       </section>
                     );
                   })}
-                </div>
+                </>
               ) : (
                 <div className="prose-post" dangerouslySetInnerHTML={{ __html: html }} />
               )}
