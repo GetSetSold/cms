@@ -5,13 +5,27 @@ import type { SvgAsset, CmsForm } from "@/lib/types";
 import { SvgPicker } from "./SvgPicker";
 
 function TextareaWithLink({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
-  const [pages, setPages] = useState<{ title: string; url: string }[]>([]);
+  const [pages, setPages] = useState<{ title: string; url: string; group: string }[]>([]);
   const [loadError, setLoadError] = useState(false);
   const [open, setOpen] = useState(false);
   const [linkText, setLinkText] = useState("");
   const [customUrl, setCustomUrl] = useState("");
+  const [search, setSearch] = useState("");
+  const [showPreview, setShowPreview] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
+
+  const filtered = search.trim()
+    ? pages.filter((p) => p.title.toLowerCase().includes(search.toLowerCase()) || p.url.toLowerCase().includes(search.toLowerCase()))
+    : pages;
+
+  // Group filtered pages
+  const groups: { name: string; items: typeof pages }[] = [];
+  for (const p of filtered) {
+    let g = groups.find((x) => x.name === p.group);
+    if (!g) { g = { name: p.group, items: [] }; groups.push(g); }
+    g.items.push(p);
+  }
 
   // Close on outside click
   useEffect(() => {
@@ -79,17 +93,25 @@ function TextareaWithLink({ label, value, onChange }: { label: string; value: st
                   Add
                 </button>
               </div>
-              <div className="max-h-48 overflow-y-auto border-t border-line pt-2">
+              <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search pages…"
+                className="mb-2 w-full rounded border border-line px-2 py-1 text-sm" />
+              <div className="max-h-56 overflow-y-auto border-t border-line pt-1">
                 {loadError ? (
                   <p className="px-2 py-1 text-sm text-muted">Couldn&apos;t load pages — use a manual URL above.</p>
-                ) : pages.length === 0 ? (
-                  <p className="px-2 py-1 text-sm text-muted">Loading…</p>
-                ) : pages.map((p) => (
-                  <button key={p.url} type="button"
-                    onClick={() => insertLink(p.url, p.title)}
-                    className="block w-full truncate px-2 py-1 text-left text-sm hover:bg-gray-50">
-                    {p.title}
-                  </button>
+                ) : filtered.length === 0 ? (
+                  <p className="px-2 py-1 text-sm text-muted">{pages.length === 0 ? "Loading…" : "No matches."}</p>
+                ) : groups.map((g) => (
+                  <div key={g.name}>
+                    <p className="px-2 pt-2 text-[11px] font-semibold uppercase tracking-wide text-muted">{g.name}</p>
+                    {g.items.map((p) => (
+                      <button key={p.url} type="button"
+                        onClick={() => insertLink(p.url, p.title)}
+                        className="block w-full truncate px-2 py-1 text-left text-sm hover:bg-gray-50"
+                        title={p.url}>
+                        {p.title}
+                      </button>
+                    ))}
+                  </div>
                 ))}
               </div>
             </div>
@@ -97,7 +119,23 @@ function TextareaWithLink({ label, value, onChange }: { label: string; value: st
         </div>
       </div>
       <textarea ref={textareaRef} rows={3} className="textarea" value={value ?? ""} onChange={(e) => onChange(e.target.value)} />
-      <span className="text-[11px] text-muted">Tip: use [link text](/page-url) for inline links</span>
+      <div className="flex items-center justify-between">
+        <span className="text-[11px] text-muted">Tip: [link text](/page-url) creates a link</span>
+        {value?.includes("](") ? (
+          <button type="button" onClick={() => setShowPreview(!showPreview)} className="text-[11px] text-[#0066cc] underline">
+            {showPreview ? "Hide preview" : "Preview links"}
+          </button>
+        ) : null}
+      </div>
+      {showPreview && value?.includes("](") ? (
+        <div className="rounded-lg border border-line bg-gray-50 p-3 text-sm">
+          {value.split(/\n{2,}/).filter(Boolean).map((p, i) => (
+            <p key={i} className="mb-2 last:mb-0" dangerouslySetInnerHTML={{
+              __html: p.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" style="color:#0066cc;text-decoration:underline">$1</a>')
+            }} />
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }
