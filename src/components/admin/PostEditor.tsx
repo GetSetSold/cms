@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { MarkdownEditor } from "./MarkdownEditor";
+import { ContentBlocksEditor } from "./ContentBlocksEditor";
 import { BlockListEditor } from "./BlockListEditor";
 import { SvgPicker } from "./SvgPicker";
 import { Spinner } from "./Spinner";
@@ -76,6 +77,7 @@ export function PostEditor({
 }: { initial: BlogPost; categories: { id: string; name: string; slug: string }[]; blockTypes: BlockType[]; svgs: SvgAsset[]; forms: CmsForm[]; authors: BlogAuthor[] }) {
   const router = useRouter();
   const [post, setPost] = useState<BlogPost>(initial);
+  const [editMode, setEditMode] = useState<"blocks" | "markdown">(initial.content_blocks?.length ? "blocks" : "markdown");
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState("");
   const set = <K extends keyof BlogPost>(k: K, v: BlogPost[K]) => setPost((p) => ({ ...p, [k]: v }));
@@ -87,6 +89,7 @@ export function PostEditor({
       title: post.title, slug: slugify(post.slug || post.title), category_id: post.category_id || null,
       excerpt: post.excerpt || null, cover_svg_id: post.cover_svg_id || null,
       blocks_before: post.blocks_before, content_md: post.content_md, blocks_after: post.blocks_after,
+      content_blocks: post.content_blocks || [],
       author_id: post.author_id || null, tags: post.tags,
       status: post.status, publish_at: post.publish_at,
       seo_title: post.seo_title || null, seo_description: post.seo_description || null,
@@ -183,8 +186,24 @@ export function PostEditor({
           </div>
 
           <div className="card">
-            <h2 className="mb-3 text-lg font-semibold">Writing area</h2>
-            <MarkdownEditor value={post.content_md} onChange={(v) => set("content_md", v)} />
+            <div className="flex items-center gap-3 mb-3">
+              <h2 className="text-lg font-semibold">Content blocks</h2>
+              <div className="flex rounded-md bg-ground p-0.5 text-xs">
+                <button type="button" onClick={() => setEditMode("blocks")}
+                  className={`h-7 rounded px-2.5 ${editMode !== "markdown" ? "bg-white font-medium shadow-sm" : "text-muted"}`}>Blocks</button>
+                <button type="button" onClick={() => setEditMode("markdown")}
+                  className={`h-7 rounded px-2.5 ${editMode === "markdown" ? "bg-white font-medium shadow-sm" : "text-muted"}`}>Single text</button>
+              </div>
+            </div>
+            {editMode === "markdown" ? (
+              <MarkdownEditor value={post.content_md} onChange={(v) => set("content_md", v)} />
+            ) : (
+              <ContentBlocksEditor
+                blocks={post.content_blocks || []}
+                onChange={(b) => set("content_blocks", b)}
+                svgs={svgs.map((s: SvgAsset) => ({ id: s.id, name: s.name }))}
+              />
+            )}
           </div>
 
           <GenerateQaCard content={post.content_md} onGenerated={(items) => set("blocks_after", [...post.blocks_after, { type: "qa_block", data: { heading: "Common questions", items }, settings: {} }])} />

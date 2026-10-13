@@ -56,6 +56,8 @@ export default async function PostPage({ params, searchParams }: { params: Promi
   const svgIds = collectSvgIds([...post.blocks_before, ...post.blocks_after]);
   if (post.cover_svg_id) svgIds.add(post.cover_svg_id);
   if (author?.avatar_svg_id) svgIds.add(author.avatar_svg_id);
+  // Block images
+  (post.content_blocks || []).forEach((b: any) => { if (b.image_svg_id) svgIds.add(b.image_svg_id); });
   const svgs = await getSvgs(svgIds);
 
   const related = (await getPosts({ categoryId: cat.id, limit: 4 })).filter((p: any) => p.id !== post.id).slice(0, 3);
@@ -114,7 +116,23 @@ export default async function PostPage({ params, searchParams }: { params: Promi
 
               {post.cover_svg_id ? <Svg asset={svgs[post.cover_svg_id]} fill className="mb-8 aspect-[16/9] overflow-hidden rounded-[var(--radius-lg)]" /> : null}
 
-              <div className="prose-post" dangerouslySetInnerHTML={{ __html: html }} />
+              {post.content_blocks?.length ? (
+                <div className="flex flex-col gap-8">
+                  {post.content_blocks.map((block: any) => (
+                    <section key={block.id}>
+                      {block.header && (
+                        <h2 className="text-xl font-semibold mb-4 pb-2 border-b-2 border-ink">{block.header}</h2>
+                      )}
+                      {block.image_svg_id && svgs[block.image_svg_id] ? (
+                        <Svg asset={svgs[block.image_svg_id]} fill className="mb-4 aspect-[16/9] overflow-hidden rounded-[var(--radius-lg)]" />
+                      ) : null}
+                      <div className="prose-post" dangerouslySetInnerHTML={{ __html: renderMarkdown(block.content) }} />
+                    </section>
+                  ))}
+                </div>
+              ) : (
+                <div className="prose-post" dangerouslySetInnerHTML={{ __html: html }} />
+              )}
 
               {post.tags.length ? (
                 <div className="mt-8 flex flex-wrap gap-2">

@@ -251,6 +251,8 @@ export interface BlogPost {
   cover_svg_id: string | null;
   blocks_before: BlockInstance[];
   content_md: string;
+  /** Structured content blocks (header + markdown + optional image). Takes precedence over content_md when non-empty. */
+  content_blocks?: { id: string; header: string; content: string; image_svg_id?: string | null }[];
   blocks_after: BlockInstance[];
   author_id: string | null;
   tags: string[];
