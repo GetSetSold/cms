@@ -117,6 +117,7 @@ export const BLOCK_FIELDS: Record<string, Field[]> = {
     { key: "svg_id", label: "Photo (illustration)", type: "svg" },
     { key: "photo_radius", label: "Photo corner radius", type: "select", options: ["none", "sm", "md", "lg", "full"] },
     { key: "photo_align", label: "Photo alignment", type: "select", options: ["left", "center", "right"] },
+    { key: "bg", label: "Background", type: "select", options: ["white", "gray", "black", "blue"] },
     { key: "primary_cta", label: "Primary button", type: "link" },
     { key: "secondary_cta", label: "Secondary button", type: "link" },
   ],

@@ -124,15 +124,6 @@ export default async function PostPage({ params, searchParams }: { params: Promi
                 </div>
               ) : null}
 
-              {author?.bio ? (
-                <div className="mt-10 flex gap-4 border-t border-line pt-6">
-                  {author.avatar_svg_id ? <Svg asset={svgs[author.avatar_svg_id]} fill className="h-14 w-14 shrink-0 overflow-hidden rounded-full" /> : <div className="h-14 w-14 shrink-0 rounded-full bg-soft" />}
-                  <div className="flex flex-col gap-1">
-                    <span className="font-semibold">Written by {author.name}</span>
-                    <span className="text-sm leading-relaxed text-muted">{author.bio}</span>
-                  </div>
-                </div>
-              ) : null}
             </article>
 
             {/* Content blocks: each is its own separate card, outside the article */}
