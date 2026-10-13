@@ -86,7 +86,10 @@ export function renderMarkdown(md: string): string {
     if (m) {
       const type = CALLOUT[m[1].toLowerCase()];
       const text = [m[2], ...quote.slice(1)].filter(Boolean).join(" ");
-      rawBlocks.push(`<div class="callout ${type.cls}"><span class="callout-icon">${type.icon}</span><div>${inline(text)}</div></div>`);
+      // Skip empty callouts — don't render a box with just an icon
+      if (text.trim()) {
+        rawBlocks.push(`<div class="callout ${type.cls}"><span class="callout-icon">${type.icon}</span><div>${inline(text)}</div></div>`);
+      }
     } else {
       rawBlocks.push(`<blockquote>${inline(quote.join(" "))}</blockquote>`);
     }
