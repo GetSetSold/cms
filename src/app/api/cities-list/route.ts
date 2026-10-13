@@ -1,17 +1,32 @@
 import { NextResponse } from "next/server";
 import { createMlsClient } from "@/lib/mls";
 
-// Returns distinct cities from the MLS grid for the demographics warmer.
-// Cached for 1 hour — city list changes slowly.
+// Returns distinct cities from ALL property tables (active, sold, historical)
+// for the demographics cache warmer. Cached for 1 hour.
 export async function GET() {
   try {
     const mls = createMlsClient();
-    const { data, error } = await mls.from("distinct_cities").select("City").limit(5000);
-    if (error) throw error;
-    const cities = (data || [])
-      .map((r: any) => r.City)
-      .filter((c: string) => c && c.trim())
-      .sort((a: string, b: string) => a.localeCompare(b));
+    const citySet = new Set<string>();
+
+    // Active listings grid
+    try {
+      const { data } = await mls.from("distinct_cities").select("City").limit(5000);
+      (data || []).forEach((r: any) => { if (r.City?.trim()) citySet.add(r.City.trim()); });
+    } catch {}
+
+    // Property table (may include historical)
+    try {
+      const { data } = await mls.from("property").select("City").limit(5000);
+      (data || []).forEach((r: any) => { if (r.City?.trim()) citySet.add(r.City.trim()); });
+    } catch {}
+
+    // Sold listings
+    try {
+      const { data } = await mls.from("sold").select("City").limit(5000);
+      (data || []).forEach((r: any) => { if (r.City?.trim()) citySet.add(r.City.trim()); });
+    } catch {}
+
+    const cities = [...citySet].sort((a, b) => a.localeCompare(b));
     return NextResponse.json(
       { cities, count: cities.length },
       { headers: { "Cache-Control": "public, max-age=3600" } }
