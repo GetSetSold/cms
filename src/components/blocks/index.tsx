@@ -1219,7 +1219,7 @@ function WhatsIncluded({ data, ctx }: BlockProps) {
         {data.heading ? (compact
           ? <h2 className={`text-[22px] font-semibold leading-snug tracking-tight md:text-[28px] ${heading(ctx)}`}>{data.heading}</h2>
           : <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2>) : null}
-        {data.subline ? <p className={compact ? `text-sm leading-relaxed ${muted(ctx)}` : `text-lg font-semibold ${heading(ctx)}`}>{data.subline}</p> : null}
+        {data.subline ? <p className={compact ? `text-sm leading-relaxed ${muted(ctx)}` : `text-lg font-semibold ${heading(ctx)}`}>{renderInlineLinks(data.subline)}</p> : null}
       </div>
       <div className={`grid border-t border-l ${lineCls} sm:grid-cols-3 ${mobileCols} sm:divide-x sm:divide-y-0 divide-[var(--fq-line,var(--color-line))]`}>
         {items.map((it, i) => {
@@ -1232,8 +1232,8 @@ function WhatsIncluded({ data, ctx }: BlockProps) {
                 </span>
               ) : null}
               <div className="flex flex-col gap-1.5">
-                {it.title ? <div className={`${compact ? "text-sm" : "text-[15px]"} font-semibold leading-snug ${heading(ctx)}`}>{it.title}</div> : null}
-                {it.text ? <p className={`text-[13px] leading-relaxed ${muted(ctx)}`}>{it.text}</p> : null}
+                {it.title ? <div className={`${compact ? "text-sm" : "text-[15px]"} font-semibold leading-snug ${heading(ctx)}`}>{renderInlineLinks(it.title)}</div> : null}
+                {it.text ? <p className={`text-[13px] leading-relaxed ${muted(ctx)}`}>{renderInlineLinks(it.text)}</p> : null}
               </div>
               <span className={`mt-auto inline-flex items-center gap-1.5 rounded-[var(--radius-label)] bg-primary px-3 text-[10px] font-bold text-white ${compact ? "h-[22px]" : "h-[26px]"}`} style={compact ? { background: "var(--color-accent)" } : undefined}>
                 <span aria-hidden>✓</span> Included
@@ -1260,7 +1260,7 @@ function PhasedReasons({ data, ctx }: BlockProps) {
         {data.heading ? (compact
           ? <h2 className={`text-[22px] font-semibold leading-snug tracking-tight md:text-[28px] ${heading(ctx)}`}>{data.heading}</h2>
           : <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2>) : null}
-        {data.subline ? <p className={compact ? `text-sm leading-relaxed ${muted(ctx)}` : `text-lg font-semibold ${heading(ctx)}`}>{data.subline}</p> : null}
+        {data.subline ? <p className={compact ? `text-sm leading-relaxed ${muted(ctx)}` : `text-lg font-semibold ${heading(ctx)}`}>{renderInlineLinks(data.subline)}</p> : null}
       </div>
       <div className={`flex flex-col overflow-hidden ${compact ? "" : "rounded-[var(--radius-lg)]"} border ${ctx.dark ? "border-white/15" : "border-line"}`}>
         {phases.map((phase, pi) => (
@@ -1268,7 +1268,7 @@ function PhasedReasons({ data, ctx }: BlockProps) {
             <div className={`flex shrink-0 flex-col gap-2 ${compact ? "p-5" : "p-6"} sm:w-64 sm:border-r ${ctx.dark ? "bg-white/5 border-white/15" : compact ? "border-line" : "bg-soft border-line"}`}>
               {phase.label ? <div className={`text-xs font-bold uppercase tracking-wide ${accentCls}`} style={accentStyle}>{phase.label}</div> : null}
               {phase.title ? <div className={`${compact ? "text-base" : "text-xl"} font-bold ${heading(ctx)}`}>{phase.title}</div> : null}
-              {phase.description ? <p className={`text-sm ${muted(ctx)}`}>{phase.description}</p> : null}
+              {phase.description ? <p className={`text-sm ${muted(ctx)}`}>{renderInlineLinks(phase.description)}</p> : null}
             </div>
             <div className={`grid flex-1 ${mobileCols}`}>
               {(phase.reasons ?? []).map((r: any, ri: number) => {
@@ -1276,8 +1276,8 @@ function PhasedReasons({ data, ctx }: BlockProps) {
                 return (
                   <div key={ri} className={`flex flex-col gap-1.5 ${compact ? "p-5" : "p-6"}`}>
                     <div className={`text-sm font-bold ${accentCls}`} style={accentStyle}>{String(n).padStart(2, "0")}</div>
-                    {r.title ? <div className={`${compact ? "text-sm" : "text-[15px]"} font-semibold leading-snug ${heading(ctx)}`}>{r.title}</div> : null}
-                    {r.text ? <p className={`text-[13px] leading-relaxed ${muted(ctx)}`}>{r.text}</p> : null}
+                    {r.title ? <div className={`${compact ? "text-sm" : "text-[15px]"} font-semibold leading-snug ${heading(ctx)}`}>{renderInlineLinks(r.title)}</div> : null}
+                    {r.text ? <p className={`text-[13px] leading-relaxed ${muted(ctx)}`}>{renderInlineLinks(r.text)}</p> : null}
                   </div>
                 );
               })}
