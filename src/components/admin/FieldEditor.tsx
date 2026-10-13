@@ -6,8 +6,10 @@ import { SvgPicker } from "./SvgPicker";
 
 function TextareaWithLink({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
   const [pages, setPages] = useState<{ title: string; url: string }[]>([]);
+  const [loadError, setLoadError] = useState(false);
   const [open, setOpen] = useState(false);
   const [linkText, setLinkText] = useState("");
+  const [customUrl, setCustomUrl] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
 
@@ -24,26 +26,26 @@ function TextareaWithLink({ label, value, onChange }: { label: string; value: st
   }, [open ]);
 
   async function openPicker() {
-    if (!pages.length) {
+    if (!pages.length && !loadError) {
       try {
         const r = await fetch("/api/admin/pages-list");
         const d = await r.json();
-        setPages(d.pages ?? []);
-      } catch {}
+        if (d.pages) setPages(d.pages);
+        else setLoadError(true);
+      } catch { setLoadError(true); }
     }
     setOpen(true);
   }
 
   function insertLink(url: string, title: string) {
-    const ta = textareaRef.current;
-    const text = linkText.trim() || title;
+    const text = linkText.trim() || title || url;
     const md = `[${text}](${url})`;
+    const ta = textareaRef.current;
     if (ta) {
       const start = ta.selectionStart ?? value.length;
       const end = ta.selectionEnd ?? value.length;
       const next = value.slice(0, start) + md + value.slice(end);
       onChange(next);
-      // Restore cursor after inserted text
       setTimeout(() => {
         ta.focus();
         ta.setSelectionRange(start + md.length, start + md.length);
@@ -53,6 +55,7 @@ function TextareaWithLink({ label, value, onChange }: { label: string; value: st
     }
     setOpen(false);
     setLinkText("");
+    setCustomUrl("");
   }
 
   return (
@@ -67,8 +70,19 @@ function TextareaWithLink({ label, value, onChange }: { label: string; value: st
             <div className="absolute right-0 z-50 mt-1 w-72 rounded-lg border border-line bg-white p-3 shadow-lg">
               <input value={linkText} onChange={(e) => setLinkText(e.target.value)} placeholder="Link text (optional)"
                 className="mb-2 w-full rounded border border-line px-2 py-1 text-sm" />
-              <div className="max-h-48 overflow-y-auto">
-                {pages.length === 0 ? (
+              <div className="mb-2 flex gap-1">
+                <input value={customUrl} onChange={(e) => setCustomUrl(e.target.value)} placeholder="https://… for external link"
+                  className="min-w-0 flex-1 rounded border border-line px-2 py-1 text-sm" />
+                <button type="button" disabled={!customUrl.trim()}
+                  onClick={() => insertLink(customUrl.trim(), customUrl.trim())}
+                  className="shrink-0 rounded bg-ink px-2 py-1 text-xs text-white disabled:opacity-40">
+                  Add
+                </button>
+              </div>
+              <div className="max-h-48 overflow-y-auto border-t border-line pt-2">
+                {loadError ? (
+                  <p className="px-2 py-1 text-sm text-muted">Couldn&apos;t load pages — use a manual URL above.</p>
+                ) : pages.length === 0 ? (
                   <p className="px-2 py-1 text-sm text-muted">Loading…</p>
                 ) : pages.map((p) => (
                   <button key={p.url} type="button"
