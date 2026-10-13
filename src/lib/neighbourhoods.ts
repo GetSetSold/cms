@@ -165,29 +165,22 @@ export async function listNeighbourhoods(): Promise<Neighbourhood[]> {
 
 
 /** Neighbourhoods for one normalized city, sorted by listing count.
- *  Scoped to the city's listings only (1 query) — never scans the full table. */
+ *  Scoped to the city's listings only via SQL aggregation RPC — never scans
+ *  the full table. Requires migration 20261013000001_city_hub_performance.sql. */
 export async function getHoodsForCity(city: string): Promise<Neighbourhood[]> {
   const mls = createMlsClient();
   const variants = await rawCitiesFor(city);
-  const { data, error } = await mls
-    .from("property")
-    .select("CityRegion,SubdivisionName")
-    .in("City", variants)
-    .limit(10000);
+  const { data, error } = await mls.rpc('get_hoods_for_city', { cities: variants });
   if (error) throw new Error(`getHoodsForCity: ${error.message}`);
-  const pairCounts = new Map<string, number>();
-  const displayNames = new Map<string, string>();
-  for (const r of (data ?? []) as HoodRow[]) {
-    const hood = coalesceHood(r);
-    if (!hood) continue;
-    const slug = hoodSlug(hood);
-    pairCounts.set(slug, (pairCounts.get(slug) ?? 0) + 1);
-    if (!displayNames.has(slug)) displayNames.set(slug, hood);
-  }
-  return [...pairCounts.entries()]
-    .filter(([, count]) => count >= HOOD_MIN_LISTINGS)
-    .map(([hoodSlug, count]) => ({ city, hood: displayNames.get(hoodSlug) ?? hoodSlug, hoodSlug, count }))
-    .sort((a, b) => b.count - a.count);
+  return ((data as any[]) ?? []).map((r) => {
+    const hood = r.hood as string;
+    return {
+      city,
+      hood,
+      hoodSlug: hoodSlug(hood),
+      count: Number(r.count),
+    };
+  });
 }
 
 /** Resolve (citySlug, hoodSlug) to a Neighbourhood, or null. */
@@ -204,7 +197,8 @@ export async function resolveHood(
 /** Live stats for a neighbourhood page — same shape as city stats so the
  *  CityStatsSection / CityEditorial / CityFaq components can be reused
  *  with the neighbourhood name. */
-// Module-level 1h cache — paginated scan, don't rerun per request (free plan bandwidth).
+// Module-level 1h cache — RPC returns single-row results, but we still cache
+// to avoid hammering the DB on popular neighbourhood pages.
 const hoodStatsCache = new Map<string, { data: CityStats; expires: number }>();
 const HOOD_STATS_TTL = 3600000;
 
@@ -217,56 +211,31 @@ export const getHoodStats = cache(async (city: string, hood: string): Promise<Ci
   const variants = await rawCitiesFor(city);
   const unknownVariants = await unknownCityVariants();
   const cities = [...new Set([...variants, ...unknownVariants])];
-  const hoodFilter = `CityRegion.eq.${hood},SubdivisionName.eq.${hood}`;
 
-  const prices: number[] = [];
-  const rents: number[] = [];
-  const typeCounts = new Map<string, number>();
-  let total = 0;
+  // Single aggregation queries via RPC — no more downloading all listings.
+  // Requires migration 20261013000001_city_hub_performance.sql in the MLS project.
+  const [statsRes, typeRes] = await Promise.all([
+    mls.rpc('get_hood_stats', { cities, hood }),
+    mls.rpc('get_hood_type_breakdown', { cities, hood }),
+  ]);
 
-  // Count first, then fetch all pages in PARALLEL (was sequential).
-  const PAGE = 1000;
-  const { count } = await mls.from("property").select("ListingKey", { count: "exact", head: true }).in("City", cities).or(hoodFilter);
-  const pages = Math.max(1, Math.ceil((count ?? 0) / PAGE));
-  const results = await Promise.all(
-    Array.from({ length: pages }, (_, i) =>
-      mls.from("property").select("ListPrice,TotalActualRent,StructureType").in("City", cities).or(hoodFilter).range(i * PAGE, i * PAGE + PAGE - 1)
-    )
-  );
-  for (const { data, error } of results) {
-    if (error) throw new Error(`getHoodStats: ${error.message}`);
-    if (!data) continue;
-    for (const r of data as {
-      ListPrice: number | null;
-      TotalActualRent: number | null;
-      StructureType: string[] | string | null;
-    }[]) {
-      total++;
-      if (r.ListPrice != null) prices.push(Number(r.ListPrice));
-      if (r.TotalActualRent != null) rents.push(Number(r.TotalActualRent));
-      const t = structureTypeText(r.StructureType) || "Other";
-      typeCounts.set(t, (typeCounts.get(t) ?? 0) + 1);
-    }
-  }
+  if (statsRes.error) throw new Error(`getHoodStats: ${statsRes.error.message}`);
+  if (typeRes.error) throw new Error(`getHoodStats types: ${typeRes.error.message}`);
 
-  const median = (vals: number[]): number | null => {
-    if (!vals.length) return null;
-    const s = [...vals].sort((a, b) => a - b);
-    const mid = Math.floor(s.length / 2);
-    return s.length % 2 ? s[mid] : Math.round((s[mid - 1] + s[mid]) / 2);
-  };
+  const s = (statsRes.data as any[])?.[0] ?? {};
+  const typeBreakdown = ((typeRes.data as any[]) ?? []).map((r) => ({
+    label: r.label as string,
+    count: Number(r.count),
+  }));
 
   const result: CityStats = {
     city: hood, // components interpolate this as the place name
-    activeCount: total,
-    saleCount: prices.length,
-    leaseCount: rents.length,
-    medianSalePrice: median(prices),
-    medianLeasePrice: median(rents),
-    typeBreakdown: [...typeCounts.entries()]
-      .map(([label, count]) => ({ label, count }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 6),
+    activeCount: Number(s.active_count ?? 0),
+    saleCount: Number(s.sale_count ?? 0),
+    leaseCount: Number(s.lease_count ?? 0),
+    medianSalePrice: s.median_sale != null ? Math.round(Number(s.median_sale)) : null,
+    medianLeasePrice: s.median_lease != null ? Math.round(Number(s.median_lease)) : null,
+    typeBreakdown,
   };
   hoodStatsCache.set(key, { data: result, expires: Date.now() + HOOD_STATS_TTL });
   return result;

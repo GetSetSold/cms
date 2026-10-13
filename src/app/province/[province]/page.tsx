@@ -37,32 +37,22 @@ interface CityCount {
   count: number;
 }
 
-/** Normalized cities with live listing counts. Single parallel scan of the
- *  grid City column (no N+1 count queries). Module-level cache (1h) because
- *  unstable_cache does not persist on Workers — each isolate keeps its own. */
+/** Normalized cities with live listing counts. Single SQL aggregation via RPC
+ *  (no more 57k-row download). Module-level cache (1h) because
+ *  unstable_cache does not persist on Workers — each isolate keeps its own.
+ *  Requires migration 20261013000001_city_hub_performance.sql. */
 let provinceCache: { data: CityCount[]; expires: number } | null = null;
 
 async function getProvinceCities(): Promise<CityCount[]> {
   if (provinceCache && Date.now() < provinceCache.expires) return provinceCache.data;
   const mls = createMlsClient();
+  const { data, error } = await mls.rpc('get_all_city_counts');
+  if (error) throw new Error(`provinceCities: ${error.message}`);
   const counts = new Map<string, number>();
-  // Parallel pages, 2000 rows each: 57k rows = ~29 subrequests (under the
-  // 50/request Workers limit). Fetches only the narrow City column.
-  const PAGE = 2000;
-  const { count } = await mls.from("grid").select("City", { count: "exact", head: true });
-  const pages = Math.max(1, Math.ceil((count ?? 0) / PAGE));
-  const results = await Promise.all(
-    Array.from({ length: pages }, (_, i) =>
-      mls.from("grid").select("City").range(i * PAGE, i * PAGE + PAGE - 1)
-    )
-  );
-  for (const { data, error } of results) {
-    if (error) throw new Error(`provinceCities: ${error.message}`);
-    for (const r of (data ?? []) as { City: string | null }[]) {
-      const n = normalizeCity(r.City || "");
-      if (!n || n.toLowerCase() === "unknown") continue;
-      counts.set(n, (counts.get(n) ?? 0) + 1);
-    }
+  for (const r of (data as any[]) ?? []) {
+    const n = normalizeCity(r.city || "");
+    if (!n || n.toLowerCase() === "unknown") continue;
+    counts.set(n, (counts.get(n) ?? 0) + Number(r.count));
   }
   const result = [...counts.entries()]
     .map(([city, count]) => ({ city, slug: citySlug(city), count }))
