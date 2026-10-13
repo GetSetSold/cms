@@ -5,6 +5,11 @@ import type { NavColumn, NavItem } from "@/lib/types";
 function ColumnEditor({ column, onChange, onRemove }: { column: NavColumn; onChange: (c: NavColumn) => void; onRemove: () => void }) {
   const setLink = (i: number, patch: Partial<{ label: string; href: string }>) =>
     onChange({ ...column, links: column.links.map((l, j) => (j === i ? { ...l, ...patch } : l)) });
+  const moveLink = (i: number, dir: -1 | 1) => {
+    const links = [...column.links];
+    [links[i], links[i + dir]] = [links[i + dir], links[i]];
+    onChange({ ...column, links });
+  };
 
   return (
     <div className="flex flex-col gap-2 rounded-lg border border-line p-3">
@@ -13,9 +18,12 @@ function ColumnEditor({ column, onChange, onRemove }: { column: NavColumn; onCha
         <button type="button" className="shrink-0 text-sm text-red-700" onClick={onRemove}>Remove column</button>
       </div>
       {column.links.map((l, i) => (
-        <div key={i} className="flex flex-col gap-2 sm:grid sm:grid-cols-[1fr_1fr_auto]">
-          <input className="input" placeholder="Label" value={l.label} onChange={(e) => setLink(i, { label: e.target.value })} />
-          <input className="input" placeholder="/services/roofing" value={l.href} onChange={(e) => setLink(i, { href: e.target.value })} />
+        <div key={i} className="flex items-center gap-1">
+          <ReorderButtons onUp={() => moveLink(i, -1)} onDown={() => moveLink(i, 1)} canUp={i > 0} canDown={i < column.links.length - 1} />
+          <div className="flex min-w-0 flex-1 flex-col gap-2 sm:grid sm:grid-cols-[1fr_1fr_auto]">
+            <input className="input" placeholder="Label" value={l.label} onChange={(e) => setLink(i, { label: e.target.value })} />
+            <input className="input" placeholder="/services/roofing" value={l.href} onChange={(e) => setLink(i, { href: e.target.value })} />
+          </div>
           <button type="button" aria-label="Remove link" onClick={() => onChange({ ...column, links: column.links.filter((_, j) => j !== i) })}>✕</button>
         </div>
       ))}
@@ -89,6 +97,11 @@ export function FooterRowsEditor({ rows, maxPerRow, onChange }: { rows: NavColum
   const toggle = (ri: number) => setOpen(open.includes(ri) ? open.filter((i) => i !== ri) : [...open, ri]);
   const setRow = (ri: number, row: NavColumn[]) => onChange(rows.map((r, i) => (i === ri ? row : r)));
   const setColumn = (ri: number, ci: number, c: NavColumn) => setRow(ri, rows[ri].map((x, j) => (j === ci ? c : x)));
+  const moveColumn = (ri: number, ci: number, dir: -1 | 1) => {
+    const row = [...rows[ri]];
+    [row[ci], row[ci + dir]] = [row[ci + dir], row[ci]];
+    setRow(ri, row);
+  };
   const moveRow = (ri: number, dir: -1 | 1) => {
     const next = [...rows];
     [next[ri], next[ri + dir]] = [next[ri + dir], next[ri]];
@@ -128,7 +141,12 @@ export function FooterRowsEditor({ rows, maxPerRow, onChange }: { rows: NavColum
             {isOpen ? (
               <>
                 {row.map((col, ci) => (
-                  <ColumnEditor key={ci} column={col} onChange={(c) => setColumn(ri, ci, c)} onRemove={() => setRow(ri, row.filter((_, j) => j !== ci))} />
+                  <div key={ci} className="flex items-start gap-1">
+                    <ReorderButtons onUp={() => moveColumn(ri, ci, -1)} onDown={() => moveColumn(ri, ci, 1)} canUp={ci > 0} canDown={ci < row.length - 1} />
+                    <div className="min-w-0 flex-1">
+                      <ColumnEditor column={col} onChange={(c) => setColumn(ri, ci, c)} onRemove={() => setRow(ri, row.filter((_, j) => j !== ci))} />
+                    </div>
+                  </div>
                 ))}
                 {row.length < maxPerRow ? (
                   <button type="button" className="btn self-start border-dashed" onClick={() => setRow(ri, [...row, { heading: "", links: [{ label: "", href: "" }] }])}>
