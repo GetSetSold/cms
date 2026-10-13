@@ -165,7 +165,7 @@ export async function ListingsBrowser({
           <p className="text-sm text-muted">
             Showing {DEFAULT_CITY} by default. <a href={hrefFor({ city: ALL_CITIES_SENTINEL })} className="font-medium text-primary">Search all cities</a> instead.
           </p>
-        ) : (
+        ) : fixedCity ? null : (
           <p className="text-muted">{total.toLocaleString()} properties available</p>
         )}
       </div>
