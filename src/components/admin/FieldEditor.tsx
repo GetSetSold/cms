@@ -21,23 +21,23 @@ function LinkHelper({ onInsert }: { onInsert: (markdown: string) => void }) {
 
   return (
     <div className="relative">
-      <button type="button" onClick={load} className="text-xs text-[#0066cc] underline">
+      <button type="button" onClick={(e) => { e.stopPropagation(); load(); }} className="text-xs text-[#0066cc] underline">
         + Insert link
       </button>
       {open ? (
-        <div className="absolute right-0 z-50 mt-1 w-72 rounded-lg border border-line bg-white p-3 shadow-lg">
+        <div className="absolute right-0 z-50 mt-1 w-72 rounded-lg border border-line bg-white p-3 shadow-lg" onClick={(e) => e.stopPropagation()}>
           <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Link text"
             className="mb-2 w-full rounded border border-line px-2 py-1 text-sm" />
           <div className="max-h-48 overflow-y-auto">
             {pages.map((p) => (
               <button key={p.url} type="button"
-                onClick={() => { onInsert(`[${text || p.title}](${p.url})`); setOpen(false); setText(""); }}
+                onClick={(e) => { e.stopPropagation(); onInsert(`[${text || p.title}](${p.url})`); setOpen(false); setText(""); }}
                 className="block w-full truncate px-2 py-1 text-left text-sm hover:bg-gray-50">
                 {p.title}
               </button>
             ))}
           </div>
-          <button type="button" onClick={() => setOpen(false)} className="mt-2 text-xs text-muted underline">Close</button>
+          <button type="button" onClick={(e) => { e.stopPropagation(); setOpen(false); }} className="mt-2 text-xs text-muted underline">Close</button>
         </div>
       ) : null}
     </div>
