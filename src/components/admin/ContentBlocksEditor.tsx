@@ -1,6 +1,7 @@
 "use client";
 import { useRef, useState } from "react";
 import { renderMarkdown } from "@/lib/markdown";
+import { LinkPicker } from "./LinkPicker";
 
 export interface ContentBlock {
   id: string;
@@ -16,7 +17,6 @@ const TOOLS: { label: string; wrap?: [string, string]; line?: string }[] = [
   { label: "I", wrap: ["*", "*"] },
   { label: "H2", line: "## " },
   { label: "H3", line: "### " },
-  { label: "Link", wrap: ["[", "](https://)"] },
   { label: "•", line: "- " },
   { label: "❝", line: "> " },
   { label: "Tip", line: "> [!tip] " },
@@ -24,7 +24,17 @@ const TOOLS: { label: string; wrap?: [string, string]; line?: string }[] = [
   { label: "Note", line: "> [!note] " },
 ];
 
-function BlockToolbar({ onApply }: { onApply: (t: (typeof TOOLS)[number]) => void }) {
+function BlockToolbar({
+  onApply,
+  textareaRef,
+  value,
+  onChange,
+}: {
+  onApply: (t: (typeof TOOLS)[number]) => void;
+  textareaRef: React.RefObject<HTMLTextAreaElement | null>;
+  value: string;
+  onChange: (v: string) => void;
+}) {
   return (
     <div className="flex items-center gap-1 rounded-lg border border-line bg-ground p-1 flex-wrap mb-2">
       {TOOLS.map((t) => (
@@ -33,6 +43,7 @@ function BlockToolbar({ onApply }: { onApply: (t: (typeof TOOLS)[number]) => voi
           {t.label}
         </button>
       ))}
+      <LinkPicker textareaRef={textareaRef} value={value} onChange={onChange} />
     </div>
   );
 }
@@ -161,12 +172,17 @@ export function ContentBlocksEditor({
             </div>
           ) : (
             <>
-              <BlockToolbar onApply={(t) => applyToTextarea(
-                { current: refs.current[block.id] } as React.RefObject<HTMLTextAreaElement>,
-                block.content,
-                (v) => update(block.id, { content: v }),
-                t
-              )} />
+              <BlockToolbar
+                onApply={(t) => applyToTextarea(
+                  { current: refs.current[block.id] } as React.RefObject<HTMLTextAreaElement>,
+                  block.content,
+                  (v) => update(block.id, { content: v }),
+                  t
+                )}
+                textareaRef={{ current: refs.current[block.id] } as React.RefObject<HTMLTextAreaElement | null>}
+                value={block.content}
+                onChange={(v) => update(block.id, { content: v })}
+              />
               <textarea
                 ref={(el) => { refs.current[block.id] = el; }}
                 value={block.content}
