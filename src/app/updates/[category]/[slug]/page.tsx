@@ -114,7 +114,11 @@ export default async function PostPage({ params, searchParams }: { params: Promi
                 </div>
               </div>
 
-              {post.cover_svg_id ? <Svg asset={svgs[post.cover_svg_id]} fill className="mb-8 aspect-[16/9] overflow-hidden rounded-[var(--radius-lg)]" /> : null}
+              {post.cover_svg_id ? (
+                <div className="-mx-6 md:-mx-14 mb-8 overflow-hidden rounded-[var(--radius-lg)]">
+                  <Svg asset={svgs[post.cover_svg_id]} fill className="aspect-[16/9] w-full" />
+                </div>
+              ) : null}
 
               {post.tags.length ? (
                 <div className="mt-8 flex flex-wrap gap-2">
@@ -147,9 +151,11 @@ export default async function PostPage({ params, searchParams }: { params: Promi
                           {block.header}
                         </h2>
                       )}
-                      <div className={is2col ? "grid md:grid-cols-2 gap-6" : ""}>
+                      <div className={is2col ? "grid md:grid-cols-2 gap-6 items-center" : ""}>
                         {block.image_svg_id && svgs[block.image_svg_id] ? (
-                          <Svg asset={svgs[block.image_svg_id]} fill className="mb-4 md:mb-0 aspect-[16/9] overflow-hidden rounded-[var(--radius-md)]" />
+                          <div className="mb-4 md:mb-0 flex items-center justify-center">
+                            <Svg asset={svgs[block.image_svg_id]} className="w-full max-w-[320px] h-auto rounded-[var(--radius-md)]" />
+                          </div>
                         ) : null}
                         <div className="prose-post" dangerouslySetInnerHTML={{ __html: renderMarkdown(block.content) }} />
                       </div>

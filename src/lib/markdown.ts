@@ -53,7 +53,7 @@ const CALLOUT: Record<string, { cls: string; icon: string }> = {
 };
 
 const BOX_BG: Record<string, string> = {
-  light: "#F4F2FC", // theme's own light tint — matches the rest of the site
+  light: "#f7f7f7",
   gray: "#f7f7f7",
   white: "#FFFFFF",
   black: "#1a1a1a",

@@ -54,13 +54,19 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
         </div>
 
         {posts.length ? (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {posts.map((p: any) => (
-              <Link key={p.id} href={`/updates/${slug}/${p.slug}`} prefetch={false} className="flex flex-col gap-3 overflow-hidden rounded-[var(--radius-lg)] bg-white shadow-[var(--shadow-card)]">
-                <Svg asset={p.cover_svg_id ? svgs[p.cover_svg_id] : undefined} fill className="aspect-[16/10] overflow-hidden" />
-                <div className="flex flex-col gap-2 px-5 pb-5">
-                  <h3 className="text-lg font-bold leading-snug">{p.title}</h3>
+              <Link key={p.id} href={`/updates/${slug}/${p.slug}`} prefetch={false} className="group flex flex-col overflow-hidden rounded-[var(--radius-lg)] bg-white shadow-[var(--shadow-card)]">
+                <Svg asset={p.cover_svg_id ? svgs[p.cover_svg_id] : undefined} fill className="aspect-[16/10] w-full overflow-hidden" />
+                <div className="flex flex-1 flex-col gap-2 px-5 pb-5 pt-4">
+                  <h3 className="text-lg font-bold leading-snug group-hover:text-primary">{p.title}</h3>
                   {p.excerpt ? <p className="line-clamp-2 text-[13px] text-muted">{p.excerpt}</p> : null}
+                  <span className="mt-auto inline-flex items-center gap-1 pt-2 text-sm font-semibold text-primary">
+                    Read More
+                    <svg className="h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                    </svg>
+                  </span>
                 </div>
               </Link>
             ))}
