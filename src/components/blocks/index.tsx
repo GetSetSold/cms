@@ -677,21 +677,23 @@ function TeamProfile({ data, ctx }: BlockProps) {
   }[(data.photo_align as string) || "left"];
   const credentials = [data.credential_1, data.credential_2].filter(Boolean);
   return (
-    <div className={`grid items-center ${stack ? "gap-8 md:grid-cols-[30%_70%] md:gap-10" : "gap-8 md:grid-cols-[280px_1fr] md:gap-12"}`}>
-      <Svg asset={art} label={art?.name} className={`aspect-[8/9] overflow-hidden ${radiusCls} ${alignCls} ${stack ? "w-full" : "w-full max-w-[280px]"}`} />
-      <div className="flex flex-col gap-3.5 min-w-0 overflow-hidden">
-        {data.eyebrow ? <div className="text-sm font-semibold uppercase tracking-wide text-primary">{data.eyebrow}</div> : null}
-        <h2 className={`font-display text-[24px] md:text-[32px] font-bold ${heading(ctx)}`}>{data.name}</h2>
-        {data.role ? <div className={`text-[13px] md:text-[15px] ${muted(ctx)}`}>{data.role}</div> : null}
-        {credentials.length ? (
-          <div className="flex flex-col gap-1">
-            {credentials.map((c: string, i: number) => (
-              <div key={i} className={`text-[11px] md:text-xs font-semibold uppercase tracking-[0.08em] ${muted(ctx)}`}>{c}</div>
-            ))}
-          </div>
-        ) : null}
-        {data.bio ? <p className={`text-[13px] md:text-[15px] leading-relaxed break-words ${muted(ctx)}`}>{data.bio}</p> : null}
-        <div className="mt-2 flex flex-wrap gap-3"><Button link={data.primary_cta} dark={ctx.dark} /><Button link={data.secondary_cta} variant="outline" dark={ctx.dark} /></div>
+    <div className="mx-auto w-full max-w-7xl px-5 md:px-10">
+      <div className={`grid items-center ${stack ? "gap-8 md:grid-cols-[30%_70%] md:gap-10" : "gap-8 md:grid-cols-[280px_1fr] md:gap-12"}`}>
+        <Svg asset={art} label={art?.name} className={`aspect-[8/9] overflow-hidden ${radiusCls} ${alignCls} ${stack ? "w-full" : "w-full max-w-[280px]"}`} />
+        <div className="flex flex-col gap-3.5 min-w-0 overflow-hidden">
+          {data.eyebrow ? <div className="text-sm font-semibold uppercase tracking-wide text-primary">{data.eyebrow}</div> : null}
+          <h2 className={`font-display text-[24px] md:text-[32px] font-bold ${heading(ctx)}`}>{data.name}</h2>
+          {data.role ? <div className={`text-[13px] md:text-[15px] ${muted(ctx)}`}>{data.role}</div> : null}
+          {credentials.length ? (
+            <div className="flex flex-col gap-1">
+              {credentials.map((c: string, i: number) => (
+                <div key={i} className={`text-[11px] md:text-xs font-semibold uppercase tracking-[0.08em] ${muted(ctx)}`}>{c}</div>
+              ))}
+            </div>
+          ) : null}
+          {data.bio ? <p className={`text-[13px] md:text-[15px] leading-relaxed break-words ${muted(ctx)}`}>{data.bio}</p> : null}
+          <div className="mt-2 flex flex-wrap gap-3"><Button link={data.primary_cta} dark={ctx.dark} /><Button link={data.secondary_cta} variant="outline" dark={ctx.dark} /></div>
+        </div>
       </div>
     </div>
   );
