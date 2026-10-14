@@ -9,6 +9,7 @@ import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter, MobileCtaBar } from "@/components/site/SiteFooter";
 import { Svg } from "@/components/site/Svg";
 import { RenderSections } from "@/components/blocks";
+import { BlogAdSlot } from "@/components/blog/BlogAdSlot";
 import type { Section } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -176,17 +177,8 @@ export default async function PostPage({ params, searchParams }: { params: Promi
             ))}
           </div>
 
-          {/* SIDEBAR: TOC (auto from headings), CTA (set once in Settings), related reading — none of this needs per-post setup */}
+          {/* SIDEBAR: CTA first (lead capture = priority), then ad, TOC, related */}
           <aside className="flex flex-col gap-4 lg:sticky lg:top-24">
-            {toc.length ? (
-              <div className="flex flex-col gap-2.5 rounded-[var(--radius-lg)] bg-white p-5">
-                <span className="text-xs font-bold uppercase tracking-wide text-muted">On this page</span>
-                {toc.map((item) => (
-                  <a key={item.id} href={`#${item.id}`} className={`text-sm hover:text-primary ${item.level === 3 ? "pl-4 text-muted" : "font-medium"}`}>{item.text}</a>
-                ))}
-              </div>
-            ) : null}
-
             {settings.blog_cta?.heading ? (
               <div className="flex flex-col gap-3 rounded-[var(--radius-lg)] bg-gradient-to-br from-ink to-primary p-6 text-white">
                 <strong className="text-lg">{settings.blog_cta.heading}</strong>
@@ -194,6 +186,19 @@ export default async function PostPage({ params, searchParams }: { params: Promi
                 {settings.blog_cta.button_label && settings.blog_cta.button_href ? (
                   <Link href={settings.blog_cta.button_href} className="mt-1 flex h-11 items-center justify-center rounded-[var(--radius-btn)] bg-white text-sm font-bold text-ink">{settings.blog_cta.button_label}</Link>
                 ) : null}
+              </div>
+            ) : null}
+
+            {settings.ads?.blog_ad_enabled && settings.ads?.blog_ad_code ? (
+              <BlogAdSlot code={settings.ads.blog_ad_code} />
+            ) : null}
+
+            {toc.length ? (
+              <div className="flex flex-col gap-2.5 rounded-[var(--radius-lg)] bg-white p-5">
+                <span className="text-xs font-bold uppercase tracking-wide text-muted">On this page</span>
+                {toc.map((item) => (
+                  <a key={item.id} href={`#${item.id}`} className={`text-sm hover:text-primary ${item.level === 3 ? "pl-4 text-muted" : "font-medium"}`}>{item.text}</a>
+                ))}
               </div>
             ) : null}
 

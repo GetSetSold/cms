@@ -144,7 +144,10 @@ export interface SiteSettings {
     boc_ad_enabled?: boolean;
     guides_ad_enabled?: boolean;
     calculators_ad_enabled?: boolean;
-    listing_ad_enabled?: boolean;  };
+    listing_ad_enabled?: boolean;
+    blog_ad_enabled?: boolean;
+    blog_ad_code?: string;
+  };
   promo?: {
     buyer_enabled?: boolean;
     tenant_enabled?: boolean;

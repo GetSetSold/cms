@@ -589,6 +589,22 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
               <input type="checkbox" checked={s.ads?.listing_ad_enabled ?? false} onChange={(e) => set("ads", { ...s.ads, listing_ad_enabled: e.target.checked })} className="h-4 w-4" />
               Show ads on listing detail pages
             </label>
+            <label className="label flex items-center gap-2 border-t border-line pt-3">
+              <input type="checkbox" checked={s.ads?.blog_ad_enabled ?? false} onChange={(e) => set("ads", { ...s.ads, blog_ad_enabled: e.target.checked })} className="h-4 w-4" />
+              Show ads in blog sidebar
+            </label>
+            {s.ads?.blog_ad_enabled ? (
+              <label className="label mt-2 block">
+                Blog AdSense code
+                <textarea
+                  className="textarea mt-1 font-mono text-xs"
+                  rows={3}
+                  placeholder='<ins class="adsbygoogle" data-ad-client="ca-pub-..." data-ad-slot="..."></ins>'
+                  value={s.ads?.blog_ad_code ?? ""}
+                  onChange={(e) => set("ads", { ...s.ads, blog_ad_code: e.target.value })}
+                />
+              </label>
+            ) : null}
             <div className="border-t border-line pt-3">
               <h3 className="mb-2 text-sm font-semibold">Promo Banners</h3>
               <label className="label flex items-center gap-2">
