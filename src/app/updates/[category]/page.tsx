@@ -6,7 +6,8 @@ import { getCategories, getCategoryBySlug, getPosts } from "@/lib/blog";
 import { themeFontHref, themeVars, themeIconOverrideCSS } from "@/lib/theme";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter, MobileCtaBar } from "@/components/site/SiteFooter";
-import { Svg } from "@/components/site/Svg";
+import { CategorySegmentedControl } from "@/components/blog/CategorySegmentedControl";
+import { BlogCard } from "@/components/blog/BlogCard";
 
 export const dynamic = "force-dynamic";
 
@@ -46,30 +47,11 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
           {category.description ? <p className="max-w-xl text-lg text-muted">{category.description}</p> : null}
         </div>
 
-        <div className="mb-10 flex flex-wrap gap-2.5">
-          <Link href="/updates" className="flex h-10 items-center rounded-[var(--radius-btn)] border border-line bg-white px-4.5 text-sm">All posts</Link>
-          {categories.map((c) => (
-            <Link key={c.id} href={`/updates/${c.slug}`} className={`flex h-10 items-center rounded-[var(--radius-btn)] px-4.5 text-sm ${c.slug === slug ? "bg-primary font-semibold text-white" : "border border-line bg-white"}`}>{c.name}</Link>
-          ))}
-        </div>
+        <CategorySegmentedControl categories={categories} activeSlug={slug} />
 
         {posts.length ? (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {posts.map((p: any) => (
-              <Link key={p.id} href={`/updates/${slug}/${p.slug}`} prefetch={false} className="group flex flex-col overflow-hidden rounded-[var(--radius-lg)] bg-white shadow-[var(--shadow-card)]">
-                <Svg asset={p.cover_svg_id ? svgs[p.cover_svg_id] : undefined} fill className="aspect-[16/10] w-full overflow-hidden" />
-                <div className="flex flex-1 flex-col gap-2 px-5 pb-5 pt-4">
-                  <h3 className="text-lg font-bold leading-snug group-hover:text-primary">{p.title}</h3>
-                  {p.excerpt ? <p className="line-clamp-2 text-[13px] text-muted">{p.excerpt}</p> : null}
-                  <span className="mt-auto inline-flex items-center gap-1 pt-2 text-sm font-semibold text-primary">
-                    Read More
-                    <svg className="h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                    </svg>
-                  </span>
-                </div>
-              </Link>
-            ))}
+            {posts.map((p: any) => <BlogCard key={p.id} post={p} svgs={svgs} />)}
           </div>
         ) : <p className="text-muted">No posts in this category yet.</p>}
       </main>
