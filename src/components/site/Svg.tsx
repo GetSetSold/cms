@@ -9,8 +9,16 @@ import type { SvgAsset } from "@/lib/types";
 export function Svg({ asset, label, className = "", style, fill, colorOverride }: { asset?: SvgAsset | null; label?: string; className?: string; style?: React.CSSProperties; fill?: boolean; colorOverride?: string }) {
   if (!asset) return null;
   let markup = fill
-    ? asset.markup.replace(/^\s*<svg([^>]*)>/i, (_m, attrs: string) =>
-        `<svg${attrs.replace(/\spreserveAspectRatio="[^"]*"/gi, "")} preserveAspectRatio="xMidYMid slice">`)
+    ? asset.markup.replace(/^\s*<svg([^>]*)>/i, (_m, attrs: string) => {
+        const noPar = attrs.replace(/\spreserveAspectRatio="[^"]*"/gi, "");
+        // Cover uploaded SVGs that are just a raster background-image wrapper:
+        // preserveAspectRatio doesn't affect CSS backgrounds, so force cover.
+        const withBg = /background-image\s*:/i.test(noPar)
+          ? noPar.replace(/\sstyle="([^"]*)"/i, (_s, s: string) =>
+              ` style="${s.replace(/background-size\s*:[^;]+;?/gi, "").replace(/background-position\s*:[^;]+;?/gi, "")};background-size:cover;background-position:center;"`)
+          : noPar;
+        return `<svg${withBg} preserveAspectRatio="xMidYMid slice">`;
+      })
     : asset.markup;
   if (colorOverride && /^#[0-9a-f]{6}$/i.test(colorOverride)) {
     markup = markup

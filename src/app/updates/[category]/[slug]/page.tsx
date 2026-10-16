@@ -136,8 +136,8 @@ export default async function PostPage({ params, searchParams }: { params: Promi
               </div>
 
               {post.cover_svg_id ? (
-                <div className="mb-8">
-                  <Svg asset={svgs[post.cover_svg_id]} fill className="aspect-video w-full rounded-[var(--radius-lg)]" />
+                <div className="mb-8 overflow-hidden rounded-[var(--radius-lg)]">
+                  <Svg asset={svgs[post.cover_svg_id]} fill className="aspect-video w-full" />
                 </div>
               ) : (
                 <div className="mb-8">
