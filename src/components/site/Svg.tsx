@@ -9,7 +9,7 @@ import type { SvgAsset } from "@/lib/types";
 export function Svg({ asset, label, className = "", style, fill, colorOverride }: { asset?: SvgAsset | null; label?: string; className?: string; style?: React.CSSProperties; fill?: boolean; colorOverride?: string }) {
   if (!asset) return null;
   let markup = fill
-    ? asset.markup.replace(/^<svg([^>]*)>/i, (_m, attrs: string) =>
+    ? asset.markup.replace(/^\s*<svg([^>]*)>/i, (_m, attrs: string) =>
         `<svg${attrs.replace(/\spreserveAspectRatio="[^"]*"/gi, "")} preserveAspectRatio="xMidYMid slice">`)
     : asset.markup;
   if (colorOverride && /^#[0-9a-f]{6}$/i.test(colorOverride)) {

@@ -40,7 +40,7 @@ export function BlogCard({ post, svgs }: { post: any; svgs: Record<string, any> 
       className="group flex flex-col overflow-hidden rounded-[var(--radius-lg)] bg-white shadow-[var(--shadow-card)]"
     >
       {post.cover_svg_id && svgs[post.cover_svg_id] ? (
-        <Svg asset={svgs[post.cover_svg_id]} fill className="aspect-[16/10] w-full" />
+        <Svg asset={svgs[post.cover_svg_id]} fill className="aspect-[16/10] w-full overflow-hidden" />
       ) : (
         <BlogCardArt categorySlug={catSlug} categoryName={catName || "Update"} title={post.title} marketLabel={marketLabel} />
       )}
