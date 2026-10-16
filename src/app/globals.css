@@ -58,7 +58,7 @@ body { background: var(--c-ground); color: var(--c-ink); font-family: var(--font
   .card { @apply rounded-[var(--radius-lg)] bg-white p-6; }
 }
 
-.prose-post { font-size: 17px; line-height: 1.75; color: var(--c-ink); }
+.prose-post { font-size: 13px; line-height: 1.5; color: var(--c-ink); }
 .prose-post > * + * { margin-top: 1.25em; }
 .prose-post h2 { font-family: var(--font-display); font-size: 28px; font-weight: 600; margin-top: 1.6em; }
 .prose-post h3 { font-family: var(--font-display); font-size: 22px; font-weight: 600; margin-top: 1.4em; }
