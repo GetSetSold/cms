@@ -295,7 +295,7 @@ export function ListingFaq({ listing }: { listing: PropertyListing }) {
               {f.q}
               <span className="text-xl text-[#0066cc] transition-transform group-open:rotate-45">+</span>
             </summary>
-            <p className="pt-2 text-sm leading-relaxed text-muted">{f.a}</p>
+            <p className="faq-a pt-2 text-muted">{f.a}</p>
           </details>
         ))}
       </div>

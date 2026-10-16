@@ -49,7 +49,7 @@ export function CityFaq({ stats }: { stats: CityStats }) {
         {faqs.map((f) => (
           <div key={f.q} className="rounded-[var(--radius-lg)] border-[length:var(--border-card-width)] border-line bg-white p-6 shadow-[var(--shadow-card)]">
             <h3 className="font-display text-lg">{f.q}</h3>
-            <p className="mt-2 leading-relaxed text-muted">{f.a}</p>
+            <p className="faq-a mt-2 text-muted">{f.a}</p>
           </div>
         ))}
       </div>

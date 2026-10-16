@@ -73,7 +73,7 @@ export async function GuidePageShell({
           <div className="text-[12px] font-bold uppercase tracking-[0.12em] text-accent">
             {meta.tag}
           </div>
-          <h1 className="text-3xl font-bold tracking-tight">{meta.title}</h1>
+          <h1 className="font-display font-bold text-[30px] leading-[1.15] tracking-tight md:text-[28px] md:leading-[1.2]">{meta.title}</h1>
           <div className="h-px w-full border-t border-line" />
           <p className="max-w-3xl text-[15px] leading-relaxed text-muted">{meta.subtitle}</p>
         </div>

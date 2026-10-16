@@ -26,7 +26,7 @@ export function ProvinceCityExplorer({
     <>
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
-          <h1 className="font-display text-3xl md:text-4xl">Ontario Real Estate &amp; MLS® Listings</h1>
+          <h1 className="font-display font-bold text-[30px] leading-[1.15] tracking-tight md:text-[28px] md:leading-[1.2]">Ontario Real Estate &amp; MLS® Listings</h1>
           <p className="mt-3 max-w-3xl leading-relaxed text-muted">
             Browse {totalListings.toLocaleString()} active MLS® listings across Ontario. Select a city
             below to see homes for sale and rent, live market stats, and local market FAQs.
