@@ -61,7 +61,7 @@ export async function GuidePageShell({
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
       <SiteHeader settings={settings} logo={logo} />
       <main className="mx-auto max-w-7xl px-5 pb-16">
-        <nav className="pt-6 text-[13px] text-muted" aria-label="Breadcrumb">
+        <nav className="py-3 text-[13px] text-muted" aria-label="Breadcrumb">
           <Link href="/" className="hover:underline">Home</Link>
           {" / "}
           <Link href="/guides" className="hover:underline">Guides</Link>

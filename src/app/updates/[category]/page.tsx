@@ -41,7 +41,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
       <SiteHeader settings={settings} logo={logo} />
       <main className="mx-auto w-full max-w-7xl px-5 py-14 md:px-10">
         <div className="mb-8 flex flex-col gap-3">
-          <nav className="text-sm text-muted" aria-label="Breadcrumb"><Link href="/">Home</Link> / <Link href="/updates">Updates</Link> / {category.name}</nav>
+          <nav className="py-3 text-[13px] text-muted" aria-label="Breadcrumb"><Link href="/">Home</Link> / <Link href="/updates">Updates</Link> / {category.name}</nav>
           <h1 className="font-display font-bold text-[30px] leading-[1.15] tracking-tight md:text-[28px] md:leading-[1.2]">{category.name}</h1>
           {category.description ? <p className="max-w-xl text-lg text-muted">{category.description}</p> : null}
         </div>

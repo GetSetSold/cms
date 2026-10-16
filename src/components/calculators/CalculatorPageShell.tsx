@@ -69,7 +69,7 @@ export async function CalculatorPageShell({
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(appJsonLd) }} />
       <SiteHeader settings={settings} logo={logo} />
       <main className="mx-auto max-w-7xl px-5 pb-16">
-        <nav className="pt-6 text-[13px] text-muted" aria-label="Breadcrumb">
+        <nav className="py-3 text-[13px] text-muted" aria-label="Breadcrumb">
           <Link href="/" className="hover:underline">Home</Link>
           {" / "}
           <Link href="/calculators" className="hover:underline">Calculators</Link>

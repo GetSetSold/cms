@@ -148,7 +148,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
       {themeIconOverrideCSS(settings) ? <style dangerouslySetInnerHTML={{ __html: themeIconOverrideCSS(settings) }} /> : null}
       <SiteHeader settings={settings} logo={logo} />
       <main className="mx-auto w-full max-w-7xl min-w-0 overflow-x-clip px-5 py-8 md:px-10 md:py-12">
-        <nav className="mb-4 text-sm text-muted" aria-label="Breadcrumb">
+        <nav className="py-3 text-[13px] text-muted" aria-label="Breadcrumb">
           {(() => {
             const city = normalizeCity(listing.City ?? "");
             const hood = ((listing.CityRegion || listing.SubdivisionName) ?? "").trim();

@@ -89,7 +89,7 @@ export default async function PostPage({ params, searchParams }: { params: Promi
       <SiteHeader settings={settings} logo={logo} />
 
       <main className="mx-auto w-full max-w-7xl px-5 py-10 md:px-10">
-        <nav className="mb-6 text-sm text-muted" aria-label="Breadcrumb">
+        <nav className="py-3 text-[13px] text-muted" aria-label="Breadcrumb">
           <Link href="/">Home</Link> / <Link href="/updates">Updates</Link> / <Link href={`/updates/${cat.slug}`}>{cat.name}</Link>
         </nav>
 

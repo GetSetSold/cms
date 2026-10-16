@@ -10,7 +10,7 @@ const wrap = "mx-auto w-full max-w-7xl px-5 md:px-10";
 
 /** Contained box-style page header: background image(s) + dark scrim, never full-width.
  *  Pass several `bgImages` and the background crossfades between them automatically.
- *  Breadcrumb renders below the hero (not overlaid) via the `crumbs` prop. */
+ *  Breadcrumb renders at the top of the hero via the `crumbs` prop. */
 export function PreconBoxHeader({
   crumbs,
   eyebrow,
@@ -71,6 +71,22 @@ export function PreconBoxHeader({
           aria-hidden="true"
         />
         <div className="relative z-10 flex flex-col items-start gap-4 p-7 md:p-12">
+          {crumbs.length ? (
+            <nav className="py-1 text-[13px] text-white/70" aria-label="Breadcrumb">
+              {crumbs.map((c, i) => (
+                <span key={`${c.label}-${i}`}>
+                  {i > 0 ? " / " : null}
+                  {c.href ? (
+                    <Link href={c.href} prefetch={false} className="hover:text-white hover:underline">
+                      {c.label}
+                    </Link>
+                  ) : (
+                    <span className="font-medium text-white">{c.label}</span>
+                  )}
+                </span>
+              ))}
+            </nav>
+          ) : null}
           {logoUrl ? (
             <span className="flex items-center justify-center rounded-[18px] bg-white p-3 shadow-[0_8px_24px_rgba(0,0,0,0.25)]">
               <img
@@ -130,22 +146,6 @@ export function PreconBoxHeader({
           ) : null}
         </div>
       </header>
-      {crumbs.length ? (
-        <nav className="flex flex-wrap items-center gap-x-1.5 gap-y-1 px-1 pt-4 text-[13px] text-muted" aria-label="Breadcrumb">
-          {crumbs.map((c, i) => (
-            <span key={`${c.label}-${i}`} className="flex items-center gap-1.5">
-              {i > 0 ? <span className="text-muted/50">›</span> : null}
-              {c.href ? (
-                <Link href={c.href} prefetch={false} className="font-medium hover:text-ink hover:underline">
-                  {c.label}
-                </Link>
-              ) : (
-                <span className="font-semibold text-ink">{c.label}</span>
-              )}
-            </span>
-          ))}
-        </nav>
-      ) : null}
     </div>
   );
 }
