@@ -8,6 +8,8 @@ import { themeFontHref, themeVars, themeIconOverrideCSS } from "@/lib/theme";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter, MobileCtaBar } from "@/components/site/SiteFooter";
 import { Svg } from "@/components/site/Svg";
+import { PostCoverArt } from "@/components/blog/PostCoverArt";
+import { getHpiMarketAsOf } from "@/lib/hpi";
 import { RenderSections } from "@/components/blocks";
 import { BlogAdSlot } from "@/components/blog/BlogAdSlot";
 import type { Section } from "@/lib/types";
@@ -71,6 +73,24 @@ export default async function PostPage({ params, searchParams }: { params: Promi
   const toc = extractToc(post.content_md);
   const minutes = readingTime(post.content_md);
 
+  // Cover art data: first market_stats block's market + pinned month
+  function findCoverMarketBlock(p: any): { slug: string; month: string } | null {
+    for (const list of [p.blocks_before, p.blocks_after].filter(Array.isArray)) {
+      for (const b of list) {
+        const isMarket = b?.block_type === "market_stats" || b?.type === "market_stats";
+        if (isMarket && b?.data?.market_slug) return { slug: b.data.market_slug, month: (b.data.month as string) || "" };
+      }
+    }
+    return null;
+  }
+  function monthLabelForCover(ym: string): string {
+    const [y, mo] = ym.split("-");
+    const d = new Date(Number(y), Number(mo) - 1, 1);
+    return isNaN(d.getTime()) ? ym : d.toLocaleDateString("en-CA", { month: "long", year: "numeric" });
+  }
+  const coverBlock = findCoverMarketBlock(post);
+  const coverMarket = coverBlock ? await getHpiMarketAsOf(coverBlock.slug, coverBlock.month) : null;
+
   const jsonLd = {
     "@context": "https://schema.org", "@type": "Article",
     headline: post.title,
@@ -116,17 +136,16 @@ export default async function PostPage({ params, searchParams }: { params: Promi
               </div>
 
               {post.cover_svg_id ? (
-                <div className="-mx-6 md:-mx-14 mb-8">
-                  <Svg asset={svgs[post.cover_svg_id]} fill className="aspect-[16/9] w-full rounded-[var(--radius-lg)]" />
+                <div className="mb-8">
+                  <Svg asset={svgs[post.cover_svg_id]} fill className="aspect-video w-full rounded-[var(--radius-lg)]" />
                 </div>
               ) : (
-                <div className="-mx-6 md:-mx-14 mb-8">
-                  {/* Auto-generated branded cover — same image as the social share card */}
-                  <img
-                    src={`/updates/${cat.slug}/${post.slug}/opengraph-image`}
-                    alt={post.title}
-                    className="aspect-[16/9] w-full rounded-[var(--radius-lg)] object-cover"
-                    loading="eager"
+                <div className="mb-8">
+                  <PostCoverArt
+                    marketName={coverMarket?.name}
+                    monthLabel={coverMarket ? monthLabelForCover(coverMarket.pinnedMonth) : undefined}
+                    benchmark={coverMarket?.latest.compositeBenchmark}
+                    momChange={coverMarket?.latest.momChange}
                   />
                 </div>
               )}
