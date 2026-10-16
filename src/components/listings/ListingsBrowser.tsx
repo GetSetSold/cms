@@ -159,7 +159,7 @@ export async function ListingsBrowser({
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
         <nav className="text-sm text-muted" aria-label="Breadcrumb"><a href="/">Home</a> / {fixedCity ? <><a href="/ontario-real-estate">Ontario Real Estate</a> / <span>{fixedCity}</span></> : <span>Search</span>}</nav>
-        <h1 className="font-display text-4xl font-extrabold md:text-5xl">
+        <h1 className="font-display font-bold text-[30px] leading-[1.15] tracking-tight md:text-[28px] md:leading-[1.2]">
           {heading ?? (hasLocation ? `${total.toLocaleString()} listings near you` : multiCityDisplay ? `${total.toLocaleString()} listings in ${multiCityDisplay}` : effectiveCity ? `${total.toLocaleString()} listings in ${effectiveCity}` : `${total.toLocaleString()} listings`)}
         </h1>
         {hasLocation ? (

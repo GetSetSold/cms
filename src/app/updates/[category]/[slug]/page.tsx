@@ -104,7 +104,7 @@ export default async function PostPage({ params, searchParams }: { params: Promi
 
             <article className="overflow-hidden rounded-[var(--radius-lg)] bg-white px-6 py-10 md:px-14 md:py-14">
               <span className="mb-4 inline-block w-fit rounded-[var(--radius-label)] bg-primary-soft px-3 py-1 text-xs font-bold uppercase tracking-wide text-primary">{cat.name}</span>
-              <h1 className="mb-4 font-display text-2xl font-extrabold leading-tight md:text-5xl">{post.title}</h1>
+              <h1 className="mb-4 font-display font-bold text-[30px] leading-[1.15] tracking-tight md:text-[28px] md:leading-[1.2]">{post.title}</h1>
               {post.excerpt ? <p className="mb-6 text-lg text-muted">{post.excerpt}</p> : null}
 
               <div className="mb-8 flex items-center gap-3 border-y border-line py-4 text-sm text-muted">

@@ -35,7 +35,7 @@ export default async function UpdatesLanding() {
       <main className="mx-auto w-full max-w-7xl px-5 py-14 md:px-10">
         <div className="mb-8 flex flex-col gap-3">
           <nav className="text-sm text-muted" aria-label="Breadcrumb"><Link href="/">Home</Link> / Updates</nav>
-          <h1 className="font-display text-4xl font-extrabold md:text-5xl">Insights &amp; Updates</h1>
+          <h1 className="font-display font-bold text-[30px] leading-[1.15] tracking-tight md:text-[28px] md:leading-[1.2]">Insights &amp; Updates</h1>
           <p className="max-w-xl text-lg text-muted">Practical advice on buying, selling, and everything in between.</p>
         </div>
 
