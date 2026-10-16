@@ -89,8 +89,8 @@ function Hero({ data, ctx }: BlockProps) {
   const compact = ctx.settings.theme.density === "compact";
   const title = (
     <h1 className={compact
-      ? "font-display font-bold text-[26px] leading-[1.2] tracking-tight md:text-[44px] md:leading-[1.1]"
-      : "font-display font-bold text-[30px] leading-[1.15] tracking-tight md:text-[72px] md:leading-[1.05]"}>
+      ? "font-display font-bold text-[26px] leading-[1.2] tracking-tight md:text-[28px] md:leading-[1.2]"
+      : "font-display font-bold text-[30px] leading-[1.15] tracking-tight md:text-[28px] md:leading-[1.2]"}>
       {data.heading}{" "}
       {data.heading_accent ? <span className={data.heading_accent_color ? "" : "text-primary"} style={data.heading_accent_color ? { color: data.heading_accent_color } : undefined}>{data.heading_accent}</span> : null}
     </h1>
