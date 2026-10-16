@@ -76,8 +76,8 @@ export function BlogCardArt({
       </g>
       {t.icon}
       <text x="20" y="34" fontSize="11" fontWeight="800" fill={ACCENT} letterSpacing="2">{label}</text>
-      <text x="20" y="178" fontSize={line1.length > 24 ? 15 : 19} fontWeight="800" fill="#ffffff">{line1}</text>
-      {line2 ? <text x="20" y="196" fontSize="11" fill={SUBTLE}>{line2}</text> : null}
+      <text x="20" y="170" fontSize={line1.length > 24 ? 15 : 19} fontWeight="800" fill="#ffffff">{line1}</text>
+      {line2 ? <text x="20" y="188" fontSize="11" fill={SUBTLE}>{line2}</text> : null}
     </svg>
   );
 }
