@@ -31,7 +31,7 @@ export default async function PreconAlertsPage() {
               <span>Pre-Con Alerts</span>
             </nav>
             <p className="pt-5 text-[11px] font-bold uppercase tracking-[0.25em] text-primary">Stay Ahead</p>
-            <h1 className="pt-2 font-display text-3xl font-extrabold tracking-tight md:text-4xl">
+            <h1 className="pt-2 font-display font-bold text-[30px] leading-[1.15] tracking-tight md:text-[28px] md:leading-[1.2]">
               Pre-con updates, before everyone else.
             </h1>
             <p className="pt-3 text-[15px] leading-relaxed text-muted">

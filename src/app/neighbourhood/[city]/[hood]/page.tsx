@@ -135,7 +135,7 @@ export default async function NeighbourhoodPage({
           <span>{hood.hood}</span>
         </nav>
 
-        <h1 className="font-display text-3xl md:text-4xl">
+        <h1 className="font-display font-bold text-[30px] leading-[1.15] tracking-tight md:text-[28px] md:leading-[1.2]">
           Homes for sale in {hood.hood}, {hood.city}
         </h1>
         <p className="mt-3 max-w-3xl leading-relaxed text-muted">

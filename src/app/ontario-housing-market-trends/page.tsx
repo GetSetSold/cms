@@ -47,7 +47,7 @@ export default async function TrendsOverviewPage() {
           <Link href="/" className="hover:underline">Home</Link> / <span>Ontario Housing Market Trends</span>
         </nav>
 
-        <h1 className="mt-2 text-3xl font-bold tracking-tight">Ontario Housing Market Trends</h1>
+        <h1 className="mt-2 font-display font-bold text-[30px] leading-[1.15] tracking-tight md:text-[28px] md:leading-[1.2]">Ontario Housing Market Trends</h1>
         <p className="mt-3 max-w-3xl leading-relaxed text-muted">
           Benchmark prices and market conditions for all {markets.length} Ontario real estate markets
           tracked by the Canadian Real Estate Association&apos;s MLS® Home Price Index.

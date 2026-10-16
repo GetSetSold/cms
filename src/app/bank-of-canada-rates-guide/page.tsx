@@ -109,7 +109,7 @@ export default async function BocRatesGuidePage() {
           <a href="/" className="hover:underline">Home</a> / <span>Bank of Canada Rate Tracker</span>
         </nav>
 
-        <h1 className="mt-2 text-3xl font-bold tracking-tight">Bank of Canada Rate Tracker</h1>
+        <h1 className="mt-2 font-display font-bold text-[30px] leading-[1.15] tracking-tight md:text-[28px] md:leading-[1.2]">Bank of Canada Rate Tracker</h1>
         <p className="mt-3 max-w-3xl leading-relaxed text-muted">
           Live BoC policy rate, prime rate, CORRA &amp; mortgage rates from Canada&apos;s Big 5 banks —
           with historical trends, decision countdown &amp; what it means for real estate.

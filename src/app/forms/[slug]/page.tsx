@@ -41,7 +41,7 @@ export default async function FormPage({ params, searchParams }: { params: Promi
       <main className={`mx-auto w-full px-5 py-14 md:py-20 ${form.layout === "sidebar" ? "max-w-6xl" : "max-w-2xl"}`}>
         {!form.hide_header && form.layout !== "sidebar" ? (
           <div className="mb-8 flex flex-col gap-2">
-            <h1 className="font-display text-4xl font-extrabold">{form.name}</h1>
+            <h1 className="font-display font-bold text-[30px] leading-[1.15] tracking-tight md:text-[28px] md:leading-[1.2]">{form.name}</h1>
             {form.description ? <p className="text-muted">{form.description}</p> : null}
           </div>
         ) : null}

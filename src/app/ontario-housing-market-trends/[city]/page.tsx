@@ -88,7 +88,7 @@ export default async function TrendsDetailPage({ params }: { params: Promise<Par
         {/* Header — wraps cleanly, no overflow */}
         <div className="mt-2 flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
           <div className="min-w-0">
-            <h1 className="text-3xl font-bold tracking-tight">{market.name} Housing Market Trends</h1>
+            <h1 className="font-display font-bold text-[30px] leading-[1.15] tracking-tight md:text-[28px] md:leading-[1.2]">{market.name} Housing Market Trends</h1>
             <p className="mt-2 text-[15px] text-muted">
               Benchmark price <b className="text-ink">{fmtMoney(L.compositeBenchmark)}</b>
               {" · "}<span className={toneCls(L.yoyChange)}>{fmtPct(L.yoyChange)}</span> yearly change

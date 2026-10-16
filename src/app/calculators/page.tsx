@@ -87,7 +87,7 @@ export default async function CalculatorsHubPage({
               <div className="text-[12px] font-bold uppercase tracking-[0.12em] text-accent">
                 14 free calculators · no signup
               </div>
-              <h1 className="mt-2 text-3xl font-bold tracking-tight text-ink sm:text-4xl">
+              <h1 className="mt-2 font-display font-bold text-[30px] leading-[1.15] tracking-tight text-ink md:text-[28px] md:leading-[1.2]">
                 Free Canadian Mortgage &amp; Real Estate <span className="text-accent">Calculators</span>
               </h1>
               <p className="mt-3 max-w-2xl text-[14px] leading-relaxed text-muted">
