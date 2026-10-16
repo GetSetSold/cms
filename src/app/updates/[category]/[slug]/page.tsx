@@ -119,7 +119,17 @@ export default async function PostPage({ params, searchParams }: { params: Promi
                 <div className="-mx-6 md:-mx-14 mb-8 overflow-hidden rounded-[var(--radius-lg)]">
                   <Svg asset={svgs[post.cover_svg_id]} fill className="aspect-[16/9] w-full" />
                 </div>
-              ) : null}
+              ) : (
+                <div className="-mx-6 md:-mx-14 mb-8 overflow-hidden rounded-[var(--radius-lg)]">
+                  {/* Auto-generated branded cover — same image as the social share card */}
+                  <img
+                    src={`/updates/${cat.slug}/${post.slug}/opengraph-image`}
+                    alt={post.title}
+                    className="aspect-[16/9] w-full object-cover"
+                    loading="eager"
+                  />
+                </div>
+              )}
 
               {post.tags.length ? (
                 <div className="mt-8 flex flex-wrap gap-2">
