@@ -71,7 +71,7 @@ export default async function CalculatorsHubPage({
       <SiteHeader settings={settings} logo={logo} />
       <LegacyHashRedirect />
       <main className="mx-auto max-w-7xl px-5 pb-16">
-        <nav className="pt-6 text-[13px] text-muted" aria-label="Breadcrumb">
+        <nav className="py-3 text-[13px] text-muted" aria-label="Breadcrumb">
           <Link href="/" className="hover:underline">Home</Link> / <span>Calculators</span>
         </nav>
 

@@ -105,7 +105,7 @@ export default async function BocRatesGuidePage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
       <SiteHeader settings={settings} logo={logo} />
       <main className="mx-auto max-w-7xl px-5 pb-16">
-        <nav className="pt-6 text-[13px] text-muted" aria-label="Breadcrumb">
+        <nav className="py-3 text-[13px] text-muted" aria-label="Breadcrumb">
           <a href="/" className="hover:underline">Home</a> / <span>Bank of Canada Rate Tracker</span>
         </nav>
 

@@ -25,7 +25,7 @@ export default async function PreconAlertsPage() {
       <main className="pb-16">
         <div className={`${wrap} py-10 md:py-14`}>
           <div className="mx-auto max-w-2xl rounded-[var(--radius-lg)] border-[length:var(--border-card-width)] border-line bg-white p-7 shadow-[var(--shadow-card)] md:p-10">
-            <nav className="text-[13px] text-muted" aria-label="Breadcrumb">
+            <nav className="py-3 text-[13px] text-muted" aria-label="Breadcrumb">
               <Link href="/pre-construction" prefetch={false} className="hover:text-ink">Pre-Construction</Link>
               <span className="mx-1.5">›</span>
               <span>Pre-Con Alerts</span>
