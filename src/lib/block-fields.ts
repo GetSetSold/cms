@@ -243,6 +243,7 @@ export const BLOCK_FIELDS: Record<string, Field[]> = {
   ],
   market_stats: [
     t("market_slug", "HPI market slug (e.g. hamilton-burlington, greater-toronto, niagara-region)"),
+    t("month", "Month (YYYY-MM, e.g. 2026-09 — locks the post to that month's data; empty = latest)"),
     { key: "show_chart", label: "Show trend chart", type: "boolean" },
     { key: "show_narrative", label: "Show auto-drafted narrative", type: "boolean" },
   ],

@@ -1,10 +1,16 @@
 import Link from "next/link";
-import { getHpiMarket, HPI_MARKET_COVERAGE, computeInsights, fmtMoney, fmtPct, pctTone } from "@/lib/hpi";
+import { getHpiMarketAsOf, HPI_MARKET_COVERAGE, computeInsights, fmtMoney, fmtPct, pctTone } from "@/lib/hpi";
 import type { BlockProps } from "./index";
 import { MarketStatsChart } from "./MarketStatsChart";
 
+function monthLabel(ym: string): string {
+  const [y, mo] = ym.split("-");
+  const d = new Date(Number(y), Number(mo) - 1, 1);
+  return isNaN(d.getTime()) ? ym : d.toLocaleDateString("en-CA", { month: "long", year: "numeric" });
+}
+
 /** Rule-based narrative from HPI numbers — factual, no invented data. */
-function draftNarrative(market: NonNullable<Awaited<ReturnType<typeof getHpiMarket>>>): { means: string; watch: string } {
+function draftNarrative(market: NonNullable<Awaited<ReturnType<typeof getHpiMarketAsOf>>>): { means: string; watch: string } {
   const { latest, history12m, name, lastUpdated } = market;
   const ins = computeInsights(market);
   const mom = latest.momChange;
@@ -46,11 +52,16 @@ export async function MarketStats({ data }: BlockProps) {
   const slug = (data.market_slug as string) || "hamilton-burlington";
   const showChart = data.show_chart !== false;
   const showNarrative = data.show_narrative !== false;
-  const market = await getHpiMarket(slug);
+  // Pinned month (YYYY-MM): the post keeps its month's numbers even after
+  // newer HPI data is uploaded. Empty = latest.
+  const month = (data.month as string) || "";
+  const market = await getHpiMarketAsOf(slug, month);
   if (!market) {
     return (
       <div className="rounded-[var(--radius-lg)] border border-line bg-white p-6 text-[13px] leading-[1.5] text-muted">
-        Market data for &ldquo;{slug}&rdquo; hasn&rsquo;t been uploaded yet. Add it from Admin &rarr; Market Data.
+        {month
+          ? <>No HPI data for &ldquo;{slug}&rdquo; in {month} yet. Upload it from Admin &rarr; Market Data.</>
+          : <>Market data for &ldquo;{slug}&rdquo; hasn&rsquo;t been uploaded yet. Add it from Admin &rarr; Market Data.</>}
       </div>
     );
   }
@@ -78,7 +89,10 @@ export async function MarketStats({ data }: BlockProps) {
   return (
     <div className="overflow-hidden rounded-[var(--radius-lg)] border-[length:var(--border-card-width)] border-line bg-white shadow-[var(--shadow-card)]">
       <div className="px-6 pt-6 md:px-8">
-        <h3 className="font-display text-xl font-bold tracking-tight">{market.name}</h3>
+        <h3 className="font-display text-xl font-bold tracking-tight">
+          {market.name}
+          {market.isPinned ? <span className="ml-2 align-middle text-[13px] font-semibold leading-[1.5] text-muted">{monthLabel(market.pinnedMonth)}</span> : null}
+        </h3>
         {coverage && (
           <p className="mt-1 text-[13px] leading-[1.5] text-muted">Covers {coverage.replace(/ · /g, ", ")}</p>
         )}
@@ -115,7 +129,7 @@ export async function MarketStats({ data }: BlockProps) {
         </div>
       )}
       <p className="border-t border-line px-6 py-3 text-[13px] leading-[1.5] text-muted md:px-8">
-        Source: CREA MLS&reg; HPI &middot; Updated {market.lastUpdated || "—"} &middot;{" "}
+        Source: CREA MLS&reg; HPI &middot; {market.isPinned ? <>{monthLabel(market.pinnedMonth)} data</> : <>Updated {market.lastUpdated || "—"}</>} &middot;{" "}
         <Link href={`/ontario-housing-market-trends/${market.slug}`} className="underline">Full trends</Link>
       </p>
     </div>

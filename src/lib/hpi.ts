@@ -270,3 +270,88 @@ export function availablePropertyTypes(market: HpiMarket): { key: (typeof PT_ROW
     key: k, label, data: market.latest.propertyTypes[k] as HpiPropertyType,
   }));
 }
+/* ------------------------------------------------------------------ */
+/* Month-pinned market view                                            */
+/* A Market Updates post locks to its month (YYYY-MM) so older posts  */
+/* keep their numbers after new HPI data is uploaded.                 */
+/* ------------------------------------------------------------------ */
+
+export interface PinnedHpiMarket extends HpiMarket {
+  /** YYYY-MM the stats are pinned to */
+  pinnedMonth: string;
+  /** true when pinned to a historical month (not the latest) */
+  isPinned: boolean;
+}
+
+function pct(n: number, d: number): number {
+  return d ? ((n - d) / d) * 100 : 0;
+}
+
+/**
+ * Return the market with stats as-of a specific month. When `month` is
+ * empty or matches the latest data month, returns the live market.
+ * Returns null when the month isn't in the uploaded history.
+ */
+export async function getHpiMarketAsOf(slug: string, month?: string | null): Promise<PinnedHpiMarket | null> {
+  const market = await getHpiMarket(slug);
+  if (!market) return null;
+
+  const latestMonth = (market.lastUpdated || "").slice(0, 7);
+  const m = (month || "").trim().slice(0, 7);
+  if (!m || m === latestMonth) {
+    return { ...market, pinnedMonth: latestMonth, isPinned: false };
+  }
+
+  const hist = market.fullHistory;
+  const idx = hist.findIndex((h) => h.month === m || h.month.startsWith(m));
+  if (idx < 0) return null;
+
+  const pt = hist[idx];
+  const prev = idx > 0 ? hist[idx - 1] : null;
+  const yearAgo = idx >= 12 ? hist[idx - 12] : null;
+  const mom = prev ? pct(pt.compositeBenchmark, prev.compositeBenchmark) : 0;
+  const yoy = yearAgo ? pct(pt.compositeBenchmark, yearAgo.compositeBenchmark) : 0;
+
+  // Property-type benchmarks for the pinned month (from the 12m detail history when available)
+  const h12 = market.history12m;
+  const h12Idx = h12.findIndex((h) => h.month === m || h.month.startsWith(m));
+  const h12Pt = h12Idx >= 0 ? h12[h12Idx] : null;
+  const h12Prev = h12Idx > 0 ? h12[h12Idx - 1] : null;
+  const mkPt = (bench?: number, prevBench?: number): HpiPropertyType => ({
+    hpi: 0,
+    benchmark: bench ?? 0,
+    momChange: bench != null && prevBench ? pct(bench, prevBench) : 0,
+    yoyChange: 0,
+  });
+  const lp = market.latest.propertyTypes;
+  const propertyTypes = {
+    singleFamily: h12Pt?.singleFamilyBenchmark != null ? mkPt(h12Pt.singleFamilyBenchmark, h12Prev?.singleFamilyBenchmark) : lp.singleFamily,
+    oneStorey: h12Pt?.oneStoreyBenchmark != null ? mkPt(h12Pt.oneStoreyBenchmark, h12Prev?.oneStoreyBenchmark) : lp.oneStorey,
+    twoStorey: h12Pt?.twoStoreyBenchmark != null ? mkPt(h12Pt.twoStoreyBenchmark, h12Prev?.twoStoreyBenchmark) : lp.twoStorey,
+    townhouse: h12Pt?.townhouseBenchmark != null ? mkPt(h12Pt.townhouseBenchmark, h12Prev?.townhouseBenchmark) : lp.townhouse,
+    apartment: h12Pt?.apartmentBenchmark != null ? mkPt(h12Pt.apartmentBenchmark, h12Prev?.apartmentBenchmark) : lp.apartment,
+  };
+
+  // Market condition: uploaded value only exists for the latest month.
+  // For history, infer from YoY trend (documented proxy).
+  const marketCondition: HpiLatest["marketCondition"] =
+    yoy > 3 ? "seller" : yoy < -3 ? "buyer" : "balanced";
+
+  const sliced = hist.slice(0, idx + 1);
+  return {
+    ...market,
+    latest: {
+      compositeBenchmark: pt.compositeBenchmark,
+      compositeHPI: pt.compositeHPI,
+      momChange: mom,
+      yoyChange: yoy,
+      marketCondition,
+      propertyTypes,
+    },
+    fullHistory: sliced,
+    history12m: sliced.slice(-12) as HpiMonth[],
+    lastUpdated: m,
+    pinnedMonth: m,
+    isPinned: true,
+  };
+}
