@@ -117,7 +117,7 @@ export const HPI_MARKET_COVERAGE: Record<string, string> = {
   "greater-toronto": "Toronto · Vaughan · Markham · Richmond Hill · Pickering · Ajax · Whitby · Oshawa · Newmarket · Aurora",
   mississauga: "Brampton · Caledon · Mississauga",
   "oakville-milton": "Oakville · Milton · Halton Hills",
-  "hamilton-burlington": "Hamilton · Burlington · Ancaster · Dundas · Waterdown · Flamborough · Stoney Creek · Caledonia · Haldimand County",
+  "hamilton-burlington": "Hamilton · Burlington · Ancaster · Dundas · Waterdown · Flamborough · Glanbrook · Binbrook · Stoney Creek · Caledonia · Cayuga · Dunnville · Haldimand County · Hagersville · Grimsby",
   guelph: "Guelph",
   barrie: "Barrie",
   cambridge: "Cambridge",
