@@ -19,6 +19,7 @@ import { FeatureSection } from "./FeatureSection";
 import { MergedCard } from "./MergedCard";
 import { FaqList, FAQ_STYLES, type FaqStyle } from "./FaqList";
 import { ServiceCard, SERVICE_CARD_STYLES, type ServiceCardStyle } from "./ServiceCard";
+import { MarketStats } from "./MarketStats";
 
 export type BlockCtx = { svgs: Record<string, SvgAsset>; settings: SiteSettings; page?: Page; dark?: boolean; buttonStyle?: "solid" | "bordered"; inRow?: boolean; /** Set when the block sits inside a merged header+block card. */ embedded?: "side" | "stacked"; /** The real background color behind the block when known (custom color, brand, box, merged card) — lets a block check contrast instead of guessing. */ bg?: string };
 
@@ -27,7 +28,7 @@ export type BlockCtx = { svgs: Record<string, SvgAsset>; settings: SiteSettings;
 const muted = (ctx: BlockCtx) => (ctx.dark ? "text-ground/75" : "text-muted");
 const heading = (ctx: BlockCtx) => (ctx.dark ? "text-ground" : "text-ink");
 
-type BlockProps = { data: any; ctx: BlockCtx };
+export type BlockProps = { data: any; ctx: BlockCtx };
 
 const wrap = "mx-auto w-full max-w-7xl px-5 md:px-10";
 /** Page-width wrapper — empty when embedded in a merged card (the card provides the width). */
@@ -1330,6 +1331,7 @@ export const BLOCKS: Record<string, (p: BlockProps) => React.ReactNode> = {
   sold_history_grid: SoldHistoryGrid,
   precon_projects_grid: PreconProjectsGrid,
   feature_section: FeatureSection,
+  market_stats: MarketStats,
 };
 
 const BG: Record<string, string> = {

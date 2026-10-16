@@ -241,4 +241,9 @@ export const BLOCK_FIELDS: Record<string, Field[]> = {
     { key: "show_stats", label: "Show stats bar", type: "boolean" },
     { key: "show_map", label: "Show map", type: "boolean" },
   ],
+  market_stats: [
+    t("market_slug", "HPI market slug (e.g. hamilton-burlington, greater-toronto, niagara-region)"),
+    { key: "show_chart", label: "Show trend chart", type: "boolean" },
+    { key: "show_narrative", label: "Show auto-drafted narrative", type: "boolean" },
+  ],
 };
