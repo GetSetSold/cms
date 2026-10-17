@@ -13,6 +13,10 @@ const THEMES: Record<string, { bg: string; grid: string; icon: React.ReactNode }
     bg: "#141416", grid: "#2a2a2e",
     icon: <polyline points="20,130 60,122 100,128 140,110 180,118 220,96 260,104 300,84" fill="none" stroke={ACCENT} strokeWidth="2.5" />,
   },
+  market: {
+    bg: "#141416", grid: "#2a2a2e",
+    icon: <polyline points="20,130 60,122 100,128 140,110 180,118 220,96 260,104 300,84" fill="none" stroke={ACCENT} strokeWidth="2.5" />,
+  },
   buying: {
     bg: "#1c2733", grid: "#2c3a4a",
     icon: <g fill="none" stroke={ACCENT} strokeWidth="2.5"><path d="M120 110 L160 78 L200 110" /><rect x="128" y="110" width="64" height="48" /><rect x="150" y="130" width="20" height="28" /></g>,
@@ -76,8 +80,8 @@ export function BlogCardArt({
       </g>
       {t.icon}
       <text x="20" y="34" fontSize="11" fontWeight="800" fill={ACCENT} letterSpacing="2">{label}</text>
-      <text x="20" y="170" fontSize={line1.length > 24 ? 15 : 19} fontWeight="800" fill="#ffffff">{line1}</text>
-      {line2 ? <text x="20" y="188" fontSize="11" fill={SUBTLE}>{line2}</text> : null}
+      <text x="20" y="178" fontSize={line1.length > 24 ? 15 : 19} fontWeight="800" fill="#ffffff">{line1}</text>
+      {line2 ? <text x="20" y="196" fontSize="11" fill={SUBTLE}>{line2}</text> : null}
     </svg>
   );
 }
