@@ -15,12 +15,14 @@ export const BOC_SERIES = {
   CPI: "V41690973", // CPI all items, monthly (StatCan via BoC)
 } as const;
 
-/** BoC 2025–2026 fixed announcement dates (from BoC published schedule). */
+/** BoC fixed announcement dates (from BoC published schedule). */
 export const BOC_SCHEDULE = [
   "2025-01-29", "2025-03-12", "2025-04-16", "2025-06-04",
   "2025-07-30", "2025-09-17", "2025-10-29", "2025-12-10",
   "2026-01-28", "2026-03-18", "2026-04-29", "2026-06-10",
-  "2026-07-15", "2026-09-17", "2026-10-29", "2026-12-10",
+  "2026-07-15", "2026-09-02", "2026-10-28", "2026-12-09",
+  "2027-01-27", "2027-03-03", "2027-04-28", "2027-06-02",
+  "2027-07-21", "2027-09-08", "2027-10-27", "2027-12-08",
 ];
 
 export interface BocRates {
