@@ -14,7 +14,7 @@ export function MarketStatsChart({ points12m, points3yr }: { points12m: ChartPoi
           <button
             key={r}
             onClick={() => setRange(r)}
-            className={`rounded-full px-4 py-1 text-[13px] font-bold ${range === r ? "bg-ink text-white" : "bg-soft text-muted"}`}
+            className={`rounded-[var(--radius-btn,999px)] px-4 py-1 text-[13px] font-bold ${range === r ? "bg-ink text-white" : "bg-soft text-muted"}`}
           >
             {r === "12m" ? "12 mo" : "3 yr"}
           </button>

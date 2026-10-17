@@ -73,12 +73,15 @@ export async function RateUpdate({ data }: BlockProps) {
   const pts = snap.history;
   const min = Math.min(...pts.map((p) => p.value));
   const max = Math.max(...pts.map((p) => p.value));
-  const W = 600, H = 160, P = 8;
-  const path = pts.map((p, i) => {
-    const x = P + (i / Math.max(1, pts.length - 1)) * (W - P * 2);
-    const y = H - P - ((p.value - min) / Math.max(0.01, max - min)) * (H - P * 2);
-    return `${i === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`;
-  }).join(" ");
+  const W = 600, H = 190, P = 8, LP = 18;
+  const xy = pts.map((p, i) => ({
+    x: P + (i / Math.max(1, pts.length - 1)) * (W - P * 2),
+    y: LP + H - LP - P - ((p.value - min) / Math.max(0.01, max - min)) * (H - LP - P * 2),
+    ...p,
+  }));
+  const path = xy.map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
+  // Label only the points where the rate actually changed (the decisions).
+  const labeled = xy.filter((p, i) => i === 0 || i === xy.length - 1 || p.value !== xy[i - 1].value);
 
   return (
     <div className="overflow-hidden rounded-[var(--radius-lg)] border-[length:var(--border-card-width)] border-line bg-white shadow-[var(--shadow-card)]">
@@ -108,7 +111,14 @@ export async function RateUpdate({ data }: BlockProps) {
         <div className="px-6 pb-2 md:px-8">
           <svg viewBox={`0 0 ${W} ${H}`} className="mt-2 w-full" role="img" aria-label="Target rate history">
             <path d={path} fill="none" stroke="#4d9fff" strokeWidth="2.5" />
-            <circle cx={W - P} cy={H - P - ((pts[pts.length - 1].value - min) / Math.max(0.01, max - min)) * (H - P * 2)} r="4" fill="#4d9fff" />
+            {xy.map((p, i) => (
+              <circle key={i} cx={p.x} cy={p.y} r="2.5" fill="#4d9fff" />
+            ))}
+            {labeled.map((p, i) => (
+              <text key={`l${i}`} x={p.x} y={p.y - 8} textAnchor="middle" fontSize="11" fontWeight="700" fill="#1a1a1a">
+                {p.value.toFixed(2)}%
+              </text>
+            ))}
           </svg>
           <p className="mt-2 text-center text-[13px] leading-[1.5] text-muted">
             Target rate · last {pts.length} observations
