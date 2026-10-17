@@ -151,44 +151,70 @@ export async function getBocDecisionAsOf(pinDate: string): Promise<BocDecisionSn
     if (idx < 0) return null;
   }
   const cur = targetObs[idx];
-  const byDate = new Map(rates.map((o) => [o.d, o]));
 
-  // Previous decision = most recent earlier observation with a different value.
-  let prev: { date: string; value: number } | null = null;
-  for (let i = idx - 1; i >= 0; i--) {
-    if (targetObs[i].value !== cur.value) { prev = targetObs[i]; break; }
+  // Previous DECISION: walk back to where the current rate run started.
+  // Only counts if the change happened at/after the previous scheduled
+  // announcement — otherwise it's a stale year-old move, treat as a hold.
+  const schedIdx = BOC_SCHEDULE.findIndex((s) => s >= cur.date);
+  const prevSched = schedIdx > 0 ? BOC_SCHEDULE[schedIdx - 1]
+    : schedIdx === -1 ? BOC_SCHEDULE[BOC_SCHEDULE.length - 1] : null;
+  let runStart = idx;
+  while (runStart > 0 && targetObs[runStart - 1].value === cur.value) runStart--;
+  let prevRate: number | null = runStart > 0 ? targetObs[runStart - 1].value : null;
+  if (prevRate !== null && prevSched && targetObs[runStart].date < prevSched) {
+    prevRate = cur.value; // stale change — this decision was a hold
   }
-  const change: BocChange | null = prev
+  const diff = prevRate !== null ? parseFloat((cur.value - prevRate).toFixed(2)) : 0;
+  const change: BocChange | null = diff !== 0
     ? {
         date: cur.date,
-        oldRate: prev.value,
+        oldRate: prevRate as number,
         newRate: cur.value,
-        change: Math.abs(parseFloat((cur.value - prev.value).toFixed(2))),
-        direction: cur.value > prev.value ? "up" : "down",
+        change: Math.abs(diff),
+        direction: diff > 0 ? "up" : "down",
       }
     : null;
 
-  const row = byDate.get(cur.date);
+  // Prime / bond: most recent observation at or before the decision date
+  // (weekly/monthly series rarely land exactly on decision day).
+  let prime: number | null = null;
+  let bond5y: number | null = null;
+  for (let i = rates.length - 1; i >= 0; i--) {
+    const o = rates[i];
+    if (o.d > cur.date) continue;
+    if (prime === null) prime = num(o[BOC_SERIES.PRIME]);
+    if (bond5y === null) bond5y = num(o[BOC_SERIES.BOND_5YR]);
+    if (prime !== null && bond5y !== null) break;
+  }
+
+  // CPI: index -> YoY % (12 months apart).
   const cpiRows = cpiObs
     .map((o) => ({ date: o.d, value: num(o[BOC_SERIES.CPI]) }))
     .filter((o) => o.value !== null) as { date: string; value: number }[];
-  // Latest CPI at or before the decision date.
   let cpi: { date: string; value: number } | null = null;
-  for (const c of cpiRows) {
-    if (c.date <= cur.date) cpi = c;
+  let cpiYoY: number | null = null;
+  for (const r of cpiRows) {
+    if (r.date <= cur.date) cpi = r;
     else break;
+  }
+  if (cpi) {
+    const y = Number(cpi.date.slice(0, 4)) - 1;
+    const m = cpi.date.slice(5, 7);
+    const yearAgo = cpiRows.find((r) => r.date.startsWith(`${y}-${m}`));
+    if (yearAgo && yearAgo.value) {
+      cpiYoY = parseFloat((((cpi.value - yearAgo.value) / yearAgo.value) * 100).toFixed(1));
+    }
   }
 
   return {
     date: cur.date,
     target: cur.value,
-    prime: row ? num(row[BOC_SERIES.PRIME]) : null,
-    bond5y: row ? num(row[BOC_SERIES.BOND_5YR]) : null,
-    cpi: cpi?.value ?? null,
+    prime,
+    bond5y,
+    cpi: cpiYoY,
     cpiDate: cpi?.date ?? null,
     change,
     history: targetObs.slice(Math.max(0, idx - 36), idx + 1),
     isPinned: !!pin,
   };
 }
-

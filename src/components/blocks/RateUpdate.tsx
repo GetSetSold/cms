@@ -52,7 +52,7 @@ export async function RateUpdate({ data }: BlockProps) {
   const narrative = showNarrative ? draftNarrative(snap) : null;
   const moveLabel = snap.change
     ? `${snap.change.direction === "up" ? "+" : "−"}${snap.change.change.toFixed(2)} vs previous`
-    : "No change";
+    : "Held \u2014 no change";
 
   const rows: { label: string; value: string; sub?: string; subTone?: string }[] = [
     {
@@ -114,11 +114,23 @@ export async function RateUpdate({ data }: BlockProps) {
             {xy.map((p, i) => (
               <circle key={i} cx={p.x} cy={p.y} r="2.5" fill="#4d9fff" />
             ))}
-            {labeled.map((p, i) => (
-              <text key={`l${i}`} x={p.x} y={p.y - 8} textAnchor="middle" fontSize="11" fontWeight="700" fill="#1a1a1a">
-                {p.value.toFixed(2)}%
-              </text>
-            ))}
+            {labeled.map((p, i) => {
+              const isFirst = i === 0;
+              const isLast = i === labeled.length - 1;
+              return (
+                <text
+                  key={`l${i}`}
+                  x={isFirst ? p.x + 2 : isLast ? p.x - 2 : p.x}
+                  y={p.y - 8}
+                  textAnchor={isFirst ? "start" : isLast ? "end" : "middle"}
+                  fontSize="11"
+                  fontWeight="700"
+                  fill="#1a1a1a"
+                >
+                  {p.value.toFixed(2)}%
+                </text>
+              );
+            })}
           </svg>
           <p className="mt-2 text-center text-[13px] leading-[1.5] text-muted">
             Target rate · last {pts.length} observations
