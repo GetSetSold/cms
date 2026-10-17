@@ -133,7 +133,7 @@ export async function RateUpdate({ data }: BlockProps) {
             })}
           </svg>
           <p className="mt-2 text-center text-[13px] leading-[1.5] text-muted">
-            Target rate · last {pts.length} observations
+            Target rate · 3-year trend
           </p>
         </div>
       )}
@@ -149,10 +149,15 @@ export async function RateUpdate({ data }: BlockProps) {
           </div>
         </div>
       )}
-      <p className="border-t border-line px-6 py-3 text-[13px] leading-[1.5] text-muted md:px-8">
-        Source: Bank of Canada Valet API ·{" "}
-        <Link href="/bank-of-canada-rates-guide" className="underline">Live rate tracker</Link>
-      </p>
+      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line px-6 py-4 md:px-8">
+        <p className="text-[13px] leading-[1.5] text-muted">Source: Bank of Canada Valet API</p>
+        <Link
+          href="/bank-of-canada-rates-guide"
+          className="inline-flex items-center rounded-[var(--radius-btn,999px)] bg-ink px-5 py-2 text-[13px] font-bold leading-[1.5] text-white"
+        >
+          Live rate tracker
+        </Link>
+      </div>
     </div>
   );
 }

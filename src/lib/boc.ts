@@ -123,6 +123,24 @@ function num(v: unknown): number | null {
   return null;
 }
 
+/** Sample daily observations to ~one point per month for a readable 3yr chart. */
+function monthlySample(obs: { date: string; value: number }[]): { date: string; value: number }[] {
+  const cutoff = new Date();
+  cutoff.setFullYear(cutoff.getFullYear() - 3);
+  const cut = cutoff.toISOString().slice(0, 10);
+  const recent = obs.filter((o) => o.date >= cut);
+  const out: { date: string; value: number }[] = [];
+  let lastMonth = "";
+  for (const o of recent) {
+    const m = o.date.slice(0, 7);
+    if (m !== lastMonth || o.date === recent[recent.length - 1].date) {
+      out.push(o);
+      lastMonth = m;
+    }
+  }
+  return out;
+}
+
 /**
  * Fetch the BoC decision snapshot as of `pinDate` (YYYY-MM-DD).
  * Empty pin = latest decision. Historical pins freeze the post's numbers.
@@ -214,7 +232,7 @@ export async function getBocDecisionAsOf(pinDate: string): Promise<BocDecisionSn
     cpi: cpiYoY,
     cpiDate: cpi?.date ?? null,
     change,
-    history: targetObs.slice(Math.max(0, idx - 36), idx + 1),
+    history: monthlySample(targetObs.slice(0, idx + 1)),
     isPinned: !!pin,
   };
 }

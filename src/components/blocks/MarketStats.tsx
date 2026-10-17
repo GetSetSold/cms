@@ -128,10 +128,17 @@ export async function MarketStats({ data }: BlockProps) {
           </div>
         </div>
       )}
-      <p className="border-t border-line px-6 py-3 text-[13px] leading-[1.5] text-muted md:px-8">
-        Source: CREA MLS&reg; HPI &middot; {market.isPinned ? <>{monthLabel(market.pinnedMonth)} data</> : <>Updated {market.lastUpdated || "—"}</>} &middot;{" "}
-        <Link href={`/ontario-housing-market-trends/${market.slug}`} className="underline">Full trends</Link>
-      </p>
+      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line px-6 py-4 md:px-8">
+        <p className="text-[13px] leading-[1.5] text-muted">
+          Source: CREA MLS&reg; HPI &middot; {market.isPinned ? <>{monthLabel(market.pinnedMonth)} data</> : <>Updated {market.lastUpdated || "—"}</>}
+        </p>
+        <Link
+          href={`/ontario-housing-market-trends/${market.slug}`}
+          className="inline-flex items-center rounded-[var(--radius-btn,999px)] bg-ink px-5 py-2 text-[13px] font-bold leading-[1.5] text-white"
+        >
+          Full trends
+        </Link>
+      </div>
     </div>
   );
 }
