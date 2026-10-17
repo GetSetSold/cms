@@ -10,6 +10,7 @@ import { SiteFooter, MobileCtaBar } from "@/components/site/SiteFooter";
 import { Svg } from "@/components/site/Svg";
 import { PostCoverArt } from "@/components/blog/PostCoverArt";
 import { getHpiMarketAsOf } from "@/lib/hpi";
+import { getBocDecisionAsOf, fmtRate } from "@/lib/boc";
 import { RenderSections } from "@/components/blocks";
 import { BlogAdSlot } from "@/components/blog/BlogAdSlot";
 import type { Section } from "@/lib/types";
@@ -83,6 +84,16 @@ export default async function PostPage({ params, searchParams }: { params: Promi
     }
     return null;
   }
+  // Cover art data: first rate_update block's pinned decision date
+  function findCoverRateBlock(p: any): { decisionDate: string } | null {
+    for (const list of [p.blocks_before, p.blocks_after].filter(Array.isArray)) {
+      for (const b of list) {
+        const isRate = b?.block_type === "rate_update" || b?.type === "rate_update";
+        if (isRate) return { decisionDate: (b?.data?.decision_date as string) || "" };
+      }
+    }
+    return null;
+  }
   function monthLabelForCover(ym: string): string {
     const [y, mo] = ym.split("-");
     const d = new Date(Number(y), Number(mo) - 1, 1);
@@ -90,6 +101,8 @@ export default async function PostPage({ params, searchParams }: { params: Promi
   }
   const coverBlock = findCoverMarketBlock(post);
   const coverMarket = coverBlock ? await getHpiMarketAsOf(coverBlock.slug, coverBlock.month) : null;
+  const coverRateBlock = !coverMarket ? findCoverRateBlock(post) : null;
+  const coverRate = coverRateBlock ? await getBocDecisionAsOf(coverRateBlock.decisionDate) : null;
 
   const jsonLd = {
     "@context": "https://schema.org", "@type": "Article",
@@ -146,6 +159,9 @@ export default async function PostPage({ params, searchParams }: { params: Promi
                     monthLabel={coverMarket ? monthLabelForCover(coverMarket.pinnedMonth) : undefined}
                     benchmark={coverMarket?.latest.compositeBenchmark}
                     momChange={coverMarket?.latest.momChange}
+                    rateLabel={coverRate ? "BoC Target Rate" : undefined}
+                    rateValue={coverRate && coverRate.target !== null ? fmtRate(coverRate.target) : undefined}
+                    rateChange={coverRate?.change ? `${coverRate.change.direction === "up" ? "+" : "\u2212"}${coverRate.change.change.toFixed(2)}` : coverRate ? "Hold" : undefined}
                   />
                 </div>
               )}

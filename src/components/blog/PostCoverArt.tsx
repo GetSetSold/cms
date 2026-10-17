@@ -21,14 +21,23 @@ export function PostCoverArt({
   monthLabel,
   benchmark,
   momChange,
+  rateLabel,
+  rateValue,
+  rateChange,
 }: {
   marketName?: string;
   monthLabel?: string;
   benchmark?: number;
   momChange?: number;
+  /** Rate variant: e.g. rateLabel="BoC Target Rate", rateValue="2.75%", rateChange="-0.25" */
+  rateLabel?: string;
+  rateValue?: string;
+  rateChange?: string;
 }) {
   const hasMarket = !!marketName;
+  const isRate = !!rateLabel;
   const isDown = (momChange ?? 0) < 0;
+  const rateDown = (rateChange ?? "").startsWith("-") || (rateChange ?? "").startsWith("\u2212");
 
   return (
     <svg viewBox="0 0 800 450" className="aspect-video w-full rounded-[var(--radius-lg)]" role="img" aria-label={marketName ? `${marketName} housing market update` : "Market update"}>
@@ -48,18 +57,31 @@ export function PostCoverArt({
       </text>
       {/* body */}
       <text x="48" y="200" fontSize="20" fontWeight="700" fill="#4d9fff" letterSpacing="4">
-        MARKET UPDATE
+        {isRate ? "RATE UPDATE" : "MARKET UPDATE"}
       </text>
       <text x="48" y="268" fontSize="56" fontWeight="700" fill="#ffffff">
-        {hasMarket ? `${marketName}` : "Housing Market"}
+        {hasMarket ? `${marketName}` : isRate ? "Bank of Canada" : "Housing Market"}
       </text>
       {hasMarket ? (
         <text x="48" y="312" fontSize="28" fill="rgba(255,255,255,0.75)">
           Housing Market
         </text>
+      ) : isRate ? (
+        <text x="48" y="312" fontSize="28" fill="rgba(255,255,255,0.75)">
+          Interest Rate Decision
+        </text>
       ) : null}
       {/* footer stats */}
-      {benchmark ? (
+      {isRate && rateValue ? (
+        <g>
+          <text x="48" y="392" fontSize="44" fontWeight="700" fill="#ffffff">
+            {rateValue}
+          </text>
+          <text x="48" y="418" fontSize="16" fill="rgba(255,255,255,0.6)">
+            {rateLabel || "Target rate"}
+          </text>
+        </g>
+      ) : benchmark ? (
         <g>
           <text x="48" y="392" fontSize="44" fontWeight="700" fill="#ffffff">
             {fmtMoney(benchmark)}
@@ -73,7 +95,16 @@ export function PostCoverArt({
           GetSetSold.ca
         </text>
       )}
-      {momChange != null && benchmark ? (
+      {isRate && rateChange ? (
+        <g>
+          <text x="752" y="392" fontSize="40" fontWeight="700" fill={rateDown ? "#4ade80" : "#ff6b6b"} textAnchor="end">
+            {rateChange}
+          </text>
+          <text x="752" y="418" fontSize="16" fill="rgba(255,255,255,0.6)" textAnchor="end">
+            vs previous decision
+          </text>
+        </g>
+      ) : momChange != null && benchmark ? (
         <g>
           <text x="752" y="392" fontSize="40" fontWeight="700" fill={isDown ? "#ff6b6b" : "#4ade80"} textAnchor="end">
             {fmtPct(momChange)}
