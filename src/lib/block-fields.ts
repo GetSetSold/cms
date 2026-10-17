@@ -247,4 +247,9 @@ export const BLOCK_FIELDS: Record<string, Field[]> = {
     { key: "show_chart", label: "Show trend chart", type: "boolean" },
     { key: "show_narrative", label: "Show auto-drafted narrative", type: "boolean" },
   ],
+  rate_update: [
+    t("decision_date", "Decision date (YYYY-MM-DD, e.g. 2026-10-29 — locks the post to that decision; empty = latest)"),
+    { key: "show_chart", label: "Show target-rate chart", type: "boolean" },
+    { key: "show_narrative", label: "Show auto-drafted narrative", type: "boolean" },
+  ],
 };

@@ -12,6 +12,7 @@ export const BOC_SERIES = {
   MTG_1YR: "V80691333",
   MTG_3YR: "V80691334",
   MTG_5YR: "V80691335",
+  CPI: "V41690973", // CPI all items, monthly (StatCan via BoC)
 } as const;
 
 /** BoC 2025–2026 fixed announcement dates (from BoC published schedule). */
@@ -80,3 +81,112 @@ export function bocChanges(obs: { date: string; value: number | null }[]): BocCh
   void prevDate;
   return changes;
 }
+
+/* ---------- Server-side BoC snapshot (for the rate_update block) ---------- */
+
+export interface BocDecisionSnapshot {
+  /** Decision date actually rendered (pinned or latest). */
+  date: string;
+  target: number | null;
+  prime: number | null;
+  bond5y: number | null;
+  cpi: number | null;
+  cpiDate: string | null;
+  /** Change vs the previous decision, if any. */
+  change: BocChange | null;
+  /** Target-rate history for the chart (date-ascending). */
+  history: { date: string; value: number }[];
+  isPinned: boolean;
+}
+
+interface ValetObs {
+  d: string;
+  [k: string]: { v: string } | string;
+}
+
+async function valet(series: string, params: string): Promise<ValetObs[]> {
+  const r = await fetch(`${BOC_API}/observations/${series}/json?${params}`, {
+    next: { revalidate: 3600 },
+  });
+  if (!r.ok) return [];
+  const j = await r.json();
+  return (j.observations ?? []) as ValetObs[];
+}
+
+function num(v: unknown): number | null {
+  if (v && typeof v === "object" && "v" in v) {
+    const n = parseFloat((v as { v: string }).v);
+    return isFinite(n) ? n : null;
+  }
+  return null;
+}
+
+/**
+ * Fetch the BoC decision snapshot as of `pinDate` (YYYY-MM-DD).
+ * Empty pin = latest decision. Historical pins freeze the post's numbers.
+ */
+export async function getBocDecisionAsOf(pinDate: string): Promise<BocDecisionSnapshot | null> {
+  const pin = /^\d{4}-\d{2}-\d{2}$/.test(pinDate) ? pinDate : "";
+  const [rates, cpiObs] = await Promise.all([
+    valet(`${BOC_SERIES.TARGET},${BOC_SERIES.PRIME},${BOC_SERIES.BOND_5YR}`, "start_date=2020-01-01&order_dir=asc"),
+    valet(BOC_SERIES.CPI, "start_date=2020-01-01&order_dir=asc"),
+  ]);
+  if (!rates.length) return null;
+
+  const targetObs = rates
+    .map((o) => ({ date: o.d, value: num(o[BOC_SERIES.TARGET]) }))
+    .filter((o) => o.value !== null) as { date: string; value: number }[];
+  if (!targetObs.length) return null;
+
+  // Latest observation at or before the pin (or the very latest).
+  let idx = targetObs.length - 1;
+  if (pin) {
+    idx = -1;
+    for (let i = 0; i < targetObs.length; i++) {
+      if (targetObs[i].date <= pin) idx = i;
+      else break;
+    }
+    if (idx < 0) return null;
+  }
+  const cur = targetObs[idx];
+  const byDate = new Map(rates.map((o) => [o.d, o]));
+
+  // Previous decision = most recent earlier observation with a different value.
+  let prev: { date: string; value: number } | null = null;
+  for (let i = idx - 1; i >= 0; i--) {
+    if (targetObs[i].value !== cur.value) { prev = targetObs[i]; break; }
+  }
+  const change: BocChange | null = prev
+    ? {
+        date: cur.date,
+        oldRate: prev.value,
+        newRate: cur.value,
+        change: Math.abs(parseFloat((cur.value - prev.value).toFixed(2))),
+        direction: cur.value > prev.value ? "up" : "down",
+      }
+    : null;
+
+  const row = byDate.get(cur.date);
+  const cpiRows = cpiObs
+    .map((o) => ({ date: o.d, value: num(o[BOC_SERIES.CPI]) }))
+    .filter((o) => o.value !== null) as { date: string; value: number }[];
+  // Latest CPI at or before the decision date.
+  let cpi: { date: string; value: number } | null = null;
+  for (const c of cpiRows) {
+    if (c.date <= cur.date) cpi = c;
+    else break;
+  }
+
+  return {
+    date: cur.date,
+    target: cur.value,
+    prime: row ? num(row[BOC_SERIES.PRIME]) : null,
+    bond5y: row ? num(row[BOC_SERIES.BOND_5YR]) : null,
+    cpi: cpi?.value ?? null,
+    cpiDate: cpi?.date ?? null,
+    change,
+    history: targetObs.slice(Math.max(0, idx - 36), idx + 1),
+    isPinned: !!pin,
+  };
+}
+
