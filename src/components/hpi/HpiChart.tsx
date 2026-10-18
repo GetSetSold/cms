@@ -96,9 +96,28 @@ export function HpiChart({
         ))}
         {/* latest point marker */}
         <circle cx={px(n - 1)} cy={py(last.value)} r={4.5} fill="var(--c-primary, #111111)" />
-        <text x={px(n - 1) - 8} y={py(last.value) - 12} textAnchor="end" fontSize={12} fontWeight={700} fill="var(--c-primary, #111111)">
-          {formatValue(last.value)}
-        </text>
+        <g>
+          <rect
+            x={Math.max(px(n - 1) - 84, PAD_L)}
+            y={py(last.value) - 36}
+            width="76"
+            height="24"
+            rx="12"
+            fill="#ffffff"
+            stroke="#e0e0e0"
+            strokeWidth="1"
+          />
+          <text
+            x={Math.max(px(n - 1) - 84, PAD_L) + 38}
+            y={py(last.value) - 19}
+            textAnchor="middle"
+            fontSize={12}
+            fontWeight={700}
+            fill="var(--c-primary, #111111)"
+          >
+            {formatValue(last.value)}
+          </text>
+        </g>
         {/* invisible hover targets */}
         {points.map((p, i) => (
           <rect key={i} x={px(i) - (W / n) / 2} y={PAD_T} width={W / n} height={H - PAD_T - PAD_B} fill="transparent" />
