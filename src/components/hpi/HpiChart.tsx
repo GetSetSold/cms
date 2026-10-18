@@ -98,24 +98,31 @@ export function HpiChart({
         <circle cx={px(n - 1)} cy={py(last.value)} r={4.5} fill="var(--c-primary, #111111)" />
         <g>
           <rect
-            x={Math.max(px(n - 1) - 84, PAD_L)}
-            y={py(last.value) - 36}
-            width="76"
-            height="24"
+            x={Math.min(Math.max(px(n - 1) - 46, PAD_L), W - PAD_R - 92)}
+            y={Math.max(py(last.value) - 62, 4)}
+            width="92"
+            height="44"
             rx="12"
-            fill="#ffffff"
-            stroke="#e0e0e0"
-            strokeWidth="1"
+            fill="#1a1a1a"
           />
           <text
-            x={Math.max(px(n - 1) - 84, PAD_L) + 38}
-            y={py(last.value) - 19}
+            x={Math.min(Math.max(px(n - 1) - 46, PAD_L), W - PAD_R - 92) + 46}
+            y={Math.max(py(last.value) - 62, 4) + 19}
             textAnchor="middle"
-            fontSize={12}
+            fontSize={13}
             fontWeight={700}
-            fill="var(--c-primary, #111111)"
+            fill="#ffffff"
           >
             {formatValue(last.value)}
+          </text>
+          <text
+            x={Math.min(Math.max(px(n - 1) - 46, PAD_L), W - PAD_R - 92) + 46}
+            y={Math.max(py(last.value) - 62, 4) + 34}
+            textAnchor="middle"
+            fontSize={11}
+            fill="rgba(255,255,255,0.7)"
+          >
+            {monthShort(last.month)}
           </text>
         </g>
         {/* invisible hover targets */}
