@@ -176,6 +176,34 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
                     </div>
 
                     <div className="flex flex-col gap-3 rounded-lg border border-line p-3">
+                      <strong className="text-sm">Typography</strong>
+                      <p className="text-xs text-muted">Base font sizes used across blocks. Blocks that support it read these values — no code changes needed.</p>
+                      <div className="flex flex-wrap gap-4">
+                        <label className="label">Body text
+                          <select className="input w-full sm:w-36" value={s.theme.typo_body ?? "0.875rem"} onChange={(e) => set("theme", { ...s.theme, typo_body: e.target.value })}>
+                            <option value="0.75rem">12px (xs)</option>
+                            <option value="0.875rem">14px (sm)</option>
+                            <option value="1rem">16px (base)</option>
+                          </select>
+                        </label>
+                        <label className="label">Card titles
+                          <select className="input w-full sm:w-36" value={s.theme.typo_card_title ?? "1.125rem"} onChange={(e) => set("theme", { ...s.theme, typo_card_title: e.target.value })}>
+                            <option value="1rem">16px</option>
+                            <option value="1.125rem">18px</option>
+                            <option value="1.25rem">20px</option>
+                          </select>
+                        </label>
+                        <label className="label">Eyebrow
+                          <select className="input w-full sm:w-36" value={s.theme.typo_eyebrow ?? "0.75rem"} onChange={(e) => set("theme", { ...s.theme, typo_eyebrow: e.target.value })}>
+                            <option value="0.6875rem">11px</option>
+                            <option value="0.75rem">12px</option>
+                            <option value="0.875rem">14px</option>
+                          </select>
+                        </label>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-3 rounded-lg border border-line p-3">
                       <strong className="text-sm">Density</strong>
                       <p className="text-xs text-muted">Compact uses smaller type and tighter spacing — a near black-and-white, Vercel-style look with your Accent color
                         used sparingly (step numbers, small badges). Applies site-wide to every block that supports it, not per-block.</p>

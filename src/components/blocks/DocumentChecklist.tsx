@@ -53,7 +53,7 @@ export default function DocumentChecklist({ data }: { data: DocumentChecklistDat
   return (
     <div className="mx-auto w-full max-w-7xl px-5 md:px-10">
         {data.eyebrow ? (
-          <div className="mb-2 text-xs font-medium uppercase tracking-wide text-muted">{data.eyebrow}</div>
+          <div className="mb-2 font-medium uppercase tracking-wide text-muted" style={{ fontSize: "var(--font-eyebrow-size, 0.75rem)" }}>{data.eyebrow}</div>
         ) : null}
         {data.heading ? (
           <h2 className="mb-3 font-display font-semibold tracking-tight text-[22px] leading-snug md:text-[32px] md:leading-tight">{data.heading}</h2>
@@ -89,7 +89,7 @@ export default function DocumentChecklist({ data }: { data: DocumentChecklistDat
                   <CheckIcon />
                   <div className="min-w-0">
                     {item.title ? <div className="mb-1 text-base font-semibold">{item.title}</div> : null}
-                    {item.note ? <div className="text-sm text-muted">{item.note}</div> : null}
+                    {item.note ? <div className="text-muted" style={{ fontSize: "var(--font-body-size, 0.875rem)" }}>{item.note}</div> : null}
                     {(item.buttons ?? []).filter((b) => b.label).length > 0 ? (
                       <div className="mt-3 flex flex-wrap gap-3">
                         {(item.buttons ?? [])

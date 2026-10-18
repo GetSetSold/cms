@@ -42,9 +42,9 @@ export function ServiceCard({ s, style, align, color, ctx }: {
     </div>
   ) : null;
 
-  const title = s.title ? <h3 className="text-lg font-semibold leading-tight md:text-xl">{s.title}</h3> : null;
+  const title = s.title ? <h3 className="font-semibold leading-tight" style={{ fontSize: "var(--font-card-title-size, 1.125rem)" }}>{s.title}</h3> : null;
   const text = (cls: string, css?: React.CSSProperties) =>
-    s.text ? <p className={`text-sm leading-relaxed ${cls}`} style={css}>{s.text}</p> : null;
+    s.text ? <p className={`leading-relaxed ${cls}`} style={{ ...css, fontSize: "var(--font-body-size, 0.875rem)" }}>{s.text}</p> : null;
 
   if (style === "solid") {
     return (
