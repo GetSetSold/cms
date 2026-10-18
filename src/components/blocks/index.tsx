@@ -468,13 +468,13 @@ function FaqBoxed({ data, ctx }: BlockProps) {
       <div className="flex flex-col gap-3">
         {items.map((f: any, i: number) => (
           <details key={i} className={`group overflow-hidden rounded-[var(--radius-lg)] p-6 ${ctx.dark ? "bg-white/10" : `bg-white ${cardShadow}`}`} open={i === 0}>
-            <summary className={`flex cursor-pointer list-none items-center justify-between gap-4 text-lg font-semibold ${heading(ctx)}`}>
+            <summary className={`flex cursor-pointer list-none items-center justify-between gap-4 font-semibold ${heading(ctx)}`} style={{ fontSize: "var(--font-card-title-size, 1.125rem)" }}>
               {f.q}
               <span className="relative h-5 w-5 shrink-0">
                 <span className={`absolute inset-0 flex items-center justify-center text-2xl leading-none transition-transform group-open:rotate-45 ${heading(ctx)}`}>+</span>
               </span>
             </summary>
-            <p className={`mt-3 leading-relaxed ${muted(ctx)}`}>{f.a}</p>
+            <p className={`mt-3 leading-relaxed ${muted(ctx)}`} style={{ fontSize: "var(--font-body-size, 0.875rem)" }}>{f.a}</p>
           </details>
         ))}
       </div>
