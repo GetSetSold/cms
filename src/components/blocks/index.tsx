@@ -318,7 +318,7 @@ function Services({ data, ctx }: BlockProps) {
           {data.link?.label ? <Link href={data.link.href} className="font-medium text-primary">{data.link.label} →</Link> : null}
         </div>
       ) : null}
-      <div className={`grid md:grid-cols-3 md:gap-6 ${cardStyle ? "gap-5" : "gap-4"}`}>
+      <div className={`grid md:grid-cols-4 md:gap-6 ${cardStyle ? "gap-5" : "gap-4"}`}>
         {(data.items ?? []).map((s: any, i: number) => {
           if (cardStyle) {
             const card = <ServiceCard s={s} style={cardStyle} align={align} color={data.card_color} ctx={ctx} />;
