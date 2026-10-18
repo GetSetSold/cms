@@ -42,7 +42,7 @@ export function ServiceCard({ s, style, align, color, ctx }: {
     </div>
   ) : null;
 
-  const title = s.title ? <h3 className="text-2xl font-semibold leading-tight md:text-[28px]">{s.title}</h3> : null;
+  const title = s.title ? <h3 className="text-xl font-semibold leading-tight md:text-[22px]">{s.title}</h3> : null;
   const text = (cls: string, css?: React.CSSProperties) =>
     s.text ? <p className={`text-[15px] leading-relaxed md:text-base ${cls}`} style={css}>{s.text}</p> : null;
 

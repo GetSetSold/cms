@@ -53,13 +53,13 @@ export default function DocumentChecklist({ data }: { data: DocumentChecklistDat
   return (
     <div className="mx-auto w-full max-w-7xl px-5 md:px-10">
         {data.eyebrow ? (
-          <div className="mb-2 text-[13px] font-bold uppercase tracking-[0.06em] text-primary">{data.eyebrow}</div>
+          <div className="mb-2 text-sm font-semibold uppercase tracking-wide text-primary">{data.eyebrow}</div>
         ) : null}
         {data.heading ? (
-          <h2 className="mb-3 text-2xl font-bold leading-tight md:text-[32px]">{data.heading}</h2>
+          <h2 className="mb-3 font-display font-semibold tracking-tight text-[22px] leading-snug md:text-[32px] md:leading-tight">{data.heading}</h2>
         ) : null}
         {data.intro ? (
-          <p className="mb-7 max-w-3xl text-[15px] leading-relaxed text-muted md:text-base">{data.intro}</p>
+          <p className="mb-7 max-w-3xl text-[15px] leading-relaxed text-muted">{data.intro}</p>
         ) : null}
 
         {tabs.length > 0 ? (
