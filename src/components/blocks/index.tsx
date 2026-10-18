@@ -448,10 +448,10 @@ function Faq({ data, ctx }: BlockProps) {
       <div className="md:col-span-2">
         {items.map((f: any, i: number) => (
           <details key={i} className={`group border-t py-6 last:border-b ${ctx.dark ? "border-white/20" : "border-line"}`}>
-            <summary className={`flex cursor-pointer list-none items-center justify-between gap-4 text-lg font-medium md:text-xl ${heading(ctx)}`}>
+            <summary className={`flex cursor-pointer list-none items-center justify-between gap-4 font-medium ${heading(ctx)}`} style={{ fontSize: "var(--font-card-title-size, 1.125rem)" }}>
               {f.q}<span className="text-2xl transition group-open:rotate-45">+</span>
             </summary>
-            <p className={`pt-3 leading-relaxed ${muted(ctx)}`}>{renderInlineLinks(f.a)}</p>
+            <p className={`pt-3 leading-relaxed ${muted(ctx)}`} style={{ fontSize: "var(--font-body-size, 0.875rem)" }}>{renderInlineLinks(f.a)}</p>
           </details>
         ))}
       </div>

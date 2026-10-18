@@ -52,12 +52,12 @@ export function FaqList({ items, style, columns, ctx }: { items: Item[]; style: 
         <details key={n} id={id} className={`group scroll-mt-24 border-t last:border-b ${rule}`}>
           <summary className={`grid cursor-pointer grid-cols-[2.75rem_1fr_auto] items-center gap-3 py-6 md:grid-cols-[4rem_1fr_auto] md:py-8 ${NOMARKER}`}>
             <span className="text-base font-semibold md:text-lg" style={{ color: numColor }}>{String(n).padStart(2, "0")}</span>
-            <h3 className={`text-lg font-medium tracking-tight ${q} ${head}`}>{f.q}</h3>
+            <h3 className={`font-medium tracking-tight ${q} ${head}`} style={{ fontSize: "var(--font-card-title-size, 1.125rem)" }}>{f.q}</h3>
             <span className={`flex h-11 w-11 items-center justify-center rounded-[var(--radius-label)] md:h-14 md:w-14 ${dark ? "bg-white/10" : "bg-soft"}`}>
               <span aria-hidden className={`text-2xl leading-none transition-transform group-open:rotate-45 ${head}`}>+</span>
             </span>
           </summary>
-          <p className={`pb-7 pl-14 pr-14 leading-relaxed md:pb-9 md:pl-[4.75rem] md:pr-20 md:text-lg ${body}`}>{renderInlineLinks(f.a)}</p>
+          <p className={`pb-7 pl-14 pr-14 leading-relaxed md:pb-9 md:pl-[4.75rem] md:pr-20 ${body}`} style={{ fontSize: "var(--font-body-size, 0.875rem)" }}>{renderInlineLinks(f.a)}</p>
         </details>
       );
     }
@@ -65,22 +65,22 @@ export function FaqList({ items, style, columns, ctx }: { items: Item[]; style: 
       return (
         <details key={n} id={id} className={`group scroll-mt-24 overflow-hidden rounded-[var(--radius-lg)] p-5 md:p-6 ${dark ? "bg-white/10" : `bg-white ${cardShadow}`}`}>
           <summary className={`flex cursor-pointer items-center justify-between gap-4 ${NOMARKER}`}>
-            <h3 className={`text-lg font-semibold ${q} ${head}`}>{f.q}</h3>
+            <h3 className={`font-semibold ${q} ${head}`} style={{ fontSize: "var(--font-card-title-size, 1.125rem)" }}>{f.q}</h3>
             <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-[var(--radius-label)] transition-transform group-open:rotate-180 ${dark ? "bg-white/15 text-white" : "bg-primary/10 text-primary"}`}>
               <svg aria-hidden width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>
             </span>
           </summary>
-          <p className={`mt-4 pr-14 leading-relaxed md:text-lg ${body}`}>{renderInlineLinks(f.a)}</p>
+          <p className={`mt-4 pr-14 leading-relaxed ${body}`} style={{ fontSize: "var(--font-body-size, 0.875rem)" }}>{renderInlineLinks(f.a)}</p>
         </details>
       );
     }
     return (
       <details key={n} id={id} className={`group scroll-mt-24 border-t py-6 last:border-b md:py-8 ${rule}`}>
         <summary className={`flex cursor-pointer items-center justify-between gap-4 ${NOMARKER}`}>
-          <h3 className={`text-lg font-semibold ${q} ${head}`}>{f.q}</h3>
+          <h3 className={`font-semibold ${q} ${head}`} style={{ fontSize: "var(--font-card-title-size, 1.125rem)" }}>{f.q}</h3>
           <span aria-hidden className={`text-3xl leading-none transition-transform group-open:rotate-45 ${head}`}>+</span>
         </summary>
-        <p className={`pt-4 pr-10 leading-relaxed md:text-lg ${body}`}>{renderInlineLinks(f.a)}</p>
+        <p className={`pt-4 pr-10 leading-relaxed ${body}`} style={{ fontSize: "var(--font-body-size, 0.875rem)" }}>{renderInlineLinks(f.a)}</p>
       </details>
     );
   };
