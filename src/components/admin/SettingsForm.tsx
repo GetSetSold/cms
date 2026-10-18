@@ -182,12 +182,14 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
                         <label className="label">Body text
                           <select className="input w-full sm:w-36" value={s.theme.typo_body ?? "0.875rem"} onChange={(e) => set("theme", { ...s.theme, typo_body: e.target.value })}>
                             <option value="0.75rem">12px (xs)</option>
+                            <option value="0.8125rem">13px</option>
                             <option value="0.875rem">14px (sm)</option>
                             <option value="1rem">16px (base)</option>
                           </select>
                         </label>
                         <label className="label">Card titles
                           <select className="input w-full sm:w-36" value={s.theme.typo_card_title ?? "1.125rem"} onChange={(e) => set("theme", { ...s.theme, typo_card_title: e.target.value })}>
+                            <option value="0.8125rem">13px</option>
                             <option value="1rem">16px</option>
                             <option value="1.125rem">18px</option>
                             <option value="1.25rem">20px</option>
@@ -197,6 +199,7 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
                           <select className="input w-full sm:w-36" value={s.theme.typo_eyebrow ?? "0.75rem"} onChange={(e) => set("theme", { ...s.theme, typo_eyebrow: e.target.value })}>
                             <option value="0.6875rem">11px</option>
                             <option value="0.75rem">12px</option>
+                            <option value="0.8125rem">13px</option>
                             <option value="0.875rem">14px</option>
                           </select>
                         </label>
