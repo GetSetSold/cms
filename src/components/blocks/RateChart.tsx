@@ -81,6 +81,27 @@ export function RateChart({ points }: { points: RateChartPoint[] }) {
             onMouseLeave={() => setHover(null)}
           />
         ))}
+        {/* persistent latest-value label */}
+        <g>
+          <rect
+            x={Math.min(X(points.length - 1) + 8, W - padR - 76)}
+            y={Y(points[points.length - 1].value) - 32}
+            width="76"
+            height="26"
+            rx="13"
+            fill="#1a1a1a"
+          />
+          <text
+            x={Math.min(X(points.length - 1) + 8, W - padR - 76) + 38}
+            y={Y(points[points.length - 1].value) - 14}
+            textAnchor="middle"
+            fontSize="12"
+            fontWeight="700"
+            fill="#ffffff"
+          >
+            {points[points.length - 1].value.toFixed(2)}%
+          </text>
+        </g>
         {/* hover crosshair + tooltip */}
         {hp && hover !== null && (
           <g>
