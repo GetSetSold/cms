@@ -99,14 +99,14 @@ export default function DocumentChecklist({ data }: { data: DocumentChecklistDat
                               <Link
                                 key={j}
                                 href={b.href}
-                                className="inline-flex items-center gap-2 rounded-[var(--radius-btn,999px)] bg-ink px-6 py-3 text-sm font-semibold text-white transition hover:bg-primary"
+                                className="inline-flex items-center gap-2 rounded-[var(--radius-btn,999px)] border-[1.5px] border-ink bg-transparent px-5 py-2 text-[13px] font-semibold text-ink transition hover:bg-ink hover:text-white"
                               >
                                 {b.label} <ArrowIcon />
                               </Link>
                             ) : (
                               <span
                                 key={j}
-                                className="inline-flex items-center gap-2 rounded-[var(--radius-btn,999px)] bg-ink px-6 py-3 text-sm font-semibold text-white"
+                                className="inline-flex items-center gap-2 rounded-[var(--radius-btn,999px)] border-[1.5px] border-ink bg-transparent px-5 py-2 text-[13px] font-semibold text-ink"
                               >
                                 {b.label} <ArrowIcon />
                               </span>
