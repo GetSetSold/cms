@@ -44,7 +44,7 @@ export function ServiceCard({ s, style, align, color, ctx }: {
 
   const title = s.title ? <h3 className="text-lg font-semibold leading-tight md:text-xl">{s.title}</h3> : null;
   const text = (cls: string, css?: React.CSSProperties) =>
-    s.text ? <p className={`text-[15px] leading-relaxed md:text-base ${cls}`} style={css}>{s.text}</p> : null;
+    s.text ? <p className={`text-sm leading-relaxed ${cls}`} style={css}>{s.text}</p> : null;
 
   if (style === "solid") {
     return (
