@@ -7,6 +7,29 @@ Deno.serve(async (req) => {
 
   try {
     const db = admin();
+    const payload = await req.json().catch(() => ({}));
+
+    // System mode: server-to-server (service role) sends with to_email/html_body.
+    // Used by property alerts and other automated senders. The service role key
+    // in the Authorization header is the credential — no user session needed.
+    if (typeof payload.to_email === "string" && payload.to_email) {
+      const toEmail = payload.to_email.trim();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(toEmail)) {
+        return json(req, { error: `Invalid email address: "${toEmail}"` }, 422);
+      }
+      const subj = typeof payload.subject === "string" ? payload.subject.trim().slice(0, 200) : "";
+      const htmlBody = typeof payload.html_body === "string" ? payload.html_body : "";
+      const textBody = typeof payload.body === "string" ? payload.body.trim().slice(0, 10000) : "";
+      if (!subj || (!htmlBody && !textBody)) {
+        return json(req, { error: "subject and html_body (or body) are required" }, 422);
+      }
+      const { data: settings } = await db.from("site_settings").select("email_provider").maybeSingle();
+      const provider = (settings as { email_provider?: "zeptomail" | "resend" } | null)?.email_provider ?? "zeptomail";
+      const sent = await sendEmail(toEmail, subj, textBody || subj, htmlBody || undefined, provider);
+      return json(req, { ok: true, meta: sent });
+    }
+
+    // Manual mode: requires a signed-in admin or sales user.
     const jwt = (req.headers.get("Authorization") ?? "").replace(/^Bearer\s+/i, "");
     const { data: { user } } = await db.auth.getUser(jwt);
     if (!user) return json(req, { error: "Not signed in" }, 401);
@@ -16,7 +39,7 @@ Deno.serve(async (req) => {
       return json(req, { error: "Not allowed" }, 403);
     }
 
-    const { lead_id, subject, body } = await req.json().catch(() => ({}));
+    const { lead_id, subject, body } = payload;
     const subj = typeof subject === "string" ? subject.trim().slice(0, 200) : "";
     const text = typeof body === "string" ? body.trim().slice(0, 10000) : "";
     if (!lead_id || !subj || !text) return json(req, { error: "lead_id, subject and body are required" }, 422);
