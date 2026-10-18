@@ -52,7 +52,6 @@ export default function DocumentChecklist({ data }: { data: DocumentChecklistDat
 
   return (
     <div className="mx-auto w-full max-w-7xl px-5 md:px-10">
-      <div className="rounded-[var(--radius-lg,16px)] bg-white p-6 shadow-[0_6px_20px_rgba(20,20,43,0.08)] md:p-10">
         {data.eyebrow ? (
           <div className="mb-2 text-[13px] font-bold uppercase tracking-[0.06em] text-primary">{data.eyebrow}</div>
         ) : null}
@@ -65,18 +64,18 @@ export default function DocumentChecklist({ data }: { data: DocumentChecklistDat
 
         {tabs.length > 0 ? (
           <>
-            <div className="rounded-t-[12px] border border-b-0 border-line bg-white px-4 pt-4">
-              <div className="flex flex-wrap gap-2" role="tablist" aria-label="Document categories">
+            <div className="mb-6 overflow-x-auto">
+              <div className="inline-flex min-w-full items-center gap-1 rounded-[var(--radius-btn)] border border-line bg-white p-1.5 sm:min-w-0" role="tablist" aria-label="Document categories">
                 {tabs.map((t, i) => (
                   <button
                     key={i}
                     role="tab"
                     aria-selected={i === active}
                     onClick={() => setActive(i)}
-                    className={`rounded-[var(--radius-btn,999px)] border-[1.5px] px-5 py-2.5 text-sm font-semibold transition ${
+                    className={`whitespace-nowrap rounded-[var(--radius-btn)] px-4 py-2 text-sm ${
                       i === active
-                        ? "border-ink bg-ink text-white"
-                        : "border-line bg-white text-muted hover:border-ink hover:text-ink"
+                        ? "bg-ink font-semibold text-white"
+                        : "font-medium text-muted hover:text-ink"
                     }`}
                   >
                     {t.label}
@@ -84,7 +83,7 @@ export default function DocumentChecklist({ data }: { data: DocumentChecklistDat
                 ))}
               </div>
             </div>
-            <div className="rounded-b-[12px] border border-line bg-ground px-5 py-2 md:px-7 md:py-3">
+            <div className="rounded-[12px] border border-line bg-white px-5 py-2 md:px-7 md:py-3">
               {(current?.items ?? []).map((item, i) => (
                 <div key={i} className="flex gap-3.5 border-b border-line py-4 last:border-b-0">
                   <CheckIcon />
@@ -127,7 +126,6 @@ export default function DocumentChecklist({ data }: { data: DocumentChecklistDat
             <strong className="text-ink">Tip:</strong> {data.tip}
           </div>
         ) : null}
-      </div>
     </div>
   );
 }
