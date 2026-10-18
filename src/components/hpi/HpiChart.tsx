@@ -99,7 +99,7 @@ export function HpiChart({
         <g>
           <rect
             x={Math.min(Math.max(px(n - 1) - 46, PAD_L), W - PAD_R - 92)}
-            y={Math.max(py(last.value) - 62, 4)}
+            y={PAD_T}
             width="92"
             height="44"
             rx="12"
@@ -107,7 +107,7 @@ export function HpiChart({
           />
           <text
             x={Math.min(Math.max(px(n - 1) - 46, PAD_L), W - PAD_R - 92) + 46}
-            y={Math.max(py(last.value) - 62, 4) + 19}
+            y={PAD_T + 19}
             textAnchor="middle"
             fontSize={13}
             fontWeight={700}
@@ -117,7 +117,7 @@ export function HpiChart({
           </text>
           <text
             x={Math.min(Math.max(px(n - 1) - 46, PAD_L), W - PAD_R - 92) + 46}
-            y={Math.max(py(last.value) - 62, 4) + 34}
+            y={PAD_T + 34}
             textAnchor="middle"
             fontSize={11}
             fill="rgba(255,255,255,0.7)"
