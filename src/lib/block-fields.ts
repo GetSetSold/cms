@@ -252,4 +252,20 @@ export const BLOCK_FIELDS: Record<string, Field[]> = {
     { key: "show_chart", label: "Show target-rate chart", type: "boolean" },
     { key: "show_narrative", label: "Show auto-drafted narrative", type: "boolean" },
   ],
+  document_checklist: [
+    t("eyebrow", "Eyebrow (e.g. \"BE READY, NOT RUSHED\")"),
+    t("heading", "Heading"),
+    ta("intro", "Intro paragraph"),
+    { key: "tabs", label: "Tabs", type: "list", itemLabel: "Tab", fields: [
+      t("label", "Tab label (e.g. \"Employed\")"),
+      { key: "items", label: "Documents", type: "list", itemLabel: "Document", fields: [
+        t("title", "Title (e.g. \"Two Recent Pay Stubs\")"),
+        ta("note", "Helper note (optional)"),
+        { key: "buttons", label: "Buttons", type: "list", itemLabel: "Button", fields: [
+          t("label", "Button label"), t("href", "Button link"),
+        ] },
+      ] },
+    ] },
+    ta("tip", "Tip box at the bottom (optional)"),
+  ],
 };
