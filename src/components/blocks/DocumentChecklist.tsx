@@ -53,7 +53,7 @@ export default function DocumentChecklist({ data }: { data: DocumentChecklistDat
   return (
     <div className="mx-auto w-full max-w-7xl px-5 md:px-10">
         {data.eyebrow ? (
-          <div className="mb-2 text-sm font-semibold uppercase tracking-wide text-primary">{data.eyebrow}</div>
+          <div className="mb-2 text-sm font-medium uppercase tracking-wide text-muted">{data.eyebrow}</div>
         ) : null}
         {data.heading ? (
           <h2 className="mb-3 font-display font-semibold tracking-tight text-[22px] leading-snug md:text-[32px] md:leading-tight">{data.heading}</h2>
