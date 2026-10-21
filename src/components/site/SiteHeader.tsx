@@ -14,6 +14,63 @@ function PlusMinus({ open }: { open: boolean }) {
   );
 }
 
+// Line icons for the mega-menu tiles, keyed by keyword match on the link's
+// label + href. Keeps icons in code so nav settings need no schema change.
+const ICONS: Record<string, React.ReactNode> = {
+  home: (<><path d="M3 11l9-8 9 8" /><path d="M5 10v10h14V10" /></>),
+  pin: (<><path d="M12 21s-7-5.5-7-11a7 7 0 0114 0c0 5.5-7 11-7 11z" /><circle cx="12" cy="10" r="2.5" /></>),
+  book: (<><path d="M4 19.5A2.5 2.5 0 016.5 17H20V4H6.5A2.5 2.5 0 004 6.5v13z" /><path d="M4 19.5A2.5 2.5 0 006.5 22H20v-5" /></>),
+  calculator: (<><rect x="4" y="2" width="16" height="20" rx="2" /><path d="M8 7h8M8 12h8M8 16h5" /></>),
+  chart: (<><path d="M3 17l6-6 4 4 8-8" /><path d="M15 7h6v6" /></>),
+  star: (<path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.2 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z" />),
+  clock: (<><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 3" /></>),
+  bell: (<><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.7 21a2 2 0 01-3.4 0" /></>),
+  badge: (<><path d="M20 6L9 17l-5-5" /></>),
+  key: (<><circle cx="8" cy="15" r="4" /><path d="M11 12l9-9M17 4l3 3M14 7l3 3" /></>),
+  building: (<><rect x="4" y="3" width="16" height="18" rx="1" /><path d="M9 7h2M13 7h2M9 11h2M13 11h2M9 15h2M13 15h2M10 21v-3h4v3" /></>),
+  doc: (<><path d="M6 2h9l5 5v15H6z" /><path d="M14 2v6h6" /></>),
+  phone: (<path d="M22 16.9v3a2 2 0 01-2.2 2 19.8 19.8 0 01-8.6-3.1 19.5 19.5 0 01-6-6A19.8 19.8 0 012.1 4.2 2 2 0 014.1 2h3a2 2 0 012 1.7c.1 1 .4 2 .7 2.9a2 2 0 01-.5 2.1L8.1 9.9a16 16 0 006 6l1.2-1.2a2 2 0 012.1-.5c.9.3 1.9.6 2.9.7a2 2 0 011.7 2z" />),
+  tag: (<><path d="M20.6 13.4L13.4 20.6a2 2 0 01-2.8 0L2 12V2h10l8.6 8.6a2 2 0 010 2.8z" /><circle cx="7.5" cy="7.5" r="1.5" /></>),
+  link: (<><path d="M10 13a5 5 0 007.5.5l3-3a5 5 0 00-7-7l-1.7 1.7" /><path d="M14 11a5 5 0 00-7.5-.5l-3 3a5 5 0 007 7l1.7-1.7" /></>),
+};
+
+function iconForLink(label: string, href: string): React.ReactNode {
+  const s = `${label} ${href}`.toLowerCase();
+  const rules: [RegExp, string][] = [
+    [/pre-?con/, "building"],
+    [/calcul/, "calculator"],
+    [/trend|market|stats|hpi/, "chart"],
+    [/guide|blog|learn|faq|how/, "book"],
+    [/alert/, "bell"],
+    [/valuat|evaluation/, "badge"],
+    [/consult|book|appointment|schedule|contact/, "clock"],
+    [/vip|cash-?back|reward/, "star"],
+    [/rent/, "key"],
+    [/landlord|manag/, "building"],
+    [/sell|listing/, "tag"],
+    [/about|team|contact/, "phone"],
+    [/buy|home|house|property|search/, "home"],
+    [/caledonia|hamilton|haldimand|niagara|gta|ontario|city|town/, "pin"],
+    [/form|appl|doc/, "doc"],
+  ];
+  for (const [re, key] of rules) if (re.test(s)) return ICONS[key];
+  return ICONS.link;
+}
+
+function MegaTile({ label, href, onClick }: { label: string; href: string; onClick?: () => void }) {
+  return (
+    <Link href={href} onClick={onClick}
+      className="group flex items-center gap-3 rounded-xl p-2.5 transition-colors hover:bg-[#f2f6fc]">
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[11px] bg-[#eef3fa]">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0066CC" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          {iconForLink(label, href)}
+        </svg>
+      </span>
+      <span className="text-[15px] font-semibold leading-snug group-hover:text-[#0066CC]">{label}</span>
+    </Link>
+  );
+}
+
 export function SiteHeader({ settings, logo }: { settings: SiteSettings; logo?: SvgAsset | null }) {
   const [open, setOpen] = useState(false);
   const [openMega, setOpenMega] = useState<string | null>(null);
@@ -79,13 +136,13 @@ export function SiteHeader({ settings, logo }: { settings: SiteSettings; logo?: 
                   {n.label}
                 </button>
                 {openMega === n.href ? (
-                  <div className="absolute inset-x-0 top-full z-50 border-b border-line bg-white">
-                    <div className="mx-auto grid max-w-7xl grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-10 px-5 py-8 text-ink md:px-10">
+                  <div className="absolute inset-x-0 top-full z-50 border-b border-line bg-white shadow-[0_24px_48px_rgba(20,20,43,0.10)]">
+                    <div className="mx-auto grid max-w-7xl grid-cols-[repeat(auto-fit,minmax(210px,1fr))] gap-x-8 gap-y-2 px-5 py-8 text-ink md:px-10">
                       {n.columns.map((col, i) => (
                         <div key={i} className="flex flex-col">
-                          {col.heading ? <div className="pb-2 text-xs font-semibold uppercase tracking-wide text-[#0066CC]">{col.heading}</div> : null}
-                          {col.links.map((l, j) => (
-                            <Link key={l.href} href={l.href} className={`border-b border-line/50 py-2.5 hover:text-[#0066CC] ${j === col.links.length - 1 ? "border-b-0" : ""} ${compact ? "text-[13px]" : "text-[15px]"}`} onClick={() => setOpenMega(null)}>{l.label}</Link>
+                          {col.heading ? <div className="px-2.5 pb-2 text-xs font-semibold uppercase tracking-[1.2px] text-[#8a8a93]">{col.heading}</div> : null}
+                          {col.links.map((l) => (
+                            <MegaTile key={l.href} label={l.label} href={l.href} onClick={() => setOpenMega(null)} />
                           ))}
                         </div>
                       ))}
@@ -126,14 +183,17 @@ export function SiteHeader({ settings, logo }: { settings: SiteSettings; logo?: 
                   <PlusMinus open={openMobileGroup === n.href} />
                 </button>
                 {openMobileGroup === n.href ? (
-                  <div className="flex flex-col pb-3 pl-3">
-                    {n.columns.map((col, i) => (
-                      <div key={i} className="flex flex-col">
-                        {col.heading ? <div className="pb-1 pt-2 text-xs font-semibold uppercase tracking-wide text-[#0066CC]">{col.heading}</div> : null}
-                        {col.links.map((l, j) => (
-                          <Link key={l.href} href={l.href} onClick={() => setOpen(false)} className={`border-b border-line/50 py-2.5 text-base ${j === col.links.length - 1 && i === (n.columns?.length ?? 0) - 1 ? "border-b-0" : ""}`}>{l.label}</Link>
-                        ))}
-                      </div>
+                  <div className="grid grid-cols-2 gap-2.5 px-1 pb-4 pt-1">
+                    {(n.columns ?? []).flatMap((col) => col.links).map((l) => (
+                      <Link key={l.href} href={l.href} onClick={() => setOpen(false)}
+                        className="flex flex-col items-start gap-2 rounded-xl bg-[#f7f9fc] p-3.5">
+                        <span className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-[#e7effa]">
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0066CC" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                            {iconForLink(l.label, l.href)}
+                          </svg>
+                        </span>
+                        <span className="text-[13px] font-semibold leading-snug">{l.label}</span>
+                      </Link>
                     ))}
                   </div>
                 ) : null}
