@@ -6,15 +6,6 @@ import { MobileCtaBarInner } from "./MobileCtaBarInner";
 import { Svg } from "./Svg";
 import { getSvgs } from "@/lib/cms";
 
-/** Divider: absolute-positioned at the exact center of the grid gap.
- *  With equal 1fr columns and wrapping headers, this is the perfect middle.
- *  offset: half the gap (16px for gap-8, 12px for gap-6). */
-function VSlot({ color, offset = 16 }: { color: string; offset?: number }) {
-  return (
-    <span aria-hidden className="pointer-events-none absolute bottom-1/4 top-1/4 w-px" style={{ background: color, left: -offset }} />
-  );
-}
-
 function FooterCol({ col }: { col: NavColumn }) {
   return (
     <div className="flex min-w-0 flex-col items-start gap-2.5 text-left">
@@ -30,17 +21,14 @@ function pairs<T>(arr: T[]): T[][] {
   return out;
 }
 
-/** Mobile: pairs in equal columns, dividers at gap center. Headers wrap. */
-function MobilePairs({ cols, divider }: { cols: NavColumn[]; divider: string }) {
+/** Mobile: pairs in equal columns. Headers wrap. */
+function MobilePairs({ cols }: { cols: NavColumn[] }) {
   return (
     <>
       {pairs(cols).map((pair, pi) => (
         <div key={pi} className="grid grid-cols-2 gap-6">
           {pair.map((col, i) => (
-            <div key={i} className="relative">
-              {i > 0 ? <VSlot color={divider} offset={12} /> : null}
-              <FooterCol col={col} />
-            </div>
+            <FooterCol key={i} col={col} />
           ))}
         </div>
       ))}
@@ -146,7 +134,7 @@ export async function SiteFooter({ settings, logo }: { settings: SiteSettings; l
   const socialBlock = socialItems.length ? (
     <div className="flex flex-col gap-3">
       <div className="mb-1 text-[11px] font-bold uppercase tracking-[1.5px]" style={{ color: ACCENT }}>Follow</div>
-      <div className="grid max-w-[104px] grid-cols-2 gap-2.5">
+      <div className="grid max-w-[156px] grid-cols-3 gap-2.5">
         {socialItems.map((it, i) => (
           <a key={i} href={it.href} target="_blank" rel="noopener noreferrer" aria-label={it.label || "Social link"}
             className={`flex items-center justify-center overflow-hidden rounded-[var(--radius-md)] bg-white p-2 transition hover:scale-105 ${socialSize}`}>
@@ -181,27 +169,21 @@ export async function SiteFooter({ settings, logo }: { settings: SiteSettings; l
           {/* Desktop: one grid, all rows */}
           <div className="hidden gap-8 md:grid" style={{ gridTemplateColumns: "repeat(4, 1fr)" }}>
             {(firstRow ?? []).map((col, i) => (
-              <div key={`r0-${i}`} className="relative">
-                {i > 0 ? <VSlot color={divider} /> : null}
-                <FooterCol col={col} />
-              </div>
+              <FooterCol key={`r0-${i}`} col={col} />
             ))}
             {restRows.map((row, ri) => (
               <Fragment key={`row-${ri}`}>
                 <div className="col-span-4 border-t" style={{ borderColor: divider }} aria-hidden />
                 {row.map((col, i) => (
-                  <div key={`r${ri + 1}-${i}`} className="relative">
-                    {i > 0 ? <VSlot color={divider} /> : null}
-                    <FooterCol col={col} />
-                  </div>
+                  <FooterCol key={`r${ri + 1}-${i}`} col={col} />
                 ))}
               </Fragment>
             ))}
           </div>
-          {/* Mobile: stacked rows, pairs with centered dividers */}
+          {/* Mobile: stacked rows, pairs without dividers */}
           <div className="flex flex-col gap-8 md:hidden">
             {mcols === 2 ? (
-              <MobilePairs cols={firstRow ?? []} divider={divider} />
+              <MobilePairs cols={firstRow ?? []} />
             ) : (
               (firstRow ?? []).map((col, i) => <FooterCol key={i} col={col} />)
             )}
@@ -209,7 +191,7 @@ export async function SiteFooter({ settings, logo }: { settings: SiteSettings; l
               <Fragment key={`mrow-${ri}`}>
                 <div className="border-t" style={{ borderColor: divider }} aria-hidden />
                 {mcols === 2 ? (
-                  <MobilePairs cols={row} divider={divider} />
+                  <MobilePairs cols={row} />
                 ) : (
                   row.map((col, i) => <FooterCol key={i} col={col} />)
                 )}
