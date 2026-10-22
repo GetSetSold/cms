@@ -7,17 +7,17 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "preview": "opennextjs-cloudflare build --dangerouslyUseUnsupportedNextVersion && opennextjs-cloudflare preview",
-    "deploy": "opennextjs-cloudflare build --dangerouslyUseUnsupportedNextVersion && opennextjs-cloudflare deploy",
+    "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     "db:push": "supabase db push",
     "functions:deploy": "supabase functions deploy"
   },
   "dependencies": {
-    "@opennextjs/cloudflare": "^1.20.6",
+    "@opennextjs/cloudflare": "^1.20.13",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.117.1",
     "dompurify": "^3.4.16",
-    "next": "15.5.26",
+    "next": "^16.4.2",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },
@@ -29,6 +29,6 @@
     "supabase": "^2",
     "tailwindcss": "^4.3.3",
     "typescript": "^5",
-    "wrangler": "^4.137.0"
+    "wrangler": "^4.148.0"
   }
 }
