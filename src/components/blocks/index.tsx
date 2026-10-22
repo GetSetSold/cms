@@ -22,6 +22,8 @@ import { ServiceCard, SERVICE_CARD_STYLES, type ServiceCardStyle } from "./Servi
 import { MarketStats } from "./MarketStats";
 import { RateUpdate } from "./RateUpdate";
 import DocumentChecklist from "./DocumentChecklist";
+import { CalculatorBlockClient, type CalcType, type CalcStyle } from "./CalculatorBlock";
+import { getCalculatorSettings } from "@/lib/calculators/settings";
 
 export type BlockCtx = { svgs: Record<string, SvgAsset>; settings: SiteSettings; page?: Page; dark?: boolean; buttonStyle?: "solid" | "bordered"; inRow?: boolean; /** Set when the block sits inside a merged header+block card. */ embedded?: "side" | "stacked"; /** The real background color behind the block when known (custom color, brand, box, merged card) — lets a block check contrast instead of guessing. */ bg?: string };
 
@@ -1343,7 +1345,28 @@ export const BLOCKS: Record<string, (p: BlockProps) => React.ReactNode> = {
   market_stats: MarketStats,
   rate_update: RateUpdate,
   document_checklist: DocumentChecklist,
+  calculator: CalculatorBlock,
 };
+
+function CalculatorBlock({ data, ctx }: BlockProps) {
+  const cfg = getCalculatorSettings((ctx.settings as any)?.calculators).marketing;
+  const calcType: CalcType = data.calc_type === "buyer" ? "buyer" : "listing";
+  const style: CalcStyle =
+    data.style === "dark" || data.style === "minimal" ? data.style : "brand";
+  const icon = data.icon_svg_id ? ctx.svgs[data.icon_svg_id] : null;
+  return (
+    <div className={bw(ctx)}>
+      <CalculatorBlockClient
+        calcType={calcType}
+        style={style}
+        icon={icon}
+        heading={data.heading}
+        description={data.description}
+        cfg={cfg}
+      />
+    </div>
+  );
+}
 
 const BG: Record<string, string> = {
   default: "",

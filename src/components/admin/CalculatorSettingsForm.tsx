@@ -17,6 +17,7 @@ const TABS = [
   "Down Payment",
   "CMHC Premiums",
   "Land Transfer Tax & Rebates",
+  "Marketing Blocks",
   "Assumptions",
 ] as const;
 
@@ -52,6 +53,9 @@ export function CalculatorSettingsForm({ initial }: { initial: unknown }) {
 
   const set = <K extends keyof CalculatorSettings>(k: K, v: CalculatorSettings[K]) =>
     setForm((f) => ({ ...f, [k]: v }));
+
+  const setM = <K extends keyof CalculatorSettings["marketing"]>(k: K, v: number) =>
+    setForm((f) => ({ ...f, marketing: { ...f.marketing, [k]: v } }));
 
   async function save() {
     const err = validateCalculatorSettings(form);
@@ -171,6 +175,28 @@ export function CalculatorSettingsForm({ initial }: { initial: unknown }) {
           <Num label="Ontario first-time buyer rebate" hint="Max rebate against Ontario land transfer tax." value={form.onRebate} onChange={(v) => set("onRebate", v)} prefix="$" />
           <Num label="Toronto first-time buyer rebate" hint="Max rebate against Toronto MLTT." value={form.toRebate} onChange={(v) => set("toRebate", v)} prefix="$" />
           <p className="text-[12px] text-muted">Bracket rates (0.5%–2.5%) follow the standard Ontario schedule and are baked into the calculation code.</p>
+        </div>
+      )}
+
+      {tab === "Marketing Blocks" && (
+        <div className="grid max-w-2xl gap-5">
+          <p className="text-[13px] text-muted">Numbers behind the fee-savings and cash-back calculator blocks used across the site. Change a fee here and every block updates — no per-page edits.</p>
+          <div className="grid grid-cols-2 gap-4">
+            <Num label="Traditional listing fee" hint="The 'typical' fee the savings compare against." value={form.marketing.listingTraditionalPct} onChange={(v) => setM("listingTraditionalPct", v)} step={0.1} suffix="%" />
+            <Num label="Our listing fee" hint="GetSetSold listing-side fee." value={form.marketing.listingOurPct} onChange={(v) => setM("listingOurPct", v)} step={0.1} suffix="%" />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <Num label="Buyer cash-back rate" hint="Cash back as % of purchase price." value={form.marketing.cashbackRatePct} onChange={(v) => setM("cashbackRatePct", v)} step={0.05} suffix="%" />
+            <Num label="Buyer cash-back cap" hint="Max cash back paid, regardless of price." value={form.marketing.cashbackCap} onChange={(v) => setM("cashbackCap", v)} prefix="$" />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <Num label="Slider min price" value={form.marketing.sliderMin} onChange={(v) => setM("sliderMin", v)} prefix="$" />
+            <Num label="Slider max price" value={form.marketing.sliderMax} onChange={(v) => setM("sliderMax", v)} prefix="$" />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <Num label="Listing slider default" value={form.marketing.listingDefault} onChange={(v) => setM("listingDefault", v)} prefix="$" />
+            <Num label="Buyer slider default" value={form.marketing.buyerDefault} onChange={(v) => setM("buyerDefault", v)} prefix="$" />
+          </div>
         </div>
       )}
 

@@ -28,6 +28,16 @@ export const DEFAULT_CALCULATOR_SETTINGS: CalculatorSettings = {
   onRebate: 4000,
   toRebate: 4475,
   effectiveDate: "2026-01-01",
+  marketing: {
+    listingTraditionalPct: 2.5,
+    listingOurPct: 1,
+    cashbackRatePct: 0.25,
+    cashbackCap: 5000,
+    sliderMin: 200000,
+    sliderMax: 2000000,
+    listingDefault: 500000,
+    buyerDefault: 300000,
+  },
 };
 
 /**
@@ -39,6 +49,7 @@ export function getCalculatorSettings(stored: unknown): CalculatorSettings {
   const merged: CalculatorSettings = {
     ...DEFAULT_CALCULATOR_SETTINGS,
     ...s,
+    marketing: { ...DEFAULT_CALCULATOR_SETTINGS.marketing, ...(s.marketing ?? {}) },
     cmhcTiers:
       Array.isArray(s.cmhcTiers) && s.cmhcTiers.length > 0
         ? s.cmhcTiers
@@ -65,6 +76,21 @@ export function getCalculatorSettings(stored: unknown): CalculatorSettings {
   }
   if (typeof merged.effectiveDate !== "string" || !merged.effectiveDate) {
     merged.effectiveDate = DEFAULT_CALCULATOR_SETTINGS.effectiveDate;
+  }
+  // Guard marketing fields against bad admin input
+  for (const k of [
+    "listingTraditionalPct",
+    "listingOurPct",
+    "cashbackRatePct",
+    "cashbackCap",
+    "sliderMin",
+    "sliderMax",
+    "listingDefault",
+    "buyerDefault",
+  ] as const) {
+    const v = Number(merged.marketing[k]);
+    merged.marketing[k] =
+      Number.isFinite(v) && v >= 0 ? v : DEFAULT_CALCULATOR_SETTINGS.marketing[k];
   }
   return merged;
 }

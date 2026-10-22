@@ -5,6 +5,19 @@ export interface CmhcTier {
   rate: number; // premium rate as a decimal (e.g. 0.0315)
 }
 
+/** Numbers behind the marketing calculator block (fee-savings / cash-back).
+ *  Editable in Admin → Calculators → "Marketing Blocks" tab. */
+export interface MarketingCalculatorSettings {
+  listingTraditionalPct: number; // e.g. 2.5 — the "typical" listing fee %
+  listingOurPct: number; // e.g. 1 — GetSetSold listing fee %
+  cashbackRatePct: number; // e.g. 0.25 — buyer cash-back rate %
+  cashbackCap: number; // e.g. 5000 — max buyer cash back $
+  sliderMin: number; // slider range min $
+  sliderMax: number; // slider range max $
+  listingDefault: number; // listing slider default $
+  buyerDefault: number; // buyer slider default $
+}
+
 /** Regulatory / default assumptions, editable in Admin → Calculators.
  *  Ported 1:1 from the legacy CFG_DEFAULTS so math stays identical. */
 export interface CalculatorSettings {
@@ -22,6 +35,7 @@ export interface CalculatorSettings {
   toRebate: number; // Toronto first-time buyer LTT rebate ($)
   effectiveDate: string; // human label, e.g. "2026-01-01" — when these assumptions take effect
   lastUpdated?: string; // ISO timestamp of the last admin save
+  marketing: MarketingCalculatorSettings; // marketing calculator block numbers
 }
 
 export type PaymentFrequency = "weekly" | "biweekly" | "monthly";

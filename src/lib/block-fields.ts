@@ -252,6 +252,13 @@ export const BLOCK_FIELDS: Record<string, Field[]> = {
     { key: "show_chart", label: "Show target-rate chart", type: "boolean" },
     { key: "show_narrative", label: "Show auto-drafted narrative", type: "boolean" },
   ],
+  calculator: [
+    { key: "calc_type", label: "Calculator", type: "select", options: ["listing", "buyer"] },
+    { key: "style", label: "Style", type: "select", options: ["brand", "dark", "minimal"] },
+    { key: "icon_svg_id", label: "Icon (SVG library — shown on card styles)", type: "svg" },
+    t("heading", "Heading"),
+    ta("description", "Description"),
+  ],
   document_checklist: [
     t("eyebrow", "Eyebrow (e.g. \"BE READY, NOT RUSHED\")"),
     t("heading", "Heading"),
