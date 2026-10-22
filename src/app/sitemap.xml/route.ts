@@ -49,6 +49,9 @@ export async function GET() {
 
   // Guides
   addUrl(`${base}/guides`, undefined, "weekly", 0.9);
+  for (const a of ["buyers", "sellers", "renters", "landlords"]) {
+    addUrl(`${base}/guides/${a}`, undefined, "weekly", 0.85);
+  }
   for (const g of GUIDES) {
     addUrl(`${base}/guides/${g.id}`, undefined, "weekly", 0.8);
   }

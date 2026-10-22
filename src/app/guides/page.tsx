@@ -168,7 +168,7 @@ export default async function GuidesHubPage({
         </nav>
 
         <div className="mb-6 mt-4">
-          <GuideTabs guides={GUIDES} audiences={AUDIENCES} total={GUIDE_COUNT} />
+          <GuideTabs guides={GUIDES} audiences={AUDIENCES} total={GUIDE_COUNT} active="All" />
         </div>
 
         {showAd && <GuideAdSlot adCode={adCode} className="my-8" />}

@@ -1,42 +1,64 @@
-"use client";
-/** Audience tabs + guide cards grid. Client-side filtering, no page reloads. */
-import { useState } from "react";
+/** Audience sub-menu + guide cards grid. Tabs are real links
+ *  (/guides, /guides/buyers, /guides/sellers, /guides/renters, /guides/landlords)
+ *  so each audience has its own indexable, shareable page. */
 import Link from "next/link";
 import type { GuideMeta, AudienceMeta, GuideAudience } from "@/lib/guides/types";
 
-type Tab = "All" | GuideAudience;
+export type TabKey = "All" | GuideAudience;
+
+export const TAB_PATH: Record<TabKey, string> = {
+  All: "/guides",
+  Buyer: "/guides/buyers",
+  Seller: "/guides/sellers",
+  Renter: "/guides/renters",
+  Landlord: "/guides/landlords",
+};
+
+/** URL slug → audience, e.g. "buyers" → "Buyer". Checked in guides/[slug]. */
+export const AUDIENCE_SLUGS: Record<string, GuideAudience> = {
+  buyers: "Buyer",
+  sellers: "Seller",
+  renters: "Renter",
+  landlords: "Landlord",
+};
+
+export function audiencePath(aud: GuideAudience): string {
+  return TAB_PATH[aud];
+}
 
 export function GuideTabs({
   guides,
   audiences,
   total,
+  active,
 }: {
   guides: GuideMeta[];
   audiences: AudienceMeta[];
   total: number;
+  active: TabKey;
 }) {
-  const [tab, setTab] = useState<Tab>("All");
-  const visible = tab === "All" ? guides : guides.filter((g) => g.audience === tab);
-  const countFor = (t: Tab) => (t === "All" ? total : guides.filter((g) => g.audience === t).length);
+  const visible = active === "All" ? guides : guides.filter((g) => g.audience === active);
+  const countFor = (t: TabKey) => (t === "All" ? total : guides.filter((g) => g.audience === t).length);
 
-  const tabs: { key: Tab; label: string }[] = [
+  const tabs: { key: TabKey; label: string }[] = [
     { key: "All", label: `All Guides (${countFor("All")})` },
-    ...audiences.map((a) => ({ key: a.audience as Tab, label: `${a.label} (${countFor(a.audience as Tab)})` })),
+    ...audiences.map((a) => ({ key: a.audience as TabKey, label: `${a.label} (${countFor(a.audience as TabKey)})` })),
   ];
 
   return (
     <div>
       <div className="mb-5 flex flex-wrap gap-0 border-b-2 border-line">
         {tabs.map((t) => (
-          <button
+          <Link
             key={t.key}
-            onClick={() => setTab(t.key)}
-            className={`-mb-[2px] whitespace-nowrap border-b-[3px] border-transparent bg-transparent px-5 py-2.5 text-[13px] font-semibold transition ${
-              tab === t.key ? "border-accent text-accent" : "text-muted hover:text-ink"
+            href={TAB_PATH[t.key]}
+            aria-current={active === t.key ? "page" : undefined}
+            className={`-mb-[2px] whitespace-nowrap border-b-[3px] px-5 py-2.5 text-[13px] font-semibold transition ${
+              active === t.key ? "border-accent text-accent" : "border-transparent text-muted hover:text-ink"
             }`}
           >
             {t.label}
-          </button>
+          </Link>
         ))}
       </div>
 

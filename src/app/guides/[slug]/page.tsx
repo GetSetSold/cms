@@ -16,11 +16,29 @@ import { GuideContent } from "@/components/guides/GuideContent";
 import { GuideReportButtons } from "@/components/guides/GuideReportButtons";
 import { GuideAdSlot } from "@/components/guides/GuideAdSlot";
 import { GuideHashRedirect } from "@/components/guides/GuideHashRedirect";
+import { AUDIENCE_SLUGS, TAB_PATH } from "@/components/guides/GuideTabs";
+import { AudienceHubPage } from "@/components/guides/AudienceHubPage";
 
 type Props = { params: Promise<{ slug: string }>; searchParams?: Promise<{ c?: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
+  // Audience hub, e.g. /guides/buyers
+  const aud = AUDIENCE_SLUGS[slug];
+  if (aud) {
+    const meta = getAudienceMeta(aud);
+    const count = getGuidesByAudience(aud).length;
+    const title = await seoTitle(`Free ${meta.label} Real Estate Guides (${count})`);
+    const description = `${count} free Canadian real estate guides for ${meta.label.toLowerCase()} — expert advice for 2026. Read online or download the PDF.`;
+    const url = `https://www.getsetsold.ca${TAB_PATH[aud]}`;
+    return {
+      title,
+      description,
+      alternates: { canonical: url },
+      openGraph: { title, description, type: "website", url },
+      twitter: { card: "summary", title, description },
+    };
+  }
   const meta = getGuide(slug);
   if (!meta) return {};
   const title = await seoTitle(meta.seoTitle);
@@ -59,6 +77,10 @@ const OFFERS = [
 
 export default async function GuideDetailPage({ params, searchParams }: Props) {
   const { slug } = await params;
+
+  // Audience hub, e.g. /guides/buyers → filtered listing page
+  const aud = AUDIENCE_SLUGS[slug];
+  if (aud) return <AudienceHubPage audience={aud} />;
 
   // Legacy ?c=<guideId> → canonical
   const c = (await searchParams)?.c;
@@ -121,10 +143,10 @@ export default async function GuideDetailPage({ params, searchParams }: Props) {
               Browse every guide for {guide.tag.toLowerCase().replace("for ", "")}.
             </p>
             <Link
-              href="/guides"
+              href={TAB_PATH[guide.audience]}
               className="mt-3 inline-block rounded-[var(--radius-btn)] bg-accent px-4 py-2 text-[12px] font-bold text-white transition hover:opacity-90"
             >
-              All Guides
+              All {audience?.label} Guides
             </Link>
           </div>
         </aside>
