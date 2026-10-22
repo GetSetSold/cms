@@ -88,9 +88,9 @@ export async function SiteFooter({ settings, logo }: { settings: SiteSettings; l
   const footerDark = !f.bg || isDarkColor(f.bg);
   const footerLogo = logo && footerDark ? { ...logo, markup: liftLogoForDark(logo.markup) } : logo;
 
-  // Brand block: Local Office + Brokerage, headers/lines in black (#000000).
-  // Local Office pulls name/title/tagline from Contact settings (not hardcoded).
-  const ACCENT = "#000000";
+  // Brand block: Local Office + Brokerage, headers/lines adapt to footer tone
+  // (black on light footers, white on dark) so they stay readable.
+  const ACCENT = footerDark ? "#FFFFFF" : "#000000";
   const localName = c.office_name || settings.site_name;
   const localTitle = c.office_title || settings.header?.subline;
   const localTagline = c.office_tagline || f.tagline;
@@ -116,36 +116,46 @@ export async function SiteFooter({ settings, logo }: { settings: SiteSettings; l
     </div>
   );
 
-  // Offices: Local Office + Brokerage side-by-side (wide, right of brand)
-  const officesBlock = (
-    <div className="grid gap-6 sm:grid-cols-2">
-      {/* Local Office */}
-      <div className="border-l-2 pl-4" style={{ borderColor: ACCENT }}>
-        <div className="mb-1.5 text-[11px] font-bold uppercase tracking-[1.5px]" style={{ color: ACCENT }}>Local Office</div>
-        <div className="flex flex-col gap-1.5">
-          {c.address ? <p className="opacity-75">{c.address}</p> : null}
-          {c.phone ? <a href={`tel:${c.phone}`} className="opacity-75 hover:opacity-100">{c.phone}</a> : null}
-          {c.email ? <a href={`mailto:${c.email}`} className="opacity-75 hover:opacity-100">{c.email}</a> : null}
-          {c.hours ? <span className="opacity-75">{c.hours}</span> : null}
-        </div>
-      </div>
-      {/* Brokerage */}
-      {brokerageName ? (
-        <div className="border-l-2 pl-4" style={{ borderColor: ACCENT }}>
-          <div className="mb-1.5 text-[11px] font-bold uppercase tracking-[1.5px]" style={{ color: ACCENT }}>Brokerage</div>
-          {brokerageLogo ? (
-            <div className="mb-2"><Svg asset={brokerageLogo} label={`${brokerageName} logo`} style={{ width: 120, height: 48 }} /></div>
-          ) : null}
-          <span className="font-semibold">{brokerageName}</span>
-          <div className="mt-1.5 flex flex-col gap-1.5">
-            {settings.brokerage?.address ? <p className="opacity-75">{settings.brokerage.address}</p> : null}
-            {settings.brokerage?.phone ? <a href={`tel:${settings.brokerage.phone}`} className="opacity-75 hover:opacity-100">{settings.brokerage.phone}</a> : null}
-            {settings.brokerage?.email ? <a href={`mailto:${settings.brokerage.email}`} className="opacity-75 hover:opacity-100">{settings.brokerage.email}</a> : null}
-          </div>
-        </div>
-      ) : null}
+  // Contact column (top row, 2nd): phone/email/address/hours from Contact settings.
+  const contactBlock = (
+    <div className="flex flex-col gap-1.5">
+      <div className="mb-1 text-[11px] font-bold uppercase tracking-[1.5px]" style={{ color: ACCENT }}>Contact</div>
+      {c.phone ? <a href={`tel:${c.phone}`} className="font-semibold hover:opacity-100">{c.phone}</a> : null}
+      {c.email ? <a href={`mailto:${c.email}`} className="opacity-75 hover:opacity-100">{c.email}</a> : null}
+      {c.address ? <p className="opacity-75">{c.address}</p> : null}
+      {c.hours ? <span className="opacity-75">{c.hours}</span> : null}
     </div>
   );
+
+  // Brokerage column (top row, 3rd).
+  const brokerageBlock = (
+    <div className="flex flex-col gap-1.5">
+      <div className="mb-1 text-[11px] font-bold uppercase tracking-[1.5px]" style={{ color: ACCENT }}>Brokerage</div>
+      {brokerageLogo ? (
+        <div className="mb-2"><Svg asset={brokerageLogo} label={`${brokerageName} logo`} style={{ width: 120, height: 48 }} /></div>
+      ) : null}
+      {brokerageName ? <span className="font-semibold">{brokerageName}</span> : null}
+      {settings.brokerage?.address ? <p className="opacity-75">{settings.brokerage.address}</p> : null}
+      {settings.brokerage?.phone ? <a href={`tel:${settings.brokerage.phone}`} className="opacity-75 hover:opacity-100">{settings.brokerage.phone}</a> : null}
+      {settings.brokerage?.email ? <a href={`mailto:${settings.brokerage.email}`} className="opacity-75 hover:opacity-100">{settings.brokerage.email}</a> : null}
+    </div>
+  );
+
+  // Social column (top row, 4th): 2x2 icon grid. `rounded-full` is banned site-wide
+  // (Tailwind v4 emits an invalid radius) — uses the Shape radius token instead.
+  const socialBlock = socialItems.length ? (
+    <div className="flex flex-col gap-3">
+      <div className="mb-1 text-[11px] font-bold uppercase tracking-[1.5px]" style={{ color: ACCENT }}>Follow</div>
+      <div className="grid max-w-[104px] grid-cols-2 gap-2.5">
+        {socialItems.map((it, i) => (
+          <a key={i} href={it.href} target="_blank" rel="noopener noreferrer" aria-label={it.label || "Social link"}
+            className={`flex items-center justify-center overflow-hidden rounded-[var(--radius-md)] bg-white p-2 transition hover:scale-105 ${socialSize}`}>
+            <Svg asset={socialSvgs[it.svg_id]} label={it.label} className="h-full w-full" />
+          </a>
+        ))}
+      </div>
+    </div>
+  ) : null;
 
   const topBorder = f.top_border !== false;
   const topBorderColor = f.top_border_color || "var(--c-line)";
@@ -157,10 +167,12 @@ export async function SiteFooter({ settings, logo }: { settings: SiteSettings; l
         <div aria-hidden="true" style={{ borderTop: `${topBorderWidth}px solid ${topBorderColor}` }} />
       ) : null}
       <div className={`mx-auto flex max-w-7xl flex-col px-5 md:px-10 ${compact ? "gap-6 pb-20 pt-10 text-[13px] md:pb-8" : "gap-10 pb-28 pt-16 text-[15px] md:pb-12"}`}>
-        {/* Top: brand (slim) + offices (wide, two columns) — Option 3 split layout */}
-        <div className="grid gap-8 md:grid-cols-[1fr_2fr] md:gap-12">
+        {/* Top: 4 columns — brand | contact | brokerage | social (refined footer) */}
+        <div className={`grid gap-8 sm:grid-cols-2 md:gap-10 ${socialBlock ? "md:grid-cols-4" : "md:grid-cols-3"}`}>
           {brandBlock}
-          {officesBlock}
+          {contactBlock}
+          {brokerageBlock}
+          {socialBlock}
         </div>
 
         {/* Unified menu grid: all rows share the same 4 columns so dividers align vertically.
@@ -206,16 +218,7 @@ export async function SiteFooter({ settings, logo }: { settings: SiteSettings; l
           </div>
         </div>
 
-        {socialItems.length ? (
-          <div className="flex flex-wrap items-center justify-center gap-3 border-t pt-6" style={{ borderColor: divider }}>
-            {socialItems.map((it, i) => (
-              <a key={i} href={it.href} target="_blank" rel="noopener noreferrer" aria-label={it.label || "Social link"}
-                className={`flex items-center justify-center overflow-hidden rounded-full bg-white p-2 transition hover:scale-105 ${socialSize}`}>
-                <Svg asset={socialSvgs[it.svg_id]} label={it.label} className="h-full w-full" />
-              </a>
-            ))}
-          </div>
-        ) : null}
+        {/* Social lives in the top-row 4th column now, not as a separate centered row. */}
 
         <div className="flex flex-col gap-2.5 border-t pt-6 text-sm" style={{ borderColor: divider }}>
           <div className="flex flex-wrap items-center justify-between gap-3">
