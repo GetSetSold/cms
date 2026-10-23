@@ -8,14 +8,20 @@ import { createMlsClient } from "@/lib/mls";
 
 export default async function SitemapDashboard() {
   await requireStaff(["admin"]);
-  
+
   const base = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-  
+
+  // Each source gets a timeout: a hung query degrades to an empty section
+  // instead of killing the whole page (the MLS grid/city queries have
+  // timed out in the Worker before).
+  const withTimeout = <T,>(p: Promise<T>, ms: number, fallback: T): Promise<T> =>
+    Promise.race([p, new Promise<T>((resolve) => setTimeout(() => resolve(fallback), ms))]);
+
   const [pages, cities, hoods, posts] = await Promise.all([
-    getPublishedSlugs(),
-    listNormalizedCities(),
-    listNeighbourhoods(),
-    getPosts({ limit: 500 }),
+    withTimeout(getPublishedSlugs(), 15000, []),
+    withTimeout(listNormalizedCities(), 15000, []),
+    withTimeout(listNeighbourhoods(), 15000, []),
+    withTimeout(getPosts({ limit: 500 }), 15000, []),
   ]);
   
   // Listing count for the dashboard stat — estimated, not exact: a real
