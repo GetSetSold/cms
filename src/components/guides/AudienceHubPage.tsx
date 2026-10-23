@@ -10,8 +10,55 @@ import type { GuideAudience } from "@/lib/guides/types";
 import { GuideTabs, TAB_PATH } from "./GuideTabs";
 import { GuideAdSlot } from "./GuideAdSlot";
 
-const AUDIENCE_BLURBS: Record<GuideAudience, string> = {
-  Buyer:
+/** Monochrome line icon per audience — black & white, on-brand. */
+function AudienceIcon({ audience }: { audience: GuideAudience }) {
+  const p = {
+    width: 88,
+    height: 88,
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: 1.2,
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
+  } as const;
+  switch (audience) {
+    case "Buyer": // house
+      return (
+        <svg {...p} aria-hidden>
+          <path d="M4 11l8-7 8 7" />
+          <path d="M6 9.5V20h12V9.5" />
+          <path d="M10 20v-6h4v6" />
+        </svg>
+      );
+    case "Seller": // price tag
+      return (
+        <svg {...p} aria-hidden>
+          <path d="M20.6 13.4L12 22 2 12V2h10l8.6 8.6a2 2 0 0 1 0 2.8z" />
+          <circle cx="7.5" cy="7.5" r="1.5" />
+        </svg>
+      );
+    case "Renter": // key
+      return (
+        <svg {...p} aria-hidden>
+          <circle cx="8" cy="8" r="4.5" />
+          <path d="M11.2 11.2L20 20" />
+          <path d="M16.5 16.5l2.5-2.5" />
+          <path d="M18.5 18.5l1.5-1.5" />
+        </svg>
+      );
+    case "Landlord": // building
+      return (
+        <svg {...p} aria-hidden>
+          <rect x="5" y="3" width="14" height="18" rx="1" />
+          <path d="M9 7h2M13 7h2M9 11h2M13 11h2M9 15h2M13 15h2" />
+          <path d="M10 21v-3h4v3" />
+        </svg>
+      );
+  }
+}
+
+const AUDIENCE_BLURBS: Record<GuideAudience, string> = {  Buyer:
     "Every step of buying a home in Canada — mortgages, pre-approval, closing costs, bidding wars and inspections. Plain language, free PDF downloads.",
   Seller:
     "Pricing, staging, listing and negotiating the sale of your Canadian home — including how the 1% listing fee saves you thousands.",
@@ -72,11 +119,8 @@ export async function AudienceHubPage({ audience }: { audience: GuideAudience })
       <div className="mx-auto max-w-7xl px-5 pb-8 pt-10">
         <div className="grid grid-cols-1 items-center gap-6 md:grid-cols-[3fr_7fr] md:gap-8">
           <div className="hidden items-center justify-center md:flex" aria-hidden>
-            <div
-              className="flex h-44 w-44 items-center justify-center rounded-[var(--radius-lg)] text-[88px]"
-              style={{ background: meta.bg }}
-            >
-              {meta.emoji}
+            <div className="flex h-44 w-44 items-center justify-center rounded-[var(--radius-lg)] bg-soft text-ink">
+              <AudienceIcon audience={audience} />
             </div>
           </div>
           <div>
