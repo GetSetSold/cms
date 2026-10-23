@@ -1243,6 +1243,7 @@ function WhatsIncluded({ data, ctx }: BlockProps) {
   );
   // Cards layout: standalone Shape cards instead of the table grid.
   if (data.layout === "cards") {
+    const iconBg = data.icon_bg || "none";
     return (
       <div className={`${bw(ctx)} flex flex-col ${compact ? "gap-6 py-10 md:py-16" : "gap-8 py-10 md:gap-12 md:py-20"}`}>
         {header}
@@ -1252,7 +1253,7 @@ function WhatsIncluded({ data, ctx }: BlockProps) {
             return (
               <div key={i} className={`flex flex-col items-start gap-4 rounded-[var(--radius-lg)] border p-6 shadow-[0_6px_20px_rgba(20,20,43,0.08)] transition-transform duration-200 hover:-translate-y-1 ${ctx.dark ? "border-white/15 bg-white/5" : "border-line bg-white"}`}>
                 {icon ? (
-                  <span className={`flex h-14 w-14 items-center justify-center rounded-[var(--radius-btn,999px)] ${ctx.dark ? "bg-white text-black" : "bg-black text-white"}`}>
+                  <span className="flex h-14 w-14 items-center justify-center" style={{ borderRadius: "var(--radius-btn,999px)", backgroundColor: iconBg === "accent" ? "var(--color-accent)" : ctx.dark ? "#fff" : "transparent", color: "#000" }}>
                     <Svg asset={icon} className="h-7 w-7" />
                   </span>
                 ) : null}
@@ -1310,9 +1311,10 @@ function PhasedReasons({ data, ctx }: BlockProps) {
           : <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2>) : null}
         {data.subline ? <p className={compact ? `text-sm leading-relaxed ${muted(ctx)}` : `text-lg font-semibold ${heading(ctx)}`}>{renderInlineLinks(data.subline)}</p> : null}
       </div>
-      <div className={`flex flex-col overflow-hidden ${compact ? "" : "rounded-[var(--radius-lg)]"} border ${ctx.dark ? "border-white/15" : "border-line"}`}>
+      <div className={`flex flex-col ${compact ? "gap-5" : "gap-6 md:gap-8"}`}>
         {phases.map((phase, pi) => (
-          <div key={pi} className={`flex flex-col sm:flex-row ${pi > 0 ? `border-t ${ctx.dark ? "border-white/15" : "border-line"}` : ""}`}>
+          <div key={pi} className={`overflow-hidden ${compact ? "rounded-[var(--radius-md)]" : "rounded-[var(--radius-lg)]"} border shadow-[var(--shadow-card)] ${ctx.dark ? "border-white/15" : "border-line"}`}>
+          <div className="flex flex-col sm:flex-row">
             <div className={`flex shrink-0 flex-col gap-2 ${compact ? "p-5" : "p-6"} sm:w-64 sm:border-r ${ctx.dark ? "bg-white/5 border-white/15" : compact ? "border-line" : "bg-soft border-line"}`}>
               {phase.label ? <div className={`text-xs font-bold uppercase tracking-wide ${accentCls}`} style={accentStyle}>{phase.label}</div> : null}
               {phase.title ? <div className={`${compact ? "text-base" : "text-xl"} font-bold ${heading(ctx)}`}>{phase.title}</div> : null}
@@ -1330,6 +1332,7 @@ function PhasedReasons({ data, ctx }: BlockProps) {
                 );
               })}
             </div>
+          </div>
           </div>
         ))}
       </div>

@@ -63,6 +63,7 @@ export const BLOCK_FIELDS: Record<string, Field[]> = {
   whats_included: [
     t("eyebrow", "Eyebrow (e.g. \"EVERYTHING YOU NEED TO SELL YOUR HOME\")"), t("heading", "Heading"), ta("subline", "Subline"),
     { key: "layout", label: "Layout", type: "select", options: ["table", "cards"] },
+    { key: "icon_bg", label: "Icon background (cards layout) — none: icon only · accent: site accent circle", type: "select", options: ["none", "accent"] },
     { key: "mobile_columns", label: "Cards per row on mobile", type: "select", options: ["2", "1"] },
     { key: "items", label: "What's included", type: "list", itemLabel: "Item", fields: [
       { key: "svg_id", label: "Icon", type: "svg" }, t("title", "Title"), ta("text", "Text"),
