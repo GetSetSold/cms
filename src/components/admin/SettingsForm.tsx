@@ -349,6 +349,12 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
                     <div className="label">Footer rows
                       <FooterRowsEditor rows={s.footer?.rows ?? []} maxPerRow={s.footer?.columns_per_row ?? 4} onChange={(rows) => set("footer", { ...s.footer, rows })} />
                     </div>
+                    <div className="grid gap-3 rounded-lg border border-line p-3 sm:grid-cols-2">
+                      <div className="label">Brand logo (SVG)<SvgPicker value={s.contact?.logo_svg_id} svgs={svgs} onChange={(id) => set("contact", { ...s.contact, logo_svg_id: id })} />
+                        <p className="text-xs text-muted">Left column, next to your name. Falls back to the site logo.</p></div>
+                      <div className="label">Brokerage logo (SVG)<SvgPicker value={s.brokerage?.logo_svg_id} svgs={svgs} onChange={(id) => set("brokerage", { ...s.brokerage, logo_svg_id: id })} />
+                        <p className="text-xs text-muted">Brokerage column, above the brokerage name.</p></div>
+                    </div>
           </section>
         )}
         {tab === "mobile" && (
