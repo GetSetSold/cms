@@ -1204,8 +1204,8 @@ function SectionHeader({ data, ctx }: BlockProps) {
 // Static class strings, not built from a template — Tailwind's build only picks up classes it can
 // see literally in the source, so `grid-cols-${n}` would silently produce no CSS.
 const REASONS_GRID_CLS: Record<string, string> = {
-  "1": "grid-cols-1 divide-y divide-line sm:grid-cols-3 sm:divide-x sm:divide-y-0",
-  "2": "grid-cols-2 divide-x divide-y divide-line sm:grid-cols-3 sm:divide-y-0",
+  "1": "grid-cols-1 sm:grid-cols-3",
+  "2": "grid-cols-2 sm:grid-cols-3",
 };
 
 /** "What's included" — a bordered service matrix: icon (with a short underline accent), title,
@@ -1213,8 +1213,8 @@ const REASONS_GRID_CLS: Record<string, string> = {
  *  respects the section's own light/dark setting rather than forcing one. Mobile column count is the
  *  same reusable 1/2 choice as Phases & reasons. */
 const INCLUDED_GRID_CLS: Record<string, string> = {
-  "1": "grid-cols-1 divide-y divide-[var(--fq-line,var(--color-line))]",
-  "2": "grid-cols-2 divide-x divide-y divide-[var(--fq-line,var(--color-line))]",
+  "1": "grid-cols-1",
+  "2": "grid-cols-2",
 };
 
 function WhatsIncluded({ data, ctx }: BlockProps) {
@@ -1271,11 +1271,11 @@ function WhatsIncluded({ data, ctx }: BlockProps) {
   return (
     <div className={`${bw(ctx)} flex flex-col ${compact ? "gap-6 py-10 md:py-16" : "gap-8 py-10 md:gap-12 md:py-20"}`}>
       {header}
-      <div className={`grid border-t border-l ${lineCls} sm:grid-cols-3 ${mobileCols} sm:divide-x sm:divide-y-0 divide-[var(--fq-line,var(--color-line))]`}>
+      <div className={`grid gap-px border ${lineCls} sm:grid-cols-3 ${mobileCols} ${ctx.dark ? "bg-white/15" : "bg-[var(--fq-line,var(--color-line))]"}`}>
         {items.map((it, i) => {
           const icon = it.svg_id ? ctx.svgs[it.svg_id] : null;
           return (
-            <div key={i} className={`flex flex-col items-start gap-4 border-r border-b ${compact ? "p-5" : "p-6"} ${lineCls}`}>
+            <div key={i} className={`flex flex-col items-start gap-4 ${compact ? "p-5" : "p-6"} ${ctx.dark ? "bg-ink" : "bg-white"}`}>
               {icon ? (
                 <span className={compact ? "flex h-14 w-14 items-center justify-center" : "flex h-18 w-18 items-center justify-center border-b-2"} style={{ color: iconColor, borderColor: iconColor }}>
                   <Svg asset={icon} className={compact ? "h-10 w-10" : "h-14 w-14"} />
@@ -1318,11 +1318,11 @@ function PhasedReasons({ data, ctx }: BlockProps) {
               {phase.title ? <div className={`${compact ? "text-base" : "text-xl"} font-bold ${heading(ctx)}`}>{phase.title}</div> : null}
               {phase.description ? <p className={`text-sm ${muted(ctx)}`}>{renderInlineLinks(phase.description)}</p> : null}
             </div>
-            <div className={`grid flex-1 ${mobileCols}`}>
+            <div className={`grid flex-1 gap-px ${mobileCols} ${ctx.dark ? "bg-white/15" : "bg-line"}`}>
               {(phase.reasons ?? []).map((r: any, ri: number) => {
                 n += 1;
                 return (
-                  <div key={ri} className={`flex flex-col gap-1.5 ${compact ? "p-5" : "p-6"}`}>
+                  <div key={ri} className={`flex flex-col gap-1.5 ${compact ? "p-5" : "p-6"} ${ctx.dark ? "bg-ink" : "bg-white"}`}>
                     <div className={`text-sm font-bold ${accentCls}`} style={accentStyle}>{String(n).padStart(2, "0")}</div>
                     {r.title ? <div className={`font-semibold leading-snug ${heading(ctx)}`} style={{ fontSize: "var(--font-card-title-size, 1.125rem)" }}>{renderInlineLinks(r.title)}</div> : null}
                     {r.text ? <p className={`leading-relaxed ${muted(ctx)}`} style={{ fontSize: "var(--font-body-size, 0.875rem)" }}>{renderInlineLinks(r.text)}</p> : null}
