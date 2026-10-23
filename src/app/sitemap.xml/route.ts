@@ -13,11 +13,19 @@ function esc(s: string): string {
 
 export async function GET() {
   const base = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+
+  // The MLS sources (distinct_cities view, 57k-row neighbourhood scan) have
+  // hung this route before — a 500 sitemap is worse than a partial one, so
+  // each source gets a timeout and degrades to an empty list. Googlebot
+  // retries; the next fetch gets the full sitemap once caches are warm.
+  const withTimeout = <T,>(p: Promise<T>, ms: number, fallback: T): Promise<T> =>
+    Promise.race([p, new Promise<T>((resolve) => setTimeout(() => resolve(fallback), ms))]);
+
   const [pages, cities, hoods, posts] = await Promise.all([
-    getPublishedSlugs(),
-    listNormalizedCities(),
-    listNeighbourhoods(),
-    getPosts({ limit: 500 }),
+    withTimeout(getPublishedSlugs(), 25000, [] as Awaited<ReturnType<typeof getPublishedSlugs>>),
+    withTimeout(listNormalizedCities(), 25000, [] as string[]),
+    withTimeout(listNeighbourhoods(), 25000, [] as Awaited<ReturnType<typeof listNeighbourhoods>>),
+    withTimeout(getPosts({ limit: 500 }), 25000, [] as Awaited<ReturnType<typeof getPosts>>),
   ]);
 
   let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
