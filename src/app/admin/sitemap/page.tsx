@@ -18,9 +18,17 @@ export default async function SitemapDashboard() {
     getPosts({ limit: 500 }),
   ]);
   
-  // Count active listings (grid table contains active listings only)
+  // Listing count for the dashboard stat — estimated, not exact: a real
+  // COUNT(*) over the full DDF grid times out inside the Worker and kills
+  // the whole page. An estimate is plenty for a dashboard number.
   const mls = createMlsClient();
-  const { count: listingCount } = await mls.from("grid").select("ListingKey", { count: "exact", head: true });
+  let listingCount = 0;
+  try {
+    const { count } = await mls.from("grid").select("ListingKey", { count: "estimated", head: true });
+    listingCount = count ?? 0;
+  } catch {
+    listingCount = 0;
+  }
   
   const sections = [
     { name: "CMS Pages", count: pages.length, url: `${base}/sitemap.xml`, desc: "Auto from database" },
