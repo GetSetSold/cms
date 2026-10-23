@@ -57,6 +57,12 @@ export async function ListingsBrowser({
 }) {
   const mls = createMlsClient();
 
+  // The MLS database has hung these queries before — every MLS call gets a
+  // timeout and degrades to an empty result instead of hanging the page.
+  const withTimeout = <T,>(p: Promise<T>, ms: number, fallback: T): Promise<T> =>
+    Promise.race([p, new Promise<T>((resolve) => setTimeout(() => resolve(fallback), ms))]);
+  const MLS_TIMEOUT = 30000;
+
   const view = (["grid", "split", "map"].includes(sp.view ?? "") ? sp.view : "grid") as "grid" | "split" | "map";
   const perRow = 4;
   // Fetch settings first: if the ad card shows, use 11 listings so 11 + 1 ad = 12 cards
@@ -85,25 +91,27 @@ export async function ListingsBrowser({
   let cityVariants: string[] | null = null;
   let multiCityDisplay: string | null = null;
   if (fixedCity) {
-    cityVariants = await rawCitiesFor(fixedCity);
+    cityVariants = await withTimeout(rawCitiesFor(fixedCity), MLS_TIMEOUT, [] as string[]);
   } else if (!hasLocation && multiCityNames.length > 0) {
     const variantSet = new Set<string>();
     const displayNames: string[] = [];
     for (const name of multiCityNames) {
-      const sel = await resolveCitySelection(name);
+      const sel = await withTimeout(resolveCitySelection(name), MLS_TIMEOUT, { variants: [] as string[], display: name });
       displayNames.push(sel.display);
       for (const v of sel.variants) variantSet.add(v);
     }
     cityVariants = [...variantSet];
     multiCityDisplay = displayNames.join(", ");
   } else if (!hasLocation && sp.city && sp.city !== ALL_CITIES_SENTINEL) {
-    cityVariants = (await resolveCitySelection(sp.city)).variants;
+    cityVariants = (await withTimeout(resolveCitySelection(sp.city), MLS_TIMEOUT, { variants: [] as string[], display: sp.city })).variants;
   }
 
   const mapLimit = view === "map" ? Math.max(perPage, 100) : perPage; // map shows a wider set than one grid page, still bounded
   // Select only the columns the cards need (not *) — cuts transfer ~70%.
   const CARD_COLS = "ListingKey,ListingId,OfficeName,ListPrice,TotalActualRent,PhotosCount,Media,UnparsedAddress,City,Province,PostalCode,Latitude,Longitude,ParkingTotal,BathroomsTotalInteger,BedroomsTotal,AboveGradeFinishedArea,StructureTypeText,OriginalEntryTimestamp";
-  let query = mls.from("grid").select(CARD_COLS, { count: "exact" });
+  // Estimated (not exact) count: the total only feeds the heading and
+  // pagination, and COUNT(*) over the grid times out when the DB is slow.
+  let query = mls.from("grid").select(CARD_COLS, { count: "estimated" });
   if (view !== "map") query = query.range(from, from + perPage - 1);
   else query = query.limit(mapLimit);
   if (hasLocation) {
@@ -129,13 +137,20 @@ export async function ListingsBrowser({
   query = query.order("OriginalEntryTimestamp", { ascending: false });
 
   const [{ data: listings, count }, cityList, cityGroups, typeCounts] = await Promise.all([
-    query,
-    fixedCity ? Promise.resolve([]) : listNormalizedCities(),
-    fixedCity ? Promise.resolve([] as CityGroup[]) : listCityGroups(),
-    // Reuse precomputed breakdown when available; otherwise scan (cached per request).
-    typeBreakdown
-      ? Promise.resolve(Object.fromEntries(typeBreakdown.map((t) => [t.label, t.count])))
-      : cityVariants ? getCachedTypeCounts(mls, cityVariants) : Promise.resolve({} as Record<string, number>),
+    withTimeout(
+      Promise.resolve(query).then((r) => ({ data: r.data as GridListing[] | null, count: r.count ?? 0 })),
+      MLS_TIMEOUT,
+      { data: [] as GridListing[], count: 0 }
+    ),
+    withTimeout(fixedCity ? Promise.resolve([] as string[]) : listNormalizedCities(), MLS_TIMEOUT, [] as string[]),
+    withTimeout(fixedCity ? Promise.resolve([] as CityGroup[]) : listCityGroups(), MLS_TIMEOUT, [] as CityGroup[]),
+    withTimeout(
+      typeBreakdown
+        ? Promise.resolve(Object.fromEntries(typeBreakdown.map((t) => [t.label, t.count])))
+        : cityVariants ? getCachedTypeCounts(mls, cityVariants) : Promise.resolve({} as Record<string, number>),
+      MLS_TIMEOUT,
+      {} as Record<string, number>
+    ),
   ]);
   const cards = listingCardsWithAds((listings ?? []) as GridListing[], _ads);
 
