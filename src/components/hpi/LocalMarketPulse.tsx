@@ -17,11 +17,13 @@ export async function LocalMarketPulse({ citySlug, cityName }: { citySlug: strin
   const yoyTone = pctTone(yoy);
 
   const yoyPoints = market.history12m.map((h) => ({ month: h.month, value: h.compositeBenchmark, hpi: h.compositeHPI }));
-  // Annualize full history for the 10-year chart (Dec value per year, last 10 years)
+  // Annualize full history for the 10-year chart (latest value per year, last 10 years).
+  // Label each point with its ACTUAL data month — not December — so the
+  // current (incomplete) year doesn't pretend to have year-end data.
   const byYear = new Map<string, { month: string; value: number }>();
   for (const h of market.fullHistory) {
     const y = h.month.slice(0, 4);
-    byYear.set(y, { month: `${y}-12`, value: h.compositeBenchmark });
+    byYear.set(y, { month: h.month, value: h.compositeBenchmark });
   }
   const tenYr = [...byYear.entries()].sort().slice(-10).map(([, v]) => ({ month: v.month, value: v.value }));
 
