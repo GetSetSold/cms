@@ -1227,15 +1227,50 @@ function WhatsIncluded({ data, ctx }: BlockProps) {
   // to repeat on every block. colorOverride needs a literal hex to rewrite fill/stroke attributes
   // directly (for icons with hardcoded colors); these icons use currentColor, so plain CSS is enough.
   const iconColor = compact ? "var(--color-accent)" : "var(--color-primary)";
+  const header = (
+    <div className="flex flex-col gap-2">
+      {data.eyebrow ? <div className={`font-semibold uppercase tracking-wide ${compact ? "text-accent" : "text-primary"}`} style={{ fontSize: "var(--font-eyebrow-size, 0.75rem)" }}>{data.eyebrow}</div> : null}
+      {data.heading ? (compact
+        ? <h2 className={`text-[22px] font-semibold leading-snug tracking-tight md:text-[28px] ${heading(ctx)}`}>{data.heading}</h2>
+        : <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2>) : null}
+      {data.subline ? <p className={compact ? `text-sm leading-relaxed ${muted(ctx)}` : `text-lg font-semibold ${heading(ctx)}`}>{renderInlineLinks(data.subline)}</p> : null}
+    </div>
+  );
+  const pill = (
+    <span className={`mt-auto inline-flex items-center gap-1.5 rounded-[var(--radius-label)] bg-primary px-3 text-[10px] font-bold text-white ${compact ? "h-[22px]" : "h-[26px]"}`} style={compact ? { background: "var(--color-accent)" } : undefined}>
+      <span aria-hidden>✓</span> Included
+    </span>
+  );
+  // Cards layout: standalone Shape cards instead of the table grid.
+  if (data.layout === "cards") {
+    return (
+      <div className={`${bw(ctx)} flex flex-col ${compact ? "gap-6 py-10 md:py-16" : "gap-8 py-10 md:gap-12 md:py-20"}`}>
+        {header}
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {items.map((it, i) => {
+            const icon = it.svg_id ? ctx.svgs[it.svg_id] : null;
+            return (
+              <div key={i} className={`flex flex-col items-start gap-4 rounded-[var(--radius-lg)] border p-6 shadow-[0_6px_20px_rgba(20,20,43,0.08)] transition-transform duration-200 hover:-translate-y-1 ${ctx.dark ? "border-white/15 bg-white/5" : "border-line bg-white"}`}>
+                {icon ? (
+                  <span className={`flex h-14 w-14 items-center justify-center rounded-[var(--radius-btn,999px)] ${ctx.dark ? "bg-white text-black" : "bg-black text-white"}`}>
+                    <Svg asset={icon} className="h-7 w-7" />
+                  </span>
+                ) : null}
+                <div className="flex flex-col gap-1.5">
+                  {it.title ? <div className={`font-semibold leading-snug ${heading(ctx)}`} style={{ fontSize: "var(--font-card-title-size, 1.125rem)" }}>{renderInlineLinks(it.title)}</div> : null}
+                  {it.text ? <p className={`leading-relaxed ${muted(ctx)}`} style={{ fontSize: "var(--font-body-size, 0.875rem)" }}>{renderInlineLinks(it.text)}</p> : null}
+                </div>
+                {pill}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
   return (
     <div className={`${bw(ctx)} flex flex-col ${compact ? "gap-6 py-10 md:py-16" : "gap-8 py-10 md:gap-12 md:py-20"}`}>
-      <div className="flex flex-col gap-2">
-        {data.eyebrow ? <div className={`font-semibold uppercase tracking-wide ${compact ? "text-accent" : "text-primary"}`} style={{ fontSize: "var(--font-eyebrow-size, 0.75rem)" }}>{data.eyebrow}</div> : null}
-        {data.heading ? (compact
-          ? <h2 className={`text-[22px] font-semibold leading-snug tracking-tight md:text-[28px] ${heading(ctx)}`}>{data.heading}</h2>
-          : <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2>) : null}
-        {data.subline ? <p className={compact ? `text-sm leading-relaxed ${muted(ctx)}` : `text-lg font-semibold ${heading(ctx)}`}>{renderInlineLinks(data.subline)}</p> : null}
-      </div>
+      {header}
       <div className={`grid border-t border-l ${lineCls} sm:grid-cols-3 ${mobileCols} sm:divide-x sm:divide-y-0 divide-[var(--fq-line,var(--color-line))]`}>
         {items.map((it, i) => {
           const icon = it.svg_id ? ctx.svgs[it.svg_id] : null;
@@ -1250,9 +1285,7 @@ function WhatsIncluded({ data, ctx }: BlockProps) {
                 {it.title ? <div className={`font-semibold leading-snug ${heading(ctx)}`} style={{ fontSize: "var(--font-card-title-size, 1.125rem)" }}>{renderInlineLinks(it.title)}</div> : null}
                 {it.text ? <p className={`leading-relaxed ${muted(ctx)}`} style={{ fontSize: "var(--font-body-size, 0.875rem)" }}>{renderInlineLinks(it.text)}</p> : null}
               </div>
-              <span className={`mt-auto inline-flex items-center gap-1.5 rounded-[var(--radius-label)] bg-primary px-3 text-[10px] font-bold text-white ${compact ? "h-[22px]" : "h-[26px]"}`} style={compact ? { background: "var(--color-accent)" } : undefined}>
-                <span aria-hidden>✓</span> Included
-              </span>
+              {pill}
             </div>
           );
         })}
