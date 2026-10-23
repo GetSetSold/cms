@@ -53,7 +53,7 @@ export function AdCard({ code }: { code: string }) {
         <ins
           ref={ref}
           className="adsbygoogle"
-          style={{ display: "block", width: "100%" }}
+          style={{ display: "block", width: "100%", maxWidth: "100%" }}
           data-ad-client={client}
           data-ad-slot={slot}
           data-ad-format="fluid"

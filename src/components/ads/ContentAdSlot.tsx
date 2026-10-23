@@ -44,10 +44,11 @@ export function ContentAdSlot({ adCode, className = "" }: { adCode: string; clas
       </div>
       <ins
         className="adsbygoogle mx-auto block"
+        style={{ display: "block", width: "100%", maxWidth: "100%" }}
         data-ad-client={client}
         data-ad-slot={slot}
         data-ad-format="auto"
-        data-full-width-responsive="true"
+        data-full-width-responsive="false"
       />
     </div>
   );

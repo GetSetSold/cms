@@ -37,7 +37,7 @@ export function GuideAdSlot({ adCode, className = "" }: { adCode: string; classN
         data-ad-client={client}
         data-ad-slot={slot}
         data-ad-format="auto"
-        data-full-width-responsive="true"
+        data-full-width-responsive="false"
       />
     </div>
   );
