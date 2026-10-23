@@ -162,7 +162,22 @@ export async function listNeighbourhoods(): Promise<Neighbourhood[]> {
   return data;
 }
 
-
+/** Cache-only read of the neighbourhood list — never triggers the 57k-row
+ *  scan. Returns null on a cold cache. The admin sitemap dashboard uses this
+ *  so it renders instantly instead of blocking on a scan it didn't ask for. */
+export async function peekNeighbourhoods(): Promise<Neighbourhood[] | null> {
+  if (hoodsCache && Date.now() < hoodsCache.expires) return hoodsCache.data;
+  try {
+    const cache = await caches.open("gss-static");
+    const hit = await cache.match(HOODS_CACHE_KEY);
+    if (hit) {
+      const data = (await hit.json()) as Neighbourhood[];
+      hoodsCache = { data, expires: Date.now() + 3600_000 };
+      return data;
+    }
+  } catch { /* cache unavailable */ }
+  return null;
+}
 
 /** Neighbourhoods for one normalized city, sorted by listing count.
  *  Scoped to the city's listings only via SQL aggregation RPC — never scans

@@ -1,7 +1,7 @@
 import { requireStaff } from "@/lib/auth";
 import { getPublishedSlugs } from "@/lib/cms";
 import { listNormalizedCities } from "@/lib/mls";
-import { listNeighbourhoods } from "@/lib/neighbourhoods";
+import { peekNeighbourhoods } from "@/lib/neighbourhoods";
 import { GUIDES } from "@/lib/guides/registry";
 import { getPosts } from "@/lib/blog";
 import { createMlsClient } from "@/lib/mls";
@@ -11,49 +11,50 @@ export default async function SitemapDashboard() {
 
   const base = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
-  // Each source gets a timeout: a hung query degrades to an empty section
-  // instead of killing the whole page (the MLS grid/city queries have
-  // timed out in the Worker before).
+  // Dashboard rule: never trigger an expensive MLS scan from here. The
+  // neighbourhood scan (57k rows) and exact grid counts have hung this page
+  // before — every source gets a short timeout and degrades to "–".
   const withTimeout = <T,>(p: Promise<T>, ms: number, fallback: T): Promise<T> =>
     Promise.race([p, new Promise<T>((resolve) => setTimeout(() => resolve(fallback), ms))]);
 
-  const [pages, cities, hoods, posts] = await Promise.all([
-    withTimeout(getPublishedSlugs(), 15000, []),
-    withTimeout(listNormalizedCities(), 15000, []),
-    withTimeout(listNeighbourhoods(), 15000, []),
-    withTimeout(getPosts({ limit: 500 }), 15000, []),
-  ]);
-  
-  // Listing count for the dashboard stat — estimated, not exact: a real
-  // COUNT(*) over the full DDF grid times out inside the Worker and kills
-  // the whole page. An estimate is plenty for a dashboard number.
   const mls = createMlsClient();
-  let listingCount = 0;
-  try {
-    const { count } = await mls.from("grid").select("ListingKey", { count: "estimated", head: true });
-    listingCount = count ?? 0;
-  } catch {
-    listingCount = 0;
-  }
-  
-  const sections = [
+  const listingCountP: Promise<number | null> = withTimeout(
+    Promise.resolve(
+      mls.from("grid").select("ListingKey", { count: "estimated", head: true })
+    )
+      .then((r) => r.count ?? null)
+      .catch(() => null),
+    8000,
+    null
+  );
+
+  const [pages, cities, hoods, posts, listingCount] = await Promise.all([
+    withTimeout(getPublishedSlugs(), 8000, [] as Awaited<ReturnType<typeof getPublishedSlugs>>),
+    withTimeout(listNormalizedCities(), 8000, [] as string[]),
+    // Cache-only: null on a cold cache, never kicks off the 57k-row scan.
+    peekNeighbourhoods(),
+    withTimeout(getPosts({ limit: 500 }), 8000, [] as Awaited<ReturnType<typeof getPosts>>),
+    listingCountP,
+  ]);
+
+  const sections: { name: string; count: number | null; url: string; desc: string }[] = [
     { name: "CMS Pages", count: pages.length, url: `${base}/sitemap.xml`, desc: "Auto from database" },
     { name: "Calculators", count: 15, url: `${base}/sitemap.xml`, desc: "Hub + 14 calculators" },
     { name: "Guides", count: GUIDES.length + 1, url: `${base}/sitemap.xml`, desc: "Hub + all guides" },
     { name: "City Hubs", count: cities.length + 1, url: `${base}/sitemap.xml`, desc: "Province + cities" },
-    { name: "Neighbourhoods", count: hoods.length, url: `${base}/sitemap.xml`, desc: "1,318 pages" },
+    { name: "Neighbourhoods", count: hoods ? hoods.length : null, url: `${base}/sitemap.xml`, desc: "1,318 pages" },
     { name: "Updates", count: posts.length + 1, url: `${base}/sitemap.xml`, desc: "Blog posts" },
     { name: "HPI Trends", count: cities.length + 1, url: `${base}/sitemap.xml`, desc: "Overview + city pages" },
-    { name: "Listings", count: listingCount ?? 0, url: `${base}/sitemap-index.xml`, desc: "Sharded, 10k per file" },
+    { name: "Listings", count: listingCount, url: `${base}/sitemap-index.xml`, desc: "Sharded, 10k per file" },
   ];
-  
-  const total = sections.reduce((sum, s) => sum + s.count, 0);
-  
+
+  const total = sections.reduce((sum, s) => sum + (s.count ?? 0), 0);
+
   return (
     <div className="p-6 max-w-4xl">
       <h1 className="text-2xl font-bold mb-2">Sitemap</h1>
       <p className="text-muted mb-6">Total URLs: <strong>{total.toLocaleString()}</strong></p>
-      
+
       <div className="grid gap-4">
         {sections.map((s) => (
           <div key={s.name} className="rounded-lg border border-line p-4 flex items-center justify-between">
@@ -62,13 +63,13 @@ export default async function SitemapDashboard() {
               <div className="text-sm text-muted">{s.desc}</div>
             </div>
             <div className="text-right">
-              <div className="text-2xl font-bold">{s.count.toLocaleString()}</div>
+              <div className="text-2xl font-bold">{s.count === null ? "–" : s.count.toLocaleString()}</div>
               <div className="text-xs text-muted">URLs</div>
             </div>
           </div>
         ))}
       </div>
-      
+
       <div className="mt-6 rounded-lg border border-line p-4">
         <div className="font-semibold mb-2">Sitemap URLs</div>
         <div className="flex flex-col gap-2 text-sm">
