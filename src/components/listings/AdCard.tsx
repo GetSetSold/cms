@@ -50,7 +50,7 @@ export function AdCard({ code }: { code: string }) {
 
   return (
     <div className="relative flex flex-col overflow-hidden rounded-[var(--radius-lg)] border-[length:var(--border-card-width)] border-line bg-white shadow-[var(--shadow-card)]">
-      <div className="relative flex min-h-[200px] w-full flex-1 items-center justify-center overflow-hidden bg-white">
+      <div className="relative min-h-[200px] w-full overflow-hidden bg-white">
         <ins
           ref={ref}
           className="adsbygoogle"
@@ -64,7 +64,7 @@ export function AdCard({ code }: { code: string }) {
           Ad
         </span>
       </div>
-      <div className="flex items-center justify-center py-1.5">
+      <div className="flex flex-1 items-center justify-center py-1.5">
         <span className="text-[10px] uppercase tracking-wider text-muted">Advertisement</span>
       </div>
     </div>
