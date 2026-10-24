@@ -6,9 +6,10 @@ import { useEffect, useRef } from "react";
  * AdSense ad card for listing grids — same footprint as a ListingCard.
  * Parses data-ad-client / data-ad-slot from the pasted AdSense snippet,
  * loads the AdSense script once, and triggers the ad on mount.
- * Uses data-ad-format="fluid" so the creative sizes itself to the card
- * instead of fighting a fixed aspect-ratio box (auto-format creatives
- * overflowed/cropped inside aspect-[4/3]).
+ * Uses data-ad-format="auto" + data-full-width-responsive="false" (same fix
+ * as the single-listing slots) so the creative sizes to the card width
+ * instead of overflowing it. White background + thin label so it blends
+ * with the listing cards; the ad area centers narrower creatives.
  */
 export function AdCard({ code }: { code: string }) {
   const ref = useRef<HTMLModElement>(null);
@@ -49,21 +50,22 @@ export function AdCard({ code }: { code: string }) {
 
   return (
     <div className="relative flex flex-col overflow-hidden rounded-[var(--radius-lg)] border-[length:var(--border-card-width)] border-line bg-white shadow-[var(--shadow-card)]">
-      <div className="relative min-h-[200px] w-full overflow-hidden bg-soft">
+      <div className="relative flex min-h-[200px] w-full flex-1 items-center justify-center overflow-hidden bg-white">
         <ins
           ref={ref}
           className="adsbygoogle"
           style={{ display: "block", width: "100%", maxWidth: "100%" }}
           data-ad-client={client}
           data-ad-slot={slot}
-          data-ad-format="fluid"
+          data-ad-format="auto"
+          data-full-width-responsive="false"
         />
         <span className="absolute left-3 top-3 rounded bg-black/60 px-2 py-0.5 text-[10px] uppercase tracking-wide text-white">
           Ad
         </span>
       </div>
-      <div className="flex flex-1 items-center justify-center p-4">
-        <span className="text-xs text-muted">Advertisement</span>
+      <div className="flex items-center justify-center py-1.5">
+        <span className="text-[10px] uppercase tracking-wider text-muted">Advertisement</span>
       </div>
     </div>
   );
