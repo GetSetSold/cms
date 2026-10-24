@@ -6,10 +6,10 @@ import { useEffect, useRef } from "react";
  * AdSense ad card for listing grids — same footprint as a ListingCard.
  * Parses data-ad-client / data-ad-slot from the pasted AdSense snippet,
  * loads the AdSense script once, and triggers the ad on mount.
- * Uses data-ad-format="auto" + data-full-width-responsive="false" (same fix
- * as the single-listing slots) so the creative sizes to the card width
- * instead of overflowing it. White background + thin label so it blends
- * with the listing cards; the ad area centers narrower creatives.
+ * Uses data-ad-format="fluid" so the creative sizes itself to the card
+ * (auto format served tall 285x600 creatives that stretched the card past
+ * the listing cards). White background + thin label so it blends
+ * with the listing cards.
  */
 export function AdCard({ code }: { code: string }) {
   const ref = useRef<HTMLModElement>(null);
@@ -57,8 +57,7 @@ export function AdCard({ code }: { code: string }) {
           style={{ display: "block", width: "100%", maxWidth: "100%" }}
           data-ad-client={client}
           data-ad-slot={slot}
-          data-ad-format="auto"
-          data-full-width-responsive="false"
+          data-ad-format="fluid"
         />
         <span className="absolute left-3 top-3 rounded bg-black/60 px-2 py-0.5 text-[10px] uppercase tracking-wide text-white">
           Ad
