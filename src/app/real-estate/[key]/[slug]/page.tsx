@@ -55,7 +55,13 @@ export async function generateMetadata({ params }: { params: Promise<{ key: stri
   const { key } = await params;
   const listing = await getListing(decodeURIComponent(key));
   if (!listing) return { title: "Listing not found" };
-  const title = await seoTitle(`${listing.UnparsedAddress ?? listing.ListingKey} — ${priceDisplay(listing)}`);
+  const status = isSale(listing) ? "For Sale" : "For Rent";
+  // Rent price without the "/mo" suffix priceDisplay adds — title format is "For Rent | $2,499 | ...".
+  const price = isSale(listing)
+    ? (listing.ListPrice ? `$${Number(listing.ListPrice).toLocaleString("en-CA")}` : "Price on request")
+    : (listing.TotalActualRent ? `$${Number(listing.TotalActualRent).toLocaleString("en-CA")}` : "Price on request");
+  const city = listing.City ? normalizeCity(listing.City) : "";
+  const title = await seoTitle(`${status} | ${price} | ${listing.UnparsedAddress ?? listing.ListingKey}${city ? ` | ${city}` : ""}`);
   const ogImage = mediaItems(listing.Media)[0]?.MediaURL;
   return {
     title,
@@ -148,7 +154,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
       {themeIconOverrideCSS(settings) ? <style dangerouslySetInnerHTML={{ __html: themeIconOverrideCSS(settings) }} /> : null}
       <SiteHeader settings={settings} logo={logo} />
       <main className="mx-auto w-full max-w-7xl min-w-0 overflow-x-clip px-5 py-8 md:px-10 md:py-12">
-        <nav className="py-3 text-[13px] text-muted" aria-label="Breadcrumb">
+        <nav className="mb-4 text-sm text-muted" aria-label="Breadcrumb">
           {(() => {
             const city = normalizeCity(listing.City ?? "");
             const hood = ((listing.CityRegion || listing.SubdivisionName) ?? "").trim();
