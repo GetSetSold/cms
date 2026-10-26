@@ -23,6 +23,7 @@ import { MarketStats } from "./MarketStats";
 import { RateUpdate } from "./RateUpdate";
 import DocumentChecklist from "./DocumentChecklist";
 import { CalculatorBlockClient, type CalcType, type CalcStyle } from "./CalculatorBlock";
+import { ReferralLinkClient } from "./ReferralLink";
 import { getCalculatorSettings } from "@/lib/calculators/settings";
 
 export type BlockCtx = { svgs: Record<string, SvgAsset>; settings: SiteSettings; page?: Page; dark?: boolean; buttonStyle?: "solid" | "bordered"; inRow?: boolean; /** Set when the block sits inside a merged header+block card. */ embedded?: "side" | "stacked"; /** The real background color behind the block when known (custom color, brand, box, merged card) — lets a block check contrast instead of guessing. */ bg?: string };
@@ -1382,6 +1383,7 @@ export const BLOCKS: Record<string, (p: BlockProps) => React.ReactNode> = {
   rate_update: RateUpdate,
   document_checklist: DocumentChecklist,
   calculator: CalculatorBlock,
+  referral_link: ReferralLink,
 };
 
 function CalculatorBlock({ data, ctx }: BlockProps) {
@@ -1399,6 +1401,22 @@ function CalculatorBlock({ data, ctx }: BlockProps) {
         heading={data.heading}
         description={data.description}
         cfg={cfg}
+      />
+    </div>
+  );
+}
+
+function ReferralLink({ data, ctx }: BlockProps) {
+  return (
+    <div className={bw(ctx)}>
+      <ReferralLinkClient
+        heading={data.heading}
+        description={data.description}
+        promiseText={data.promise_text}
+        successMessage={data.success_message}
+        pageId={ctx.page?.id}
+        siteName={ctx.settings.site_name}
+        dark={ctx.dark}
       />
     </div>
   );

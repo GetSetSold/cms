@@ -261,6 +261,12 @@ export const BLOCK_FIELDS: Record<string, Field[]> = {
     t("heading", "Heading"),
     ta("description", "Description"),
   ],
+  referral_link: [
+    t("heading", "Heading"),
+    ta("description", "Description"),
+    ta("promise_text", "Promise line under the share buttons"),
+    ta("success_message", "Success message after the referred friend submits"),
+  ],
   document_checklist: [
     t("eyebrow", "Eyebrow (e.g. \"BE READY, NOT RUSHED\")"),
     t("heading", "Heading"),
