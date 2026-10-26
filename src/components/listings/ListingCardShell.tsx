@@ -65,7 +65,7 @@ export function ListingCardShell(d: ListingCardData) {
         )}
         {d.badgeStyle === "ribbon" ? (
           <span
-            className={`absolute left-1/2 top-1/2 w-[68%] -translate-x-1/2 -translate-y-1/2 -rotate-[14deg] py-3 text-center text-[22px] font-extrabold uppercase tracking-[0.28em] text-white ${TONE[d.statusTone]}`}
+            className={`absolute left-1/2 top-1/2 w-max max-w-[90%] -translate-x-1/2 -translate-y-1/2 -rotate-[14deg] whitespace-nowrap px-6 py-3 text-center text-[22px] font-extrabold uppercase tracking-[0.28em] text-white ${TONE[d.statusTone]}`}
             style={{ clipPath: "polygon(20px 0, 100% 0, calc(100% - 20px) 100%, 0 100%)", filter: "drop-shadow(0 4px 10px rgba(0,0,0,0.35))" }}
           >
             {d.statusLabel}
