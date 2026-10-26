@@ -52,9 +52,9 @@ function unsubHtml(message: string): string {
 <title>Unsubscribed</title></head>
 <body style="margin:0;padding:0;background:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
 <div style="max-width:480px;margin:60px auto;background:#fff;border-radius:12px;padding:40px 32px;text-align:center;">
-<div style="font-size:20px;font-weight:700;margin-bottom:16px;">GETSETSOLD<span style="color:#0066cc;">.ca</span></div>
+<div style="font-size:20px;font-weight:700;margin-bottom:16px;">GETSETSOLD<span style="color:#0099cc;">.ca</span></div>
 <div style="font-size:48px;margin-bottom:16px;">✓</div>
 <p style="font-size:15px;color:#333;line-height:1.6;">${message}</p>
-<p style="margin-top:24px;"><a href="/property-alerts" style="color:#0066cc;font-size:14px;">Create a new alert</a></p>
+<p style="margin-top:24px;"><a href="/property-alerts" style="color:#0099cc;font-size:14px;">Create a new alert</a></p>
 </div></body></html>`;
 }

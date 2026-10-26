@@ -79,7 +79,7 @@ export function RateBroadcastAdmin() {
           <input value={testEmail} onChange={(e) => setTestEmail(e.target.value)} placeholder="test@example.com"
             className="flex-1 rounded border border-line px-3 py-2 text-sm" />
           <button onClick={() => send(true)} disabled={sending || !testEmail || !headline}
-            className="rounded bg-[#0066cc] px-4 py-2 text-sm font-medium text-white disabled:opacity-50">
+            className="rounded bg-[#0099cc] px-4 py-2 text-sm font-medium text-white disabled:opacity-50">
             Send test
           </button>
         </div>

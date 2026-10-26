@@ -447,7 +447,7 @@ export function LeadSubscriptionsPanel({ leadId }: { leadId: string }) {
                     <div className="flex items-center gap-2">
                       <div className="text-sm font-medium">{alertLabel(a)}</div>
                       {badges ? (
-                        <span className="rounded-full bg-[#f0f4fa] px-2 py-0.5 text-[11px] font-medium text-[#0066cc]">{badges}</span>
+                        <span className="rounded-full bg-[#f0f4fa] px-2 py-0.5 text-[11px] font-medium text-[#0099cc]">{badges}</span>
                       ) : null}
                     </div>
                     <div className="text-xs text-muted">{a.is_active ? "Active" : "Paused"}</div>

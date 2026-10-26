@@ -691,13 +691,13 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
         .cma-fh-titles { flex: 1; min-width: 0; }
         .cma-fh-brandshort { display: none; }
         .cma-fh-logo { font-size: 23px; font-weight: 800; letter-spacing: -0.5px; line-height: 1.15; }
-        .cma-fh-logo span { color: #0066cc; }
+        .cma-fh-logo span { color: #0099cc; }
         .cma-fh-title { font-size: 14px; font-weight: 700; margin-top: 2px; }
         .cma-fh-date { font-size: 12px; color: #777; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .cma-fh-mob { display: none; }
         .cma-fh-icons { display: flex; align-items: center; flex-shrink: 0; }
         .cma-fh-iconbtn { background: none; border: none; padding: 8px 12px; font-size: 19px; line-height: 1; cursor: pointer; color: #111; }
-        .cma-fh-iconbtn:hover { color: #0066cc; }
+        .cma-fh-iconbtn:hover { color: #0099cc; }
         .cma-fh-div { width: 1px; height: 22px; background: #e2e2e2; flex-shrink: 0; }
         .cma-navrel { position: relative; display: inline-flex; }
         /* print header */
@@ -705,7 +705,7 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
         .cma-topbar { text-align: center; font-size: 13px; color: #555; padding: 10px 16px; border-bottom: 1px solid #eee; margin-bottom: 20px; }
         .cma-head { display: flex; justify-content: space-between; align-items: flex-start; background: #fff; border: 1px solid #e2e2e2; border-radius: 12px; padding: 20px 24px; margin-bottom: 20px; }
         .cma-brand { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; }
-        .cma-brand span { color: #0066cc; }
+        .cma-brand span { color: #0099cc; }
         .cma-sub { font-size: 13px; color: #555; margin-top: 2px; }
         .cma-meta { text-align: right; font-size: 13px; color: #555; }
         .cma section { background: #fff; border: 1px solid #e2e2e2; border-radius: 12px; padding: 24px; margin-bottom: 20px; }
@@ -737,7 +737,7 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
         .cma-solds { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
         .cma-sold { border: 1px solid #e2e2e2; border-radius: 10px; padding: 16px; background: #fff; min-width: 0; }
         .cma-sold-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
-        .cma-sold-price { font-size: 20px; font-weight: 800; color: #0066cc; }
+        .cma-sold-price { font-size: 20px; font-weight: 800; color: #0099cc; }
         .cma-sold-addr { font-size: 14px; font-weight: 600; overflow-wrap: break-word; }
         .cma-sold-meta { font-size: 12px; color: #666; margin-top: 6px; }
         .cma-listing-addr { font-size: 13px; margin: 3px 0 6px; overflow-wrap: break-word; }
@@ -748,7 +748,7 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
         .cma-agent-svg svg { width: 100%; height: 100%; }
         .cma-agent-initials { background: #111; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 800; }
         .cma-agent-name { font-size: 24px; font-weight: 800; overflow-wrap: break-word; }
-        .cma-agent-tag { font-size: 14px; color: #0066cc; font-weight: 600; margin: 4px 0 8px; }
+        .cma-agent-tag { font-size: 14px; color: #0099cc; font-weight: 600; margin: 4px 0 8px; }
         .cma-why { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
         .cma-why-card { border: 1px solid #e2e2e2; border-radius: 10px; padding: 18px 10px; text-align: center; font-size: 13px; font-weight: 600; line-height: 1.4; background: #fff; min-width: 0; }
         .cma-why-icon { display: flex; justify-content: center; color: #111; margin-bottom: 10px; }
@@ -759,7 +759,7 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
         .cma-mkt-icon { color: #111; flex-shrink: 0; margin-top: 2px; }
         .cma-reasons-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; }
         .cma-reason { padding: 20px 16px; border-top: 1px solid #eee; min-width: 0; }
-        .cma-reason-num { font-size: 34px; font-weight: 800; color: #0066cc; line-height: 1; margin-bottom: 10px; }
+        .cma-reason-num { font-size: 34px; font-weight: 800; color: #0099cc; line-height: 1; margin-bottom: 10px; }
         .cma-reason-num::after { content: ""; display: block; width: 40px; height: 3px; background: #111; margin-top: 8px; }
         .cma-reason-title { font-size: 14px; font-weight: 700; line-height: 1.35; margin-bottom: 6px; }
         .cma-reason-sub { font-size: 12px; color: #666; line-height: 1.55; }
@@ -781,7 +781,7 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
         .cma-cta p { color: #555; font-size: 14px; margin-bottom: 20px; }
         .cma-cta-contact { font-size: 15px; line-height: 1.9; overflow-wrap: break-word; }
         .cma-cta-btn { display: inline-flex; align-items: center; gap: 8px; background: #111; color: #fff; border: none; border-radius: 30px; padding: 14px 32px; font-size: 16px; font-weight: 700; cursor: pointer; margin: 6px 0 22px; transition: background 0.2s; }
-        .cma-cta-btn:hover { background: #0066cc; }
+        .cma-cta-btn:hover { background: #0099cc; }
         .cma-cta-btn span { font-size: 18px; }
         .cma-cta-btn:disabled { opacity: 0.6; cursor: default; }
         .cma-modal-wrap { position: fixed; inset: 0; background: rgba(0,0,0,0.55); display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 100; }
@@ -791,7 +791,7 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
         .cma-modal-x { position: absolute; top: 12px; right: 12px; border: none; background: #f0f0f0; width: 32px; height: 32px; border-radius: 50%; font-size: 14px; cursor: pointer; color: #111; }
         .cma-field { display: block; font-size: 13px; font-weight: 600; margin-bottom: 12px; }
         .cma-field input, .cma-field textarea { display: block; width: 100%; margin-top: 6px; border: 1px solid #ddd; border-radius: 10px; padding: 11px 14px; font-size: 15px; font-weight: 400; font-family: inherit; background: #fff; color: #111; }
-        .cma-field input:focus, .cma-field textarea:focus { outline: 2px solid #0066cc; border-color: #0066cc; }
+        .cma-field input:focus, .cma-field textarea:focus { outline: 2px solid #0099cc; border-color: #0099cc; }
         .cma-field textarea { resize: vertical; }
         .cma-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .cma-honey { position: absolute; left: -9999px; }
@@ -830,7 +830,7 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
         .cma-bars.cols-5 { grid-template-columns: repeat(5, 1fr); }
         .cma-bar { border: 1px solid #e2e2e2; border-radius: 12px; overflow: hidden; background: #fff; text-align: center; min-width: 0; }
         .cma-bar-top { background: #111; color: #fff; padding: 16px 8px; }
-        .cma-bar.hl .cma-bar-top { background: #0066cc; }
+        .cma-bar.hl .cma-bar-top { background: #0099cc; }
         .cma-bar-value { font-size: 24px; font-weight: 800; line-height: 1.15; overflow-wrap: break-word; }
         .cma-bar-sub { font-size: 15px; color: #bbb; margin-top: 4px; font-weight: 600; }
         .cma-bar-body { padding: 12px 8px 14px; }
@@ -840,9 +840,9 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
         .cma-bar-cap.more { color: #dc2626; }
         .cma-calc-label { display: block; text-align: center; font-size: 14px; font-weight: 600; color: #444; margin-bottom: 8px; }
         .cma-calc-addr { text-align: center; font-size: 19px; font-weight: 800; margin-bottom: 8px; overflow-wrap: break-word; }
-        .cma-calc-arrow { display: inline-block; margin-right: 6px; color: #0066cc; font-weight: 800; }
+        .cma-calc-arrow { display: inline-block; margin-right: 6px; color: #0099cc; font-weight: 800; }
         .cma-calc-input { display: block; width: 100%; max-width: 420px; margin: 0 auto 20px; border: 1px solid #ddd; border-radius: 12px; padding: 14px 18px; font-size: 22px; font-weight: 700; text-align: center; background: #fff; color: #111; }
-        .cma-calc-input:focus { outline: 2px solid #0066cc; border-color: #0066cc; }
+        .cma-calc-input:focus { outline: 2px solid #0099cc; border-color: #0099cc; }
         .cma-calc-head { text-align: center; font-size: 13px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: #111; margin: 22px 0 4px; padding-bottom: 10px; border-bottom: 2px solid #111; }
         /* dark mode: dark color in blocks only — page stays light */
         .cma-root.cma-dark { background: #f5f5f5; color: #111; }
@@ -877,7 +877,7 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
         .cma-root.cma-dark .cma-cta p { color: #aaa; }
         .cma-root.cma-dark .cma-bar { background: #000; border-color: #2e2e2e; }
         .cma-root.cma-dark .cma-bar-top { background: #f5f5f5; color: #111; }
-        .cma-root.cma-dark .cma-bar.hl .cma-bar-top { background: #0066cc; color: #fff; }
+        .cma-root.cma-dark .cma-bar.hl .cma-bar-top { background: #0099cc; color: #fff; }
         .cma-root.cma-dark .cma-bar-sub { color: #555; }
         .cma-root.cma-dark .cma-bar-label { color: #999; }
         .cma-root.cma-dark .cma-calc-label { color: #aaa; }
@@ -902,7 +902,7 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
         .cma-root.cma-dark .cma-nearby li { border-color: #2e2e2e; color: #ddd; }
         .cma-root.cma-dark .cma-cta-title { color: #f2f2f2; }
         .cma-root.cma-dark .cma-cta-btn { background: #f5f5f5; color: #111; }
-        .cma-root.cma-dark .cma-cta-btn:hover { background: #0066cc; color: #fff; }
+        .cma-root.cma-dark .cma-cta-btn:hover { background: #0099cc; color: #fff; }
         .cma-root.cma-dark .cma-cta-contact { color: #ddd; }
         .cma-root.cma-dark .cma-rec strong { color: #4da3ff; }
         .cma-root.cma-dark .cma-price-row strong { color: #f2f2f2; }
@@ -964,7 +964,7 @@ export function ValuationReportView({ report, leadName, branding }: { report: an
           .cma-listing, .cma-why-card, .cma-card, .cma-review, .cma-reason, .cma-bar, .cma-sold { break-inside: avoid; }
           .cma-table-wrap { overflow: visible; }
           .cma-bar-top { background: #fff !important; color: #111 !important; border-bottom: 2px solid #111; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-          .cma-bar.hl .cma-bar-top { color: #0066cc !important; }
+          .cma-bar.hl .cma-bar-top { color: #0099cc !important; }
           .cma-bar-sub { color: #555 !important; }
           .cma-calc-input { border-color: #999; }
           .cma-vp-table th.cma-vp-hl, .cma-vp-table td.cma-vp-hl { background: #f0f0f0 !important; }

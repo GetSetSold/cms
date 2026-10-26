@@ -38,12 +38,12 @@ export async function POST(req: NextRequest) {
           <div style="font-size:18px;font-weight:700;color:#111;">$1,200/mo</div>
           <div style="font-size:14px;color:#333;margin:4px 0;">4A - 67 CAROLINE STREET S, Hamilton</div>
           <div style="font-size:13px;color:#666;">2 bd · 2 ba · Apartment</div>
-          <a href="${siteUrl}/listings" style="display:inline-block;margin-top:12px;background:#0066cc;color:#fff;text-decoration:none;padding:10px 24px;border-radius:8px;font-size:14px;font-weight:600;">View Listing</a>
+          <a href="${siteUrl}/listings" style="display:inline-block;margin-top:12px;background:#0099cc;color:#fff;text-decoration:none;padding:10px 24px;border-radius:8px;font-size:14px;font-weight:600;">View Listing</a>
         </div>
       </div>
       <p style="margin:24px 0 0;font-size:13px;color:#666;">
-        <a href="${siteUrl}/property-alerts/manage" style="color:#0066cc;">Manage your alerts</a> ·
-        <a href="${siteUrl}/property-alerts" style="color:#0066cc;">Unsubscribe</a>
+        <a href="${siteUrl}/property-alerts/manage" style="color:#0099cc;">Manage your alerts</a> ·
+        <a href="${siteUrl}/property-alerts" style="color:#0099cc;">Unsubscribe</a>
       </p>`,
     footerNote: "You're receiving this because you saved a property search on GetSetSold.ca.",
   });

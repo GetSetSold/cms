@@ -15,7 +15,7 @@ export type CalcType = "listing" | "buyer";
 export type CalcStyle = "brand" | "dark" | "minimal";
 
 const fmt = (n: number) => "$" + Math.round(n).toLocaleString("en-US");
-const accent = "var(--c-accent, #0066CC)";
+const accent = "var(--c-accent, #0099cc)";
 
 export function CalculatorBlockClient({
   calcType,

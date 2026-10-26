@@ -45,7 +45,7 @@ export default async function HomeValuationPage({
           // Runtime branding (Shape tokens, header/footer theme) + this page's fixed palette
           ...themeVars(settings),
           "--hev-primary": "#111111",
-          "--hev-accent": "#0066cc",
+          "--hev-accent": "#0099cc",
           "--hev-text": "#333333",
           "--hev-bg": "#f7f7f7",
           background: "#f7f7f7",

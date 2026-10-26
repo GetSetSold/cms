@@ -63,7 +63,7 @@ export function SettingsForm({ initial, svgs }: { initial: SiteSettings; svgs: S
           <div className="flex w-max min-w-full items-stretch divide-x divide-white/15">
             {TABS.map((t) => (
               <button key={t.id} type="button" onClick={() => goTab(t.id)}
-                className={`shrink-0 whitespace-nowrap px-4 py-2.5 text-[13px] font-medium transition ${tab === t.id ? "bg-[#0066cc] text-white" : "text-white/70 hover:bg-white/10 hover:text-white"}`}>
+                className={`shrink-0 whitespace-nowrap px-4 py-2.5 text-[13px] font-medium transition ${tab === t.id ? "bg-[#0099cc] text-white" : "text-white/70 hover:bg-white/10 hover:text-white"}`}>
                 {t.label}
               </button>
             ))}

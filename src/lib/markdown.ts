@@ -57,7 +57,7 @@ const BOX_BG: Record<string, string> = {
   gray: "#f7f7f7",
   white: "#FFFFFF",
   black: "#1a1a1a",
-  blue: "#0066cc",
+  blue: "#0099cc",
 };
 
 export function renderMarkdown(md: string): string {
@@ -140,7 +140,7 @@ export function renderMarkdown(md: string): string {
   // unpaired box just stays full width) — this is what makes "two boxes
   // together" become a real side-by-side layout instead of two stacked ones.
   const out: string[] = [];
-  const isDark = (bg: string) => bg === "#1a1a1a" || bg === "#0066cc";
+  const isDark = (bg: string) => bg === "#1a1a1a" || bg === "#0099cc";
   for (let i = 0; i < rawBlocks.length; i++) {
     const cur = rawBlocks[i];
     if (!cur.startsWith(BOX_MARK)) { out.push(cur); continue; }

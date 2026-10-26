@@ -183,7 +183,7 @@ export default async function PostPage({ params, searchParams }: { params: Promi
                   const bg = block.bg || "white";
                   const bgStyle =
                     bg === "black" ? { background: "#1a1a1a", color: "#fff" } :
-                    bg === "blue" ? { background: "#0066cc", color: "#fff" } :
+                    bg === "blue" ? { background: "#0099cc", color: "#fff" } :
                     bg === "gray" ? { background: "#f7f7f7", border: "1px solid #ececec" } :
                     { background: "#fff", border: "1px solid #e5e5e5" };
                   const is2col = block.layout === "2col";

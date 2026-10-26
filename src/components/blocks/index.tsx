@@ -57,7 +57,7 @@ export const renderInlineLinks = (text: string | undefined) => {
   return parts.map((part, i) => {
     const match = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
     if (match) {
-      return <a key={i} href={match[2]} className="text-[#0066cc] underline hover:text-[#0052a3]">{match[1]}</a>;
+      return <a key={i} href={match[2]} className="text-[#0099cc] underline hover:text-[#007aa3]">{match[1]}</a>;
     }
     return <span key={i}>{part}</span>;
   });
@@ -130,10 +130,10 @@ function Hero({ data, ctx }: BlockProps) {
           <Svg asset={ctx.svgs[data.centered_icon_svg_id]} className="h-full w-full" />
         </div>
       ) : null}
-      {/* Was its own smaller, muted/faded treatment (12-13px, text-primary/80 or text-muted) — now
-         matches the eyebrow used everywhere else (14px, solid, semibold), just swapping which solid
-         color reads against a dark vs light background. */}
-      {data.eyebrow ? <div className={compact ? "text-[11px] font-semibold uppercase tracking-wide text-accent" : "text-sm font-semibold uppercase tracking-wide text-primary"}>{data.eyebrow}</div> : null}
+      {/* Eyebrow size comes from the sitewide Typography setting
+         (--font-eyebrow-size), like every other block — no per-block size.
+         Color still follows density: Accent in compact, Primary otherwise. */}
+      {data.eyebrow ? <div className={`font-semibold uppercase tracking-wide ${compact ? "text-accent" : "text-primary"}`} style={{ fontSize: "var(--font-eyebrow-size, 0.75rem)" }}>{data.eyebrow}</div> : null}
       {title}
       {data.subheading_style === "checklist" && data.subheading_items?.length ? (
         <ul className={`flex w-full max-w-xl flex-col gap-3 ${data.layout === "centered" ? "mx-auto" : ""}`}>

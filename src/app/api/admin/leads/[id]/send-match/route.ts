@@ -36,7 +36,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 <body style="margin:0;padding:0;background:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
 <div style="max-width:600px;margin:0 auto;background:#ffffff;">
 <div style="background:#0a0a1a;color:#ffffff;padding:28px 32px;">
-<div style="font-size:22px;font-weight:700;">GetSetSold<span style="color:#0066cc;">.ca</span></div>
+<div style="font-size:22px;font-weight:700;">GetSetSold<span style="color:#0099cc;">.ca</span></div>
 <div style="font-size:13px;color:#aaa;margin-top:6px;">Rohit Sharma, REALTOR&reg;</div>
 </div>
 <div style="padding:32px;">
@@ -51,7 +51,7 @@ ${listing.photo ? `<img src="${listing.photo}" style="width:100%;height:240px;ob
 <div style="font-size:13px;color:#888;">${listing.city} ${listing.mls ? `· MLS# ${listing.mls}` : ""}</div>
 <div style="font-size:13px;color:#555;margin-top:8px;">${listing.beds ? `${listing.beds} bd` : ""}${listing.beds && listing.baths ? " · " : ""}${listing.baths ? `${listing.baths} ba` : ""}${listing.type ? ` · ${listing.type}` : ""}</div>
 <div style="text-align:center;margin-top:16px;">
-<a href="${listingUrl}" style="display:inline-block;background:#0066cc;color:#fff;text-decoration:none;padding:12px 32px;border-radius:999px;font-size:14px;font-weight:600;">View Full Details</a>
+<a href="${listingUrl}" style="display:inline-block;background:#0099cc;color:#fff;text-decoration:none;padding:12px 32px;border-radius:999px;font-size:14px;font-weight:600;">View Full Details</a>
 </div>
 </div>
 </div>
@@ -69,7 +69,7 @@ ${listing.photo ? `<img src="${listing.photo}" style="width:100%;height:240px;ob
 <body style="margin:0;padding:0;background:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
 <div style="max-width:600px;margin:0 auto;background:#ffffff;">
 <div style="background:#0a0a1a;color:#ffffff;padding:28px 32px;">
-<div style="font-size:22px;font-weight:700;">GetSetSold<span style="color:#0066cc;">.ca</span></div>
+<div style="font-size:22px;font-weight:700;">GetSetSold<span style="color:#0099cc;">.ca</span></div>
 <div style="font-size:13px;color:#aaa;margin-top:6px;">Rohit Sharma, REALTOR&reg;</div>
 </div>
 <div style="padding:32px;">
@@ -81,9 +81,9 @@ ${listing.image ? `<img src="${listing.image}" style="width:100%;height:240px;ob
 <div style="padding:20px;">
 <div style="font-size:20px;font-weight:800;">${listing.name}</div>
 <div style="font-size:13px;color:#888;">${listing.builder ? `by ${listing.builder} · ` : ""}${listing.city}</div>
-<div style="font-size:16px;font-weight:700;color:#0066cc;margin-top:8px;">${price}</div>
+<div style="font-size:16px;font-weight:700;color:#0099cc;margin-top:8px;">${price}</div>
 <div style="text-align:center;margin-top:16px;">
-<a href="${projectUrl}" style="display:inline-block;background:#0066cc;color:#fff;text-decoration:none;padding:12px 32px;border-radius:999px;font-size:14px;font-weight:600;">View Project Details</a>
+<a href="${projectUrl}" style="display:inline-block;background:#0099cc;color:#fff;text-decoration:none;padding:12px 32px;border-radius:999px;font-size:14px;font-weight:600;">View Project Details</a>
 </div>
 </div>
 </div>

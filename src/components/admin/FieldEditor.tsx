@@ -77,7 +77,7 @@ function TextareaWithLink({ label, value, onChange }: { label: string; value: st
       <div className="flex items-center justify-between">
         <span>{label}</span>
         <div className="relative" ref={wrapRef}>
-          <button type="button" onClick={open ? () => setOpen(false) : openPicker} className="text-xs text-[#0066cc] underline">
+          <button type="button" onClick={open ? () => setOpen(false) : openPicker} className="text-xs text-[#0099cc] underline">
             {open ? "Close" : "+ Insert link"}
           </button>
           {open ? (
@@ -122,7 +122,7 @@ function TextareaWithLink({ label, value, onChange }: { label: string; value: st
       <div className="flex items-center justify-between">
         <span className="text-[11px] text-muted">Tip: [link text](/page-url) creates a link</span>
         {value?.includes("](") ? (
-          <button type="button" onClick={() => setShowPreview(!showPreview)} className="text-[11px] text-[#0066cc] underline">
+          <button type="button" onClick={() => setShowPreview(!showPreview)} className="text-[11px] text-[#0099cc] underline">
             {showPreview ? "Hide preview" : "Preview links"}
           </button>
         ) : null}
@@ -131,7 +131,7 @@ function TextareaWithLink({ label, value, onChange }: { label: string; value: st
         <div className="rounded-lg border border-line bg-gray-50 p-3 text-sm">
           {value.split(/\n{2,}/).filter(Boolean).map((p, i) => (
             <p key={i} className="mb-2 last:mb-0" dangerouslySetInnerHTML={{
-              __html: p.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" style="color:#0066cc;text-decoration:underline">$1</a>')
+              __html: p.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" style="color:#0099cc;text-decoration:underline">$1</a>')
             }} />
           ))}
         </div>

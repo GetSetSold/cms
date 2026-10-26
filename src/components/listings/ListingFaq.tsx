@@ -293,7 +293,7 @@ export function ListingFaq({ listing }: { listing: PropertyListing }) {
           <details key={i} className="group border-t border-line px-6 py-4 first:border-t-0">
             <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-[15px] font-medium text-ink [&::-webkit-details-marker]:hidden">
               {f.q}
-              <span className="text-xl text-[#0066cc] transition-transform group-open:rotate-45">+</span>
+              <span className="text-xl text-[#0099cc] transition-transform group-open:rotate-45">+</span>
             </summary>
             <p className="faq-a pt-2 text-muted">{f.a}</p>
           </details>

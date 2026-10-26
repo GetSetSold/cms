@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
         <div style="font-size:14px;color:#333;margin:4px 0;">${m.UnparsedAddress}, ${m.City}</div>
         <div style="font-size:13px;color:#666;">${m.BedroomsTotal ? `${m.BedroomsTotal} bd` : ""}${m.BedroomsTotal && m.BathroomsTotalInteger ? " · " : ""}${m.BathroomsTotalInteger ? `${m.BathroomsTotalInteger} ba` : ""}${m.StructureTypeText ? ` · ${m.StructureTypeText}` : ""}</div>
         <div style="font-size:12px;color:#999;margin-top:4px;">MLS# ${m.ListingId}</div>
-        <a href="${siteUrl}/real-estate/${encodeURIComponent(m.ListingKey)}" style="display:inline-block;margin-top:12px;background:#0066cc;color:#fff;text-decoration:none;padding:10px 24px;border-radius:8px;font-size:14px;font-weight:600;">View Listing</a>
+        <a href="${siteUrl}/real-estate/${encodeURIComponent(m.ListingKey)}" style="display:inline-block;margin-top:12px;background:#0099cc;color:#fff;text-decoration:none;padding:10px 24px;border-radius:8px;font-size:14px;font-weight:600;">View Listing</a>
       </div>
     </div>`;
   }).join("");
@@ -67,8 +67,8 @@ export async function POST(req: NextRequest) {
       <span style="background:#f0f4fa;padding:2px 8px;border-radius:4px;font-size:13px;">Hamilton · under $1,500 · over $1,000</span></p>
       ${cards}
       <p style="margin:24px 0 0;font-size:13px;color:#666;">
-        <a href="${siteUrl}/property-alerts/manage" style="color:#0066cc;">Manage your alerts</a> ·
-        <a href="${siteUrl}/property-alerts" style="color:#0066cc;">Unsubscribe</a>
+        <a href="${siteUrl}/property-alerts/manage" style="color:#0099cc;">Manage your alerts</a> ·
+        <a href="${siteUrl}/property-alerts" style="color:#0099cc;">Unsubscribe</a>
       </p>`,
     footerNote: "You're receiving this because you saved a property search on GetSetSold.ca.",
   });

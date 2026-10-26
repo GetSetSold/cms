@@ -114,7 +114,7 @@ export function MarkdownEditor({ value, onChange }: { value: string; onChange: (
             {t.label}
           </button>
         ))}
-        <button type="button" onClick={autoFormat} className="flex h-8 items-center justify-center rounded-md px-3 text-sm font-semibold text-white hover:opacity-90" style={{ background: "#0066cc" }} title="Auto-structure: converts Note:/Tip:/Warning: lines to callouts, adds takeaways box from headings">
+        <button type="button" onClick={autoFormat} className="flex h-8 items-center justify-center rounded-md px-3 text-sm font-semibold text-white hover:opacity-90" style={{ background: "#0099cc" }} title="Auto-structure: converts Note:/Tip:/Warning: lines to callouts, adds takeaways box from headings">
           ✨ Auto-format
         </button>
         <div className="ml-auto flex rounded-md bg-white p-0.5 text-xs">

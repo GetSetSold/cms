@@ -14,7 +14,7 @@ type DemoData = {
 };
 
 // Restrained blue palette matching site
-const COLORS = ["#0066cc", "#4d94db", "#80b3e6", "#b3d1f0", "#d6e6f7", "#e8f0fa"];
+const COLORS = ["#0099cc", "#4db8db", "#80cce6", "#b3e0f0", "#d6eff7", "#e8f6fa"];
 
 function Donut({ data }: { data: { label: string; val: number }[] }) {
   const cx = 110, cy = 110, r = 80, inner = 52;

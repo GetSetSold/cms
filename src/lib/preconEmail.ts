@@ -65,7 +65,7 @@ export function buildPreconBroadcastEmail(opts: {
           <div style="font-size:13px;color:#333;padding:8px 0;${i < arr.length - 1 ? "border-bottom:1px solid #f0f0f0;" : ""}">✓ ${b}</div>`).join("");
         fullWidth.push(`
           <div style="background:#ffffff;border:1px solid #dbe7f5;border-radius:10px;padding:14px 16px;margin:0 0 12px;">
-            ${promo.badge ? `<span style="display:inline-block;background:#0066cc;color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:12px;margin-bottom:6px;">${promo.badge}</span>` : ""}
+            ${promo.badge ? `<span style="display:inline-block;background:#0099cc;color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:12px;margin-bottom:6px;">${promo.badge}</span>` : ""}
             <div style="font-size:15px;font-weight:700;color:#111;">${promo.title || ""}</div>
             ${promo.description ? `<div style="font-size:13px;color:#555;margin-top:6px;line-height:1.6;">${promo.description}</div>` : ""}
             ${bullets ? `<div style="margin-top:8px;">${bullets}</div>` : ""}
@@ -74,7 +74,7 @@ export function buildPreconBroadcastEmail(opts: {
         cards.push(`
           <td width="50%" valign="top" style="padding:0 6px 12px;">
             <div style="background:#ffffff;border:1px solid #dbe7f5;border-radius:10px;padding:14px 16px;height:100%;">
-              ${promo.badge ? `<span style="display:inline-block;background:#0066cc;color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:12px;margin-bottom:6px;">${promo.badge}</span>` : ""}
+              ${promo.badge ? `<span style="display:inline-block;background:#0099cc;color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:12px;margin-bottom:6px;">${promo.badge}</span>` : ""}
               <div style="font-size:15px;font-weight:700;color:#111;">${promo.title || ""}</div>
             </div>
           </td>`);
@@ -135,7 +135,7 @@ export function buildPreconBroadcastEmail(opts: {
                   <div style="font-size:13px;color:#666;margin-top:2px;">
                     ${m.bedrooms ? `${m.bedrooms} bd` : ""}${m.bedrooms && m.bathrooms ? " · " : ""}${m.bathrooms ? `${m.bathrooms} ba` : ""}${m.sqft ? ` · ${m.sqft} sqft` : ""}
                   </div>
-                  ${m.starting_price ? `<div style="font-size:14px;font-weight:700;color:#0066cc;margin-top:4px;">From $${Number(m.starting_price).toLocaleString()}</div>` : ""}
+                  ${m.starting_price ? `<div style="font-size:14px;font-weight:700;color:#0099cc;margin-top:4px;">From $${Number(m.starting_price).toLocaleString()}</div>` : ""}
                 </div>
               </div>
             </td>`).join("")}
@@ -143,14 +143,14 @@ export function buildPreconBroadcastEmail(opts: {
         </table>
       </div>` : ""}
       ${p.project_description ? `<p style="font-size:14px;color:#333;line-height:1.7;margin:0 0 20px;">${p.project_description.slice(0, 350)}${p.project_description.length > 350 ? "..." : ""}</p>` : ""}
-      ${p.project_message ? `<p style="font-size:14px;color:#0066cc;background:#f0f4fa;padding:12px 16px;border-radius:8px;margin:0 0 20px;">${p.project_message}</p>` : ""}
+      ${p.project_message ? `<p style="font-size:14px;color:#0099cc;background:#f0f4fa;padding:12px 16px;border-radius:8px;margin:0 0 20px;">${p.project_message}</p>` : ""}
       <div style="text-align:center;margin:24px 0;">
-        <a href="${projectUrl}#lead" style="display:inline-block;background:#0066cc;color:#ffffff;text-decoration:none;padding:14px 40px;border-radius:999px;font-size:15px;font-weight:600;margin:0 6px 10px;">I'm Interested — Register Now</a><br>
+        <a href="${projectUrl}#lead" style="display:inline-block;background:#0099cc;color:#ffffff;text-decoration:none;padding:14px 40px;border-radius:999px;font-size:15px;font-weight:600;margin:0 6px 10px;">I'm Interested — Register Now</a><br>
         <a href="${projectUrl}" style="display:inline-block;background:#111111;color:#ffffff;text-decoration:none;padding:14px 40px;border-radius:999px;font-size:15px;font-weight:600;margin:0 6px;">View Full Details & Floor Plans</a>
       </div>
       <p style="font-size:13px;color:#888;text-align:center;margin:20px 0 0;">
         Questions? Reply to this email or call me directly.<br>
-        <a href="${siteUrl}/pre-construction" style="color:#0066cc;text-decoration:none;">Browse all pre-con projects</a><br><br>
+        <a href="${siteUrl}/pre-construction" style="color:#0099cc;text-decoration:none;">Browse all pre-con projects</a><br><br>
         <a href="${siteUrl}/api/precon-alerts/unsubscribe?token=${unsubscribeToken}" style="color:#999;text-decoration:underline;font-size:12px;">Unsubscribe from pre-con updates</a>
       </p>`,
     footerNote: "You're receiving this because you subscribed to pre-con updates on GetSetSold.ca.",

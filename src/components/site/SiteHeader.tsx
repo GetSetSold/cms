@@ -62,11 +62,11 @@ function MegaTile({ label, href, onClick }: { label: string; href: string; onCli
     <Link href={href} onClick={onClick}
       className="group flex items-center gap-3 rounded-xl p-2.5 transition-colors hover:bg-[#f2f6fc]">
       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[11px] bg-[#eef3fa]">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0066CC" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0099cc" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
           {iconForLink(label, href)}
         </svg>
       </span>
-      <span className="text-[15px] font-semibold leading-snug group-hover:text-[#0066CC]">{label}</span>
+      <span className="text-[15px] font-semibold leading-snug group-hover:text-[#0099cc]">{label}</span>
     </Link>
   );
 }
@@ -129,7 +129,7 @@ export function SiteHeader({ settings, logo }: { settings: SiteSettings; logo?: 
             n.columns?.length ? (
               <div key={n.href} onMouseEnter={() => openMenu(n.href)} onMouseLeave={scheduleClose}>
                 <button
-                  className={`border-b-2 pb-1 hover:text-[#0066CC] ${openMega === n.href ? "border-[#0066CC] text-[#0066CC]" : "border-transparent"}`}
+                  className={`border-b-2 pb-1 hover:text-[#0099cc] ${openMega === n.href ? "border-[#0099cc] text-[#0099cc]" : "border-transparent"}`}
                   aria-expanded={openMega === n.href}
                   onClick={() => { if (closeTimer.current) { clearTimeout(closeTimer.current); closeTimer.current = null; } setOpenMega(openMega === n.href ? null : n.href); }}
                 >
@@ -151,7 +151,7 @@ export function SiteHeader({ settings, logo }: { settings: SiteSettings; logo?: 
                 ) : null}
               </div>
             ) : (
-              <Link key={n.href} href={n.href} className="hover:text-[#0066CC]">{n.label}</Link>
+              <Link key={n.href} href={n.href} className="hover:text-[#0099cc]">{n.label}</Link>
             ),
           )}
         </nav>
@@ -188,7 +188,7 @@ export function SiteHeader({ settings, logo }: { settings: SiteSettings; logo?: 
                       <Link key={l.href} href={l.href} onClick={() => setOpen(false)}
                         className="flex flex-col items-start gap-2 rounded-xl bg-[#f7f9fc] p-3.5">
                         <span className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-[#e7effa]">
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0066CC" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0099cc" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                             {iconForLink(l.label, l.href)}
                           </svg>
                         </span>

@@ -57,7 +57,7 @@ function cardHtml(l: GridListing): string {
     : (l.TotalActualRent != null ? `$${l.TotalActualRent.toLocaleString()}/mo` : "—");
   const sale = isSale(l);
   const badge = sale ? "For Sale" : "For Rent";
-  const badgeBg = sale ? "#111" : "#0066CC";
+  const badgeBg = sale ? "#111" : "#0099cc";
   return `
     <a href="${href}" target="_blank" rel="noopener" style="display:block;width:230px;position:relative;background:#fff;text-decoration:none;color:inherit;font-family:Inter,sans-serif;border:0;border-radius:0;box-shadow:none;">
       ${img}
@@ -109,7 +109,7 @@ export function ListingsMap({ listings }: { listings: GridListing[] }) {
         const el = document.createElement("button");
         el.type = "button";
         el.textContent = shortPrice(l);
-        el.style.cssText = `display:inline-flex;align-items:center;height:28px;padding:0 10px;border:0;border-radius:999px;background:${sale ? "#111" : "#0066CC"};color:#fff;font:700 12px Inter,sans-serif;box-shadow:0 2px 8px rgba(20,20,43,.25);white-space:nowrap;cursor:pointer;`;
+        el.style.cssText = `display:inline-flex;align-items:center;height:28px;padding:0 10px;border:0;border-radius:999px;background:${sale ? "#111" : "#0099cc"};color:#fff;font:700 12px Inter,sans-serif;box-shadow:0 2px 8px rgba(20,20,43,.25);white-space:nowrap;cursor:pointer;`;
         el.addEventListener("click", (e) => {
           e.stopPropagation();
           popupRef.current?.remove();

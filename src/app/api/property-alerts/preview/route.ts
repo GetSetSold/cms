@@ -149,9 +149,9 @@ function buildPreviewEmail(criteriaSummary: string, matches: any[], unsubscribeT
       ${cards}
       ${viewAll}
       <p style="margin:24px 0 0;font-size:13px;color:#888;text-align:center;">
-        <a href="${siteUrl}/property-alerts/manage" style="color:#0066cc;text-decoration:none;">Manage your alerts</a>
+        <a href="${siteUrl}/property-alerts/manage" style="color:#0099cc;text-decoration:none;">Manage your alerts</a>
         <span style="color:#ccc;margin:0 8px;">·</span>
-        <a href="${siteUrl}/api/property-alerts/unsubscribe?token=${unsubscribeToken}" style="color:#0066cc;text-decoration:none;">Unsubscribe</a>
+        <a href="${siteUrl}/api/property-alerts/unsubscribe?token=${unsubscribeToken}" style="color:#0099cc;text-decoration:none;">Unsubscribe</a>
       </p>`,
     footerNote: "You're receiving this because you saved a property search on GetSetSold.ca.",
   });

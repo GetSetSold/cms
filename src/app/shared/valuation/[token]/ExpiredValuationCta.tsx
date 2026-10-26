@@ -77,20 +77,20 @@ export function ExpiredValuationCta({ address, clientName }: { address: string; 
         .evc { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #f5f5f5; padding: 24px 16px; font-family: -apple-system, 'Segoe UI', sans-serif; }
         .evc-card { background: #fff; border: 1px solid #e2e2e2; border-radius: 16px; padding: 36px 32px; width: 100%; max-width: 480px; text-align: center; color: #111; }
         .evc-brand { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 18px; }
-        .evc-brand span { color: #0066cc; }
+        .evc-brand span { color: #0099cc; }
         .evc-card h1 { font-size: 24px; font-weight: 800; margin: 0 0 10px; }
         .evc-sub { font-size: 14px; color: #555; line-height: 1.6; margin: 0 0 22px; }
         .evc-field { display: block; text-align: left; font-size: 13px; font-weight: 600; margin-bottom: 12px; }
         .evc-field input { display: block; width: 100%; margin-top: 6px; border: 1px solid #ddd; border-radius: 10px; padding: 11px 14px; font-size: 15px; font-weight: 400; font-family: inherit; box-sizing: border-box; }
-        .evc-field input:focus { outline: 2px solid #0066cc; border-color: #0066cc; }
+        .evc-field input:focus { outline: 2px solid #0099cc; border-color: #0099cc; }
         .evc-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .evc-honey { position: absolute; left: -9999px; }
         .evc-err { color: #dc2626; font-size: 13px; margin: 0 0 10px; }
         .evc-btn { display: inline-flex; align-items: center; gap: 8px; background: #111; color: #fff; border: none; border-radius: 30px; padding: 14px 32px; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 6px; width: 100%; justify-content: center; }
-        .evc-btn:hover { background: #0066cc; }
+        .evc-btn:hover { background: #0099cc; }
         .evc-btn:disabled { opacity: 0.6; cursor: default; }
         .evc-alt { font-size: 13px; color: #777; margin: 18px 0 0; }
-        .evc-alt a { color: #0066cc; font-weight: 600; text-decoration: none; }
+        .evc-alt a { color: #0099cc; font-weight: 600; text-decoration: none; }
         .evc-done p { font-size: 15px; line-height: 1.6; color: #333; }
         .evc-check { width: 56px; height: 56px; border-radius: 50%; background: #16a34a; color: #fff; font-size: 28px; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; }
         @media (max-width: 640px) {

@@ -128,7 +128,7 @@ export function Slider({
       step={step}
       value={value}
       onChange={(e) => onChange(Number(e.target.value))}
-      className="w-full accent-[#0066CC]"
+      className="w-full accent-[#0099cc]"
     />
   );
 }
@@ -143,7 +143,7 @@ export function Toggle({ checked, onChange, label }: { checked: boolean; onChang
       className="flex w-full items-center justify-between gap-3 rounded-[var(--radius-sm)] border border-line bg-white px-3 py-2.5 text-left"
     >
       <span className="text-[14px] font-medium text-ink">{label}</span>
-      <span className={`relative h-6 w-11 shrink-0 rounded-[var(--radius-label)] transition ${checked ? "bg-[#0066CC]" : "bg-neutral-300"}`}>
+      <span className={`relative h-6 w-11 shrink-0 rounded-[var(--radius-label)] transition ${checked ? "bg-[#0099cc]" : "bg-neutral-300"}`}>
         <span className={`absolute top-0.5 h-5 w-5 rounded-[var(--radius-label)] bg-white shadow transition-all ${checked ? "left-[22px]" : "left-0.5"}`} />
       </span>
     </button>

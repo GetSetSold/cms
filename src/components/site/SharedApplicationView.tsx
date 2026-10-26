@@ -120,14 +120,14 @@ export function SharedApplicationView({ share, formName }: { share: Share; formN
 
         <article className="overflow-hidden rounded-2xl bg-white shadow-sm print:rounded-none print:shadow-none">
           {/* Branded header */}
-          <header className="border-b-4 border-[#0066cc] px-8 py-6">
+          <header className="border-b-4 border-[#0099cc] px-8 py-6">
             {b.header_tagline ? (
               <h1 className="text-2xl font-bold text-[#111]">{b.header_tagline}</h1>
             ) : null}
             {b.header_name ? (
               <p className="mt-1 text-[14px] text-[#666]">{b.header_name}</p>
             ) : null}
-            <p className="mt-2 text-[18px] font-semibold text-[#0066cc]">{formName}</p>
+            <p className="mt-2 text-[18px] font-semibold text-[#0099cc]">{formName}</p>
             <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-[13px] text-[#666]">
               {b.header_phone ? <span>{b.header_phone}</span> : null}
               {b.header_email ? <span>{b.header_email}</span> : null}

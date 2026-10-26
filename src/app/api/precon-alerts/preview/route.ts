@@ -26,7 +26,7 @@ export async function GET() {
       <div style="margin:0 0 16px;border:1px solid #e8e8e8;border-radius:16px;overflow:hidden;background:#ffffff;box-shadow:0 2px 8px rgba(0,0,0,0.04);">
         ${p.main_image_url ? `<img src="${p.main_image_url}" alt="${p.project_name}" style="width:100%;height:200px;object-fit:cover;display:block;">` : ""}
         <div style="padding:18px 20px;">
-          ${p.vip_release === "Yes" ? `<span style="display:inline-block;background:#0066cc;color:#fff;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;letter-spacing:0.5px;margin-bottom:8px;">VIP RELEASE</span>` : ""}
+          ${p.vip_release === "Yes" ? `<span style="display:inline-block;background:#0099cc;color:#fff;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;letter-spacing:0.5px;margin-bottom:8px;">VIP RELEASE</span>` : ""}
           <div style="font-size:20px;font-weight:800;color:#111;letter-spacing:-0.3px;">${p.project_name}</div>
           ${builderName ? `<div style="font-size:13px;color:#666;margin-top:2px;">by ${builderName}</div>` : ""}
           <div style="font-size:14px;color:#1a1a1a;margin:8px 0 2px;font-weight:600;">${price}</div>
@@ -50,9 +50,9 @@ export async function GET() {
         <p style="margin:0 0 20px;">New pre-construction projects just launched:</p>
         ${cards}
         <p style="margin:24px 0 0;font-size:13px;color:#888;text-align:center;">
-          <a href="${siteUrl}/pre-construction" style="color:#0066cc;text-decoration:none;">Browse all pre-con</a>
+          <a href="${siteUrl}/pre-construction" style="color:#0099cc;text-decoration:none;">Browse all pre-con</a>
           <span style="color:#ccc;margin:0 8px;">·</span>
-          <a href="${siteUrl}/property-alerts/manage" style="color:#0066cc;text-decoration:none;">Manage alerts</a>
+          <a href="${siteUrl}/property-alerts/manage" style="color:#0099cc;text-decoration:none;">Manage alerts</a>
         </p>`,
       footerNote: "You're receiving this because you subscribed to pre-con updates on GetSetSold.ca.",
     });

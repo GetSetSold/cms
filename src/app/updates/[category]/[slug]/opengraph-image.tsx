@@ -49,7 +49,7 @@ export default async function OgImage({ params }: { params: Promise<{ category: 
         style={{
           width: "100%", height: "100%", display: "flex", flexDirection: "column",
           justifyContent: "space-between", padding: 64, color: "#fff",
-          background: "radial-gradient(ellipse 80% 70% at 70% 20%, rgba(0,102,204,0.35), transparent 60%), #0d0d0f",
+          background: "radial-gradient(ellipse 80% 70% at 70% 20%, rgba(0,153,204,0.35), transparent 60%), #0d0d0f",
           fontFamily: "system-ui, -apple-system, sans-serif",
         }}
       >

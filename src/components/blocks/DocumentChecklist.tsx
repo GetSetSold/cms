@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import type { BlockCtx } from "./index";
 
 interface DocButton {
   label?: string;
@@ -45,15 +46,18 @@ function ArrowIcon() {
   );
 }
 
-export default function DocumentChecklist({ data }: { data: DocumentChecklistData }) {
+export default function DocumentChecklist({ data, ctx }: { data: DocumentChecklistData; ctx?: BlockCtx }) {
   const tabs = (data.tabs ?? []).filter((t) => t.label);
   const [active, setActive] = useState(0);
   const current = tabs[Math.min(active, tabs.length - 1)];
+  // Eyebrow follows the sitewide pattern like every other block: semibold,
+  // uppercase, sitewide size, Accent in compact density, Primary otherwise.
+  const compact = ctx?.settings.theme.density === "compact";
 
   return (
     <div className="mx-auto w-full max-w-7xl px-5 md:px-10">
         {data.eyebrow ? (
-          <div className="mb-2 font-medium uppercase tracking-wide text-muted" style={{ fontSize: "var(--font-eyebrow-size, 0.75rem)" }}>{data.eyebrow}</div>
+          <div className={`mb-2 font-semibold uppercase tracking-wide ${compact ? "text-accent" : "text-primary"}`} style={{ fontSize: "var(--font-eyebrow-size, 0.75rem)" }}>{data.eyebrow}</div>
         ) : null}
         {data.heading ? (
           <h2 className="mb-3 font-display font-semibold tracking-tight text-[22px] leading-snug md:text-[32px] md:leading-tight">{data.heading}</h2>

@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
 <title>Unsubscribed — GetSetSold.ca</title>
 <style>body{font-family:-apple-system,'Segoe UI',sans-serif;background:#f5f5f5;margin:0;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
 .card{background:#fff;border:1px solid #e2e2e2;border-radius:16px;padding:40px 32px;max-width:440px;text-align:center}
-.brand{font-size:22px;font-weight:800;letter-spacing:-.5px;margin-bottom:16px}.brand span{color:#0066cc}
+.brand{font-size:22px;font-weight:800;letter-spacing:-.5px;margin-bottom:16px}.brand span{color:#0099cc}
 h1{font-size:22px;margin:0 0 10px}p{color:#555;font-size:14px;line-height:1.6}</style></head>
 <body><div class="card"><div class="brand">GETSETSOLD<span>.ca</span></div>
 <h1>${ok ? "You're unsubscribed" : "Link not recognized"}</h1>

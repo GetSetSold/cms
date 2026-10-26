@@ -212,7 +212,7 @@ export function FormSubmissionCard({ submission, bare }: { submission: FormSubmi
             <div key={s.token} className="flex items-center gap-2 text-[13px]">
               <span className="min-w-0 flex-1 truncate font-mono text-[12px]">{s.url}</span>
               <span className="shrink-0 text-xs text-muted">{s.view_count} views · exp {new Date(s.expires_at).toLocaleDateString()}</span>
-              <button className="shrink-0 text-[12px] font-medium text-[#0066cc] hover:underline" onClick={() => copy(s.url)}>Copy</button>
+              <button className="shrink-0 text-[12px] font-medium text-[#0099cc] hover:underline" onClick={() => copy(s.url)}>Copy</button>
               <button className="shrink-0 text-[12px] font-medium text-red-600 hover:underline" onClick={() => revoke(s.token)}>Revoke</button>
             </div>
           ))}
@@ -356,7 +356,7 @@ function EditSubmissionModal({ submission, onClose, onSaved }: {
                         <legend className="mb-2 text-[13px] font-medium">{f.label}</legend>
                         <div className="flex flex-wrap gap-2">
                           {f.options.map((o) => (
-                            <label key={o} className={`cursor-pointer rounded-[var(--radius-btn)] border px-4 py-2 text-[13px] transition ${val === o ? "border-[#0066cc] bg-[#0066cc] text-white" : "border-line bg-white hover:border-[#0066cc]"}`}>
+                            <label key={o} className={`cursor-pointer rounded-[var(--radius-btn)] border px-4 py-2 text-[13px] transition ${val === o ? "border-[#0099cc] bg-[#0099cc] text-white" : "border-line bg-white hover:border-[#0099cc]"}`}>
                               <input type="radio" className="sr-only" checked={val === o} onChange={() => setDraft({ ...draft, [f.key]: o })} />
                               {o}
                             </label>
@@ -373,7 +373,7 @@ function EditSubmissionModal({ submission, onClose, onSaved }: {
                           type="checkbox"
                           checked={checked}
                           onChange={(e) => setDraft({ ...draft, [f.key]: e.target.checked ? "Yes" : "No" })}
-                          className="h-4 w-4 rounded accent-[#0066cc]"
+                          className="h-4 w-4 rounded accent-[#0099cc]"
                         />
                         {f.label}
                       </label>
@@ -447,7 +447,7 @@ function SubformEditor({ field, rows, onChange }: {
           <legend className="mb-1.5">{sf.label}</legend>
           <div className="flex flex-wrap gap-2">
             {sf.options.map((o) => (
-              <label key={o} className={`cursor-pointer rounded-[var(--radius-btn)] border px-3 py-1.5 text-[13px] transition ${val === o ? "border-[#0066cc] bg-[#0066cc] text-white" : "border-line bg-white hover:border-[#0066cc]"}`}>
+              <label key={o} className={`cursor-pointer rounded-[var(--radius-btn)] border px-3 py-1.5 text-[13px] transition ${val === o ? "border-[#0099cc] bg-[#0099cc] text-white" : "border-line bg-white hover:border-[#0099cc]"}`}>
                 <input type="radio" className="sr-only" checked={val === o} onChange={() => set(o)} />
                 {o}
               </label>
@@ -464,7 +464,7 @@ function SubformEditor({ field, rows, onChange }: {
             type="checkbox"
             checked={checked}
             onChange={(e) => set(e.target.checked ? "Yes" : "No")}
-            className="h-4 w-4 rounded accent-[#0066cc]"
+            className="h-4 w-4 rounded accent-[#0099cc]"
           />
           {sf.label}
         </label>

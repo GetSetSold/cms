@@ -65,7 +65,7 @@ function Intro({ data, t, topRule, bs, compact, bg, accent }: { data: any; t: To
     return (
       <div className="flex flex-col gap-2">
         {topRule ? <div className={`border-t ${t.rule}`} /> : null}
-        {data.eyebrow ? <div className={`text-[11px] font-semibold uppercase tracking-wide ${accentReadable ? "text-accent" : t.dark ? "text-white" : "text-ink"}`}>{data.eyebrow}</div> : null}
+        {data.eyebrow ? <div className={`font-semibold uppercase tracking-wide ${accentReadable ? "text-accent" : t.dark ? "text-white" : "text-ink"}`} style={{ fontSize: "var(--font-eyebrow-size, 0.75rem)" }}>{data.eyebrow}</div> : null}
         {data.heading ? <h2 className={`text-[22px] font-semibold leading-snug tracking-tight md:text-[28px] ${t.head}`}>{data.heading}</h2> : null}
         {data.text ? <p className={`text-sm leading-relaxed ${t.dark ? "text-white/70" : "text-muted"}`}>{data.text}</p> : null}
         {data.footnote ? (
@@ -81,7 +81,7 @@ function Intro({ data, t, topRule, bs, compact, bg, accent }: { data: any; t: To
   return (
     <div className="flex flex-col gap-3">
       {topRule ? <div className={`border-t ${t.rule}`} /> : null}
-      {data.eyebrow ? <div className={`text-sm font-semibold uppercase tracking-wide ${t.accent}`}>{data.eyebrow}</div> : null}
+      {data.eyebrow ? <div className={`font-semibold uppercase tracking-wide ${t.accent}`} style={{ fontSize: "var(--font-eyebrow-size, 0.75rem)" }}>{data.eyebrow}</div> : null}
       {data.heading ? <h2 className={`font-display font-bold tracking-tight text-[26px] leading-tight md:text-[56px] md:leading-none ${t.head}`}>{data.heading}</h2> : null}
       {data.text ? (
         <>

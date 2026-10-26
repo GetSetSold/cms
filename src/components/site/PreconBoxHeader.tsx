@@ -67,7 +67,7 @@ export function PreconBoxHeader({
         />
         <div
           className="absolute -right-24 -top-24 h-[360px] w-[360px] rounded-[var(--radius-btn,999px)]"
-          style={{ background: "radial-gradient(circle, rgba(0,102,204,0.30) 0%, rgba(0,102,204,0) 70%)" }}
+          style={{ background: "radial-gradient(circle, rgba(0,153,204,0.30) 0%, rgba(0,153,204,0) 70%)" }}
           aria-hidden="true"
         />
         <div className="relative z-10 flex flex-col items-start gap-4 p-7 md:p-12">
