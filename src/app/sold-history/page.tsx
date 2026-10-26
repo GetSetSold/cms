@@ -5,6 +5,7 @@ import { themeFontHref, themeVars, themeIconOverrideCSS } from "@/lib/theme";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter, MobileCtaBar } from "@/components/site/SiteFooter";
 import { ListingCardShell } from "@/components/listings/ListingCardShell";
+import { Pagination } from "@/components/listings/Pagination";
 
 export const dynamic = "force-dynamic";
 
@@ -13,10 +14,10 @@ export const metadata: Metadata = {
   alternates: { canonical: "/sold-history" },
 };
 
-const STATUS_MAP: Record<string, { label: string; tone: "green" | "blue" | "purple" }> = {
-  sold: { label: "Sold", tone: "green" },
+const STATUS_MAP: Record<string, { label: string; tone: "green" | "blue" | "purple" | "red" }> = {
+  sold: { label: "Sold", tone: "red" },
   leased: { label: "Leased", tone: "blue" },
-  purchased: { label: "Purchased", tone: "purple" },
+  purchased: { label: "Purchased", tone: "green" },
 };
 
 function Card({ row }: { row: Awaited<ReturnType<typeof getSoldHistory>>[number] }) {
@@ -31,6 +32,7 @@ function Card({ row }: { row: Awaited<ReturnType<typeof getSoldHistory>>[number]
       image={row.image_url}
       statusLabel={status.label}
       statusTone={status.tone}
+      badgeStyle="ribbon"
       price={priceLabel}
       address={row.address}
       beds={row.bed}
@@ -40,8 +42,8 @@ function Card({ row }: { row: Awaited<ReturnType<typeof getSoldHistory>>[number]
   );
 }
 
-export default async function SoldHistoryPage({ searchParams }: { searchParams: Promise<{ status?: string }> }) {
-  const { status } = await searchParams;
+export default async function SoldHistoryPage({ searchParams }: { searchParams: Promise<{ status?: string; page?: string }> }) {
+  const { status, page: pageParam } = await searchParams;
   const [settings, rows, allRows] = await Promise.all([getSettings(), getSoldHistory(status), getSoldHistory()]);
   const logo = await getLogo(settings);
   const themeVars_ = themeVars(settings);
@@ -49,6 +51,18 @@ export default async function SoldHistoryPage({ searchParams }: { searchParams: 
     sold: allRows.filter((r) => r.status === "sold").length,
     leased: allRows.filter((r) => r.status === "leased").length,
     purchased: allRows.filter((r) => r.status === "purchased").length,
+  };
+  // Same paging as the listings browser: 12 per page, ?page= in the URL.
+  const perPage = 12;
+  const totalPages = Math.max(1, Math.ceil(rows.length / perPage));
+  const page = Math.min(Math.max(1, Number(pageParam) || 1), totalPages);
+  const pageRows = rows.slice((page - 1) * perPage, page * perPage);
+  const hrefFor = (p: number) => {
+    const qs = new URLSearchParams();
+    if (status) qs.set("status", status);
+    if (p > 1) qs.set("page", String(p));
+    const s = qs.toString();
+    return `/sold-history${s ? `?${s}` : ""}`;
   };
 
   return (
@@ -70,9 +84,14 @@ export default async function SoldHistoryPage({ searchParams }: { searchParams: 
         </div>
 
         {rows.length ? (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {rows.map((r) => <Card key={r.id} row={r} />)}
-          </div>
+          <>
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {pageRows.map((r) => <Card key={r.id} row={r} />)}
+            </div>
+            <div className="mt-10">
+              <Pagination page={page} totalPages={totalPages} hrefFor={hrefFor} />
+            </div>
+          </>
         ) : <p className="text-muted">No records yet.</p>}
       </main>
       <SiteFooter settings={settings} />

@@ -6,10 +6,12 @@ import { FavoriteButton } from "./FavoriteButton";
 export type ListingCardData = {
   href?: string;
   image: string | null;
-  /** Bottom-left ribbon over the photo — "For Sale"/"For Rent" (our style),
-   *  "Sold"/"Leased"/"Purchased" on history, "Pre-Con" etc. */
+  /** Badge over the photo — pill bottom-left by default, slanted cut ribbon
+   *  across the photo when badgeStyle is "ribbon" (sold-history only). */
   statusLabel: string;
-  statusTone: "dark" | "accent" | "green" | "blue" | "purple";
+  statusTone: "dark" | "accent" | "green" | "blue" | "purple" | "red";
+  /** "pill" (default) or "ribbon" (slanted cut strip, sold-history only). */
+  badgeStyle?: "pill" | "ribbon";
   price: string;
   address: string;
   city?: string | null;
@@ -33,7 +35,7 @@ export type ListingCardData = {
 };
 
 const TONE: Record<ListingCardData["statusTone"], string> = {
-  dark: "bg-ink", accent: "bg-accent", green: "bg-[#1B8A5A]", blue: "bg-[#2B3A8C]", purple: "bg-primary",
+  dark: "bg-ink", accent: "bg-accent", green: "bg-[#1B8A5A]", blue: "bg-[#2B3A8C]", purple: "bg-primary", red: "bg-[#C1272D]",
 };
 
 function daysLabel(days: number | null | undefined): string | null {
@@ -61,9 +63,18 @@ export function ListingCardShell(d: ListingCardData) {
         ) : (
           <div className="flex h-full items-center justify-center text-sm text-muted">No photo</div>
         )}
-        <span className={`absolute bottom-3 left-3 rounded-[var(--radius-label)] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-white ${TONE[d.statusTone]}`}>
-          {d.statusLabel}
-        </span>
+        {d.badgeStyle === "ribbon" ? (
+          <span
+            className={`absolute left-1/2 top-1/2 w-[68%] -translate-x-1/2 -translate-y-1/2 -rotate-[14deg] py-3 text-center text-[22px] font-extrabold uppercase tracking-[0.28em] text-white ${TONE[d.statusTone]}`}
+            style={{ clipPath: "polygon(20px 0, 100% 0, calc(100% - 20px) 100%, 0 100%)", filter: "drop-shadow(0 4px 10px rgba(0,0,0,0.35))" }}
+          >
+            {d.statusLabel}
+          </span>
+        ) : (
+          <span className={`absolute bottom-3 left-3 rounded-[var(--radius-label)] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-white ${TONE[d.statusTone]}`}>
+            {d.statusLabel}
+          </span>
+        )}
         {days ? (
           <span className="absolute bottom-3 right-3 rounded-[var(--radius-label)] bg-black/75 px-3 py-1 text-[11px] font-semibold text-white">
             {days}

@@ -990,10 +990,10 @@ async function FeaturedListing({ data, ctx }: BlockProps) {
   );
 }
 
-const SOLD_STATUS_MAP: Record<string, { label: string; tone: "green" | "blue" | "purple" }> = {
-  sold: { label: "Sold", tone: "green" },
+const SOLD_STATUS_MAP: Record<string, { label: string; tone: "green" | "blue" | "purple" | "red" }> = {
+  sold: { label: "Sold", tone: "red" },
   leased: { label: "Leased", tone: "blue" },
-  purchased: { label: "Purchased", tone: "purple" },
+  purchased: { label: "Purchased", tone: "green" },
 };
 
 async function SoldHistoryGrid({ data, ctx }: BlockProps) {
@@ -1007,7 +1007,7 @@ async function SoldHistoryGrid({ data, ctx }: BlockProps) {
         {data.heading ? <h2 className={h2}>{data.heading}</h2> : <span />}
         <Link href="/sold-history" prefetch={false} className="font-medium text-primary">{data.link_label || "View all"} →</Link>
       </div>
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
         {rows.map((r) => {
           const priceLabel = r.status === "leased"
             ? r.price ? `$${r.price.toLocaleString()} / mo` : "Call for price"
@@ -1020,6 +1020,7 @@ async function SoldHistoryGrid({ data, ctx }: BlockProps) {
               image={r.image_url}
               statusLabel={status.label}
               statusTone={status.tone}
+              badgeStyle="ribbon"
               price={priceLabel}
               address={r.address}
               beds={r.bed}
