@@ -233,7 +233,7 @@ export const BLOCK_FIELDS: Record<string, Field[]> = {
   ],
   sold_history_grid: [
     t("heading", "Heading"),
-    t("count", "Number of records to show (leave blank for all)"),
+    t("count", "Number of records to show (leave blank for all, 12 per page)"),
     { key: "status_filter", label: "Only show (leave blank for all)", type: "select", options: ["", "sold", "leased", "purchased"] },
     t("link_label", "\"View all\" link label"),
   ],

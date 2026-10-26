@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 function pageList(current: number, total: number): (number | "…")[] {
   if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
   const pages = new Set([1, 2, total - 1, total, current - 1, current, current + 1]);
@@ -10,30 +12,55 @@ function pageList(current: number, total: number): (number | "…")[] {
   return out;
 }
 
-export function Pagination({ page, totalPages, hrefFor }: { page: number; totalPages: number; hrefFor: (p: number) => string }) {
+/** One pager item — a link on URL-driven archives, a button when the parent
+ *  pages client-side (sold-history block). Same look either way. */
+function PageItem({ p, className, disabled, current, hrefFor, onPageChange, children }: {
+  p: number; className: string; disabled?: boolean; current?: boolean;
+  hrefFor?: (p: number) => string; onPageChange?: (p: number) => void; children: ReactNode;
+}) {
+  if (onPageChange) {
+    return (
+      <button type="button" onClick={() => onPageChange(p)} disabled={disabled} aria-current={current ? "page" : undefined} className={className}>
+        {children}
+      </button>
+    );
+  }
+  return (
+    <a href={hrefFor?.(p) ?? "#"} aria-disabled={disabled ? true : undefined} aria-current={current ? "page" : undefined} className={className}>
+      {children}
+    </a>
+  );
+}
+
+export function Pagination({ page, totalPages, hrefFor, onPageChange }: {
+  page: number; totalPages: number;
+  hrefFor?: (p: number) => string;
+  /** When set, pages render as buttons calling this instead of links. */
+  onPageChange?: (p: number) => void;
+}) {
   if (totalPages <= 1) return null;
   return (
     <nav className="flex items-center justify-center gap-1.5" aria-label="Pagination">
-      <a href={hrefFor(Math.max(1, page - 1))} aria-disabled={page === 1}
+      <PageItem p={Math.max(1, page - 1)} disabled={page === 1} hrefFor={hrefFor} onPageChange={onPageChange}
         className={`flex h-11 w-11 items-center justify-center rounded-[var(--radius-btn)] bg-white ${page === 1 ? "pointer-events-none opacity-40" : "hover:bg-soft"}`}>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m15 6-6 6 6 6" /></svg>
-      </a>
+      </PageItem>
       <div className="flex items-center gap-1 rounded-[var(--radius-btn)] bg-soft/70 p-1.5">
         {pageList(page, totalPages).map((p, i) =>
           p === "…" ? (
             <span key={`e${i}`} className="flex h-9 w-9 items-center justify-center text-sm text-muted">…</span>
           ) : (
-            <a key={p} href={hrefFor(p)} aria-current={p === page ? "page" : undefined}
+            <PageItem key={p} p={p} current={p === page} hrefFor={hrefFor} onPageChange={onPageChange}
               className={`flex h-9 min-w-9 items-center justify-center rounded-[var(--radius-btn)] px-2.5 text-sm font-medium ${p === page ? "bg-primary text-white" : "text-ink hover:bg-white"}`}>
               {p}
-            </a>
+            </PageItem>
           ),
         )}
       </div>
-      <a href={hrefFor(Math.min(totalPages, page + 1))} aria-disabled={page === totalPages}
+      <PageItem p={Math.min(totalPages, page + 1)} disabled={page === totalPages} hrefFor={hrefFor} onPageChange={onPageChange}
         className={`flex h-11 w-11 items-center justify-center rounded-[var(--radius-btn)] bg-white ${page === totalPages ? "pointer-events-none opacity-40" : "hover:bg-soft"}`}>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m9 6 6 6-6 6" /></svg>
-      </a>
+      </PageItem>
     </nav>
   );
 }

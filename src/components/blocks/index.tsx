@@ -14,6 +14,7 @@ import { getProjects, getCities, getBuilders, getPreconStats } from "@/lib/preco
 import { PreconGridClient } from "@/components/site/PreconGridClient";
 import { getSoldHistory } from "@/lib/soldHistory";
 import { ListingCardShell } from "@/components/listings/ListingCardShell";
+import { SoldHistoryPager } from "@/components/listings/SoldHistoryPager";
 import { isDarkColor } from "@/lib/color";
 import { FeatureSection } from "./FeatureSection";
 import { MergedCard } from "./MergedCard";
@@ -996,12 +997,37 @@ const SOLD_STATUS_MAP: Record<string, { label: string; tone: "green" | "blue" | 
   purchased: { label: "Purchased", tone: "green" },
 };
 
+function SoldHistoryCard({ row }: { row: Awaited<ReturnType<typeof getSoldHistory>>[number] }) {
+  const priceLabel = row.status === "leased"
+    ? row.price ? `$${row.price.toLocaleString()} / mo` : "Call for price"
+    : row.price ? `$${row.price.toLocaleString()}` : "Call for price";
+  const status = SOLD_STATUS_MAP[row.status] ?? { label: row.status, tone: "purple" as const };
+  return (
+    <ListingCardShell
+      href={row.link ? (row.link.startsWith("http") ? row.link : `https://${row.link}`) : undefined}
+      image={row.image_url}
+      statusLabel={status.label}
+      statusTone={status.tone}
+      badgeStyle="ribbon"
+      price={priceLabel}
+      address={row.address}
+      beds={row.bed}
+      baths={row.bath}
+      area={row.sqft ? `${row.sqft.toLocaleString()} sqft` : null}
+    />
+  );
+}
+
 async function SoldHistoryGrid({ data, ctx }: BlockProps) {
-  // Empty count = show all rows; a number caps the teaser (e.g. 7 shows the 7 newest).
+  // A number caps the teaser (e.g. 7 shows the 7 newest); blank = all rows,
+  // paged 12 per page on the client (blocks can't read ?page= from the URL).
   const count = Number(data.count);
   const allRows = await getSoldHistory(data.status_filter || undefined);
-  const rows = Number.isFinite(count) && count > 0 ? allRows.slice(0, count) : allRows;
-  if (!rows.length) return null;
+  if (!allRows.length) return null;
+  const capped = Number.isFinite(count) && count > 0;
+  const perPage = 12;
+  const chunks: typeof allRows[] = [];
+  for (let i = 0; i < allRows.length; i += perPage) chunks.push(allRows.slice(i, i + perPage));
 
   return (
     <div className={`${bw(ctx)} flex flex-col gap-6 py-7 md:py-16`}>
@@ -1009,29 +1035,19 @@ async function SoldHistoryGrid({ data, ctx }: BlockProps) {
         {data.heading ? <h2 className={h2}>{data.heading}</h2> : <span />}
         <Link href="/sold-history" prefetch={false} className="font-medium text-primary">{data.link_label || "View all"} →</Link>
       </div>
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        {rows.map((r) => {
-          const priceLabel = r.status === "leased"
-            ? r.price ? `$${r.price.toLocaleString()} / mo` : "Call for price"
-            : r.price ? `$${r.price.toLocaleString()}` : "Call for price";
-          const status = SOLD_STATUS_MAP[r.status] ?? { label: r.status, tone: "purple" as const };
-          return (
-            <ListingCardShell
-              key={r.id}
-              href={r.link ? (r.link.startsWith("http") ? r.link : `https://${r.link}`) : undefined}
-              image={r.image_url}
-              statusLabel={status.label}
-              statusTone={status.tone}
-              badgeStyle="ribbon"
-              price={priceLabel}
-              address={r.address}
-              beds={r.bed}
-              baths={r.bath}
-              area={r.sqft ? `${r.sqft.toLocaleString()} sqft` : null}
-            />
-          );
-        })}
-      </div>
+      {capped ? (
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {allRows.slice(0, count).map((r) => <SoldHistoryCard key={r.id} row={r} />)}
+        </div>
+      ) : (
+        <SoldHistoryPager
+          pages={chunks.map((chunk, i) => (
+            <div key={i} className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+              {chunk.map((r) => <SoldHistoryCard key={r.id} row={r} />)}
+            </div>
+          ))}
+        />
+      )}
     </div>
   );
 }
