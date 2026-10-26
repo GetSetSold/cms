@@ -997,8 +997,10 @@ const SOLD_STATUS_MAP: Record<string, { label: string; tone: "green" | "blue" | 
 };
 
 async function SoldHistoryGrid({ data, ctx }: BlockProps) {
-  const count = Number(data.count) || 6;
-  const rows = (await getSoldHistory(data.status_filter || undefined)).slice(0, count);
+  // Empty count = show all rows; a number caps the teaser (e.g. 7 shows the 7 newest).
+  const count = Number(data.count);
+  const allRows = await getSoldHistory(data.status_filter || undefined);
+  const rows = Number.isFinite(count) && count > 0 ? allRows.slice(0, count) : allRows;
   if (!rows.length) return null;
 
   return (
