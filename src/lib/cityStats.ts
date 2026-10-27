@@ -35,7 +35,39 @@ export const getCityStats = cache(async (city: string): Promise<CityStats> => {
       cityStatsCache.set(key, { data, expires: Date.now() + CITY_STATS_TTL });
       return data;
     }
-  } catch { /* cache unavailable — fall through to the RPCs */ }
+  } catch { /* cache unavailable — fall through to the table/RPCs */ }
+  // Phase 2: pre-computed table first — one indexed row instead of two
+  // aggregations. Falls through to the RPCs if the table has no row yet
+  // (writer not run) or the read fails.
+  try {
+    const mls = createMlsClient();
+    const { data: row, error: rowErr } = await mls.from("city_stats")
+      .select("active_count,sale_count,lease_count,median_sale,median_lease,type_breakdown")
+      .eq("city", city).maybeSingle();
+    if (!rowErr && row) {
+      const result: CityStats = {
+        city,
+        activeCount: Number((row as any).active_count ?? 0),
+        saleCount: Number((row as any).sale_count ?? 0),
+        leaseCount: Number((row as any).lease_count ?? 0),
+        medianSalePrice: (row as any).median_sale != null ? Math.round(Number((row as any).median_sale)) : null,
+        medianLeasePrice: (row as any).median_lease != null ? Math.round(Number((row as any).median_lease)) : null,
+        typeBreakdown: (((row as any).type_breakdown as any[]) ?? []).map((r) => ({
+          label: r.label as string,
+          count: Number(r.count),
+        })),
+      };
+      cityStatsCache.set(key, { data: result, expires: Date.now() + CITY_STATS_TTL });
+      try {
+        const cache = await caches.open("gss-static");
+        await cache.put(
+          cityStatsCacheKey(city),
+          new Response(JSON.stringify(result), { headers: { "Content-Type": "application/json", "Cache-Control": `public, max-age=${CITY_STATS_TTL / 1000}` } })
+        );
+      } catch { /* best-effort */ }
+      return result;
+    }
+  } catch { /* fall through to the RPCs */ }
 
   const mls = createMlsClient();
   const variants = await rawCitiesFor(city);

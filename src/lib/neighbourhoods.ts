@@ -136,8 +136,10 @@ let hoodsCache: { data: Neighbourhood[]; expires: number } | null = null;
 const HOODS_CACHE_KEY = "https://internal/hoods-v1";
 const HOODS_CACHE_TTL = 3600; // 1 hour
 
-/** All neighbourhoods with >= HOOD_MIN_LISTINGS. Uses Cloudflare Cache API
- *  so the 57k-row scan runs once per hour, not per request. */
+/** All neighbourhoods with >= HOOD_MIN_LISTINGS. Phase 2: reads the
+ *  pre-computed hood_stats table (one small indexed read); the 57k-row
+ *  scan below is only a fallback for when the writer hasn't run yet.
+ *  Edge-cached 1h via the Workers Cache API. */
 export async function listNeighbourhoods(): Promise<Neighbourhood[]> {
   if (hoodsCache && Date.now() < hoodsCache.expires) return hoodsCache.data;
   // Try edge cache first (persists across Workers isolates).
@@ -149,8 +151,24 @@ export async function listNeighbourhoods(): Promise<Neighbourhood[]> {
       hoodsCache = { data, expires: Date.now() + 3600_000 };
       return data;
     }
-  } catch { /* cache unavailable — fall through to scan */ }
-  const data = await scanNeighbourhoods();
+  } catch { /* cache unavailable — fall through to the table/scan */ }
+  let data: Neighbourhood[] | null = null;
+  try {
+    const mls = createMlsClient();
+    const { data: rows, error } = await mls.from("hood_stats")
+      .select("city,hood,active_count")
+      .gte("active_count", HOOD_MIN_LISTINGS)
+      .order("active_count", { ascending: false });
+    if (!error && rows && rows.length) {
+      data = (rows as any[]).map((r) => ({
+        city: r.city as string,
+        hood: r.hood as string,
+        hoodSlug: hoodSlug(r.hood as string),
+        count: Number(r.active_count ?? 0),
+      }));
+    }
+  } catch { /* fall through to the scan */ }
+  if (!data) data = await scanNeighbourhoods();
   hoodsCache = { data, expires: Date.now() + 3600_000 };
   try {
     const cache = await caches.open("gss-static");
@@ -200,7 +218,33 @@ export const getHoodsForCity = cache(async (city: string): Promise<Neighbourhood
       hoodsForCityCache.set(key, { data, expires: Date.now() + 3600_000 });
       return data;
     }
-  } catch { /* cache unavailable — fall through to the RPC */ }
+  } catch { /* cache unavailable — fall through to the table/RPC */ }
+  // Phase 2: pre-computed table first — one indexed read instead of an
+  // aggregation. Falls through to the RPC if the table is empty/unreadable.
+  // The >= 5 filter mirrors the RPC's HAVING COUNT(*) >= 5: small hoods
+  // never appeared on city pages.
+  try {
+    const mls = createMlsClient();
+    const { data: rows, error } = await mls.from("hood_stats")
+      .select("hood,active_count").eq("city", city).gte("active_count", 5).order("active_count", { ascending: false });
+    if (!error && rows && rows.length) {
+      const out = (rows as any[]).map((r) => ({
+        city,
+        hood: r.hood as string,
+        hoodSlug: hoodSlug(r.hood as string),
+        count: Number(r.active_count ?? 0),
+      }));
+      hoodsForCityCache.set(key, { data: out, expires: Date.now() + 3600_000 });
+      try {
+        const cache = await caches.open("gss-static");
+        await cache.put(
+          hoodsForCityKey(city),
+          new Response(JSON.stringify(out), { headers: { "Content-Type": "application/json", "Cache-Control": "public, max-age=3600" } })
+        );
+      } catch { /* best-effort */ }
+      return out;
+    }
+  } catch { /* fall through to the RPC */ }
   const mls = createMlsClient();
   const variants = await rawCitiesFor(city);
   const { data, error } = await mls.rpc('get_hoods_for_city', { cities: variants });
@@ -259,7 +303,39 @@ export const getHoodStats = cache(async (city: string, hood: string): Promise<Ci
       hoodStatsCache.set(key, { data, expires: Date.now() + HOOD_STATS_TTL });
       return data;
     }
-  } catch { /* cache unavailable — fall through to the RPCs */ }
+  } catch { /* cache unavailable — fall through to the table/RPCs */ }
+  // Phase 2: pre-computed table first — one indexed row instead of two
+  // aggregations. Falls through to the RPCs if the table has no row yet
+  // (writer not run) or the read fails.
+  try {
+    const mls = createMlsClient();
+    const { data: row, error: rowErr } = await mls.from("hood_stats")
+      .select("active_count,sale_count,lease_count,median_sale,median_lease,type_breakdown")
+      .eq("city", city).eq("hood", hood).maybeSingle();
+    if (!rowErr && row) {
+      const result: CityStats = {
+        city: hood, // components interpolate this as the place name
+        activeCount: Number((row as any).active_count ?? 0),
+        saleCount: Number((row as any).sale_count ?? 0),
+        leaseCount: Number((row as any).lease_count ?? 0),
+        medianSalePrice: (row as any).median_sale != null ? Math.round(Number((row as any).median_sale)) : null,
+        medianLeasePrice: (row as any).median_lease != null ? Math.round(Number((row as any).median_lease)) : null,
+        typeBreakdown: (((row as any).type_breakdown as any[]) ?? []).map((r) => ({
+          label: r.label as string,
+          count: Number(r.count),
+        })),
+      };
+      hoodStatsCache.set(key, { data: result, expires: Date.now() + HOOD_STATS_TTL });
+      try {
+        const cache = await caches.open("gss-static");
+        await cache.put(
+          hoodStatsKey(city, hood),
+          new Response(JSON.stringify(result), { headers: { "Content-Type": "application/json", "Cache-Control": `public, max-age=${HOOD_STATS_TTL / 1000}` } })
+        );
+      } catch { /* best-effort */ }
+      return result;
+    }
+  } catch { /* fall through to the RPCs */ }
 
   const mls = createMlsClient();
   const variants = await rawCitiesFor(city);
