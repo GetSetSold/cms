@@ -6,6 +6,15 @@ import { getPosts } from "@/lib/blog";
 
 export const dynamic = "force-dynamic";
 
+// Edge cache (see sitemap-listings/[shard]/route.ts): this route scans the
+// 57k-row neighbourhood set plus the distinct_cities view, so bot hits must
+// not re-run it every time. The routes below already degrade to partial on
+// timeout; the cache means those timeouts stop happening per-hit.
+const CACHE_HEADERS = {
+  "Content-Type": "application/xml",
+  "Cache-Control": "public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400",
+};
+
 /** Escape XML entities in URLs and text. */
 function esc(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
@@ -90,5 +99,5 @@ export async function GET() {
   }
 
   xml += `</urlset>`;
-  return new Response(xml, { headers: { "Content-Type": "application/xml" } });
+  return new Response(xml, { headers: CACHE_HEADERS });
 }

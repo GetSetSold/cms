@@ -2,6 +2,15 @@ import { createMlsClient, listingSlug } from "@/lib/mls";
 
 export const dynamic = "force-dynamic";
 
+// Edge cache: bots crawl these shards constantly, and each hit re-runs a
+// 10k-row OFFSET scan over the 58k-row grid. force-dynamic still renders
+// fresh on a cache miss, but Cloudflare serves the edge copy for an hour
+// so the database only pays for one query set per hour per shard.
+const CACHE_HEADERS = {
+  "Content-Type": "application/xml",
+  "Cache-Control": "public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400",
+};
+
 const PER_PAGE = 10000;
 
 /** Sharded listings sitemap: /sitemap-listings-1.xml, /sitemap-listings-2.xml, etc. */
@@ -39,6 +48,6 @@ export async function GET(
   xml += `</urlset>`;
   
   return new Response(xml, {
-    headers: { "Content-Type": "application/xml" },
+    headers: CACHE_HEADERS,
   });
 }

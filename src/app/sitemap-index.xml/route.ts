@@ -2,6 +2,13 @@ import { createMlsClient, listingSlug } from "@/lib/mls";
 
 export const dynamic = "force-dynamic";
 
+// Edge cache (see sitemap-listings/[shard]/route.ts): the shard count query
+// is cheap, but there is no reason to re-run it on every crawler hit.
+const CACHE_HEADERS = {
+  "Content-Type": "application/xml",
+  "Cache-Control": "public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400",
+};
+
 const PER_PAGE = 10000; // URLs per sitemap shard (max 50k per spec, we use 10k for safety)
 
 /** Sitemap index listing all sitemaps. */
@@ -28,6 +35,6 @@ export async function GET() {
   xml += `</sitemapindex>`;
 
   return new Response(xml, {
-    headers: { "Content-Type": "application/xml" },
+    headers: CACHE_HEADERS,
   });
 }
