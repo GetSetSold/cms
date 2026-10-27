@@ -15,15 +15,27 @@ export interface CityStats {
  *  Cached per request. HPI trend data (index MoM/YoY, benchmark price)
  *  slots in here once the /ontario-housing-market/trends function is
  *  ported to the CMS. */
-// Module-level 1h cache — the RPC returns single-row results, but we still
-// cache to avoid hammering the DB on popular city pages.
+// Module-level 1h cache + Workers Cache API (mirrors listNeighbourhoods): a
+// module Map alone re-queries on every cold Workers isolate.
 const cityStatsCache = new Map<string, { data: CityStats; expires: number }>();
 const CITY_STATS_TTL = 3600000;
+const cityStatsCacheKey = (city: string) =>
+  `https://internal/city-stats-v1?city=${encodeURIComponent(city.toLowerCase())}`;
 
 export const getCityStats = cache(async (city: string): Promise<CityStats> => {
   const key = city.toLowerCase();
   const hit = cityStatsCache.get(key);
   if (hit && Date.now() < hit.expires) return hit.data;
+  // Edge cache first (persists across Workers isolates).
+  try {
+    const cache = await caches.open("gss-static");
+    const edgeHit = await cache.match(cityStatsCacheKey(city));
+    if (edgeHit) {
+      const data = (await edgeHit.json()) as CityStats;
+      cityStatsCache.set(key, { data, expires: Date.now() + CITY_STATS_TTL });
+      return data;
+    }
+  } catch { /* cache unavailable — fall through to the RPCs */ }
 
   const mls = createMlsClient();
   const variants = await rawCitiesFor(city);
@@ -54,6 +66,13 @@ export const getCityStats = cache(async (city: string): Promise<CityStats> => {
     typeBreakdown,
   };
   cityStatsCache.set(key, { data: result, expires: Date.now() + CITY_STATS_TTL });
+  try {
+    const cache = await caches.open("gss-static");
+    await cache.put(
+      cityStatsCacheKey(city),
+      new Response(JSON.stringify(result), { headers: { "Content-Type": "application/json", "Cache-Control": `public, max-age=${CITY_STATS_TTL / 1000}` } })
+    );
+  } catch { /* best-effort */ }
   return result;
 });
 

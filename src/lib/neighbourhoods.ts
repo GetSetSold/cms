@@ -181,13 +181,31 @@ export async function peekNeighbourhoods(): Promise<Neighbourhood[] | null> {
 
 /** Neighbourhoods for one normalized city, sorted by listing count.
  *  Scoped to the city's listings only via SQL aggregation RPC — never scans
- *  the full table. Requires migration 20261013000001_city_hub_performance.sql. */
-export async function getHoodsForCity(city: string): Promise<Neighbourhood[]> {
+ *  the full table. Requires migration 20261013000001_city_hub_performance.sql.
+ *  Cached 1h in the Workers Cache API (module Map alone re-queries on every
+ *  cold isolate) — mirrors listNeighbourhoods. */
+const hoodsForCityCache = new Map<string, { data: Neighbourhood[]; expires: number }>();
+const hoodsForCityKey = (city: string) =>
+  `https://internal/hoods-for-city-v1?city=${encodeURIComponent(city.toLowerCase())}`;
+
+export const getHoodsForCity = cache(async (city: string): Promise<Neighbourhood[]> => {
+  const key = city.toLowerCase();
+  const hit = hoodsForCityCache.get(key);
+  if (hit && Date.now() < hit.expires) return hit.data;
+  try {
+    const cache = await caches.open("gss-static");
+    const edgeHit = await cache.match(hoodsForCityKey(city));
+    if (edgeHit) {
+      const data = (await edgeHit.json()) as Neighbourhood[];
+      hoodsForCityCache.set(key, { data, expires: Date.now() + 3600_000 });
+      return data;
+    }
+  } catch { /* cache unavailable — fall through to the RPC */ }
   const mls = createMlsClient();
   const variants = await rawCitiesFor(city);
   const { data, error } = await mls.rpc('get_hoods_for_city', { cities: variants });
   if (error) throw new Error(`getHoodsForCity: ${error.message}`);
-  return ((data as any[]) ?? []).map((r) => {
+  const out = ((data as any[]) ?? []).map((r) => {
     const hood = r.hood as string;
     return {
       city,
@@ -196,7 +214,16 @@ export async function getHoodsForCity(city: string): Promise<Neighbourhood[]> {
       count: Number(r.count),
     };
   });
-}
+  hoodsForCityCache.set(key, { data: out, expires: Date.now() + 3600_000 });
+  try {
+    const cache = await caches.open("gss-static");
+    await cache.put(
+      hoodsForCityKey(city),
+      new Response(JSON.stringify(out), { headers: { "Content-Type": "application/json", "Cache-Control": "public, max-age=3600" } })
+    );
+  } catch { /* best-effort */ }
+  return out;
+});
 
 /** Resolve (citySlug, hoodSlug) to a Neighbourhood, or null. */
 export async function resolveHood(
@@ -212,15 +239,27 @@ export async function resolveHood(
 /** Live stats for a neighbourhood page — same shape as city stats so the
  *  CityStatsSection / CityEditorial / CityFaq components can be reused
  *  with the neighbourhood name. */
-// Module-level 1h cache — RPC returns single-row results, but we still cache
-// to avoid hammering the DB on popular neighbourhood pages.
+// Module-level 1h cache + Workers Cache API (mirrors listNeighbourhoods):
+// a module Map alone re-queries on every cold Workers isolate.
 const hoodStatsCache = new Map<string, { data: CityStats; expires: number }>();
 const HOOD_STATS_TTL = 3600000;
+const hoodStatsKey = (city: string, hood: string) =>
+  `https://internal/hood-stats-v1?city=${encodeURIComponent(city.toLowerCase())}&hood=${encodeURIComponent(hood.toLowerCase())}`;
 
 export const getHoodStats = cache(async (city: string, hood: string): Promise<CityStats> => {
   const key = `${city.toLowerCase()}|${hood.toLowerCase()}`;
   const hit = hoodStatsCache.get(key);
   if (hit && Date.now() < hit.expires) return hit.data;
+  // Edge cache first (persists across Workers isolates).
+  try {
+    const cache = await caches.open("gss-static");
+    const edgeHit = await cache.match(hoodStatsKey(city, hood));
+    if (edgeHit) {
+      const data = (await edgeHit.json()) as CityStats;
+      hoodStatsCache.set(key, { data, expires: Date.now() + HOOD_STATS_TTL });
+      return data;
+    }
+  } catch { /* cache unavailable — fall through to the RPCs */ }
 
   const mls = createMlsClient();
   const variants = await rawCitiesFor(city);
@@ -253,6 +292,13 @@ export const getHoodStats = cache(async (city: string, hood: string): Promise<Ci
     typeBreakdown,
   };
   hoodStatsCache.set(key, { data: result, expires: Date.now() + HOOD_STATS_TTL });
+  try {
+    const cache = await caches.open("gss-static");
+    await cache.put(
+      hoodStatsKey(city, hood),
+      new Response(JSON.stringify(result), { headers: { "Content-Type": "application/json", "Cache-Control": `public, max-age=${HOOD_STATS_TTL / 1000}` } })
+    );
+  } catch { /* best-effort */ }
   return result;
 });
 

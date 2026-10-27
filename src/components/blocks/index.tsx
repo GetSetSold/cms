@@ -3,7 +3,7 @@ import Link from "next/link";
 import type { Page, Section, SiteSettings, SvgAsset } from "@/lib/types";
 import { Svg } from "@/components/site/Svg";
 import { LeadForm } from "./LeadForm";
-import { createMlsClient, type GridListing } from "@/lib/mls";
+import { createMlsClient, LISTING_CARD_COLUMNS, type GridListing } from "@/lib/mls";
 import { ListingCard } from "@/components/listings/ListingCard";
 import { CmsFormRenderer } from "./CmsFormRenderer";
 import { createClient } from "@/lib/supabase/server";
@@ -737,7 +737,9 @@ async function ListingGrid({ data, ctx }: BlockProps) {
   const cols: Record<number, string> = { 2: "sm:grid-cols-2", 3: "sm:grid-cols-2 lg:grid-cols-3", 4: "sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" };
 
   const mls = createMlsClient();
-  let query = mls.from("grid").select("*").order("OriginalEntryTimestamp", { ascending: false }).limit(perPage);
+  // Card-only columns: this block renders ListingCard, so full grid rows
+  // are wasted payload on every render.
+  let query = mls.from("grid").select(LISTING_CARD_COLUMNS).order("OriginalEntryTimestamp", { ascending: false }).limit(perPage);
   if (city) query = query.eq("City", city);
   const { data: rows } = await query;
   const listings = (rows ?? []) as GridListing[];
@@ -981,7 +983,7 @@ function Divider({ data, ctx }: BlockProps) {
 async function FeaturedListing({ data, ctx }: BlockProps) {
   if (!data.listing_key) return null;
   const mls = createMlsClient();
-  const { data: listing } = await mls.from("grid").select("*").eq("ListingKey", data.listing_key).maybeSingle();
+  const { data: listing } = await mls.from("grid").select(LISTING_CARD_COLUMNS).eq("ListingKey", data.listing_key).maybeSingle();
   if (!listing) return null;
   return (
     <div className={`${bw(ctx)} flex flex-col gap-6 py-7 md:py-16`}>

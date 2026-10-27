@@ -31,6 +31,18 @@ async function getCachedTypeCounts(
   const key = [...cityVariants].sort().join("|");
   const cached = typeCountsCache.get(key);
   if (cached && Date.now() - cached.ts < TYPE_CACHE_TTL) return cached.data;
+  // Edge cache first: a module Map alone re-downloads up to 10k rows on
+  // every cold Workers isolate (mirrors listNeighbourhoods).
+  const edgeKey = `https://internal/type-counts-v1?cities=${encodeURIComponent(key)}`;
+  try {
+    const cache = await caches.open("gss-static");
+    const edgeHit = await cache.match(edgeKey);
+    if (edgeHit) {
+      const data = (await edgeHit.json()) as Record<string, number>;
+      typeCountsCache.set(key, { data, ts: Date.now() });
+      return data;
+    }
+  } catch { /* cache unavailable — fall through to the query */ }
   const { data } = await mls.from("grid").select("StructureTypeText").in("City", cityVariants).limit(10000);
   const counts: Record<string, number> = {};
   for (const r of (data ?? []) as { StructureTypeText: string | null }[]) {
@@ -38,6 +50,13 @@ async function getCachedTypeCounts(
     counts[t] = (counts[t] || 0) + 1;
   }
   typeCountsCache.set(key, { data: counts, ts: Date.now() });
+  try {
+    const cache = await caches.open("gss-static");
+    await cache.put(
+      edgeKey,
+      new Response(JSON.stringify(counts), { headers: { "Content-Type": "application/json", "Cache-Control": `public, max-age=${TYPE_CACHE_TTL / 1000}` } })
+    );
+  } catch { /* best-effort */ }
   return counts;
 }
 

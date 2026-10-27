@@ -98,6 +98,13 @@ export interface PropertyListing extends Omit<GridListing, "Media"> {
 
 export const isSale = (l: Pick<GridListing, "ListPrice">) => l.ListPrice != null;
 
+/** Columns ListingCard reads (price via isSale/priceDisplay, slug via
+ *  UnparsedAddress+City). Shared by every card-only query so a card never
+ *  ships full grid rows: detail similar listings, featured listings, and
+ *  the listing-grid block. */
+export const LISTING_CARD_COLUMNS =
+  "ListingKey,ListingId,ListPrice,TotalActualRent,Media,UnparsedAddress,City,Province,PostalCode,BedroomsTotal,BathroomsTotalInteger,AboveGradeFinishedArea,PhotosCount,OfficeName,OriginalEntryTimestamp";
+
 export function citySlug(city: string) {
   return city.toLowerCase().trim().replace(/\s+/g, "-");
 }
@@ -120,14 +127,41 @@ export function listingSlug(l: Pick<GridListing, "UnparsedAddress" | "City">): s
   return slugifyAddress(l.UnparsedAddress, l.City);
 }
 
+/** Module-level cache (1h) + Workers Cache API, mirroring listNeighbourhoods:
+ *  a module Map alone re-queries on every cold isolate, which is how the
+ *  distinct_cities scan ended up running per listings view. */
+let citiesCache: { data: string[]; expires: number } | null = null;
+const CITIES_CACHE_KEY = "https://internal/cities-v1";
+const CITIES_CACHE_TTL = 3600; // 1 hour
+
 /** The full distinct-city list, fetched once per request no matter how many
  *  times it's called (React's cache() memoizes by arguments for the
  *  lifetime of a single render pass) — resolveCitySlug and the city search
  *  dropdown both need this, and previously each ran its own separate query. */
 export const listCities = cache(async (): Promise<string[]> => {
+  if (citiesCache && Date.now() < citiesCache.expires) return citiesCache.data;
+  // Edge cache first (persists across Workers isolates).
+  try {
+    const cache = await caches.open("gss-static");
+    const hit = await cache.match(CITIES_CACHE_KEY);
+    if (hit) {
+      const data = (await hit.json()) as string[];
+      citiesCache = { data, expires: Date.now() + 3600_000 };
+      return data;
+    }
+  } catch { /* cache unavailable — fall through to the view */ }
   const mls = createMlsClient();
   const { data } = await mls.from("distinct_cities").select("City").limit(5000);
-  return (data ?? []).map((r) => r.City as string);
+  const cities = (data ?? []).map((r) => r.City as string);
+  citiesCache = { data: cities, expires: Date.now() + 3600_000 };
+  try {
+    const cache = await caches.open("gss-static");
+    await cache.put(
+      CITIES_CACHE_KEY,
+      new Response(JSON.stringify(cities), { headers: { "Content-Type": "application/json", "Cache-Control": `public, max-age=${CITIES_CACHE_TTL}` } })
+    );
+  } catch { /* best-effort */ }
+  return cities;
 });
 
 /** The DDF feed concatenates district info into City ("Toronto (Waterfront

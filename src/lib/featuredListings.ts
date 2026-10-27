@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { createMlsClient, type GridListing } from "@/lib/mls";
+import { createMlsClient, LISTING_CARD_COLUMNS, type GridListing } from "@/lib/mls";
 
 export type FeaturedListingRow = {
   id: string; source_type: "brokerage" | "friend" | "private"; listing_key: string | null;
@@ -38,7 +38,7 @@ export async function getFeaturedListings(): Promise<{ order: string[]; mlsListi
   let liveByKey: Record<string, GridListing> = {};
   if (keys.length) {
     const mls = createMlsClient();
-    const { data: live } = await mls.from("grid").select("*").in("ListingKey", keys);
+    const { data: live } = await mls.from("grid").select(LISTING_CARD_COLUMNS).in("ListingKey", keys);
     liveByKey = Object.fromEntries((live ?? []).map((l) => [l.ListingKey, l as GridListing]));
   }
 
