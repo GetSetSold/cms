@@ -11,21 +11,21 @@ import { useState } from "react";
 export function CardCollapsible({ title, extra, children }: { title: string; extra?: React.ReactNode; children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex items-end justify-between gap-4">
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center justify-between gap-4">
         <button
           type="button"
           onClick={() => setOpen((o) => !o)}
           aria-expanded={open}
-          className="flex flex-1 items-center justify-between gap-4 text-left lg:cursor-default"
+          className="flex flex-1 items-start gap-3 text-left lg:cursor-default"
         >
-          <span className="font-display font-semibold tracking-tight text-[22px] leading-snug md:text-[32px]">{title}</span>
           <span
             aria-hidden="true"
-            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[var(--radius-btn)] border border-line bg-white text-lg leading-none text-ink lg:hidden"
+            className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-[var(--radius-btn)] border border-line bg-white text-lg leading-none text-ink lg:hidden"
           >
             {open ? "−" : "+"}
           </span>
+          <span className="font-display font-semibold tracking-tight text-[22px] leading-snug md:text-[32px]">{title}</span>
         </button>
         {extra}
       </div>

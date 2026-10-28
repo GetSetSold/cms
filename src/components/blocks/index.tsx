@@ -421,7 +421,7 @@ function Stats({ data, ctx }: BlockProps) {
 function Testimonials({ data, ctx }: BlockProps) {
   if (ctx.narrow) {
     return (
-      <div className={`${bw(ctx)} py-7`}>
+      <div className={bw(ctx)}>
         <CardCollapsible title={data.heading || "Testimonials"}>
         <SwipeRow>
           {(data.items ?? []).map((t: any, i: number) => (
@@ -667,7 +667,7 @@ function ContactInfo({ data, ctx }: BlockProps) {
     .filter((r) => r[1]);
   if (ctx.narrow) {
     return (
-      <div className={`${bw(ctx)} py-7`}>
+      <div className={bw(ctx)}>
         <CardCollapsible title={data.heading || "Contact"}>
           <dl className="grid gap-6">
             {rows.map(([k, v, href]) => (
@@ -1081,7 +1081,7 @@ async function SoldHistoryGrid({ data, ctx }: BlockProps) {
     // Card page: a swipe teaser, not the 12-per-page pager — the full
     // list lives at /sold-history behind the View all link.
     return (
-      <div className={`${bw(ctx)} py-7`}>
+      <div className={bw(ctx)}>
         <CardCollapsible
           title={data.heading || "Sold History"}
           extra={<Link href="/sold-history" prefetch={false} className="font-medium text-primary">{data.link_label || "View all"} →</Link>}
@@ -1156,7 +1156,7 @@ async function FeaturedListingsGrid({ data, ctx }: BlockProps) {
   });
   if (ctx.narrow) {
     return (
-      <div className={`${bw(ctx)} py-7`}>
+      <div className={bw(ctx)}>
         <CardCollapsible
           title={data.heading || "Featured Listings"}
           extra={<Link href="/listings" prefetch={false} className="font-medium text-primary">{data.link_label || "View all listings"} →</Link>}
@@ -1224,7 +1224,7 @@ function CustomCode({ data, ctx }: BlockProps) {
   if (!data.html) return null;
   if (ctx.narrow && data.heading) {
     return (
-      <div className={`${bw(ctx)} py-5`}>
+      <div className={bw(ctx)}>
         <CardCollapsible title={data.heading}>
           <div className="flex flex-col items-center text-center">
             <EmbedHtml html={data.html} />
@@ -1610,7 +1610,7 @@ function renderOne(s: Section, ctx: BlockCtx) {
   // Card gets the standard page width (max-w-7xl). Blocks with internal wrap
   // (TeamProfile, CustomCode, etc.) are constrained by the card width —
   // no double-wrapping. Blocks without internal wrap fill the card.
-  const boxWrap = "w-full py-5 md:py-12";
+  const boxWrap = ctx.narrow ? "w-full py-3" : "w-full py-5 md:py-12";
   const boxInner = globalBorderHidden
     ? `mx-auto w-full ${ctx.narrow ? "max-w-md" : "max-w-7xl"} ${boxShadow}`
     : `mx-auto w-full ${ctx.narrow ? "max-w-md" : "max-w-7xl"} rounded-[var(--radius-lg)] p-6 md:p-8 ${boxBorder} ${showBorder && !globalBorderHidden ? "border-line" : ""} ${boxShadow}`;
@@ -1635,7 +1635,7 @@ function renderOne(s: Section, ctx: BlockCtx) {
         // No box: render directly without extra wrap to avoid double-wrapping.
         // Blocks with internal wrap get correct single padding; blocks without
         // are full-width (unified, not narrow). Keep vertical rhythm.
-        <div className="py-5 md:py-12">{content}</div>
+        <div className={ctx.narrow ? "py-3" : "py-5 md:py-12"}>{content}</div>
       )}
       {dividerEl}
     </section>
@@ -1658,7 +1658,7 @@ function renderMerged(h: Section, p: Section, ctx: BlockCtx) {
   const partnerCls = [ps.hide_on_mobile && "hide-mobile", ps.hide_on_desktop && "hide-desktop"].filter(Boolean).join(" ");
   return (
     <section key={h.id} id={hs.anchor || h.id} className={cls} style={customBg ? { background: customBg } : undefined} data-block="merged">
-      <div className={`${bw(ctx)} py-5 md:py-12`}>
+      <div className={`${bw(ctx)} ${ctx.narrow ? "py-3" : "py-5 md:py-12"}`}>
         <MergedCard header={h.data ?? {}} layout={layout} color={color} ctx={ctx}
           partner={<Block data={p.data ?? {}} ctx={partnerCtx} />} partnerId={ps.anchor || p.id} partnerClass={partnerCls} />
       </div>
