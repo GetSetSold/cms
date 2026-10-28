@@ -71,7 +71,7 @@ function Shell({ eyebrow, children }: { eyebrow: string; children: React.ReactNo
       }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div style={{ fontSize: 26, fontWeight: 800, letterSpacing: "0.14em" }}>
+        <div style={{ display: "flex", fontSize: 26, fontWeight: 800, letterSpacing: "0.14em" }}>
           GETSET<span style={{ color: ACCENT }}>SOLD</span>
         </div>
         <div style={{ fontSize: 24, fontWeight: 400, color: "rgba(255,255,255,0.65)", letterSpacing: "0.08em" }}>
@@ -150,14 +150,14 @@ export default async function OgImage({ params }: { params: Promise<{ category: 
           }}
         >
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div style={{ fontSize: 26, fontWeight: 800, letterSpacing: "0.14em" }}>
+            <div style={{ display: "flex", fontSize: 26, fontWeight: 800, letterSpacing: "0.14em" }}>
               GETSET<span style={{ color: ACCENT }}>SOLD</span>
             </div>
             <div style={{ fontSize: 24, fontWeight: 400, color: "rgba(255,255,255,0.65)", letterSpacing: "0.08em" }}>
               {monthYear || "MARKET UPDATE"}
             </div>
           </div>
-          <div>
+          <div style={{ display: "flex", flexDirection: "column" }}>
             <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: "0.22em", color: ACCENT, marginBottom: 12 }}>
               MARKET UPDATE
             </div>
@@ -166,12 +166,12 @@ export default async function OgImage({ params }: { params: Promise<{ category: 
             </div>
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
-            <div>
+            <div style={{ display: "flex", flexDirection: "column" }}>
               <div style={{ fontSize: 56, fontWeight: 800 }}>{benchmark || "GetSetSold.ca"}</div>
               {benchmark ? <div style={{ fontSize: 20, color: "rgba(255,255,255,0.6)" }}>Benchmark price</div> : null}
             </div>
             {delta ? (
-              <div style={{ textAlign: "right" }}>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", textAlign: "right" }}>
                 <div style={{ fontSize: 48, fontWeight: 800, color: isDown ? "#ff6b6b" : "#4ade80" }}>{delta}</div>
                 <div style={{ fontSize: 20, color: "rgba(255,255,255,0.6)" }}>month over month</div>
               </div>
@@ -188,7 +188,7 @@ export default async function OgImage({ params }: { params: Promise<{ category: 
       (
         <Shell eyebrow={categoryName}>
           <div style={{ display: "flex", flexDirection: "column", gap: 36 }}>
-            <div>
+            <div style={{ display: "flex", flexDirection: "column" }}>
               <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: "0.22em", color: ACCENT, marginBottom: 16 }}>
                 POLICY INTEREST RATE UPDATE
               </div>
@@ -207,7 +207,7 @@ export default async function OgImage({ params }: { params: Promise<{ category: 
               </div>
               {rateEffective ? (
                 <div style={{ fontSize: 22, fontWeight: 400, color: "rgba(255,255,255,0.65)", textAlign: "right" }}>
-                  Effective {rateEffective}
+                  {`Effective ${rateEffective}`}
                 </div>
               ) : null}
             </div>
@@ -221,7 +221,7 @@ export default async function OgImage({ params }: { params: Promise<{ category: 
   return new ImageResponse(
     (
       <Shell eyebrow={categoryName}>
-        <div>
+        <div style={{ display: "flex", flexDirection: "column" }}>
           <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: "0.22em", color: ACCENT, marginBottom: 16 }}>
             {categoryName}
           </div>
