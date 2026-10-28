@@ -71,8 +71,13 @@ function Shell({ eyebrow, children }: { eyebrow: string; children: React.ReactNo
       }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div style={{ display: "flex", fontSize: 26, fontWeight: 800, letterSpacing: "0.14em" }}>
-          GETSET<span style={{ color: ACCENT }}>SOLD</span>
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          <div style={{ display: "flex", fontSize: 26, fontWeight: 800 }}>
+            Rohit Sharma<span style={{ color: ACCENT }}>&nbsp;Real Estate</span>
+          </div>
+          <div style={{ fontSize: 16, fontWeight: 400, color: "rgba(255,255,255,0.6)", letterSpacing: "0.08em", marginTop: 6 }}>
+            getsetsold.ca
+          </div>
         </div>
         <div style={{ fontSize: 24, fontWeight: 400, color: "rgba(255,255,255,0.65)", letterSpacing: "0.08em" }}>
           {eyebrow}
@@ -150,8 +155,13 @@ export default async function OgImage({ params }: { params: Promise<{ category: 
           }}
         >
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div style={{ display: "flex", fontSize: 26, fontWeight: 800, letterSpacing: "0.14em" }}>
-              GETSET<span style={{ color: ACCENT }}>SOLD</span>
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <div style={{ display: "flex", fontSize: 26, fontWeight: 800 }}>
+                Rohit Sharma<span style={{ color: ACCENT }}>&nbsp;Real Estate</span>
+              </div>
+              <div style={{ fontSize: 16, fontWeight: 400, color: "rgba(255,255,255,0.6)", letterSpacing: "0.08em", marginTop: 6 }}>
+                getsetsold.ca
+              </div>
             </div>
             <div style={{ fontSize: 24, fontWeight: 400, color: "rgba(255,255,255,0.65)", letterSpacing: "0.08em" }}>
               {monthYear || "MARKET UPDATE"}
