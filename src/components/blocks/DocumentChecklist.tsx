@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import type { BlockCtx } from "./index";
+import { renderInlineLinks } from "./renderInlineLinks";
 
 interface DocButton {
   label?: string;
@@ -63,7 +64,7 @@ export default function DocumentChecklist({ data, ctx }: { data: DocumentCheckli
           <h2 className="mb-3 font-display font-semibold tracking-tight text-[22px] leading-snug md:text-[32px] md:leading-tight">{data.heading}</h2>
         ) : null}
         {data.intro ? (
-          <p className="mb-7 max-w-3xl text-[15px] leading-relaxed text-muted">{data.intro}</p>
+          <p className="mb-7 max-w-3xl text-[15px] leading-relaxed text-muted">{renderInlineLinks(data.intro)}</p>
         ) : null}
 
         {tabs.length > 0 ? (
