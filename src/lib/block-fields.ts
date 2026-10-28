@@ -274,6 +274,7 @@ export const BLOCK_FIELDS: Record<string, Field[]> = {
     t("tagline", "Tagline (blank = Local Roots. Global Reach.)"),
     t("handle", "Handle (e.g. @getsetsold)"),
     t("photo_url", "Photo URL (round photo)"),
+    { key: "photo_svg_id", label: "Photo (SVG library — round photo, wins over Photo URL)", type: "svg" },
     t("phone", "Phone (blank = Settings → Contact phone)"),
     t("email", "Email (blank = Settings → Contact email)"),
     t("address", "Address (blank = Settings → Contact address)"),

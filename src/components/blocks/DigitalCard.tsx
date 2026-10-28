@@ -1,4 +1,7 @@
 "use client";
+
+import { Svg } from "@/components/site/Svg";
+import type { SvgAsset } from "@/lib/types";
 /**
  * Digital card block — the one-screen agent card for /rohit-sharma-realtor
  * (short share link /rohit redirects to it).
@@ -42,6 +45,8 @@ type Props = {
   tagline?: string;
   handle?: string;
   photoUrl?: string;
+  /** Library SVG photo (picked in Page Builder) — wins over photoUrl. */
+  photoSvg?: SvgAsset | null;
   phone?: string;
   email?: string;
   address?: string;
@@ -108,6 +113,7 @@ export function DigitalCardClient({
   tagline,
   handle,
   photoUrl,
+  photoSvg,
   phone,
   email,
   address,
@@ -188,12 +194,14 @@ export function DigitalCardClient({
           card, not a section, so it does not use the site-wide max-w-7xl
           section width. */}
       <div className="flex flex-col items-center gap-2 rounded-[var(--radius-lg)] bg-ink px-6 py-8 text-center text-white">
-        {photoUrl ? (
+        {photoSvg ? (
+          <Svg asset={photoSvg} label={displayName} fill className="mb-2 h-28 w-28 overflow-hidden rounded-[999px] border-[3px] border-white" />
+        ) : photoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={photoUrl}
             alt={displayName}
-            className="mb-2 h-28 w-28 rounded-[var(--radius-btn)] border-[3px] border-white object-cover"
+            className="mb-2 h-28 w-28 rounded-[999px] border-[3px] border-white object-cover"
           />
         ) : null}
         {handle ? <p className="text-sm text-white/70">{handle}</p> : null}

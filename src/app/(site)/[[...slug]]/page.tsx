@@ -177,7 +177,9 @@ export default async function SitePage(props: Props) {
       ) : null}
       {!page.hide_nav ? <SiteHeader settings={settings} logo={settings.logo_svg_id ? svgs[settings.logo_svg_id] : null} /> : null}
       <main>
-        <RenderSections sections={sections} ctx={{ svgs, settings, page }} />
+        {/* Card page: any page carrying a digital_card renders every block
+            at the card's narrow width, with swipe rows instead of grids. */}
+        <RenderSections sections={sections} ctx={{ svgs, settings, page, narrow: sections.some((s) => s.block_type === "digital_card") }} />
       </main>
       {!page.hide_footer ? <SiteFooter settings={settings} logo={settings.logo_svg_id ? svgs[settings.logo_svg_id] : null} /> : null}
       {!page.hide_nav ? <MobileCtaBar settings={settings} /> : null}

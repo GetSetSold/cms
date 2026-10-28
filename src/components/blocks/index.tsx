@@ -26,9 +26,10 @@ import DocumentChecklist from "./DocumentChecklist";
 import { CalculatorBlockClient, type CalcType, type CalcStyle } from "./CalculatorBlock";
 import { ReferralLinkClient } from "./ReferralLink";
 import { DigitalCardClient } from "./DigitalCard";
+import { SwipeRow } from "./SwipeRow";
 import { getCalculatorSettings } from "@/lib/calculators/settings";
 
-export type BlockCtx = { svgs: Record<string, SvgAsset>; settings: SiteSettings; page?: Page; dark?: boolean; buttonStyle?: "solid" | "bordered"; inRow?: boolean; /** Set when the block sits inside a merged header+block card. */ embedded?: "side" | "stacked"; /** The real background color behind the block when known (custom color, brand, box, merged card) — lets a block check contrast instead of guessing. */ bg?: string };
+export type BlockCtx = { svgs: Record<string, SvgAsset>; settings: SiteSettings; page?: Page; dark?: boolean; buttonStyle?: "solid" | "bordered"; inRow?: boolean; /** Set when the block sits inside a merged header+block card. */ embedded?: "side" | "stacked"; /** The real background color behind the block when known (custom color, brand, box, merged card) — lets a block check contrast instead of guessing. */ bg?: string; /** Set when the page contains a digital_card: every block on that page renders at the card's narrow width, with swipe rows instead of grids. */ narrow?: boolean };
 
 /** Text tone that auto-adjusts to the section's background — use instead of
  *  a hardcoded text-muted/text-ink so copy stays readable on dark sections. */
@@ -38,8 +39,12 @@ const heading = (ctx: BlockCtx) => (ctx.dark ? "text-ground" : "text-ink");
 export type BlockProps = { data: any; ctx: BlockCtx };
 
 const wrap = "mx-auto w-full max-w-7xl px-5 md:px-10";
-/** Page-width wrapper — empty when embedded in a merged card (the card provides the width). */
-const bw = (ctx: BlockCtx) => (ctx as any).embedded ? "" : wrap;
+// Card width, exactly matching DigitalCardClient's outer wrapper
+// (max-w-md, px-5 mobile, no side padding desktop) so every block on a
+// card page lines up with the card above it.
+const narrowWrap = "mx-auto w-full max-w-md px-5 md:px-0";
+/** Page-width wrapper — empty when embedded in a merged card (the card provides the width), narrow on card pages. */
+const bw = (ctx: BlockCtx) => (ctx as any).embedded ? "" : ctx.narrow ? narrowWrap : wrap;
 const h2 = "font-display font-bold tracking-tight text-[26px] leading-tight md:text-[56px] md:leading-none";
 // Shared compact heading size, used everywhere `h2` is — one definition instead of repeating a
 // smaller scale at every call site. Site-wide Density (Settings → Branding) drives this.
@@ -413,6 +418,28 @@ function Stats({ data, ctx }: BlockProps) {
 }
 
 function Testimonials({ data, ctx }: BlockProps) {
+  if (ctx.narrow) {
+    return (
+      <div className={`${bw(ctx)} flex flex-col gap-8 py-7`}>
+        {data.heading ? <h2 className={h2Compact}>{data.heading}</h2> : null}
+        <SwipeRow>
+          {(data.items ?? []).map((t: any, i: number) => (
+            <figure key={i} className={`flex flex-col justify-between gap-8 rounded-[20px] p-7 ${i % 2 ? "bg-primary text-white" : "bg-white"}`}>
+              <blockquote className="font-display font-semibold leading-snug" style={{ fontSize: "var(--font-body-size, 0.875rem)" }}>“{t.quote}”</blockquote>
+              <figcaption className="flex items-center gap-3">
+                <svg viewBox="0 0 44 44" className="h-11 w-11" aria-hidden="true">
+                  <circle cx="22" cy="22" r="22" fill={i % 2 ? "rgba(255,255,255,.25)" : "var(--c-soft)"} />
+                  <circle cx="22" cy="17" r="7" fill={i % 2 ? "#fff" : "#8A8E97"} />
+                  <path d="M9 38 C11 29 33 29 35 38" fill={i % 2 ? "#fff" : "#8A8E97"} />
+                </svg>
+                <div><div className="font-semibold">{t.name}</div><div className="text-sm opacity-75">{t.role}</div></div>
+              </figcaption>
+            </figure>
+          ))}
+        </SwipeRow>
+      </div>
+    );
+  }
   return (
     <div className={`${bw(ctx)} flex flex-col gap-8 py-7 md:py-24`}>
       {data.heading ? <h2 className={h2}>{data.heading}</h2> : null}
@@ -637,9 +664,9 @@ function ContactInfo({ data, ctx }: BlockProps) {
   const rows = [["Phone", c.phone, c.phone && `tel:${c.phone}`], ["Email", c.email, c.email && `mailto:${c.email}`], ["Address", c.address], ["Hours", c.hours]]
     .filter((r) => r[1]);
   return (
-    <div className={`${bw(ctx)} flex flex-col gap-8 py-16`}>
-      {data.heading ? <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2> : null}
-      <dl className="grid gap-6 md:grid-cols-4">
+    <div className={`${bw(ctx)} flex flex-col gap-8 ${ctx.narrow ? "py-7" : "py-16"}`}>
+      {data.heading ? <h2 className={`${ctx.narrow ? h2Compact : h2} ${heading(ctx)}`}>{data.heading}</h2> : null}
+      <dl className={`grid gap-6 ${ctx.narrow ? "" : "md:grid-cols-4"}`}>
         {rows.map(([k, v, href]) => (
           <div key={k as string} className="flex flex-col gap-1">
             <dt className={`text-sm ${muted(ctx)}`}>{k}</dt>
@@ -1032,6 +1059,19 @@ async function SoldHistoryGrid({ data, ctx }: BlockProps) {
   const chunks: typeof allRows[] = [];
   for (let i = 0; i < allRows.length; i += perPage) chunks.push(allRows.slice(i, i + perPage));
 
+  if (ctx.narrow) {
+    // Card page: a swipe teaser, not the 12-per-page pager — the full
+    // list lives at /sold-history behind the View all link.
+    return (
+      <div className={`${bw(ctx)} flex flex-col gap-6 py-7`}>
+        <div className="flex items-end justify-between gap-4">
+          {data.heading ? <h2 className={h2Compact}>{data.heading}</h2> : <span />}
+          <Link href="/sold-history" prefetch={false} className="font-medium text-primary">{data.link_label || "View all"} →</Link>
+        </div>
+        <SwipeRow>{allRows.map((r) => <SoldHistoryCard key={r.id} row={r} />)}</SwipeRow>
+      </div>
+    );
+  }
   return (
     <div className={`${bw(ctx)} flex flex-col gap-6 py-7 md:py-16`}>
       <div className="flex items-end justify-between gap-4">
@@ -1077,32 +1117,31 @@ async function FeaturedListingsGrid({ data, ctx }: BlockProps) {
   const visible = order.slice(0, count);
   if (!visible.length) return null;
 
+  const cards = visible.map((id) => {
+    if (mlsListings[id]) return <ListingCard key={id} listing={mlsListings[id]} />;
+    const p = privateListings[id];
+    return (
+      <ListingCardShell
+        key={id}
+        href={p.href !== "#" ? p.href : undefined}
+        image={p.image}
+        statusLabel={p.note || "Private"}
+        statusTone="purple"
+        price={p.priceLabel}
+        address={p.address}
+        beds={p.bed}
+        baths={p.bath}
+        area={p.sqft ? `${p.sqft.toLocaleString()} sqft` : null}
+      />
+    );
+  });
   return (
-    <div className={`${bw(ctx)} flex flex-col gap-6 py-7 md:py-16`}>
+    <div className={`${bw(ctx)} flex flex-col gap-6 ${ctx.narrow ? "py-7" : "py-7 md:py-16"}`}>
       <div className="flex items-end justify-between gap-4">
-        {data.heading ? <h2 className={h2}>{data.heading}</h2> : <span />}
+        {data.heading ? <h2 className={ctx.narrow ? h2Compact : h2}>{data.heading}</h2> : <span />}
         <Link href="/listings" prefetch={false} className="font-medium text-primary">{data.link_label || "View all listings"} →</Link>
       </div>
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        {visible.map((id) => {
-          if (mlsListings[id]) return <ListingCard key={id} listing={mlsListings[id]} />;
-          const p = privateListings[id];
-          return (
-            <ListingCardShell
-              key={id}
-              href={p.href !== "#" ? p.href : undefined}
-              image={p.image}
-              statusLabel={p.note || "Private"}
-              statusTone="purple"
-              price={p.priceLabel}
-              address={p.address}
-              beds={p.bed}
-              baths={p.bath}
-              area={p.sqft ? `${p.sqft.toLocaleString()} sqft` : null}
-            />
-          );
-        })}
-      </div>
+      {ctx.narrow ? <SwipeRow>{cards}</SwipeRow> : <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">{cards}</div>}
     </div>
   );
 }
@@ -1441,6 +1480,7 @@ function DigitalCard({ data, ctx }: BlockProps) {
       tagline={data.tagline}
       handle={data.handle}
       photoUrl={data.photo_url}
+      photoSvg={data.photo_svg_id ? ctx.svgs[data.photo_svg_id] : null}
       phone={data.phone || c.phone}
       email={data.email || c.email}
       address={data.address || c.address}
@@ -1530,8 +1570,8 @@ function renderOne(s: Section, ctx: BlockCtx) {
   // no double-wrapping. Blocks without internal wrap fill the card.
   const boxWrap = "w-full py-5 md:py-12";
   const boxInner = globalBorderHidden
-    ? `mx-auto w-full max-w-7xl ${boxShadow}`
-    : `mx-auto w-full max-w-7xl rounded-[var(--radius-lg)] p-6 md:p-8 ${boxBorder} ${showBorder && !globalBorderHidden ? "border-line" : ""} ${boxShadow}`;
+    ? `mx-auto w-full ${ctx.narrow ? "max-w-md" : "max-w-7xl"} ${boxShadow}`
+    : `mx-auto w-full ${ctx.narrow ? "max-w-md" : "max-w-7xl"} rounded-[var(--radius-lg)] p-6 md:p-8 ${boxBorder} ${showBorder && !globalBorderHidden ? "border-line" : ""} ${boxShadow}`;
 
   const dividerEl = showDivider ? (
     <div className={dividerFullBleed ? "" : wrap} aria-hidden="true" style={{ marginTop: dividerMt, marginBottom: dividerMb }}>
@@ -1636,7 +1676,7 @@ export function RenderSections({ sections, ctx }: { sections: Section[]; ctx: Bl
         if (group.length === 1 && !group[0].settings?.row_id) return renderOne(group[0], ctx);
         const cols = group[0].settings?.row_columns ?? Math.min(group.length, 4) as 1 | 2 | 3 | 4;
         return (
-          <div key={group[0].id ?? gi} className={`mx-auto w-full max-w-7xl grid grid-cols-1 gap-x-8 gap-y-10 px-5 md:gap-y-8 md:px-10 ${ROW_COLS[cols]}`}>
+          <div key={group[0].id ?? gi} className={ctx.narrow ? "mx-auto w-full max-w-md grid grid-cols-1 gap-x-8 gap-y-10 px-5 md:gap-y-8 md:px-0" : `mx-auto w-full max-w-7xl grid grid-cols-1 gap-x-8 gap-y-10 px-5 md:gap-y-8 md:px-10 ${ROW_COLS[cols]}`}>
             {group.map((s) => renderOne(s, { ...ctx, inRow: true }))}
           </div>
         );
