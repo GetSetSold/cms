@@ -282,7 +282,7 @@ export const BLOCK_FIELDS: Record<string, Field[]> = {
     t("share_url", "Share link (blank = https://www.getsetsold.ca/rohit)"),
     t("canonical_url", "Canonical URL on the vCard (blank = https://www.getsetsold.ca/rohit-sharma-realtor)"),
     { key: "proof_points", label: "Proof points (3 max: value + label)", type: "list", itemLabel: "Proof point", fields: [t("value", "Value (e.g. 5.0★)"), t("label", "Label (e.g. 65 reviews)")] },
-    { key: "services", label: "Services for the “I want to…” chips", type: "list", itemLabel: "Service", fields: [t("label", "Chip label (e.g. Buy)"), t("title", "Offer title"), ta("body", "Offer text"), ta("whatsapp_message", "WhatsApp message for this service")] },
+    { key: "services", label: "Services for the “I want to…” chips", type: "list", itemLabel: "Service", fields: [t("label", "Chip label (e.g. Buy)"), t("title", "Offer title"), ta("body", "Offer text"), ta("whatsapp_message", "WhatsApp message for this service"), { key: "link_type", label: "Button destination (WhatsApp = pre-filled WhatsApp, Custom = link below)", type: "select", options: ["whatsapp", "custom"] }, t("link_href", "Custom link (only when Destination = Custom, e.g. /refer)"), t("link_label", "Button label (blank = WhatsApp about… / Learn more)")] },
   ],
   document_checklist: [
     t("eyebrow", "Eyebrow (e.g. \"BE READY, NOT RUSHED\")"),

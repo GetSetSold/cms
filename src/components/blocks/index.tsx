@@ -27,6 +27,7 @@ import { CalculatorBlockClient, type CalcType, type CalcStyle } from "./Calculat
 import { ReferralLinkClient } from "./ReferralLink";
 import { DigitalCardClient } from "./DigitalCard";
 import { SwipeRow } from "./SwipeRow";
+import { CardCollapsible } from "./CardCollapsible";
 import { getCalculatorSettings } from "@/lib/calculators/settings";
 
 export type BlockCtx = { svgs: Record<string, SvgAsset>; settings: SiteSettings; page?: Page; dark?: boolean; buttonStyle?: "solid" | "bordered"; inRow?: boolean; /** Set when the block sits inside a merged header+block card. */ embedded?: "side" | "stacked"; /** The real background color behind the block when known (custom color, brand, box, merged card) — lets a block check contrast instead of guessing. */ bg?: string; /** Set when the page contains a digital_card: every block on that page renders at the card's narrow width, with swipe rows instead of grids. */ narrow?: boolean };
@@ -420,8 +421,8 @@ function Stats({ data, ctx }: BlockProps) {
 function Testimonials({ data, ctx }: BlockProps) {
   if (ctx.narrow) {
     return (
-      <div className={`${bw(ctx)} flex flex-col gap-8 py-7`}>
-        {data.heading ? <h2 className={h2Compact}>{data.heading}</h2> : null}
+      <div className={`${bw(ctx)} py-7`}>
+        <CardCollapsible title={data.heading || "Testimonials"}>
         <SwipeRow>
           {(data.items ?? []).map((t: any, i: number) => (
             <figure key={i} className={`flex flex-col justify-between gap-8 rounded-[20px] p-7 ${i % 2 ? "bg-primary text-white" : "bg-white"}`}>
@@ -437,6 +438,7 @@ function Testimonials({ data, ctx }: BlockProps) {
             </figure>
           ))}
         </SwipeRow>
+        </CardCollapsible>
       </div>
     );
   }
@@ -663,10 +665,26 @@ function ContactInfo({ data, ctx }: BlockProps) {
   const c = ctx.settings.contact ?? {};
   const rows = [["Phone", c.phone, c.phone && `tel:${c.phone}`], ["Email", c.email, c.email && `mailto:${c.email}`], ["Address", c.address], ["Hours", c.hours]]
     .filter((r) => r[1]);
+  if (ctx.narrow) {
+    return (
+      <div className={`${bw(ctx)} py-7`}>
+        <CardCollapsible title={data.heading || "Contact"}>
+          <dl className="grid gap-6">
+            {rows.map(([k, v, href]) => (
+              <div key={k as string} className="flex flex-col gap-1">
+                <dt className={`text-sm ${muted(ctx)}`}>{k}</dt>
+                <dd className={heading(ctx)} style={{ fontSize: "var(--font-body-size, 0.875rem)" }}>{href ? <a href={href as string}>{v}</a> : v}</dd>
+              </div>
+            ))}
+          </dl>
+        </CardCollapsible>
+      </div>
+    );
+  }
   return (
-    <div className={`${bw(ctx)} flex flex-col gap-8 ${ctx.narrow ? "py-7" : "py-16"}`}>
-      {data.heading ? <h2 className={`${ctx.narrow ? h2Compact : h2} ${heading(ctx)}`}>{data.heading}</h2> : null}
-      <dl className={`grid gap-6 ${ctx.narrow ? "" : "md:grid-cols-4"}`}>
+    <div className={`${bw(ctx)} flex flex-col gap-8 py-16`}>
+      {data.heading ? <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2> : null}
+      <dl className="grid gap-6 md:grid-cols-4">
         {rows.map(([k, v, href]) => (
           <div key={k as string} className="flex flex-col gap-1">
             <dt className={`text-sm ${muted(ctx)}`}>{k}</dt>
@@ -1063,12 +1081,13 @@ async function SoldHistoryGrid({ data, ctx }: BlockProps) {
     // Card page: a swipe teaser, not the 12-per-page pager — the full
     // list lives at /sold-history behind the View all link.
     return (
-      <div className={`${bw(ctx)} flex flex-col gap-6 py-7`}>
-        <div className="flex items-end justify-between gap-4">
-          {data.heading ? <h2 className={h2Compact}>{data.heading}</h2> : <span />}
-          <Link href="/sold-history" prefetch={false} className="font-medium text-primary">{data.link_label || "View all"} →</Link>
-        </div>
-        <SwipeRow>{allRows.map((r) => <SoldHistoryCard key={r.id} row={r} />)}</SwipeRow>
+      <div className={`${bw(ctx)} py-7`}>
+        <CardCollapsible
+          title={data.heading || "Sold History"}
+          extra={<Link href="/sold-history" prefetch={false} className="font-medium text-primary">{data.link_label || "View all"} →</Link>}
+        >
+          <SwipeRow>{allRows.map((r) => <SoldHistoryCard key={r.id} row={r} />)}</SwipeRow>
+        </CardCollapsible>
       </div>
     );
   }
@@ -1135,13 +1154,25 @@ async function FeaturedListingsGrid({ data, ctx }: BlockProps) {
       />
     );
   });
+  if (ctx.narrow) {
+    return (
+      <div className={`${bw(ctx)} py-7`}>
+        <CardCollapsible
+          title={data.heading || "Featured Listings"}
+          extra={<Link href="/listings" prefetch={false} className="font-medium text-primary">{data.link_label || "View all listings"} →</Link>}
+        >
+          <SwipeRow>{cards}</SwipeRow>
+        </CardCollapsible>
+      </div>
+    );
+  }
   return (
-    <div className={`${bw(ctx)} flex flex-col gap-6 ${ctx.narrow ? "py-7" : "py-7 md:py-16"}`}>
+    <div className={`${bw(ctx)} flex flex-col gap-6 py-7 md:py-16`}>
       <div className="flex items-end justify-between gap-4">
-        {data.heading ? <h2 className={ctx.narrow ? h2Compact : h2}>{data.heading}</h2> : <span />}
+        {data.heading ? <h2 className={h2}>{data.heading}</h2> : <span />}
         <Link href="/listings" prefetch={false} className="font-medium text-primary">{data.link_label || "View all listings"} →</Link>
       </div>
-      {ctx.narrow ? <SwipeRow>{cards}</SwipeRow> : <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">{cards}</div>}
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">{cards}</div>
     </div>
   );
 }
@@ -1191,6 +1222,17 @@ async function BlogGrid({ data, ctx }: BlockProps) {
 
 function CustomCode({ data, ctx }: BlockProps) {
   if (!data.html) return null;
+  if (ctx.narrow && data.heading) {
+    return (
+      <div className={`${bw(ctx)} py-5`}>
+        <CardCollapsible title={data.heading}>
+          <div className="flex flex-col items-center text-center">
+            <EmbedHtml html={data.html} />
+          </div>
+        </CardCollapsible>
+      </div>
+    );
+  }
   return (
     <div className={`${bw(ctx)} flex flex-col items-center gap-5 py-5 text-center md:py-12`}>
       {data.heading ? <h2 className={`${h2} ${heading(ctx)}`}>{data.heading}</h2> : null}

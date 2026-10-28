@@ -34,6 +34,10 @@ export type DigitalCardService = {
   title: string;
   body: string;
   whatsapp_message: string;
+  /** Destination: "whatsapp" (default) or "custom" (link_href). Blank = WhatsApp. */
+  link_type?: string;
+  link_href?: string;
+  link_label?: string;
 };
 
 export type DigitalCardProof = { value: string; label: string };
@@ -273,39 +277,35 @@ export function DigitalCardClient({
         <div className={`${cardCls} flex flex-col gap-3 p-6`}>
           <h2 className="text-xl font-semibold md:text-[22px]">{current.title}</h2>
           <p className="text-[15px] leading-relaxed text-muted">{current.body}</p>
-          <a
-            href={waHref(current.whatsapp_message)}
-            target="_blank"
-            rel="noreferrer"
-            className={`${pill} bg-primary text-white`}
-          >
-            WhatsApp about {current.label.toLowerCase()}
-          </a>
+          {(() => {
+            const isCustom = current.link_type === "custom" && !!current.link_href;
+            const href = isCustom ? current.link_href! : waHref(current.whatsapp_message);
+            const label = current.link_label || (isCustom ? "Learn more" : `WhatsApp about ${current.label.toLowerCase()}`);
+            const external = /^https?:\/\//.test(href);
+            return (
+              <a
+                href={href}
+                {...(external ? { target: "_blank", rel: "noreferrer" } : {})}
+                className={`${pill} bg-primary text-white`}
+              >
+                {label}
+              </a>
+            );
+          })()}
         </div>
       </div>
 
-      {/* Details, tucked away */}
+      {/* Details, left open on the card (a few lines — hiding them gains nothing). */}
       {address || hours || phone ? (
-        <details className={`${cardCls} p-5 text-[15px] leading-relaxed text-muted`}>
-          <summary className="cursor-pointer font-semibold text-ink">
-            Details · Address, hours &amp; brokerage
-          </summary>
-          <p className="mt-3">
-            {address ? (
-              <>
-                {address}
-                <br />
-              </>
-            ) : null}
-            {phone ? (
-              <>
-                Phone: {phone}
-                <br />
-              </>
-            ) : null}
-            {hours ? <>Hours: {hours}</> : null}
-          </p>
-        </details>
+        <div className={`${cardCls} p-5 text-[15px] leading-relaxed text-muted`}>
+          <p className="font-semibold text-ink">Details · Address, hours &amp; brokerage</p>
+          <div className="mt-3 flex flex-col gap-1">
+            {address ? <div><span className="font-semibold text-ink">Address:</span> {address}</div> : null}
+            {phone ? <div><span className="font-semibold text-ink">Phone:</span> {phone}</div> : null}
+            {hours ? <div><span className="font-semibold text-ink">Hours:</span> {hours}</div> : null}
+            <div><span className="font-semibold text-ink">Brokerage:</span> {displayBrokerage}</div>
+          </div>
+        </div>
       ) : null}
     </div>
   );
