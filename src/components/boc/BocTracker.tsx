@@ -38,6 +38,13 @@ function BlockHead({ eyebrow, heading, sub }: { eyebrow: string; heading: string
   );
 }
 
+interface Announced {
+  date: string;
+  target: number;
+  change: number;
+  effectiveDate: string;
+}
+
 function latestVal(obs: any[], series: string): number | null {
   for (const o of obs) {
     const v = o?.[series];
@@ -88,7 +95,16 @@ function useCountdown() {
     const t = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(t);
   }, []);
-  const next = nextBocDecision(now);
+  const first = nextBocDecision(now);
+  let next: string | null = first;
+  // On decision day itself, once 9:45am local has passed, that decision is
+  // no longer "next" — roll the countdown to the following scheduled date.
+  if (first) {
+    const todayIso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+    if (first === todayIso && now.getTime() >= new Date(`${first}T09:45:00`).getTime()) {
+      next = BOC_SCHEDULE.find((s) => s > first) ?? null;
+    }
+  }
   if (!next) return { next: null as string | null, parts: null };
   const target = new Date(next + "T09:45:00-05:00").getTime();
   const diff = Math.max(0, target - now.getTime());
@@ -275,6 +291,7 @@ export function BocTracker() {
   const [rates, setRates] = useState<{ target: number|null; bank: number|null; prime: number|null; corra: number|null; bond5y: number|null } | null>(null);
   const [banks, setBanks] = useState<{ bankPrime: number|null; mtg1yr: number|null; mtg3yr: number|null; mtg5yr: number|null } | null>(null);
   const [months, setMonths] = useState<MonthPt[]>([]);
+  const [announced, setAnnounced] = useState<Announced | null>(null);
   const [range, setRange] = useState("3");
   const [visible, setVisible] = useState({ target: true, bank: true, prime: true, cpi: true, holds: true });
   const { next, parts } = useCountdown();
@@ -282,6 +299,16 @@ export function BocTracker() {
   useEffect(() => {
     let alive = true;
     (async () => {
+      // Announced layer: the Bank's key-rate page updates on announcement
+      // day, while Valet's daily series only reflects the change the next
+      // business day. A failed announced fetch simply leaves Valet-only
+      // behaviour in place.
+      try {
+        const a = await fetch("/api/boc-announced").then((r) => (r.ok ? r.json() : null));
+        if (alive && a && typeof a.target === "number" && typeof a.date === "string" && typeof a.effectiveDate === "string") {
+          setAnnounced({ date: a.date, target: a.target, change: typeof a.change === "number" ? a.change : 0, effectiveDate: a.effectiveDate });
+        }
+      } catch { /* Valet-only behaviour */ }
       try {
         const cur = await fetch(
           `${BOC_API}/observations/${BOC_SERIES.TARGET},${BOC_SERIES.BANK},${BOC_SERIES.PRIME},${BOC_SERIES.CORRA},${BOC_SERIES.BOND_5YR}/json?recent=10`
@@ -346,7 +373,30 @@ export function BocTracker() {
     return bocChanges(obs);
   }, [months]);
 
-  const decisions = useMemo(() => getDecisions(changes), [changes]);
+  const decisions = useMemo(() => {
+    const base = getDecisions(changes);
+    // Announced override: Valet has not yet published the change, so the
+    // base list holds an inferred "hold" for the announcement date. Replace
+    // it with the announced change (prime is untouched by this layer).
+    if (!announced || rates?.target == null || announced.target === rates.target) return base;
+    const oldRate = rates.target;
+    const dir = announced.change !== 0
+      ? (announced.change > 0 ? "up" : "down")
+      : (announced.target > oldRate ? "up" : "down");
+    const changeEntry: Decision = {
+      date: announced.date,
+      type: "change",
+      oldRate,
+      newRate: announced.target,
+      change: announced.change !== 0 ? Math.abs(announced.change) : Math.abs(announced.target - oldRate),
+      direction: dir,
+    };
+    return [...base.filter((d) => d.date !== announced.date), changeEntry]
+      .sort((a, b) => new Date(b.date + "T00:00:00").getTime() - new Date(a.date + "T00:00:00").getTime());
+  }, [changes, announced, rates]);
+
+  // True only while Valet still shows the pre-announcement rate.
+  const announcedActive = announced !== null && rates?.target != null && announced.target !== rates.target;
 
   const stats = useMemo(() => {
     if (changes.length === 0) return null;
@@ -355,26 +405,48 @@ export function BocTracker() {
     const net = changes.reduce((s, c) => s + (c.direction === "up" ? c.change : -c.change), 0);
     const allR = changes.flatMap((c) => [c.newRate, c.oldRate]);
     const last = changes[changes.length - 1];
-    const daysSteady = Math.floor((Date.now() - new Date(last.date + "T00:00:00").getTime()) / 86400000);
+    const daysSteady = announcedActive && announced
+      ? Math.max(0, Math.floor((Date.now() - new Date(announced.date + "T00:00:00").getTime()) / 86400000))
+      : Math.floor((Date.now() - new Date(last.date + "T00:00:00").getTime()) / 86400000);
     let longest = daysSteady;
     for (let i = 0; i < changes.length - 1; i++) {
       const hold = Math.floor((new Date(changes[i + 1].date + "T00:00:00").getTime() - new Date(changes[i].date + "T00:00:00").getTime()) / 86400000);
       if (hold > longest) longest = hold;
     }
     const holds = decisions.filter((d) => d.type === "hold").length;
+    const annDir = announcedActive && announced ? (announced.target > (rates?.target ?? 0) ? "up" : "down") : null;
+    const annChange = announcedActive && announced ? (announced.change !== 0 ? Math.abs(announced.change) : Math.abs(announced.target - (rates?.target ?? 0))) : 0;
     return {
-      total: changes.length, ups, downs, net, holds,
+      total: changes.length + (announcedActive ? 1 : 0),
+      ups: ups + (annDir === "up" ? 1 : 0),
+      downs: downs + (annDir === "down" ? 1 : 0),
+      net: net + (annDir === "up" ? annChange : annDir === "down" ? -annChange : 0),
+      holds,
       totalDecisions: decisions.length,
-      high: Math.max(...allR), low: Math.min(...allR),
+      high: Math.max(...allR, announcedActive && announced ? announced.target : -Infinity),
+      low: Math.min(...allR, announcedActive && announced ? announced.target : Infinity),
       daysSteady, longestHold: longest,
     };
-  }, [changes, decisions]);
+  }, [changes, decisions, announcedActive, announced, rates]);
 
   const loading = rates === null;
-  const target = rates?.target ?? null;
+  // Announced layer: show the announced target (and bank rate = target +
+  // 0.25) while Valet still shows the pre-announcement rate. Prime is
+  // deliberately NOT overridden: it follows bank announcements and arrives
+  // later, via Valet, as before.
+  const target = announcedActive && announced ? announced.target : (rates?.target ?? null);
+  const bankRate = announcedActive && announced ? announced.target + 0.25 : (rates?.bank ?? null);
   const stress = target !== null ? Math.max(target + 2, 5.25) : null;
   const prime = banks?.bankPrime ?? rates?.prime ?? null;
-  const lastChange = changes.length > 0 ? changes[changes.length - 1] : null;
+  const lastChange = announcedActive && announced && rates?.target != null
+    ? {
+        date: announced.date,
+        oldRate: rates.target,
+        newRate: announced.target,
+        change: announced.change !== 0 ? Math.abs(announced.change) : Math.abs(announced.target - rates.target),
+        direction: (announced.target > rates.target ? "up" : "down") as "up" | "down",
+      }
+    : changes.length > 0 ? changes[changes.length - 1] : null;
   const today0 = new Date(); today0.setHours(0, 0, 0, 0);
   const meetingsHeld = lastChange
     ? BOC_SCHEDULE.filter((s) => {
@@ -393,7 +465,7 @@ export function BocTracker() {
         <BlockHead eyebrow="Live Rates" heading="Current Bank of Canada Rates" sub="Real-time policy interest rates & historical trends" />
         <section aria-label="Current Bank of Canada interest rates" className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
           <RateCard label="Target Overnight Rate" value={fmtRate(target)}
-            sub={daysSteady > 0 ? `Key policy rate \u00b7 ${daysSteady} days steady` : "Key policy rate"}
+            sub={announcedActive && announced ? `Announced ${fmtDate(announced.date)} · Effective ${fmtDate(announced.effectiveDate)}` : daysSteady > 0 ? `Key policy rate \u00b7 ${daysSteady} days steady` : "Key policy rate"}
             accent="#111111" loading={loading}
             badge={lastChange ? (
               meetingsHeld > 0 ? (
@@ -406,12 +478,18 @@ export function BocTracker() {
                 </span>
               )
             ) : undefined} />
-          <RateCard label="Bank Rate" value={fmtRate(rates?.bank ?? null)} sub="Target + 0.25%" accent="#1A6B8A" loading={loading} />
+          <RateCard label="Bank Rate" value={fmtRate(bankRate)} sub="Target + 0.25%" accent="#1A6B8A" loading={loading} />
           <RateCard label="Prime Rate" value={fmtRate(prime)} sub="Major bank prime" accent="#2E86AB" loading={loading} />
           <RateCard label="CORRA" value={fmtRate(rates?.corra ?? null)} sub="Overnight repo rate avg" accent="#4EA8C8" loading={loading} />
           <RateCard label="OSFI Stress Test Rate" value={fmtRate(stress)} sub={target !== null ? `max(${target.toFixed(2)}% + 2%, 5.25%)` : "max(BoC + 2%, 5.25%)"} accent="#7c3aed" loading={loading} />
           <RateCard label="5-Year Bond Yield" value={fmtRate(rates?.bond5y ?? null)} sub="GoC benchmark yield" accent="#ea580c" loading={loading} />
         </section>
+        {announcedActive && announced && (
+          <p className="mt-3 text-[13px] leading-[1.5] text-muted">
+            Announced {fmtDate(announced.date)} — effective {fmtDate(announced.effectiveDate)}. The Bank&apos;s daily Valet series
+            updates the next business day; prime rate follows bank announcements and updates separately.
+          </p>
+        )}
       </div>
 
       {/* Banks */}

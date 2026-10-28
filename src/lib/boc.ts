@@ -1,5 +1,7 @@
 /* Bank of Canada Valet API helpers — free, public, no key required. */
 
+import { fetchAnnouncedDecision } from "./boc-announced";
+
 export const BOC_API = "https://www.bankofcanada.ca/valet";
 
 export const BOC_SERIES = {
@@ -99,6 +101,11 @@ export interface BocDecisionSnapshot {
   /** Target-rate history for the chart (date-ascending). */
   history: { date: string; value: number }[];
   isPinned: boolean;
+  /** Effective date of the decision, when this snapshot came from the
+   *  announced layer (see boc-announced.ts); null for Valet snapshots. */
+  effectiveDate?: string | null;
+  /** True when this snapshot is the announced decision, not a Valet row. */
+  announced?: boolean;
 }
 
 interface ValetObs {
@@ -147,9 +154,10 @@ function monthlySample(obs: { date: string; value: number }[]): { date: string; 
  */
 export async function getBocDecisionAsOf(pinDate: string): Promise<BocDecisionSnapshot | null> {
   const pin = /^\d{4}-\d{2}-\d{2}$/.test(pinDate) ? pinDate : "";
-  const [rates, cpiObs] = await Promise.all([
+  const [rates, cpiObs, announced] = await Promise.all([
     valet(`${BOC_SERIES.TARGET},${BOC_SERIES.PRIME},${BOC_SERIES.BOND_5YR}`, "start_date=2020-01-01&order_dir=asc"),
     valet(BOC_SERIES.CPI, "start_date=2020-01-01&order_dir=asc"),
+    fetchAnnouncedDecision(),
   ]);
   if (!rates.length) return null;
 
@@ -224,6 +232,54 @@ export async function getBocDecisionAsOf(pinDate: string): Promise<BocDecisionSn
     }
   }
 
+  // Announced layer (see boc-announced.ts): on announcement day Valet
+  // still shows the old rate, because a change takes effect the next
+  // business day. When the Bank's announced decision is the one being
+  // rendered — pinned to its date, or latest and newer than / equal to the
+  // Valet snapshot — show the announced decision dated its announcement
+  // date, with its effective date. Prime is NOT taken from the
+  // announcement: it stays on Valet (the loop above), arriving later when
+  // banks update, exactly as requested. If Valet is already newer with a
+  // different rate (announced page stale), Valet wins and we fall through.
+  if (announced) {
+    const applies =
+      pin === announced.date ||
+      (!pin && (announced.date >= cur.date || announced.target === cur.value));
+    if (applies) {
+      const prevForChange = [...targetObs].reverse().find((o) => o.date <= announced.date)?.value ?? null;
+      const annChange = announced.change !== 0
+        ? announced.change
+        : prevForChange !== null
+          ? parseFloat((announced.target - prevForChange).toFixed(2))
+          : 0;
+      const history = monthlySample(targetObs.slice(0, idx + 1));
+      const lastHist = history[history.length - 1];
+      if (lastHist && lastHist.date === announced.date) lastHist.value = announced.target;
+      else if (!lastHist || lastHist.date < announced.date) history.push({ date: announced.date, value: announced.target });
+      return {
+        date: announced.date,
+        target: announced.target,
+        prime,
+        bond5y,
+        cpi: cpiYoY,
+        cpiDate: cpi?.date ?? null,
+        change: annChange !== 0 && prevForChange !== null
+          ? {
+              date: announced.date,
+              oldRate: prevForChange,
+              newRate: announced.target,
+              change: Math.abs(annChange),
+              direction: annChange > 0 ? "up" : "down",
+            }
+          : null,
+        history,
+        isPinned: !!pin,
+        effectiveDate: announced.effectiveDate,
+        announced: true,
+      };
+    }
+  }
+
   return {
     date: cur.date,
     target: cur.value,
@@ -234,5 +290,7 @@ export async function getBocDecisionAsOf(pinDate: string): Promise<BocDecisionSn
     change,
     history: monthlySample(targetObs.slice(0, idx + 1)),
     isPinned: !!pin,
+    effectiveDate: null,
+    announced: false,
   };
 }

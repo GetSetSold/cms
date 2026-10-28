@@ -84,6 +84,7 @@ export async function RateUpdate({ data }: BlockProps) {
         </h3>
         <p className="mt-1 text-[13px] leading-[1.5] text-muted">
           Target for the overnight rate · announced {fmtDate(snap.date)}
+          {snap.announced && snap.change && snap.effectiveDate ? <> · effective {fmtDate(snap.effectiveDate)}</> : null}
         </p>
       </div>
       <ul className="mx-6 mt-4 md:mx-8">
@@ -115,7 +116,10 @@ export async function RateUpdate({ data }: BlockProps) {
         </div>
       )}
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line px-6 py-4 md:px-8">
-        <p className="text-[13px] leading-[1.5] text-muted">Source: Bank of Canada Valet API</p>
+        <p className="text-[13px] leading-[1.5] text-muted">
+          Source: {snap.announced ? "Bank of Canada announcement · Valet API" : "Bank of Canada Valet API"}
+          {snap.announced && snap.change ? " · Prime rate follows bank announcements." : ""}
+        </p>
         <Link
           href="/bank-of-canada-rates-guide"
           className="inline-flex items-center rounded-[var(--radius-btn,999px)] bg-ink px-5 py-2 text-[13px] font-bold leading-[1.5] text-white"
