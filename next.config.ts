@@ -18,6 +18,8 @@ const nextConfig: NextConfig = {
       { source: "/ontario-housing-market/trends", destination: "/ontario-housing-market-trends", permanent: true },
       // Legacy BoC rates URL -> CMS guide URL (301)
       { source: "/bank-of-canada-rates", destination: "/bank-of-canada-rates-guide", permanent: true },
+      // Digital card short link -> canonical card page (301)
+      { source: "/rohit", destination: "/rohit-sharma-realtor", permanent: true },
     ];
   },
   async rewrites() {

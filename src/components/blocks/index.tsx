@@ -25,6 +25,7 @@ import { RateUpdate } from "./RateUpdate";
 import DocumentChecklist from "./DocumentChecklist";
 import { CalculatorBlockClient, type CalcType, type CalcStyle } from "./CalculatorBlock";
 import { ReferralLinkClient } from "./ReferralLink";
+import { DigitalCardClient } from "./DigitalCard";
 import { getCalculatorSettings } from "@/lib/calculators/settings";
 
 export type BlockCtx = { svgs: Record<string, SvgAsset>; settings: SiteSettings; page?: Page; dark?: boolean; buttonStyle?: "solid" | "bordered"; inRow?: boolean; /** Set when the block sits inside a merged header+block card. */ embedded?: "side" | "stacked"; /** The real background color behind the block when known (custom color, brand, box, merged card) — lets a block check contrast instead of guessing. */ bg?: string };
@@ -1405,6 +1406,7 @@ export const BLOCKS: Record<string, (p: BlockProps) => React.ReactNode> = {
   document_checklist: DocumentChecklist,
   calculator: CalculatorBlock,
   referral_link: ReferralLink,
+  digital_card: DigitalCard,
 };
 
 function CalculatorBlock({ data, ctx }: BlockProps) {
@@ -1424,6 +1426,30 @@ function CalculatorBlock({ data, ctx }: BlockProps) {
         cfg={cfg}
       />
     </div>
+  );
+}
+
+function DigitalCard({ data, ctx }: BlockProps) {
+  // Card shell only — Featured / Sold / Reviews stay as separate blocks
+  // on the same page. Contact fields fall back to Settings → Contact.
+  const c = ctx.settings.contact ?? {};
+  return (
+    <DigitalCardClient
+      name={data.name}
+      role={data.role}
+      brokerage={data.brokerage}
+      tagline={data.tagline}
+      handle={data.handle}
+      photoUrl={data.photo_url}
+      phone={data.phone || c.phone}
+      email={data.email || c.email}
+      address={data.address || c.address}
+      hours={data.hours || c.hours}
+      shareUrl={data.share_url}
+      canonicalUrl={data.canonical_url}
+      proofPoints={data.proof_points}
+      services={data.services}
+    />
   );
 }
 
