@@ -49,8 +49,11 @@ export function PostCoverArt({
         <line x1="0" y1="337" x2="800" y2="337" />
       </g>
       {/* header */}
-      <text x="48" y="72" fontSize="24" fontWeight="700" fill="#ffffff" letterSpacing="3">
-        GETSET<tspan fill="#4d9fff">SOLD</tspan>
+      <text x="48" y="72" fontSize="24" fontWeight="700" fill="#ffffff">
+        Rohit Sharma<tspan fill="#0099cc">&nbsp;Real Estate</tspan>
+      </text>
+      <text x="48" y="96" fontSize="13" fill="rgba(255,255,255,0.6)" letterSpacing="1">
+        getsetsold.ca
       </text>
       <text x="752" y="72" fontSize="20" fill="rgba(255,255,255,0.6)" textAnchor="end" letterSpacing="2">
         {(monthLabel || "MARKET UPDATE").toUpperCase()}
