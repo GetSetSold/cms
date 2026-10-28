@@ -27,12 +27,26 @@ export async function generateMetadata({ params, searchParams }: { params: Promi
   const result = await load(category, slug, preview === "1");
   if (!result) return { title: "Not found" };
   const { post, category: cat } = result;
-  const title = post.seo_title || post.title;
+  // A stored SEO title that is exactly the post's tag list (comma-joined)
+  // is a keyword dump, not a title — it is what share previews were
+  // picking up ("Bank of Canada, interest rates, ...") while the H1 showed
+  // the real title. Ignore it so sharing and search use the real title.
+  const seoTitle = post.seo_title && post.seo_title !== post.tags.join(", ") ? post.seo_title : null;
+  const title = seoTitle || post.title;
   const description = post.seo_description || post.excerpt || undefined;
+  const ogImage = `/updates/${cat.slug}/${post.slug}/opengraph-image`;
   return {
     title, description, keywords: post.tags.length ? post.tags : undefined,
     alternates: { canonical: `/updates/${cat.slug}/${post.slug}` },
-    openGraph: { title, description, type: "article" },
+    openGraph: {
+      title, description, type: "article",
+      url: `/updates/${cat.slug}/${post.slug}`,
+      images: [{ url: ogImage, width: 1200, height: 630, alt: title }],
+    },
+    twitter: {
+      card: "summary_large_image", title, description,
+      images: [ogImage],
+    },
   };
 }
 
