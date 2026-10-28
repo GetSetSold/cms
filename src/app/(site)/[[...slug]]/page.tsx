@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect, redirect } from "next/navigation";
 import { collectSvgIds, getPage, getSettings, getSvgs } from "@/lib/cms";
+import { getRedirect } from "@/lib/redirects";
 import { themeFontHref, themeVars, themeIconOverrideCSS } from "@/lib/theme";
 import { createClient } from "@/lib/supabase/server";
 import { RenderSections } from "@/components/blocks";
@@ -125,7 +126,18 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 
 export default async function SitePage(props: Props) {
   const [{ result, preview }, settings] = await Promise.all([load(props), getSettings()]);
-  if (!result) notFound();
+  if (!result) {
+    // CMS redirects fire ONLY on a page miss: real pages and real routes
+    // already won by this point, so a redirect row can never override
+    // a live page. A miss here costs one redirects-table lookup.
+    const { slug } = await props.params;
+    const redir = await getRedirect(toSlug(slug));
+    if (redir) {
+      if (redir.permanent) permanentRedirect(redir.destination);
+      redirect(redir.destination);
+    }
+    notFound();
+  }
   const { page, sections } = result;
   const seo = settings.seo_defaults ?? { title_suffix: "", description: "" };
 
