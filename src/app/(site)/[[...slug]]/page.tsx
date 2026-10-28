@@ -96,26 +96,32 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   }
   
   const path = page.slug === "home" ? "/" : `/${page.slug}`;
-  const ogImage = (sections ? findFirstImage(sections) : null) || settings.seo_defaults?.og_image || undefined;
-  
+  // A page shares its own photo when it has one; otherwise it gets the
+  // branded title card from this route (same setup as updates posts),
+  // so no CMS page ever shares without an image.
+  const photoOg = (sections ? findFirstImage(sections) : null) || settings.seo_defaults?.og_image || undefined;
+  const generatedOg = `/api/og/${page.slug}`;
+  const ogImage = photoOg || generatedOg;
+  const ogImageMeta = photoOg ? { url: ogImage } : { url: ogImage, width: 1200, height: 630, alt: title };
+
   return {
     title,
     description,
     alternates: { canonical: page.canonical_url || path },
     robots: page.noindex ? { index: false, follow: false } : undefined,
-    openGraph: { 
-      title, 
-      description, 
-      url: path, 
-      siteName: settings.site_name, 
-      type: "website",
-      ...(ogImage ? { images: [{ url: ogImage }] } : {}),
-    },
-    twitter: { 
-      card: ogImage ? "summary_large_image" : "summary", 
-      title, 
+    openGraph: {
+      title,
       description,
-      ...(ogImage ? { images: [ogImage] } : {}),
+      url: path,
+      siteName: settings.site_name,
+      type: "website",
+      images: [ogImageMeta],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [ogImage],
     },
     verification: {
       ...(seo.google_verify ? { google: seo.google_verify } : {}),
