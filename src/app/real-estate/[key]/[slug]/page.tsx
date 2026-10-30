@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cache } from "react";
 import { notFound, redirect, permanentRedirect } from "next/navigation";
 import { createMlsClient, daysOnMarket, displayValue, isSale, mediaItems, priceDisplay, resolveCitySlug, citySlug, listingSlug, normalizeCity, type GridListing, type PropertyListing } from "@/lib/mls";
 import { hoodSlug } from "@/lib/neighbourhoods";
@@ -34,17 +35,29 @@ async function getInquiryForm(): Promise<CmsForm | null> {
   return data as CmsForm | null;
 }
 
-async function getListing(key: string) {
+// One property fetch per request: generateMetadata and the page both call
+// this, and cache() guarantees a single round-trip instead of relying on
+// fetch memoization. The property row itself stays select=* on purpose —
+// the page hands the full listing to ~12 detail blocks (gallery, rooms,
+// financials, systems, land/lot, construction, FAQ…), so narrowing it
+// would risk breaking a block for little saving.
+const getListing = cache(async (key: string) => {
   const mls = createMlsClient();
   const { data } = await mls.from("property").select("*").eq("ListingKey", key).maybeSingle();
   return data as PropertyListing | null;
-}
+});
 
 async function getSimilar(listing: PropertyListing) {
   if (!listing.City) return [];
   const mls = createMlsClient();
   const sale = isSale(listing);
-  const base = mls.from("grid").select("*").eq("City", listing.City).neq("ListingKey", listing.ListingKey).limit(20);
+  // Narrow columns: SimilarListings only renders ListingCard, and the card
+  // reads exactly these 15 fields (price via isSale/priceDisplay, slug via
+  // UnparsedAddress+City). The old select=* shipped 20 full grid rows per
+  // detail view for no reason.
+  const SIMILAR_COLUMNS =
+    "ListingKey,ListingId,ListPrice,TotalActualRent,Media,UnparsedAddress,City,Province,PostalCode,BedroomsTotal,BathroomsTotalInteger,AboveGradeFinishedArea,PhotosCount,OfficeName,OriginalEntryTimestamp";
+  const base = mls.from("grid").select(SIMILAR_COLUMNS).eq("City", listing.City).neq("ListingKey", listing.ListingKey).limit(20);
   const { data } = sale
     ? await base.not("ListPrice", "is", null)
     : await base.not("TotalActualRent", "is", null);
