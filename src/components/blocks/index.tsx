@@ -10,7 +10,8 @@ import { createClient } from "@/lib/supabase/server";
 import type { CmsForm } from "@/lib/types";
 import { EmbedHtml } from "./EmbedHtml";
 import { getFeaturedListings } from "@/lib/featuredListings";
-import { getProjects, getCities, getBuilders, getPreconStats } from "@/lib/precon";
+import { getProjects, getCities, getBuilders, getPreconStats, type Project, type Builder } from "@/lib/precon";
+import { getCashbackAmount, formatCashback } from "@/lib/cashback";
 import { PreconGridClient } from "@/components/site/PreconGridClient";
 import { getSoldHistory } from "@/lib/soldHistory";
 import { ListingCardShell } from "@/components/listings/ListingCardShell";
@@ -1104,10 +1105,48 @@ async function SoldHistoryGrid({ data, ctx }: BlockProps) {
   );
 }
 
+/** Compact project card for the card-page swipe teaser (mirrors the
+ *  PreconGridClient card, without filters/stats/map). */
+function PreconTeaserCard({ p, cashback }: { p: Project & { builder: Builder }; cashback: SiteSettings["precon_cashback"] }) {
+  const cb = getCashbackAmount(p.p_start_price, cashback);
+  const card = "rounded-[var(--radius-lg)] border-[length:var(--border-card-width)] border-line shadow-[var(--shadow-card)] bg-white";
+  return (
+    <Link href={`/pre-construction/${p.builder.slug}/${p.slug}`} prefetch={false} className={`group flex w-64 shrink-0 snap-start flex-col overflow-hidden ${card}`}>
+      <div className="relative aspect-[4/3] bg-soft">
+        {p.main_image_url ? <img src={p.main_image_url} alt={p.project_name} loading="lazy" className="h-full w-full object-cover" /> : null}
+        {p.project_status ? <span className="absolute left-3 top-3 rounded-[var(--radius-label)] bg-primary px-2.5 py-1 text-[11px] font-semibold text-white">{p.project_status}</span> : null}
+        {p.vip_release === "Yes" ? <span className="absolute right-3 top-3 rounded-[var(--radius-label)] bg-ink/70 px-2.5 py-1 text-[11px] font-semibold text-white backdrop-blur">VIP</span> : null}
+        {cb ? <span className="absolute bottom-3 left-3 rounded-[var(--radius-label)] bg-gradient-to-r from-[#065f46] to-[#059669] px-2.5 py-1 text-[11px] font-semibold text-white">{formatCashback(cb)} cashback</span> : null}
+      </div>
+      <div className="flex flex-col gap-1 p-4">
+        <div className="text-base font-bold text-primary">{p.p_start_price ? `From $${Number(p.p_start_price).toLocaleString()}` : "Price TBA"}</div>
+        <div className="text-sm font-medium">{p.project_name}</div>
+        <div className="text-xs text-muted">{p.builder.builder_name} · {p.city}</div>
+      </div>
+    </Link>
+  );
+}
+
 async function PreconProjectsGrid({ data, ctx }: BlockProps) {
   const [projects, cities, builders, stats] = await Promise.all([
     getProjects(), getCities(), getBuilders(), getPreconStats(),
   ]);
+  if (ctx.narrow) {
+    // Card page: collapsed +/− section with a swipe teaser — the full
+    // filterable grid lives at /pre-construction behind the View all link.
+    const teaser = (projects as (Project & { builder: Builder })[]).slice(0, 8);
+    if (!teaser.length) return null;
+    return (
+      <div className={bw(ctx)}>
+        <CardCollapsible
+          title={data.heading || "Pre-Construction"}
+          extra={<Link href="/pre-construction" prefetch={false} className="font-medium text-primary">View all →</Link>}
+        >
+          <SwipeRow>{teaser.map((p) => <PreconTeaserCard key={p.id} p={p} cashback={ctx.settings.precon_cashback} />)}</SwipeRow>
+        </CardCollapsible>
+      </div>
+    );
+  }
   return (
     <div className={`${bw(ctx)} flex flex-col gap-6 py-12 md:py-16`}>
       {data.heading ? <h2 className={h2}>{data.heading}</h2> : null}
