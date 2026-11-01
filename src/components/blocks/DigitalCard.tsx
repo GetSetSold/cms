@@ -16,9 +16,11 @@ import type { SvgAsset } from "@/lib/types";
  *   service), Save Contact (vCard generated in the browser and downloaded),
  *   Share (navigator.share, falling back to copying the share link),
  *   Email (mailto:).
- * - "I want to…" chips switch the offer shown below them and re-write the
- *   WhatsApp message for that service. No page reload.
- * - Details (address, hours) sit in a <details> element at the bottom.
+ * - "I want to…" tiles (3×2 icon grid) switch the offer shown below them
+ *   and re-write the WhatsApp message for that service. No page reload.
+ *   Each service has an editable button label and optional highlight chips.
+ * - Contact is a dark card: big tap-to-call number, a message button with
+ *   an editable label, and icon-only detail rows (no Address:/Hours: labels).
  *
  * Content comes from the block's own fields, falling back to
  * Settings → Contact (phone, email, address, hours) where a field is blank,
@@ -38,6 +40,8 @@ export type DigitalCardService = {
   link_type?: string;
   link_href?: string;
   link_label?: string;
+  /** Short highlight chips shown under the offer title (3 max). */
+  highlights?: { text: string }[];
 };
 
 export type DigitalCardProof = { value: string; label: string };
@@ -59,6 +63,8 @@ type Props = {
   canonicalUrl?: string;
   proofPoints?: DigitalCardProof[];
   services?: DigitalCardService[];
+  /** Contact-card message button label. Blank = "WhatsApp me". */
+  contactButtonLabel?: string;
 };
 
 const DEFAULT_PROOF: DigitalCardProof[] = [
@@ -110,6 +116,33 @@ const DEFAULT_SERVICES: DigitalCardService[] = [
 
 const digits = (s: string) => s.replace(/\D/g, "");
 
+/** Tile icons for the "I want to…" grid, matched by service-label keyword. */
+const TILE_ICONS: [RegExp, React.ReactNode][] = [
+  [/buy/i, <><path d="M3 10.5 12 3l9 7.5" /><path d="M5 9.5V21h14V9.5" /></>],
+  [/sell/i, <><path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4" /><path d="M4 6v12c0 1.1.9 2 2 2h14v-4" /><path d="M18 12a2 2 0 0 0 0 4h4v-4Z" /></>],
+  [/lease/i, <><circle cx="8" cy="15" r="4" /><path d="m10.9 12.1 8.6-8.6" /><path d="m18 5 2 2m-2-6 3 3" /></>],
+  [/rent/i, <><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M3 9h18M9 9v11" /></>],
+  [/invest/i, <><path d="m3 17 6-6 4 4 8-8" /><path d="M14 7h7v7" /></>],
+  [/refer/i, <><rect x="3" y="8" width="18" height="4" rx="1" /><path d="M12 8v13M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7" /><path d="M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 0 1 0 5" /></>],
+];
+
+function TileIcon({ label }: { label: string }) {
+  const found = TILE_ICONS.find(([re]) => re.test(label));
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6" aria-hidden="true">
+      {found ? found[1] : <path d="M12 5v14M5 12h14" />}
+    </svg>
+  );
+}
+
+function DetailIcon({ children }: { children: React.ReactNode }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 shrink-0 text-[#0099cc]" aria-hidden="true">
+      {children}
+    </svg>
+  );
+}
+
 export function DigitalCardClient({
   name,
   role,
@@ -126,6 +159,7 @@ export function DigitalCardClient({
   canonicalUrl,
   proofPoints,
   services,
+  contactButtonLabel,
 }: Props) {
   const displayName = name || "Rohit Sharma";
   const displayRole = role || "REALTOR® · Caledonia & Haldimand County";
@@ -256,26 +290,39 @@ export function DigitalCardClient({
         ) : null}
       </div>
 
-      {/* I want to… */}
+      {/* I want to… — 3×2 icon tile grid + offer card */}
       <div className="flex flex-col gap-3">
         <p className="text-sm font-semibold uppercase tracking-wide text-primary">I want to…</p>
-        <div className="flex flex-wrap gap-2">
+        <div className="grid grid-cols-3 gap-2.5">
           {list.map((s, i) => (
             <button
               key={s.label}
               type="button"
               onClick={() => setActive(i)}
               aria-pressed={active === i}
-              className={`rounded-[var(--radius-btn)] border px-4 py-2.5 text-sm font-semibold ${
+              className={`flex flex-col items-center gap-2 rounded-[var(--radius-md)] border px-2 py-4 text-[13px] font-medium ${
                 active === i ? "border-ink bg-ink text-white" : "border-line bg-white text-ink"
               }`}
             >
+              <TileIcon label={s.label} />
               {s.label}
             </button>
           ))}
         </div>
-        <div className={`${cardCls} flex flex-col gap-3 p-6`}>
+        <div className={`${cardCls} flex flex-col gap-3 p-6`} style={{ borderTop: "3px solid #0099cc" }}>
           <h2 className="text-xl font-semibold md:text-[22px]">{current.title}</h2>
+          {(() => {
+            const chips = (current.highlights ?? []).map((h) => h.text).filter(Boolean).slice(0, 3);
+            return chips.length ? (
+              <div className="flex flex-wrap gap-2">
+                {chips.map((c, i) => (
+                  <span key={i} className="rounded-[var(--radius-label)] bg-[#e6f6fc] px-3 py-1.5 text-xs font-semibold text-[#007aa3]">
+                    {c}
+                  </span>
+                ))}
+              </div>
+            ) : null;
+          })()}
           <p className="text-[15px] leading-relaxed text-muted">{current.body}</p>
           {(() => {
             const isCustom = current.link_type === "custom" && !!current.link_href;
@@ -295,15 +342,42 @@ export function DigitalCardClient({
         </div>
       </div>
 
-      {/* Details, left open on the card (a few lines — hiding them gains nothing). */}
+      {/* Contact — dark card: big tap-to-call, message button, icon-only rows. */}
       {address || hours || phone ? (
-        <div className={`${cardCls} p-5 text-[15px] leading-relaxed text-muted`}>
-          <p className="font-semibold text-ink">Details · Address, hours &amp; brokerage</p>
-          <div className="mt-3 flex flex-col gap-1">
-            {address ? <div><span className="font-semibold text-ink">Address:</span> {address}</div> : null}
-            {phone ? <div><span className="font-semibold text-ink">Phone:</span> {phone}</div> : null}
-            {hours ? <div><span className="font-semibold text-ink">Hours:</span> {hours}</div> : null}
-            <div><span className="font-semibold text-ink">Brokerage:</span> {displayBrokerage}</div>
+        <div className="flex flex-col gap-4 rounded-[var(--radius-lg)] bg-ink p-6 text-white">
+          {phone && tel ? (
+            <div>
+              <a href={tel} className="text-[27px] font-bold leading-tight tracking-tight text-white no-underline">
+                {phone}
+              </a>
+              <p className="mt-1 text-[13px] text-white/60">Tap to call</p>
+            </div>
+          ) : null}
+          <a
+            href={waHref(`Hi ${displayName.split(" ")[0] || "Rohit"}, I found your card and would like to chat.`)}
+            target="_blank"
+            rel="noreferrer"
+            className={`${pill} bg-primary text-white`}
+          >
+            {contactButtonLabel || "WhatsApp me"}
+          </a>
+          <div className="flex flex-col gap-2.5 text-sm text-white/80">
+            {address ? (
+              <div className="flex items-center gap-2.5">
+                <DetailIcon><path d="M12 21s7-5.5 7-11a7 7 0 1 0-14 0c0 5.5 7 11 7 11Z" /><circle cx="12" cy="10" r="2.5" /></DetailIcon>
+                {address}
+              </div>
+            ) : null}
+            {hours ? (
+              <div className="flex items-center gap-2.5">
+                <DetailIcon><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 3" /></DetailIcon>
+                {hours}
+              </div>
+            ) : null}
+            <div className="flex items-center gap-2.5">
+              <DetailIcon><rect x="3" y="7" width="18" height="13" rx="2" /><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></DetailIcon>
+              {displayBrokerage}
+            </div>
           </div>
         </div>
       ) : null}

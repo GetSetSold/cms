@@ -1560,6 +1560,7 @@ function DigitalCard({ data, ctx }: BlockProps) {
       canonicalUrl={data.canonical_url}
       proofPoints={data.proof_points}
       services={data.services}
+      contactButtonLabel={data.contact_button_label}
     />
   );
 }
