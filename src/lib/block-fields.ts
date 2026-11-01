@@ -229,13 +229,21 @@ export const BLOCK_FIELDS: Record<string, Field[]> = {
   featured_listings_grid: [
     t("heading", "Heading"),
     t("count", "Number of listings to show"),
+    t("city", "City — newest active listings as a swipe showcase (blank = curated featured list)"),
     t("link_label", "\"View all\" link label"),
   ],
   sold_history_grid: [
     t("heading", "Heading"),
     t("count", "Number of records to show (leave blank for all, 12 per page)"),
     { key: "status_filter", label: "Only show (leave blank for all)", type: "select", options: ["", "sold", "leased", "purchased"] },
+    t("city", "City — matches the address (blank = all cities; set = swipe showcase)"),
     t("link_label", "\"View all\" link label"),
+  ],
+  city_stats: [
+    t("heading", "Heading (blank = stats band only)"),
+    t("city", "City (e.g. Caledonia)"),
+    t("link_label", "\"View all\" link label (blank = no link)"),
+    t("link_href", "\"View all\" link URL (e.g. /caledonia-real-estate)"),
   ],
   precon_projects_grid: [
     t("heading", "Heading"),

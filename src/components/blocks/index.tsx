@@ -3,7 +3,7 @@ import Link from "next/link";
 import type { Page, Section, SiteSettings, SvgAsset } from "@/lib/types";
 import { Svg } from "@/components/site/Svg";
 import { LeadForm } from "./LeadForm";
-import { createMlsClient, LISTING_CARD_COLUMNS, type GridListing } from "@/lib/mls";
+import { createMlsClient, LISTING_CARD_COLUMNS, rawCitiesFor, type GridListing } from "@/lib/mls";
 import { ListingCard } from "@/components/listings/ListingCard";
 import { CmsFormRenderer } from "./CmsFormRenderer";
 import { createClient } from "@/lib/supabase/server";
@@ -14,6 +14,7 @@ import { getProjects, getCities, getBuilders, getPreconStats, type Project, type
 import { getCashbackAmount, formatCashback } from "@/lib/cashback";
 import { PreconGridClient } from "@/components/site/PreconGridClient";
 import { getSoldHistory } from "@/lib/soldHistory";
+import { getCityStats, formatPrice } from "@/lib/cityStats";
 import { ListingCardShell } from "@/components/listings/ListingCardShell";
 import { SoldHistoryPager } from "@/components/listings/SoldHistoryPager";
 import { isDarkColor } from "@/lib/color";
@@ -1061,8 +1062,23 @@ async function SoldHistoryGrid({ data, ctx }: BlockProps) {
   // A number caps the teaser (e.g. 7 shows the 7 newest); blank = all rows,
   // paged 12 per page on the client (blocks can't read ?page= from the URL).
   const count = Number(data.count);
-  const allRows = await getSoldHistory(data.status_filter || undefined);
+  const city = data.city && String(data.city).trim() ? String(data.city).trim() : undefined;
+  const allRows = await getSoldHistory(data.status_filter || undefined, city);
   if (!allRows.length) return null;
+  // City showcase mode (agent pages): swipe carousel of that city's sold
+  // history. Blank city = the existing teaser/pager below.
+  if (city) {
+    const teaser = allRows.slice(0, Number.isFinite(count) && count > 0 ? count : 6);
+    return (
+      <div className={`${bw(ctx)} flex flex-col gap-6 py-7 md:py-16`}>
+        <div className="flex items-end justify-between gap-4">
+          {data.heading ? <h2 className={h2}>{data.heading}</h2> : <span />}
+          <Link href="/sold-history" prefetch={false} className="font-medium text-primary">{data.link_label || "View all"} →</Link>
+        </div>
+        <SwipeRow>{teaser.map((r) => <SoldHistoryCard key={r.id} row={r} />)}</SwipeRow>
+      </div>
+    );
+  }
   const capped = Number.isFinite(count) && count > 0;
   const perPage = 12;
   const chunks: typeof allRows[] = [];
@@ -1160,6 +1176,30 @@ async function PreconProjectsGrid({ data, ctx }: BlockProps) {
 }
 
 async function FeaturedListingsGrid({ data, ctx }: BlockProps) {
+  // City showcase mode (agent pages): the city's newest active MLS listings
+  // as a swipe carousel. Blank city = the curated featured list below.
+  if (data.city && String(data.city).trim()) {
+    const city = String(data.city).trim();
+    const count = Number(data.count) || 6;
+    const mls = createMlsClient();
+    const variants = await rawCitiesFor(city);
+    const { data: rows } = await mls.from("grid")
+      .select(LISTING_CARD_COLUMNS)
+      .in("City", variants)
+      .order("OriginalEntryTimestamp", { ascending: false })
+      .limit(count);
+    const listings = (rows ?? []) as GridListing[];
+    if (!listings.length) return null;
+    return (
+      <div className={`${bw(ctx)} flex flex-col gap-6 py-7 md:py-16`}>
+        <div className="flex items-end justify-between gap-4">
+          {data.heading ? <h2 className={h2}>{data.heading}</h2> : <span />}
+          <Link href={`/listings?city=${encodeURIComponent(city)}`} prefetch={false} className="font-medium text-primary">{data.link_label || "View all"} →</Link>
+        </div>
+        <SwipeRow>{listings.map((l) => <ListingCard key={l.ListingKey} listing={l} />)}</SwipeRow>
+      </div>
+    );
+  }
   const { order, mlsListings, privateListings } = await getFeaturedListings();
   const count = Number(data.count) || 6;
   const visible = order.slice(0, count);
@@ -1202,6 +1242,39 @@ async function FeaturedListingsGrid({ data, ctx }: BlockProps) {
         <Link href="/listings" prefetch={false} className="font-medium text-primary">{data.link_label || "View all listings"} →</Link>
       </div>
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">{cards}</div>
+    </div>
+  );
+}
+
+/** City stats band (agent pages): live MLS figures for one city — active
+ *  listings, median sale and lease prices. Data comes from getCityStats
+ *  (pre-computed city_stats table, RPC fallback), cached 1h. */
+async function CityStatsBand({ data, ctx }: BlockProps) {
+  const city = data.city && String(data.city).trim() ? String(data.city).trim() : null;
+  if (!city) return null;
+  const stats = await getCityStats(city);
+  const items = [
+    { value: stats.activeCount.toLocaleString("en-CA"), label: `Active listings in ${stats.city}` },
+    stats.medianSalePrice != null ? { value: formatPrice(stats.medianSalePrice), label: "Median sale price" } : null,
+    stats.medianLeasePrice != null ? { value: formatPrice(stats.medianLeasePrice), label: "Median lease price" } : null,
+  ].filter((s): s is { value: string; label: string } => s !== null);
+  if (!items.length) return null;
+  return (
+    <div className={`${bw(ctx)} flex flex-col gap-6 py-7 md:py-16`}>
+      {data.heading || data.link_href ? (
+        <div className="flex items-end justify-between gap-4">
+          {data.heading ? <h2 className={h2}>{data.heading}</h2> : <span />}
+          {data.link_href ? <Link href={data.link_href} prefetch={false} className="font-medium text-primary">{data.link_label || "View all"} →</Link> : null}
+        </div>
+      ) : null}
+      <div className="grid grid-cols-3 gap-4 rounded-[var(--radius-lg)] bg-ink p-6 text-white md:p-8">
+        {items.map((s) => (
+          <div key={s.label} className="text-center">
+            <div className="text-2xl font-extrabold tracking-tight md:text-4xl">{s.value}</div>
+            <div className="mt-1 text-xs text-white/60 md:text-sm">{s.label}</div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -1509,6 +1582,7 @@ export const BLOCKS: Record<string, (p: BlockProps) => React.ReactNode> = {
   social_links: SocialLinks,
   featured_listings_grid: FeaturedListingsGrid,
   sold_history_grid: SoldHistoryGrid,
+  city_stats: CityStatsBand,
   precon_projects_grid: PreconProjectsGrid,
   feature_section: FeatureSection,
   market_stats: MarketStats,
