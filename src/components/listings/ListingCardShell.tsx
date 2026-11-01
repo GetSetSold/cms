@@ -61,14 +61,11 @@ export function ListingCardShell(d: ListingCardData) {
           // eslint-disable-next-line @next/next/no-img-element
           <img src={d.image} alt="" className="h-full w-full object-cover transition group-hover:scale-105" loading="lazy" />
         ) : (
-          <div className="flex h-full flex-col items-center justify-center gap-3 text-muted" aria-hidden="true">
-            <span className="flex h-16 w-16 items-center justify-center rounded-full bg-white/70 shadow-[var(--shadow-card)]">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" className="h-8 w-8">
-                <path d="M3 10.5 12 3l9 7.5" />
-                <path d="M5 9.5V21h14V9.5" />
-              </svg>
-            </span>
-            <span className="text-xs font-medium uppercase tracking-wide">No photo</span>
+          <div className="flex h-full items-center justify-center" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" className="h-auto w-1/2 text-muted/40">
+              <path d="M3 10.5 12 3l9 7.5" />
+              <path d="M5 9.5V21h14V9.5" />
+            </svg>
           </div>
         )}
         {d.badgeStyle === "ribbon" ? (
