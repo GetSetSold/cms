@@ -61,8 +61,8 @@ export function ListingCardShell(d: ListingCardData) {
           // eslint-disable-next-line @next/next/no-img-element
           <img src={d.image} alt="" className="h-full w-full object-cover transition group-hover:scale-105" loading="lazy" />
         ) : (
-          <div className="flex h-full items-center justify-center" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" className="h-auto w-1/2 text-muted/40">
+          <div className="flex h-full items-center justify-center bg-ink" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" className="h-auto w-1/2 text-[#0099cc]">
               <path d="M3 10.5 12 3l9 7.5" />
               <path d="M5 9.5V21h14V9.5" />
             </svg>
