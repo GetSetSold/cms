@@ -418,7 +418,7 @@ function Testimonials({ data, ctx }: BlockProps) {
   if (ctx.narrow) {
     return (
       <div className={bw(ctx)}>
-        <CardCollapsible title={data.heading || "Testimonials"}>
+        <CardCollapsible title={data.heading || "Testimonials"} titleClassName={sectionTitle(ctx)}>
         <SwipeRow>
           {(data.items ?? []).map((t: any, i: number) => (
             <figure key={i} className={`flex flex-col justify-between gap-8 rounded-[20px] p-7 ${i % 2 ? "bg-primary text-white" : "bg-white"}`}>
@@ -664,7 +664,7 @@ function ContactInfo({ data, ctx }: BlockProps) {
   if (ctx.narrow) {
     return (
       <div className={bw(ctx)}>
-        <CardCollapsible title={data.heading || "Contact"}>
+        <CardCollapsible title={data.heading || "Contact"} titleClassName={sectionTitle(ctx)}>
           <dl className="grid gap-6">
             {rows.map(([k, v, href]) => (
               <div key={k as string} className="flex flex-col gap-1">
@@ -1095,6 +1095,7 @@ async function SoldHistoryGrid({ data, ctx }: BlockProps) {
       <div className={bw(ctx)}>
         <CardCollapsible
           title={data.heading || "Sold History"}
+          titleClassName={sectionTitle(ctx)}
           extra={<Link href="/sold-history" prefetch={false} className="font-medium text-primary">{data.link_label || "View all"} →</Link>}
         >
           <SwipeRow>{allRows.map((r) => <SoldHistoryCard key={r.id} row={r} />)}</SwipeRow>
@@ -1160,6 +1161,7 @@ async function PreconProjectsGrid({ data, ctx }: BlockProps) {
       <div className={bw(ctx)}>
         <CardCollapsible
           title={data.heading || "Pre-Construction"}
+          titleClassName={sectionTitle(ctx)}
           extra={<Link href="/pre-construction" prefetch={false} className="font-medium text-primary">View all →</Link>}
         >
           <SwipeRow>{teaser.map((p) => <PreconTeaserCard key={p.id} p={p} cashback={ctx.settings.precon_cashback} />)}</SwipeRow>
@@ -1232,6 +1234,7 @@ async function FeaturedListingsGrid({ data, ctx }: BlockProps) {
       <div className={bw(ctx)}>
         <CardCollapsible
           title={data.heading || "Featured Listings"}
+          titleClassName={sectionTitle(ctx)}
           extra={<Link href="/listings" prefetch={false} className="font-medium text-primary">{data.link_label || "View all listings"} →</Link>}
         >
           <SwipeRow>{cards}</SwipeRow>
@@ -1331,7 +1334,7 @@ function CustomCode({ data, ctx }: BlockProps) {
   if (ctx.narrow && data.heading) {
     return (
       <div className={bw(ctx)}>
-        <CardCollapsible title={data.heading}>
+        <CardCollapsible title={data.heading} titleClassName={sectionTitle(ctx)}>
           <div className="flex flex-col items-center text-center">
             <EmbedHtml html={data.html} />
           </div>

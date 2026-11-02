@@ -10,7 +10,7 @@ import { useState } from "react";
  *  (e.g. a View all link) sits outside the toggle button so it stays
  *  tappable even while the section is closed.
  *  Heading size matches the shared h2Compact scale used on card pages. */
-export function CardCollapsible({ title, extra, children }: { title: string; extra?: React.ReactNode; children: React.ReactNode }) {
+export function CardCollapsible({ title, extra, children, titleClassName }: { title: string; extra?: React.ReactNode; children: React.ReactNode; titleClassName?: string }) {
   const [open, setOpen] = useState(false);
   return (
     <div className="flex flex-col gap-3">
@@ -27,7 +27,7 @@ export function CardCollapsible({ title, extra, children }: { title: string; ext
           >
             {open ? "−" : "+"}
           </span>
-          <span className="font-display font-semibold tracking-tight text-[22px] leading-snug md:text-[32px]">{title}</span>
+          <span className={titleClassName || "font-display font-semibold tracking-tight text-[22px] leading-snug md:text-[32px]"}>{title}</span>
         </button>
         {extra}
       </div>
