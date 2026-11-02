@@ -53,6 +53,10 @@ const h2 = "font-display font-bold tracking-tight text-[26px] leading-tight md:t
 // smaller scale at every call site. Site-wide Density (Settings → Branding) drives this.
 const h2Compact = "font-display font-semibold tracking-tight text-[22px] leading-snug md:text-[32px] md:leading-tight";
 const headingCls = (compact?: boolean) => (compact ? h2Compact : h2);
+/** Block section titles follow the site-wide density setting exactly like the
+ *  section_header block: compact density → compact title, else the full h2. */
+const sectionTitle = (ctx: BlockCtx) =>
+  `${ctx.settings.theme.density === "compact" ? h2Compact : h2} ${heading(ctx)}`;
 // Shared card/box shape — reads the site's radius+shadow tokens (Settings >
 // Branding > Shape) instead of a hardcoded value, so every card sitewide
 // changes together when that setting changes. `cardLg` for large panels
@@ -436,7 +440,7 @@ function Testimonials({ data, ctx }: BlockProps) {
   }
   return (
     <div className={`${bw(ctx)} flex flex-col gap-8 py-7 md:py-24`}>
-      {data.heading ? <h2 className={h2}>{data.heading}</h2> : null}
+      {data.heading ? <h2 className={sectionTitle(ctx)}>{data.heading}</h2> : null}
       <div className="grid gap-4 md:grid-cols-2 md:gap-6">
         {(data.items ?? []).map((t: any, i: number) => (
           <figure key={i} className={`flex flex-col justify-between gap-8 rounded-[20px] p-7 md:p-10 ${i % 2 ? "bg-primary text-white" : "bg-white"}`}>
@@ -610,7 +614,7 @@ async function LeadFormBlock({ data, ctx }: BlockProps) {
 function RichText({ data, ctx }: BlockProps) {
   return (
     <div className={`${bw(ctx)} flex max-w-3xl flex-col gap-5 py-12 leading-relaxed md:py-16`} style={{ fontSize: "var(--font-body-size, 0.875rem)" }}>
-      {data.heading ? <h2 className={h2}>{data.heading}</h2> : null}
+      {data.heading ? <h2 className={sectionTitle(ctx)}>{data.heading}</h2> : null}
       {paragraphs(data.body)}
     </div>
   );
@@ -787,7 +791,7 @@ async function ListingGrid({ data, ctx }: BlockProps) {
     <div className={`${bw(ctx)} flex flex-col gap-8 py-7 md:py-24`}>
       {data.heading || data.link_label ? (
         <div className="flex items-end justify-between gap-4">
-          {data.heading ? <h2 className={h2}>{data.heading}</h2> : <span />}
+          {data.heading ? <h2 className={sectionTitle(ctx)}>{data.heading}</h2> : <span />}
           <Link href={city ? `/listings/city/${city.toLowerCase().replace(/\s+/g, "-")}` : "/listings"} prefetch={false} className="font-medium text-primary">
             {data.link_label || "View all listings"} →
           </Link>
@@ -1025,7 +1029,7 @@ async function FeaturedListing({ data, ctx }: BlockProps) {
   if (!listing) return null;
   return (
     <div className={`${bw(ctx)} flex flex-col gap-6 py-7 md:py-16`}>
-      {data.heading ? <h2 className={h2}>{data.heading}</h2> : null}
+      {data.heading ? <h2 className={sectionTitle(ctx)}>{data.heading}</h2> : null}
       <div className="max-w-sm"><ListingCard listing={listing as GridListing} /></div>
     </div>
   );
@@ -1072,7 +1076,7 @@ async function SoldHistoryGrid({ data, ctx }: BlockProps) {
     return (
       <div className={`${bw(ctx)} flex flex-col gap-6 py-7 md:py-16`}>
         <div className="flex items-end justify-between gap-4">
-          {data.heading ? <h2 className={h2}>{data.heading}</h2> : <span />}
+          {data.heading ? <h2 className={sectionTitle(ctx)}>{data.heading}</h2> : <span />}
           <Link href="/sold-history" prefetch={false} className="font-medium text-primary">{data.link_label || "View all"} →</Link>
         </div>
         <SwipeRow>{teaser.map((r) => <SoldHistoryCard key={r.id} row={r} />)}</SwipeRow>
@@ -1101,7 +1105,7 @@ async function SoldHistoryGrid({ data, ctx }: BlockProps) {
   return (
     <div className={`${bw(ctx)} flex flex-col gap-6 py-7 md:py-16`}>
       <div className="flex items-end justify-between gap-4">
-        {data.heading ? <h2 className={h2}>{data.heading}</h2> : <span />}
+        {data.heading ? <h2 className={sectionTitle(ctx)}>{data.heading}</h2> : <span />}
         <Link href="/sold-history" prefetch={false} className="font-medium text-primary">{data.link_label || "View all"} →</Link>
       </div>
       {capped ? (
@@ -1165,7 +1169,7 @@ async function PreconProjectsGrid({ data, ctx }: BlockProps) {
   }
   return (
     <div className={`${bw(ctx)} flex flex-col gap-6 py-12 md:py-16`}>
-      {data.heading ? <h2 className={h2}>{data.heading}</h2> : null}
+      {data.heading ? <h2 className={sectionTitle(ctx)}>{data.heading}</h2> : null}
       <PreconGridClient
         projects={projects as any} cities={cities} builders={builders} stats={stats}
         showFilters={data.show_filters !== false} showStats={data.show_stats !== false} showMap={data.show_map !== false}
@@ -1193,7 +1197,7 @@ async function FeaturedListingsGrid({ data, ctx }: BlockProps) {
     return (
       <div className={`${bw(ctx)} flex flex-col gap-6 py-7 md:py-16`}>
         <div className="flex items-end justify-between gap-4">
-          {data.heading ? <h2 className={h2}>{data.heading}</h2> : <span />}
+          {data.heading ? <h2 className={sectionTitle(ctx)}>{data.heading}</h2> : <span />}
           <Link href={`/listings?city=${encodeURIComponent(city)}`} prefetch={false} className="font-medium text-primary">{data.link_label || "View all"} →</Link>
         </div>
         <SwipeRow>{listings.map((l) => <ListingCard key={l.ListingKey} listing={l} />)}</SwipeRow>
@@ -1238,7 +1242,7 @@ async function FeaturedListingsGrid({ data, ctx }: BlockProps) {
   return (
     <div className={`${bw(ctx)} flex flex-col gap-6 py-7 md:py-16`}>
       <div className="flex items-end justify-between gap-4">
-        {data.heading ? <h2 className={h2}>{data.heading}</h2> : <span />}
+        {data.heading ? <h2 className={sectionTitle(ctx)}>{data.heading}</h2> : <span />}
         <Link href="/listings" prefetch={false} className="font-medium text-primary">{data.link_label || "View all listings"} →</Link>
       </div>
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">{cards}</div>
@@ -1263,7 +1267,7 @@ async function CityStatsBand({ data, ctx }: BlockProps) {
     <div className={`${bw(ctx)} flex flex-col gap-6 py-7 md:py-16`}>
       {data.heading || data.link_href ? (
         <div className="flex items-end justify-between gap-4">
-          {data.heading ? <h2 className={h2}>{data.heading}</h2> : <span />}
+          {data.heading ? <h2 className={sectionTitle(ctx)}>{data.heading}</h2> : <span />}
           {data.link_href ? <Link href={data.link_href} prefetch={false} className="font-medium text-primary">{data.link_label || "View all"} →</Link> : null}
         </div>
       ) : null}
