@@ -132,28 +132,13 @@ function AddByMls({ onAdded }: { onAdded: (row: FeaturedListingRow) => void }) {
   );
 }
 
-function AddPrivate({ onAdded }: { onAdded: (row: FeaturedListingRow) => void }) {
-  const supabase = useMemo(() => createClient(), []);
-  const [open, setOpen] = useState(false);
-  const [d, setD] = useState({ address: "", price: "", bed: "", bath: "", sqft: "", image_url: "", link: "", note: "" });
-  const [error, setError] = useState("");
+type PrivateFormValues = { address: string; price: string; bed: string; bath: string; sqft: string; image_url: string; link: string; note: string };
 
-  async function add() {
-    setError("");
-    const { data, error } = await supabase.from("featured_listings").insert({
-      source_type: "private", listing_key: null, sort_order: 999,
-      address: d.address, price: d.price ? Number(d.price) : null, bed: d.bed ? Number(d.bed) : null,
-      bath: d.bath ? Number(d.bath) : null, sqft: d.sqft ? Number(d.sqft) : null,
-      image_url: d.image_url || null, link: d.link || null, note: d.note || null,
-    }).select("*").single();
-    if (error) return setError(error.message);
-    onAdded(data as FeaturedListingRow);
-    setOpen(false);
-    setD({ address: "", price: "", bed: "", bath: "", sqft: "", image_url: "", link: "", note: "" });
-  }
-
-  if (!open) return <button className="btn self-start" onClick={() => setOpen(true)}>+ Add private listing</button>;
-
+function PrivateForm({ initial, submitLabel, busy, error, onSubmit, onCancel }: {
+  initial: PrivateFormValues; submitLabel: string; busy: boolean; error: string;
+  onSubmit: (d: PrivateFormValues) => void; onCancel: () => void;
+}) {
+  const [d, setD] = useState(initial);
   return (
     <div className="card flex max-w-xl flex-col gap-3">
       <strong className="text-sm">Private listing (no MLS #)</strong>
@@ -168,9 +153,52 @@ function AddPrivate({ onAdded }: { onAdded: (row: FeaturedListingRow) => void })
       <input className="input" placeholder="Link (optional)" value={d.link} onChange={(e) => setD({ ...d, link: e.target.value })} />
       <input className="input" placeholder='Note badge (optional, e.g. "New")' value={d.note} onChange={(e) => setD({ ...d, note: e.target.value })} />
       {error ? <p className="text-sm text-red-700">{error}</p> : null}
-      <div className="flex gap-2"><button className="btn" onClick={() => setOpen(false)}>Cancel</button><button className="btn-primary" onClick={add} disabled={!d.address.trim()}>Save</button></div>
+      <div className="flex gap-2">
+        <button className="btn" onClick={onCancel}>Cancel</button>
+        <button className="btn-primary" onClick={() => onSubmit(d)} disabled={!d.address.trim() || busy}>{submitLabel}</button>
+      </div>
     </div>
   );
+}
+
+const EMPTY_PRIVATE: PrivateFormValues = { address: "", price: "", bed: "", bath: "", sqft: "", image_url: "", link: "", note: "" };
+
+function toFormValues(r: FeaturedListingRow): PrivateFormValues {
+  return {
+    address: r.address ?? "", price: r.price != null ? String(r.price) : "",
+    bed: r.bed != null ? String(r.bed) : "", bath: r.bath != null ? String(r.bath) : "",
+    sqft: r.sqft != null ? String(r.sqft) : "", image_url: r.image_url ?? "",
+    link: r.link ?? "", note: r.note ?? "",
+  };
+}
+
+function toRowPatch(d: PrivateFormValues) {
+  return {
+    address: d.address, price: d.price ? Number(d.price) : null, bed: d.bed ? Number(d.bed) : null,
+    bath: d.bath ? Number(d.bath) : null, sqft: d.sqft ? Number(d.sqft) : null,
+    image_url: d.image_url || null, link: d.link || null, note: d.note || null,
+  };
+}
+
+function AddPrivate({ onAdded }: { onAdded: (row: FeaturedListingRow) => void }) {
+  const supabase = useMemo(() => createClient(), []);
+  const [open, setOpen] = useState(false);
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function add(d: PrivateFormValues) {
+    setError(""); setBusy(true);
+    const { data, error } = await supabase.from("featured_listings").insert({
+      source_type: "private", listing_key: null, sort_order: 999, ...toRowPatch(d),
+    }).select("*").single();
+    setBusy(false);
+    if (error) return setError(error.message);
+    onAdded(data as FeaturedListingRow);
+    setOpen(false);
+  }
+
+  if (!open) return <button className="btn self-start" onClick={() => setOpen(true)}>+ Add private listing</button>;
+  return <PrivateForm initial={EMPTY_PRIVATE} submitLabel="Save" busy={busy} error={error} onSubmit={add} onCancel={() => setOpen(false)} />;
 }
 
 export function FeaturedListingsManager({ initial, initialOfficeKey, details }: { initial: FeaturedListingRow[]; initialOfficeKey: string; details: Record<string, FeaturedMlsDetails> }) {
@@ -178,6 +206,9 @@ export function FeaturedListingsManager({ initial, initialOfficeKey, details }: 
   const [rows, setRows] = useState(initial);
   const [opError, setOpError] = useState("");
   const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editBusy, setEditBusy] = useState(false);
+  const [editError, setEditError] = useState("");
   const existingKeys = useMemo(() => new Set(rows.map((r) => r.listing_key).filter((k): k is string => !!k)), [rows]);
 
   async function toggleActive(id: string, is_active: boolean) {
@@ -203,6 +234,14 @@ export function FeaturedListingsManager({ initial, initialOfficeKey, details }: 
     if (error) { setOpError(`Couldn't remove: ${error.message}`); return; }
     setRows(rows.filter((r) => r.id !== id));
   }
+  async function saveEdit(id: string, d: PrivateFormValues) {
+    setEditError(""); setEditBusy(true);
+    const { data, error } = await supabase.from("featured_listings").update(toRowPatch(d)).eq("id", id).select("*").single();
+    setEditBusy(false);
+    if (error) { setEditError(error.message); return; }
+    setRows(rows.map((r) => (r.id === id ? (data as FeaturedListingRow) : r)));
+    setEditingId(null);
+  }
 
   return (
     <div className="flex flex-col gap-5">
@@ -217,6 +256,13 @@ export function FeaturedListingsManager({ initial, initialOfficeKey, details }: 
       <div className="flex flex-col gap-2">
         {rows.map((r, i) => {
           const d = r.listing_key ? details[r.listing_key] : undefined;
+          if (editingId === r.id) {
+            return (
+              <PrivateForm key={r.id} initial={toFormValues(r)} submitLabel="Save changes"
+                busy={editBusy} error={editError}
+                onSubmit={(vals) => saveEdit(r.id, vals)} onCancel={() => { setEditingId(null); setEditError(""); }} />
+            );
+          }
           return (
             <div key={r.id} className="flex items-center gap-3 rounded-xl border border-line bg-white p-3">
               <div className="flex flex-col">
@@ -255,6 +301,9 @@ export function FeaturedListingsManager({ initial, initialOfficeKey, details }: 
               <label className="ml-auto flex shrink-0 items-center gap-1.5 text-sm text-muted">
                 Active <input type="checkbox" checked={r.is_active} onChange={(e) => toggleActive(r.id, e.target.checked)} />
               </label>
+              {r.source_type === "private" ? (
+                <button className="shrink-0 text-sm font-medium text-primary" onClick={() => { setEditingId(r.id); setEditError(""); }}>Edit</button>
+              ) : null}
               {confirmRemoveId === r.id ? (
                 <span className="flex shrink-0 items-center gap-2">
                   <button className="rounded-lg bg-red-600 px-3 py-1.5 text-sm font-semibold text-white" onClick={() => remove(r.id)}>Confirm</button>
