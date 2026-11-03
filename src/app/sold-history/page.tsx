@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getSettings, getLogo } from "@/lib/cms";
-import { getSoldHistory } from "@/lib/soldHistory";
+import { getSoldHistory, shuffleRows } from "@/lib/soldHistory";
 import { themeFontHref, themeVars, themeIconOverrideCSS } from "@/lib/theme";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter, MobileCtaBar } from "@/components/site/SiteFooter";
@@ -42,28 +42,20 @@ function Card({ row }: { row: Awaited<ReturnType<typeof getSoldHistory>>[number]
   );
 }
 
-export default async function SoldHistoryPage({ searchParams }: { searchParams: Promise<{ status?: string; page?: string }> }) {
-  const { status, page: pageParam } = await searchParams;
-  const [settings, rows, allRows] = await Promise.all([getSettings(), getSoldHistory(status), getSoldHistory()]);
+export default async function SoldHistoryPage({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
+  const { page: pageParam } = await searchParams;
+  const [settings, allRows] = await Promise.all([getSettings(), getSoldHistory()]);
   const logo = await getLogo(settings);
   const themeVars_ = themeVars(settings);
-  const counts = {
-    sold: allRows.filter((r) => r.status === "sold").length,
-    leased: allRows.filter((r) => r.status === "leased").length,
-    purchased: allRows.filter((r) => r.status === "purchased").length,
-  };
+  // Random display order (fresh daily, stable within the day so ?page= stays
+  // consistent); no status filter tabs — a thin category looks bad on its own.
+  const rows = shuffleRows(allRows);
   // Same paging as the listings browser: 12 per page, ?page= in the URL.
   const perPage = 12;
   const totalPages = Math.max(1, Math.ceil(rows.length / perPage));
   const page = Math.min(Math.max(1, Number(pageParam) || 1), totalPages);
   const pageRows = rows.slice((page - 1) * perPage, page * perPage);
-  const hrefFor = (p: number) => {
-    const qs = new URLSearchParams();
-    if (status) qs.set("status", status);
-    if (p > 1) qs.set("page", String(p));
-    const s = qs.toString();
-    return `/sold-history${s ? `?${s}` : ""}`;
-  };
+  const hrefFor = (p: number) => (p > 1 ? `/sold-history?page=${p}` : "/sold-history");
 
   return (
     <div style={themeVars_} className="bg-ground text-ink">
@@ -74,13 +66,6 @@ export default async function SoldHistoryPage({ searchParams }: { searchParams: 
         <div className="mb-8 flex flex-col gap-3">
           <h1 className="font-display font-bold text-[30px] leading-[1.15] tracking-tight md:text-[28px] md:leading-[1.2]">Sold, Leased &amp; Purchased</h1>
           <p className="max-w-xl text-lg text-muted">A record of homes we've helped sell, lease, and buy.</p>
-        </div>
-
-        <div className="mb-10 flex flex-wrap gap-2.5">
-          <a href="/sold-history" className={`flex h-10 items-center rounded-[var(--radius-btn)] px-4.5 text-sm font-medium ${!status ? "bg-primary text-white" : "border border-line bg-white"}`}>All ({allRows.length})</a>
-          <a href="/sold-history?status=sold" className={`flex h-10 items-center rounded-[var(--radius-btn)] px-4.5 text-sm font-medium ${status === "sold" ? "bg-primary text-white" : "border border-line bg-white"}`}>Sold ({counts.sold})</a>
-          <a href="/sold-history?status=leased" className={`flex h-10 items-center rounded-[var(--radius-btn)] px-4.5 text-sm font-medium ${status === "leased" ? "bg-primary text-white" : "border border-line bg-white"}`}>Leased ({counts.leased})</a>
-          <a href="/sold-history?status=purchased" className={`flex h-10 items-center rounded-[var(--radius-btn)] px-4.5 text-sm font-medium ${status === "purchased" ? "bg-primary text-white" : "border border-line bg-white"}`}>Purchased ({counts.purchased})</a>
         </div>
 
         {rows.length ? (

@@ -13,7 +13,7 @@ import { getFeaturedListings } from "@/lib/featuredListings";
 import { getProjects, getCities, getBuilders, getPreconStats, type Project, type Builder } from "@/lib/precon";
 import { getCashbackAmount, formatCashback } from "@/lib/cashback";
 import { PreconGridClient } from "@/components/site/PreconGridClient";
-import { getSoldHistory } from "@/lib/soldHistory";
+import { getSoldHistory, shuffleRows } from "@/lib/soldHistory";
 import { getCityStats, formatPrice } from "@/lib/cityStats";
 import { ListingCardShell } from "@/components/listings/ListingCardShell";
 import { SoldHistoryPager } from "@/components/listings/SoldHistoryPager";
@@ -29,6 +29,7 @@ import { CalculatorBlockClient, type CalcType, type CalcStyle } from "./Calculat
 import { ReferralLinkClient } from "./ReferralLink";
 import { DigitalCardClient } from "./DigitalCard";
 import { SwipeRow } from "./SwipeRow";
+import { SoldHistoryLoadMore } from "./SoldHistoryLoadMore";
 import { CardCollapsible } from "./CardCollapsible";
 import { getCalculatorSettings } from "@/lib/calculators/settings";
 
@@ -1067,19 +1068,22 @@ async function SoldHistoryGrid({ data, ctx }: BlockProps) {
   // paged 12 per page on the client (blocks can't read ?page= from the URL).
   const count = Number(data.count);
   const city = data.city && String(data.city).trim() ? String(data.city).trim() : undefined;
-  const allRows = await getSoldHistory(data.status_filter || undefined, city);
+  const allRows = shuffleRows(await getSoldHistory(data.status_filter || undefined, city));
   if (!allRows.length) return null;
   // City showcase mode (agent pages): swipe carousel of that city's sold
-  // history. Blank city = the existing teaser/pager below.
+  // history — 12 (or the Count field) up front, Load more reveals the rest.
+  // Blank city = the existing teaser/pager below.
   if (city) {
-    const teaser = allRows.slice(0, Number.isFinite(count) && count > 0 ? count : 6);
+    const perPage = Number.isFinite(count) && count > 0 ? count : 12;
     return (
       <div className={`${bw(ctx)} flex flex-col gap-6 py-7 md:py-16`}>
         <div className="flex items-end justify-between gap-4">
           {data.heading ? <h2 className={sectionTitle(ctx)}>{data.heading}</h2> : <span />}
           <Link href="/sold-history" prefetch={false} className="font-medium text-primary">{data.link_label || "View all"} →</Link>
         </div>
-        <SwipeRow>{teaser.map((r) => <SoldHistoryCard key={r.id} row={r} />)}</SwipeRow>
+        <SoldHistoryLoadMore perPage={perPage}>
+          {allRows.map((r) => <SoldHistoryCard key={r.id} row={r} />)}
+        </SoldHistoryLoadMore>
       </div>
     );
   }
