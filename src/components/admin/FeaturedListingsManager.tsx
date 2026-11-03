@@ -1,6 +1,7 @@
 "use client";
 import { useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { ImageUploadButton } from "./ImageUploadButton";
 import type { FeaturedListingRow, FeaturedMlsDetails } from "@/lib/featuredListings";
 
 const SOURCE_LABEL: Record<string, string> = { brokerage: "Our brokerage", friend: "Friend agent", private: "Private" };
@@ -139,6 +140,7 @@ function PrivateForm({ initial, submitLabel, busy, error, onSubmit, onCancel }: 
   onSubmit: (d: PrivateFormValues) => void; onCancel: () => void;
 }) {
   const [d, setD] = useState(initial);
+
   return (
     <div className="card flex max-w-xl flex-col gap-3">
       <strong className="text-sm">Private listing (no MLS #)</strong>
@@ -149,7 +151,10 @@ function PrivateForm({ initial, submitLabel, busy, error, onSubmit, onCancel }: 
         <input className="input" type="number" placeholder="Baths" value={d.bath} onChange={(e) => setD({ ...d, bath: e.target.value })} />
       </div>
       <input className="input" type="number" placeholder="Sqft" value={d.sqft} onChange={(e) => setD({ ...d, sqft: e.target.value })} />
-      <input className="input" placeholder="Photo URL" value={d.image_url} onChange={(e) => setD({ ...d, image_url: e.target.value })} />
+      <div className="flex gap-2">
+        <input className="input flex-1" placeholder="Photo URL" value={d.image_url} onChange={(e) => setD({ ...d, image_url: e.target.value })} />
+        <ImageUploadButton folder="featured" onUploaded={(url) => setD((prev) => ({ ...prev, image_url: url }))} />
+      </div>
       <input className="input" placeholder="Link (optional)" value={d.link} onChange={(e) => setD({ ...d, link: e.target.value })} />
       <input className="input" placeholder='Note badge (optional, e.g. "New")' value={d.note} onChange={(e) => setD({ ...d, note: e.target.value })} />
       {error ? <p className="text-sm text-red-700">{error}</p> : null}

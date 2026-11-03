@@ -1,6 +1,7 @@
 "use client";
 import { useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { ImageUploadButton } from "./ImageUploadButton";
 import type { SoldHistoryRow } from "@/lib/soldHistory";
 
 const STATUS_STYLE: Record<string, string> = {
@@ -74,7 +75,12 @@ function RecordForm({ initial, onSave, onCancel }: { initial: Draft; onSave: (d:
         <label className="label">Parking<input className="input" type="number" value={d.parking ?? ""} onChange={(e) => set("parking", num(e.target.value))} /></label>
         <label className="label">Sqft<input className="input" type="number" value={d.sqft ?? ""} onChange={(e) => set("sqft", num(e.target.value))} /></label>
       </div>
-      <label className="label">Photo URL (a real link to the image — not from the SVG library)<input className="input" placeholder="https://…" value={d.image_url ?? ""} onChange={(e) => set("image_url", e.target.value)} /></label>
+      <label className="label">Photo URL (a real link to the image — not from the SVG library)
+        <span className="flex gap-2">
+          <input className="input flex-1" placeholder="https://…" value={d.image_url ?? ""} onChange={(e) => set("image_url", e.target.value)} />
+          <ImageUploadButton folder="sold-history" onUploaded={(url) => set("image_url", url)} />
+        </span>
+      </label>
       <label className="label">Link (optional — makes the card clickable, e.g. a listing page or contact page)<input className="input" placeholder="https://…" value={d.link ?? ""} onChange={(e) => set("link", e.target.value)} /></label>
       <label className="label">MLS # (optional, reference only)<input className="input" value={d.listing_key ?? ""} onChange={(e) => set("listing_key", e.target.value)} /></label>
       <div className="flex gap-2">
