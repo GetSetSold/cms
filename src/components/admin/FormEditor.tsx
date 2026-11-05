@@ -83,7 +83,7 @@ const OPS: { value: FormConditionOp; label: string }[] = [
 ];
 const askName = (q: QuestionRef) => (q.label || q.key).slice(0, 70);
 
-function FieldRow({ field, showSpan, duplicate, earlier, problems, formPaginate, onRenameKey, onMoveUp, onMoveDown, onChange, onRemove }: {
+function FieldRow({ field, showSpan, duplicate, earlier, problems, formPaginate, onRenameKey, onMoveUp, onMoveDown, moveTargets, onMoveToSection, onChange, onRemove }: {
   field: FormField; showSpan: boolean; duplicate?: boolean;
   /** Questions above this one, for logic. Absent for fields inside a repeatable group (they only get fixed limits). */
   earlier?: QuestionRef[]; problems?: string[];
@@ -93,6 +93,9 @@ function FieldRow({ field, showSpan, duplicate, earlier, problems, formPaginate,
   onRenameKey?: (to: string) => void;
   /** Reorder this question within its section (undefined at the top/bottom — no button shown there). */
   onMoveUp?: () => void; onMoveDown?: () => void;
+  /** Other steps this question can move to (absent inside repeatable groups and single-step forms). */
+  moveTargets?: { index: number; label: string }[];
+  onMoveToSection?: (target: number) => void;
   onChange: (f: FormField) => void; onRemove: () => void;
 }) {
   const [showSubBuilder, setShowSubBuilder] = useState(field.type === "subform");
@@ -148,6 +151,12 @@ function FieldRow({ field, showSpan, duplicate, earlier, problems, formPaginate,
               <button type="button" aria-label="Move down" disabled={!onMoveDown} onClick={onMoveDown} className="flex h-7 w-7 items-center justify-center rounded border border-line text-sm disabled:opacity-30">↓</button>
             </span>
           ) : null}
+          {onMoveToSection && moveTargets?.length ? (
+            <select className="input h-7 w-auto shrink-0 text-xs" aria-label="Move to another step" value="" onChange={(e) => { if (e.target.value !== "") onMoveToSection(Number(e.target.value)); }}>
+              <option value="">Move to…</option>
+              {moveTargets.map((t) => <option key={t.index} value={t.index}>{t.label}</option>)}
+            </select>
+          ) : null}
           <button type="button" className={`shrink-0 text-sm text-red-700 ${onMoveUp || onMoveDown ? "" : "ml-auto"}`} onClick={onRemove}>Remove</button>
         </div>
       </div>
@@ -190,6 +199,12 @@ function FieldRow({ field, showSpan, duplicate, earlier, problems, formPaginate,
             <button type="button" aria-label="Move up" disabled={!onMoveUp} onClick={onMoveUp} className="flex h-7 w-7 items-center justify-center rounded border border-line text-sm disabled:opacity-30">↑</button>
             <button type="button" aria-label="Move down" disabled={!onMoveDown} onClick={onMoveDown} className="flex h-7 w-7 items-center justify-center rounded border border-line text-sm disabled:opacity-30">↓</button>
           </span>
+        ) : null}
+        {onMoveToSection && moveTargets?.length ? (
+          <select className="input h-7 w-auto shrink-0 text-xs" aria-label="Move to another step" value="" onChange={(e) => { if (e.target.value !== "") onMoveToSection(Number(e.target.value)); }}>
+            <option value="">Move to…</option>
+            {moveTargets.map((t) => <option key={t.index} value={t.index}>{t.label}</option>)}
+          </select>
         ) : null}
         <button type="button" className={`shrink-0 text-sm text-red-700 ${onMoveUp || onMoveDown ? "" : "ml-auto"}`} onClick={onRemove}>Remove</button>
       </div>
@@ -395,7 +410,7 @@ function Chevron({ open }: { open: boolean }) {
   );
 }
 
-function SectionEditor({ section, label, open, onToggle, takenKeys, keyCounts, priorFields, formPaginate, onRenameKey, onChange, onRemove }: {
+function SectionEditor({ section, label, open, onToggle, takenKeys, keyCounts, priorFields, formPaginate, onRenameKey, onChange, onRemove, sectionIndex, sectionChoices, onMoveUp, onMoveDown, onMoveFieldToSection }: {
   section: FormSection; label: string; open: boolean; onToggle: () => void;
   takenKeys: string[]; keyCounts: Map<string, number>;
   /** Every question in the sections above this one (what this section's questions can refer to). */
@@ -403,6 +418,11 @@ function SectionEditor({ section, label, open, onToggle, takenKeys, keyCounts, p
   formPaginate?: boolean;
   onRenameKey: (fieldIndex: number, to: string) => void;
   onChange: (s: FormSection) => void; onRemove: () => void;
+  /** This section's position, and every section's label — for the question "Move to…" dropdown. */
+  sectionIndex: number; sectionChoices: { index: number; label: string }[];
+  /** Reorder this step (undefined at the top/bottom — no button shown there). */
+  onMoveUp?: () => void; onMoveDown?: () => void;
+  onMoveFieldToSection: (fieldIndex: number, target: number) => void;
 }) {
   // Questions above field `i`: all earlier sections plus the fields before it here (first of each key).
   const earlierFor = (i: number, own: string): QuestionRef[] => {
@@ -452,6 +472,12 @@ function SectionEditor({ section, label, open, onToggle, takenKeys, keyCounts, p
           {dupCount ? <span className="shrink-0 rounded-full bg-red-50 px-2 py-0.5 text-xs text-red-700">duplicate key</span> : null}
           {problemCount ? <span className="shrink-0 rounded-full bg-red-50 px-2 py-0.5 text-xs text-red-700">logic issue</span> : null}
         </button>
+        {onMoveUp || onMoveDown ? (
+          <span className="flex shrink-0 gap-1">
+            <button type="button" aria-label="Move step up" disabled={!onMoveUp} onClick={onMoveUp} className="flex h-7 w-7 items-center justify-center rounded border border-line text-sm disabled:opacity-30">↑</button>
+            <button type="button" aria-label="Move step down" disabled={!onMoveDown} onClick={onMoveDown} className="flex h-7 w-7 items-center justify-center rounded border border-line text-sm disabled:opacity-30">↓</button>
+          </span>
+        ) : null}
         <button type="button" className="text-sm text-red-700" onClick={onRemove}>Remove section</button>
       </div>
 
@@ -484,6 +510,8 @@ function SectionEditor({ section, label, open, onToggle, takenKeys, keyCounts, p
               onRenameKey={(to) => onRenameKey(i, to)}
               onMoveUp={i > 0 ? () => moveField(i, i - 1) : undefined}
               onMoveDown={i < section.fields.length - 1 ? () => moveField(i, i + 1) : undefined}
+              moveTargets={sectionChoices.filter((c) => c.index !== sectionIndex)}
+              onMoveToSection={(t) => onMoveFieldToSection(i, t)}
               onChange={(nf) => setField(i, nf)} onRemove={() => removeField(i)} />
           );
         })}
@@ -517,6 +545,26 @@ export function FormEditor({ initial }: { initial: CmsForm }) {
   const setSection = (i: number, s: FormSection) => set("sections", form.sections.map((x, j) => (j === i ? s : x)));
   const addSection = () => set("sections", [...form.sections, { id: `s${Date.now().toString(36)}`, columns: 1, fields: [] }]);
   const removeSection = (i: number) => set("sections", form.sections.filter((_, j) => j !== i));
+  // Swaps two steps' positions. Same logic caveat as moveField: a step's questions can only
+  // reference questions above them, so a move can orphan a reference — the per-section
+  // broken-reference badge recomputes on render and flags it, so nothing extra is needed here.
+  const moveSection = (i: number, j: number) => {
+    const arr = form.sections.slice();
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+    set("sections", arr);
+  };
+  // Moves one question to the end of another step (it can then be ↑-moved within that step).
+  // The question keeps its key; any logic it breaks is flagged by the existing badges.
+  const moveFieldToSection = (si: number, fi: number, ti: number) => {
+    if (si === ti) return;
+    const field = form.sections[si].fields[fi];
+    set("sections", form.sections.map((sec, i) => {
+      if (i === si) return { ...sec, fields: sec.fields.filter((_, j) => j !== fi) };
+      if (i === ti) return { ...sec, fields: [...sec.fields, field] };
+      return sec;
+    }));
+  };
+  const sectionChoices = form.sections.map((s, i) => ({ index: i, label: `${form.paginate ? "Step" : "Section"} ${i + 1}${s.heading ? ` · ${s.heading}` : ""}` }));
 
   // Rename one question's key. If nothing else still uses the old key, every condition, limit, entry
   // count and {answer} in a label that pointed at it follows the rename, so logic never silently breaks.
@@ -654,7 +702,11 @@ export function FormEditor({ initial }: { initial: CmsForm }) {
                   takenKeys={allKeys} keyCounts={keyCounts}
                   priorFields={form.sections.slice(0, i).flatMap((x) => x.fields.map(toRef))} formPaginate={form.paginate}
                   onRenameKey={(fi, to) => renameFieldKey(i, fi, to)}
-                  onChange={(ns) => setSection(i, ns)} onRemove={() => removeSection(i)} />
+                  onChange={(ns) => setSection(i, ns)} onRemove={() => removeSection(i)}
+                  sectionIndex={i} sectionChoices={sectionChoices}
+                  onMoveUp={i > 0 ? () => moveSection(i, i - 1) : undefined}
+                  onMoveDown={i < form.sections.length - 1 ? () => moveSection(i, i + 1) : undefined}
+                  onMoveFieldToSection={(fi, ti) => moveFieldToSection(i, fi, ti)} />
               ))}
               <button type="button" className="btn self-start border-dashed" onClick={addSection}>+ Add {form.paginate ? "step" : "section"}</button>
             </>
