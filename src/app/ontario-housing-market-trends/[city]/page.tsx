@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect, RedirectType } from "next/navigation";
 import {
   getHpiMarket, getHpiMarkets, computeInsights, ontarioAverageBenchmark,
-  availablePropertyTypes,
+  availablePropertyTypes, hpiMarketForCity,
   fmtMoney, fmtPct, pctTone,
 } from "@/lib/hpi";
 import { seoTitle } from "@/lib/seo";
@@ -23,7 +23,12 @@ type Params = { city: string };
 export async function generateMetadata({ params }: { params: Promise<Params> }): Promise<Metadata> {
   const { city } = await params;
   const market = await getHpiMarket(city);
-  if (!market) return { title: "Not found" };
+  if (!market) {
+    // Covered city without its own HPI market (e.g. haldimand) → its main market.
+    const mapped = hpiMarketForCity(city);
+    if (mapped) redirect(`/ontario-housing-market-trends/${mapped}`, RedirectType.replace);
+    return { title: "Not found" };
+  }
   const title = await seoTitle(`${market.name} Housing Market Trends & HPI`);
   const description = `${market.name} benchmark price ${fmtMoney(market.latest.compositeBenchmark)}, ${fmtPct(market.latest.yoyChange)} year over year. Full MLS® Home Price Index trends, charts and market insights.`;
   const ogImage = await getCityOgImage(market.name).catch(() => undefined);
@@ -46,7 +51,12 @@ function toneCls(v: number) {
 export default async function TrendsDetailPage({ params }: { params: Promise<Params> }) {
   const { city } = await params;
   const market = await getHpiMarket(city);
-  if (!market) notFound();
+  if (!market) {
+    // Covered city without its own HPI market (e.g. haldimand) → its main market.
+    const mapped = hpiMarketForCity(city);
+    if (mapped) redirect(`/ontario-housing-market-trends/${mapped}`, RedirectType.replace);
+    notFound();
+  }
 
   const settings = await getSettings();
   const [markets, logo, ontAvg] = await Promise.all([
