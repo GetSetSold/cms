@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound, redirect, RedirectType } from "next/navigation";
+import { notFound } from "next/navigation";
 import {
   getHpiMarket, getHpiMarkets, computeInsights, ontarioAverageBenchmark,
-  availablePropertyTypes, hpiMarketForCity,
+  availablePropertyTypes, hpiMarketForCity, citiesForMarket, cityDisplayName,
   fmtMoney, fmtPct, pctTone,
 } from "@/lib/hpi";
 import { seoTitle } from "@/lib/seo";
@@ -22,12 +22,12 @@ type Params = { city: string };
 
 export async function generateMetadata({ params }: { params: Promise<Params> }): Promise<Metadata> {
   const { city } = await params;
-  const market = await getHpiMarket(city);
+  let market = await getHpiMarket(city);
   if (!market) {
-    // Covered city without its own HPI market (e.g. haldimand) → its main market.
+    // Covered city without its own HPI market (e.g. haldimand) → render its main market.
     const mapped = hpiMarketForCity(city);
-    if (mapped) redirect(`/ontario-housing-market-trends/${mapped}`, RedirectType.replace);
-    return { title: "Not found" };
+    if (mapped) market = await getHpiMarket(mapped);
+    if (!market) return { title: "Not found" };
   }
   const title = await seoTitle(`${market.name} Housing Market Trends & HPI`);
   const description = `${market.name} benchmark price ${fmtMoney(market.latest.compositeBenchmark)}, ${fmtPct(market.latest.yoyChange)} year over year. Full MLS® Home Price Index trends, charts and market insights.`;
@@ -50,12 +50,16 @@ function toneCls(v: number) {
 
 export default async function TrendsDetailPage({ params }: { params: Promise<Params> }) {
   const { city } = await params;
-  const market = await getHpiMarket(city);
+  let market = await getHpiMarket(city);
+  let viaCity: string | null = null;
   if (!market) {
-    // Covered city without its own HPI market (e.g. haldimand) → its main market.
+    // Covered city without its own HPI market (e.g. haldimand) → render its main market.
     const mapped = hpiMarketForCity(city);
-    if (mapped) redirect(`/ontario-housing-market-trends/${mapped}`, RedirectType.replace);
-    notFound();
+    if (mapped) {
+      market = await getHpiMarket(mapped);
+      if (market) viaCity = city;
+    }
+    if (!market) notFound();
   }
 
   const settings = await getSettings();
@@ -63,6 +67,7 @@ export default async function TrendsDetailPage({ params }: { params: Promise<Par
     getHpiMarkets(), getLogo(settings), ontarioAverageBenchmark(),
   ]);
   const ins = computeInsights(market);
+  const coveredCities = citiesForMarket(market.slug);
   const L = market.latest;
   const ticker = [...markets].sort((a, b) => a.name.localeCompare(b.name));
   const compare = [...markets].sort((a, b) => b.latest.compositeBenchmark - a.latest.compositeBenchmark);
@@ -94,6 +99,12 @@ export default async function TrendsDetailPage({ params }: { params: Promise<Par
           <Link href="/ontario-housing-market-trends" className="hover:underline">Market Trends</Link> /{" "}
           <span>{market.name}</span>
         </nav>
+
+        {viaCity ? (
+          <p className="mt-2 text-sm text-muted">
+            {cityDisplayName(viaCity)} is covered by the {market.name} market — the benchmark data below is for the {market.name} region.
+          </p>
+        ) : null}
 
         {/* Header — wraps cleanly, no overflow */}
         <div className="mt-2 flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
@@ -298,6 +309,29 @@ export default async function TrendsDetailPage({ params }: { params: Promise<Par
             </tbody>
           </table>
         </div>
+
+        {/* Cities covered by this market */}
+        {coveredCities.length > 1 ? (
+          <>
+            <h2 className="mt-10 text-xl font-bold">Cities in the {market.name} Market</h2>
+            <p className="mb-4 text-sm text-muted">Benchmark data for these cities comes from the {market.name} MLS® Home Price Index region — select a city to view its market trends.</p>
+            <div className="flex flex-wrap gap-2">
+              {coveredCities.map((c) => (
+                <Link
+                  key={c}
+                  href={`/ontario-housing-market-trends/${c}`}
+                  className={`rounded-[var(--radius-md)] border px-3 py-2 text-[13px] ${
+                    c === viaCity
+                      ? "border-primary bg-primary text-white"
+                      : "border-line bg-white hover:border-primary"
+                  }`}
+                >
+                  {cityDisplayName(c)}
+                </Link>
+              ))}
+            </div>
+          </>
+        ) : null}
 
         <div className="mt-10 rounded-[var(--radius-lg)] border border-primary p-6 text-center">
           <h3 className="text-lg font-bold">Looking to Buy a Property?</h3>

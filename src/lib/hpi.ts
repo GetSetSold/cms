@@ -107,6 +107,40 @@ export function hpiMarketForCity(citySlug: string): string | null {
   return CITY_TO_HPI[citySlug.toLowerCase()] ?? null;
 }
 
+/** Human display name for a city slug (e.g. "stoney-creek" → "Stoney Creek"). */
+export function cityDisplayName(slug: string): string {
+  const overrides: Record<string, string> = {
+    richmondhill: "Richmond Hill",
+    porthope: "Port Hope",
+    haldimand: "Haldimand County",
+    "niagara-on-the-lake": "Niagara-on-the-Lake",
+    "st-thomas": "St. Thomas",
+    "sault-ste-marie": "Sault Ste. Marie",
+    lasalle: "LaSalle",
+  };
+  if (overrides[slug]) return overrides[slug];
+  return slug
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .split("-")
+    .map((w) => (w ? w.charAt(0).toUpperCase() + w.slice(1) : w))
+    .join(" ");
+}
+
+/** City slugs covered by an HPI market slug (inverse of CITY_TO_HPI), sorted, deduped by display name. */
+export function citiesForMarket(marketSlug: string): string[] {
+  const seen = new Set<string>();
+  return Object.entries(CITY_TO_HPI)
+    .filter(([, m]) => m === marketSlug)
+    .map(([c]) => c)
+    .sort((a, b) => a.localeCompare(b))
+    .filter((c) => {
+      const d = cityDisplayName(c);
+      if (seen.has(d)) return false;
+      seen.add(d);
+      return true;
+    });
+}
+
 /**
  * Human coverage label per HPI market slug — which cities/areas the benchmark
  * actually covers. Used so an address in Brampton honestly reads as
