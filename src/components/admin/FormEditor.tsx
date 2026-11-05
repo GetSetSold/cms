@@ -5,7 +5,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { CONTACT_BLOCK_FIELDS, CONSENT_TEXTS } from "@/lib/types";
 import type { CmsForm, FormConditionOp, FormField, FormFieldType, FormSection } from "@/lib/types";
-import { brokenRefs, NUMERIC_TYPES, OPS_WITHOUT_VALUE, TOKEN_RE } from "@/lib/formLogic";
+import { brokenRefs, ENTRY_TITLE_RE, NUMERIC_TYPES, OPS_WITHOUT_VALUE, TOKEN_RE } from "@/lib/formLogic";
 import { Spinner } from "./Spinner";
 
 const FIELD_TYPES: FormFieldType[] = [
@@ -72,8 +72,8 @@ function OptionsEditor({ options, onChange }: { options: string[]; onChange: (o:
 }
 
 /** What a question can refer to in its logic: an earlier question's key, label, type and options. */
-type QuestionRef = { key: string; label: string; type: FormFieldType; options?: string[] };
-const toRef = (f: FormField): QuestionRef => ({ key: f.key, label: f.label, type: f.type, options: f.options });
+type QuestionRef = { key: string; label: string; type: FormFieldType; options?: string[]; subfieldKeys?: string[] };
+const toRef = (f: FormField): QuestionRef => ({ key: f.key, label: f.label, type: f.type, options: f.options, subfieldKeys: f.type === "subform" ? (f.subfields ?? []).map((sf) => sf.key) : undefined });
 const OPS: { value: FormConditionOp; label: string }[] = [
   { value: "answered", label: "is answered" },
   { value: "equals", label: "equals" },
@@ -311,7 +311,7 @@ function FieldRow({ field, showSpan, duplicate, earlier, problems, formPaginate,
                 </>
               ) : null}
               <input className="input h-9" aria-label="Entry title" placeholder="Title of each entry, e.g. Working adult {n} of {count}" value={field.entry_label ?? ""} onChange={(e) => set({ entry_label: e.target.value || undefined })} />
-              <span className="text-xs text-muted">Use {"{n}"} for the entry number and {"{count}"} for how many so far.</span>
+              <span className="text-xs text-muted">Use {"{n}"} for the entry number and {"{count}"} for how many so far. {"{first_name}"} shows this entry's own answer; {"{applicants.first_name}"} shows the same-numbered entry of an earlier subform — so a second subform following the same count can be titled by the person it belongs to.</span>
               {formPaginate ? (
                 <label className="flex items-center gap-2 text-sm">One entry per step (like the rest of a paginated form)
                   <input type="checkbox" checked={!!field.paginate_entries} onChange={(e) => set({ paginate_entries: e.target.checked || undefined })} />
@@ -346,6 +346,12 @@ function FieldRow({ field, showSpan, duplicate, earlier, problems, formPaginate,
               <FieldRow key={i} field={sf} showSpan
                 onMoveUp={i > 0 ? () => moveSubfield(i, i - 1) : undefined}
                 onMoveDown={i < subfields.length - 1 ? () => moveSubfield(i, i + 1) : undefined}
+                // Renaming a subfield rewrites this subform's own entry title tokens that used it,
+                // so a title like "{first_name} {last_name}" follows the rename instead of breaking.
+                onRenameKey={(to) => set({
+                  subfields: subfields.map((x, j) => (j === i ? { ...x, key: to } : x)),
+                  entry_label: field.entry_label?.replace(ENTRY_TITLE_RE, (m, k) => (k === sf.key ? `{${to}}` : m)),
+                })}
                 onChange={(nf) => set({ subfields: subfields.map((x, j) => (j === i ? nf : x)) })}
                 onRemove={() => set({ subfields: subfields.filter((_, j) => j !== i) })} />
             );
@@ -394,10 +400,12 @@ function cleanLogic(sections: FormSection[]): FormSection[] {
 /** How many logic settings point at a question that isn't above them (those questions would never show). */
 function countLogicProblems(sections: FormSection[]): number {
   const seen = new Set<string>();
+  const seenSubforms = new Map<string, Set<string>>();
   let n = 0;
   for (const sec of sections) for (const f of sec.fields) {
-    n += brokenRefs(f, seen).length;
+    n += brokenRefs(f, seen, seenSubforms).length;
     seen.add(f.key);
+    if (f.type === "subform") seenSubforms.set(f.key, new Set((f.subfields ?? []).map((sf) => sf.key)));
   }
   return n;
 }
@@ -432,7 +440,14 @@ function SectionEditor({ section, label, open, onToggle, takenKeys, keyCounts, p
       seen.add(q.key); return true;
     });
   };
-  const problemCount = section.fields.reduce((n, f, i) => n + brokenRefs(f, new Set(earlierFor(i, f.key).map((q) => q.key))).length, 0);
+  // Earlier subforms and their fields, for validating {subform.field} entry-title tokens.
+  const earlierSubformsFor = (i: number): Map<string, Set<string>> => {
+    const m = new Map<string, Set<string>>();
+    for (const q of priorFields) if (q.type === "subform" && q.subfieldKeys) m.set(q.key, new Set(q.subfieldKeys));
+    for (const ef of section.fields.slice(0, i)) if (ef.type === "subform") m.set(ef.key, new Set((ef.subfields ?? []).map((sf) => sf.key)));
+    return m;
+  };
+  const problemCount = section.fields.reduce((n, f, i) => n + brokenRefs(f, new Set(earlierFor(i, f.key).map((q) => q.key)), earlierSubformsFor(i)).length, 0);
   const [contactNote, setContactNote] = useState("");
   const setField = (i: number, f: FormField) => onChange({ ...section, fields: section.fields.map((x, j) => (j === i ? f : x)) });
   const addField = () => onChange({ ...section, fields: [...section.fields, newField(nextFieldKey(takenKeys))] });
@@ -506,7 +521,7 @@ function SectionEditor({ section, label, open, onToggle, takenKeys, keyCounts, p
           const earlier = earlierFor(i, f.key);
           return (
             <FieldRow key={i} field={f} showSpan={section.columns === 2} duplicate={(keyCounts.get(f.key) ?? 0) > 1}
-              earlier={earlier} problems={brokenRefs(f, new Set(earlier.map((q) => q.key)))} formPaginate={formPaginate}
+              earlier={earlier} problems={brokenRefs(f, new Set(earlier.map((q) => q.key)), earlierSubformsFor(i))} formPaginate={formPaginate}
               onRenameKey={(to) => onRenameKey(i, to)}
               onMoveUp={i > 0 ? () => moveField(i, i - 1) : undefined}
               onMoveDown={i < section.fields.length - 1 ? () => moveField(i, i + 1) : undefined}

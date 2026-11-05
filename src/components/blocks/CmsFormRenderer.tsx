@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import type { CmsForm, FormField, FormSection } from "@/lib/types";
-import { buildSteps, entryBounds, isEmptyRow, limitsFor, NUMERIC_TYPES, paginatedEntryField, pipe, repeatCount, resolve, uid, type Resolved, type Row, type Step, type Value, type Values } from "@/lib/formLogic";
+import { buildSteps, entryBounds, entryTitle, isEmptyRow, limitsFor, NUMERIC_TYPES, paginatedEntryField, pipe, repeatCount, resolve, uid, type Resolved, type Row, type Step, type Value, type Values } from "@/lib/formLogic";
 
 type Errors = Record<string, string>;
 type Limits = { min?: number; max?: number };
@@ -231,7 +231,7 @@ function Subform({ field, id, rows, errors, count, values, resolved, boxed, pill
     next[i] = { ...next[i], [key]: v };
     onChange(next);
   };
-  const title = (i: number) => pipe(field.entry_label || `${field.label} {n}`, values, resolved, { n: String(i + 1), count: String(rows.length) });
+  const title = (i: number) => entryTitle(field.entry_label, `${field.label} {n}`, values, resolved, field, rows[i] ?? {}, i, rows.length);
 
   const indices = onlyIndex === undefined ? rows.map((_, i) => i) : [onlyIndex];
   return (
@@ -242,7 +242,7 @@ function Subform({ field, id, rows, errors, count, values, resolved, boxed, pill
         const isTrailingSlot = onlyIndex !== undefined && !fixed && i >= rows.length;
         const entry = (
           <div key={i} className={(boxed || pills) ? "flex flex-col gap-4" : "flex flex-col gap-3 rounded-[var(--radius-md)] border border-[var(--fq-line)] p-4"}>
-            {fixed && !boxed ? <div className="text-base font-semibold text-[var(--fq-ink)]">{title(i)}</div> : null}
+            {fixed && (!boxed || field.entry_label) ? <div className="text-base font-semibold text-[var(--fq-ink)]">{title(i)}</div> : null}
             {isTrailingSlot ? <p className="text-sm text-muted">Fill this in to add another — or leave it blank and continue.</p> : null}
             <div className={`grid gap-3 sm:grid-cols-2 ${(boxed || pills) ? "gap-4" : ""}`}>
               {subfields.map((sf) => {
@@ -595,8 +595,10 @@ export function CmsFormRenderer({ form, pageId, extraFields, secondaryAction, on
   }
   const shownErrors = paginated ? stepErrorKeys(activeStep) : Object.keys(errors).length;
   const sidebar = form.layout === "sidebar";
+  const stepField = activeStep?.kind === "entry" ? sections[activeStep.sectionIndex].fields.find((f) => f.key === activeStep.fieldKey) : undefined;
+  const stepRows = stepField && activeStep?.kind === "entry" ? (values[uid(sections[activeStep.sectionIndex].id, stepField.key)] as Row[] | undefined) ?? [] : [];
   const stepLabel = activeStep?.kind === "entry"
-    ? pipe(sections[activeStep.sectionIndex].fields.find((f) => f.key === activeStep.fieldKey)?.entry_label || "Entry {n} of {count}", values, resolved, { n: String(activeStep.entryIndex + 1), count: String(activeStep.total) })
+    ? entryTitle(stepField?.entry_label, "Entry {n} of {count}", values, resolved, stepField, stepRows[activeStep.entryIndex] ?? {}, activeStep.entryIndex, activeStep.total)
     : sidebar ? undefined : sections[activeStep?.sectionIndex ?? 0]?.heading;
 
   // The left-panel nav, when using the "sidebar" layout: one entry per section that currently has

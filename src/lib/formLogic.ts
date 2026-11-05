@@ -13,6 +13,9 @@ export const uid = (sectionId: string, key: string) => `${sectionId}__${key}`;
 
 /** Keys the editor produces are [a-z0-9_]; `{key}` inside a label shows that question's answer. */
 export const TOKEN_RE = /\{([a-z0-9_]+)\}/gi;
+/** Tokens in a subform entry's title: plain keys plus `{subform.field}` for the same-position
+ *  entry of another subform. */
+export const ENTRY_TITLE_RE = /\{([a-z0-9_]+(?:\.[a-z0-9_]+)?)\}/gi;
 /** Extra tokens that are valid in a repeatable entry's title. */
 export const ENTRY_TOKENS = ["n", "count"];
 
@@ -86,6 +89,44 @@ export function pipe(label: string, values: Values, r: Resolved, extra: Record<s
   });
 }
 
+/** A subform entry's title. Besides {n}/{count} and earlier answers, it can show this entry's own
+ *  fields ({first_name}) and the same-position entry of an EARLIER subform ({applicants.first_name})
+ *  — so a second subform that follows the same count can be titled by the person its entry belongs
+ *  to. An empty answer shows ___, an unknown token stays as typed (so a typo is visible). */
+export function entryTitle(
+  label: string | undefined,
+  fallback: string,
+  values: Values,
+  r: Resolved,
+  field: FormField | undefined,
+  row: Row,
+  index: number,
+  total: number,
+): string {
+  const ownKeys = new Set((field?.subfields ?? []).map((sf) => sf.key));
+  return (label || fallback).replace(ENTRY_TITLE_RE, (whole, key: string) => {
+    if (key === "n") return String(index + 1);
+    if (key === "count") return String(total);
+    const dot = key.indexOf(".");
+    if (dot > 0) {
+      // Same-position entry of another subform — only when that subform is actually shown, so a
+      // hidden subform's stale rows never leak a name into this title.
+      const subUid = r.keyToUid.get(key.slice(0, dot));
+      if (!subUid || !r.visible.has(subUid)) return whole;
+      const rows = values[subUid] as Row[] | undefined;
+      const v = Array.isArray(rows) ? rows[index]?.[key.slice(dot + 1)] : undefined;
+      return v ? String(v).trim() : "___";
+    }
+    if (ownKeys.has(key)) {
+      const v = row[key];
+      return v ? String(v).trim() : "___";
+    }
+    if (!r.keyToUid.has(key)) return whole;
+    const a = answerOf(key, values, r.keyToUid, r.visible);
+    return a ? a.split(",").map((x) => x.trim()).join(", ") : "___";
+  });
+}
+
 /** Effective min/max for a number question: its own fixed limits, tightened by the answer to its
  *  "no higher than…" source. The source's limit is ignored until it has a numeric answer. */
 function answerNumber(key: string | undefined, values: Values, r: Resolved): number | undefined {
@@ -129,7 +170,7 @@ export function repeatCount(f: FormField, values: Values, r: Resolved): number |
 
 /** Problems with a question's logic settings, for the builder to show: anything that points at a
  *  question that isn't EARLIER in the form (missing, renamed away, or further down). */
-export function brokenRefs(f: FormField, earlierKeys: Set<string>): string[] {
+export function brokenRefs(f: FormField, earlierKeys: Set<string>, earlierSubforms: Map<string, Set<string>> = new Map()): string[] {
   const out: string[] = [];
   const check = (key: string | undefined, what: string) => { if (key && !earlierKeys.has(key)) out.push(`${what} refers to “${key}”, which isn't a question above this one.`); };
   check(f.show_if?.field, "“Show only when”");
@@ -141,7 +182,16 @@ export function brokenRefs(f: FormField, earlierKeys: Set<string>): string[] {
     for (const m of (str ?? "").matchAll(TOKEN_RE)) if (!allowed.includes(m[1]) && !earlierKeys.has(m[1])) out.push(`${what} uses {${m[1]}}, which isn't a question above this one.`);
   };
   tokens(f.label, [], "The question text");
-  tokens(f.entry_label, ENTRY_TOKENS, "The entry title");
+  // Entry titles have two extra vocabularies: this entry's own fields, and {subform.field} for the
+  // same-position entry of an earlier subform.
+  const ownKeys = new Set((f.subfields ?? []).map((sf) => sf.key));
+  for (const m of (f.entry_label ?? "").matchAll(ENTRY_TITLE_RE)) {
+    const key = m[1];
+    if (ENTRY_TOKENS.includes(key) || ownKeys.has(key) || earlierKeys.has(key)) continue;
+    const dot = key.indexOf(".");
+    if (dot > 0 && earlierSubforms.get(key.slice(0, dot))?.has(key.slice(dot + 1))) continue;
+    out.push(`The entry title uses {${key}}, which isn't this entry's field or an earlier subform's field.`);
+  }
   return out;
 }
 
