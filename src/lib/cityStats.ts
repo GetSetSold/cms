@@ -1,5 +1,5 @@
 import { cache } from "react";
-import { createMlsClient, rawCitiesFor } from "./mls";
+import { createMlsClient, normalizeCity, rawCitiesFor } from "./mls";
 
 export interface CityStats {
   city: string;
@@ -111,4 +111,36 @@ export const getCityStats = cache(async (city: string): Promise<CityStats> => {
 export function formatPrice(n: number | null): string {
   if (n == null) return "—";
   return "$" + Math.round(n).toLocaleString("en-CA");
+}
+
+/** Home-type counts for a set of raw City variants, read from the pre-computed
+ *  `city_stats` table (one indexed row per city) instead of downloading up to
+ *  10,000 StructureTypeText values from the grid. The counts are only a hint
+ *  in the filter dropdown (the UI falls back to basic types when empty), so a
+ *  missing/stale city_stats row degrades to {} — never to a full-table scan.
+ *  Area selections (e.g. "Hamilton (Ancaster)") normalize to their parent city,
+ *  so the counts are city-wide for those; city hub pages already use the same
+ *  whole-city breakdown. */
+export async function getTypeCountsForVariants(
+  variants: string[]
+): Promise<Record<string, number>> {
+  const names = [...new Set(variants.map((v) => normalizeCity(v)))].filter(Boolean);
+  if (names.length === 0) return {};
+  try {
+    const mls = createMlsClient();
+    const { data, error } = await mls
+      .from("city_stats")
+      .select("city,type_breakdown")
+      .in("city", names);
+    if (error || !data) return {};
+    const counts: Record<string, number> = {};
+    for (const row of data as { city: string; type_breakdown: { label: string; count: number }[] | null }[]) {
+      for (const t of row.type_breakdown ?? []) {
+        counts[t.label] = (counts[t.label] ?? 0) + Number(t.count ?? 0);
+      }
+    }
+    return counts;
+  } catch {
+    return {};
+  }
 }

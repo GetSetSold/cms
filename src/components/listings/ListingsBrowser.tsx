@@ -1,4 +1,5 @@
 import { createMlsClient, listNormalizedCities, listCityGroups, resolveCitySelection, rawCitiesFor, type GridListing, type CityGroup } from "@/lib/mls";
+import { getTypeCountsForVariants } from "@/lib/cityStats";
 import { listingCardsWithAds } from "@/components/listings/ListingGrid";
 import { getSettings } from "@/lib/cms";
 import { ListingsMap } from "@/components/listings/ListingsMap";
@@ -19,46 +20,10 @@ const GRID_COLS: Record<number, string> = {
 
 /** Renders the full search/grid/split/map listings experience. Reused by
  *  /listings (city from ?city=) and by the listing_grid CMS block and any
- *  future per-city route (city passed in directly, no query param needed). */
-// Module-level cache for home-type counts (1h TTL) — avoids a 10k-row scan on every page load.
-const typeCountsCache = new Map<string, { data: Record<string, number>; ts: number }>();
-const TYPE_CACHE_TTL = 3600000;
-
-async function getCachedTypeCounts(
-  mls: ReturnType<typeof createMlsClient>,
-  cityVariants: string[]
-): Promise<Record<string, number>> {
-  const key = [...cityVariants].sort().join("|");
-  const cached = typeCountsCache.get(key);
-  if (cached && Date.now() - cached.ts < TYPE_CACHE_TTL) return cached.data;
-  // Edge cache first: a module Map alone re-downloads up to 10k rows on
-  // every cold Workers isolate (mirrors listNeighbourhoods).
-  const edgeKey = `https://internal/type-counts-v1?cities=${encodeURIComponent(key)}`;
-  try {
-    const cache = await caches.open("gss-static");
-    const edgeHit = await cache.match(edgeKey);
-    if (edgeHit) {
-      const data = (await edgeHit.json()) as Record<string, number>;
-      typeCountsCache.set(key, { data, ts: Date.now() });
-      return data;
-    }
-  } catch { /* cache unavailable — fall through to the query */ }
-  const { data } = await mls.from("grid").select("StructureTypeText").in("City", cityVariants).limit(10000);
-  const counts: Record<string, number> = {};
-  for (const r of (data ?? []) as { StructureTypeText: string | null }[]) {
-    const t = r.StructureTypeText?.trim() || "Other";
-    counts[t] = (counts[t] || 0) + 1;
-  }
-  typeCountsCache.set(key, { data: counts, ts: Date.now() });
-  try {
-    const cache = await caches.open("gss-static");
-    await cache.put(
-      edgeKey,
-      new Response(JSON.stringify(counts), { headers: { "Content-Type": "application/json", "Cache-Control": `public, max-age=${TYPE_CACHE_TTL / 1000}` } })
-    );
-  } catch { /* best-effort */ }
-  return counts;
-}
+ *  future per-city route (city passed in directly, no query param needed).
+ *  Per page load the DB work is: the 12-row grid query, the cached city list,
+ *  and (for the filter's home-type counts) one indexed city_stats read —
+ *  no full-table scans. */
 
 export async function ListingsBrowser({
   sp, basePath, fixedCity, heading, typeBreakdown, totalOverride,
@@ -166,7 +131,7 @@ export async function ListingsBrowser({
     withTimeout(
       typeBreakdown
         ? Promise.resolve(Object.fromEntries(typeBreakdown.map((t) => [t.label, t.count])))
-        : cityVariants ? getCachedTypeCounts(mls, cityVariants) : Promise.resolve({} as Record<string, number>),
+        : cityVariants ? getTypeCountsForVariants(cityVariants) : Promise.resolve({} as Record<string, number>),
       MLS_TIMEOUT,
       {} as Record<string, number>
     ),

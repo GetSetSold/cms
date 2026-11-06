@@ -127,12 +127,15 @@ export function listingSlug(l: Pick<GridListing, "UnparsedAddress" | "City">): s
   return slugifyAddress(l.UnparsedAddress, l.City);
 }
 
-/** Module-level cache (1h) + Workers Cache API, mirroring listNeighbourhoods:
+/** Module-level cache (24h) + Workers Cache API, mirroring listNeighbourhoods:
  *  a module Map alone re-queries on every cold isolate, which is how the
- *  distinct_cities scan ended up running per listings view. */
+ *  distinct_cities scan ended up running per listings view. The city list
+ *  changes very slowly (a new city only appears when it first gets listings),
+ *  so 24h is safe — and every re-scan is one less full DISTINCT over the grid
+ *  on a memory-starved DB. */
 let citiesCache: { data: string[]; expires: number } | null = null;
 const CITIES_CACHE_KEY = "https://internal/cities-v1";
-const CITIES_CACHE_TTL = 3600; // 1 hour
+const CITIES_CACHE_TTL = 86400; // 24 hours
 
 /** The full distinct-city list, fetched once per request no matter how many
  *  times it's called (React's cache() memoizes by arguments for the
@@ -146,14 +149,14 @@ export const listCities = cache(async (): Promise<string[]> => {
     const hit = await cache.match(CITIES_CACHE_KEY);
     if (hit) {
       const data = (await hit.json()) as string[];
-      citiesCache = { data, expires: Date.now() + 3600_000 };
+      citiesCache = { data, expires: Date.now() + 86400_000 };
       return data;
     }
   } catch { /* cache unavailable — fall through to the view */ }
   const mls = createMlsClient();
   const { data } = await mls.from("distinct_cities").select("City").limit(5000);
   const cities = (data ?? []).map((r) => r.City as string);
-  citiesCache = { data: cities, expires: Date.now() + 3600_000 };
+  citiesCache = { data: cities, expires: Date.now() + 86400_000 };
   try {
     const cache = await caches.open("gss-static");
     await cache.put(

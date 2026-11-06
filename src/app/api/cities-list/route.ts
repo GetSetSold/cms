@@ -4,7 +4,9 @@ import { ONTARIO_CITIES } from "@/lib/ontario-cities";
 
 // Returns Ontario cities for the demographics cache warmer.
 // Primary: curated Ontario municipalities list. Supplements with any
-// additional cities found in property tables. Cached for 1 hour.
+// additional cities from the pre-computed city_stats table (one indexed row
+// per city) — the old version scanned distinct_cities + property + sold at
+// 5,000 rows each, 15,000 rows per call. Cached for 1 hour.
 export async function GET() {
   const cors = {
     "Access-Control-Allow-Origin": "*",
@@ -16,22 +18,11 @@ export async function GET() {
     // Supplement with DB cities (catches any not in the curated list)
     try {
       const mls = createMlsClient();
-      const addCities = (rows: any[]) => {
-        (rows || []).forEach((r: any) => {
-          const c = r.City?.trim();
-          if (!c) return;
-          const base = c.split(" (")[0].trim();
-          if (base && !citySet.has(base)) citySet.add(base);
-        });
-      };
-      const [a, b, c] = await Promise.all([
-        mls.from("distinct_cities").select("City").limit(5000),
-        mls.from("property").select("City").limit(5000),
-        mls.from("sold").select("City").limit(5000),
-      ]);
-      addCities(a.data || []);
-      addCities(b.data || []);
-      addCities(c.data || []);
+      const { data } = await mls.from("city_stats").select("city").limit(500);
+      (data || []).forEach((r: any) => {
+        const c = (r.city as string | undefined)?.trim();
+        if (c) citySet.add(c);
+      });
     } catch {}
 
     const cities = [...citySet].sort((a, b) => a.localeCompare(b));
