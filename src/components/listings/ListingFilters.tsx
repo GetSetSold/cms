@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { displayArea, type CityGroup } from "@/lib/mls";
 
 const BED_OPTIONS = ["", "1", "2", "3", "4", "5"];
-const BATH_OPTIONS = ["", "1", "2", "3", "4"];
+const BATH_OPTIONS = ["", "1", "2", "3", "4", "5"];
 const FALLBACK_TYPES = ["House", "Apartment", "Row / Townhouse"];
 
 /** Portal dropdown — renders to body so it never clips inside scroll containers. */
