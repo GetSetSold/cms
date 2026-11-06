@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { GridListing } from "@/lib/mls";
 import { isSale, listingSlug } from "@/lib/mls";
 
@@ -85,7 +85,12 @@ export function ListingsMap({ listings }: { listings: GridListing[] }) {
   const mapRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
   const popupRef = useRef<any>(null);
+  const [mapReady, setMapReady] = useState(false);
 
+  // Create the map ONCE. It stays alive across filter changes — only the
+  // pins and the camera move when the listings change (next effect). The old
+  // version destroyed and rebuilt the whole map on every filter change, so
+  // the zoom was a reload flash and the fitBounds call raced the map load.
   useEffect(() => {
     let cancelled = false;
     loadMaplibre().then(() => {
@@ -102,41 +107,54 @@ export function ListingsMap({ listings }: { listings: GridListing[] }) {
       });
       map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
       mapRef.current = map;
-
-      const bounds = new maplibregl.LngLatBounds();
-      withCoords.forEach((l) => {
-        const sale = isSale(l);
-        const el = document.createElement("button");
-        el.type = "button";
-        el.textContent = shortPrice(l);
-        el.style.cssText = `display:inline-flex;align-items:center;height:28px;padding:0 10px;border:0;border-radius:999px;background:${sale ? "#111" : "#0099cc"};color:#fff;font:700 12px Inter,sans-serif;box-shadow:0 2px 8px rgba(20,20,43,.25);white-space:nowrap;cursor:pointer;`;
-        el.addEventListener("click", (e) => {
-          e.stopPropagation();
-          popupRef.current?.remove();
-          popupRef.current = new maplibregl.Popup({ offset: 12, closeButton: false, maxWidth: "250px", className: "gss-popup" })
-            .setLngLat([l.Longitude, l.Latitude])
-            .setHTML(popupCss() + cardHtml(l))
-            .addTo(map);
-        });
-        const marker = new maplibregl.Marker({ element: el, anchor: "bottom" })
-          .setLngLat([l.Longitude, l.Latitude])
-          .addTo(map);
-        markersRef.current.push(marker);
-        bounds.extend([l.Longitude!, l.Latitude!]);
-      });
-      // Keep the zoom tight on the listing cluster
-      if (withCoords.length > 1) map.fitBounds(bounds, { padding: 40, maxZoom: 15 });
-      else if (withCoords.length === 1) map.setZoom(14);
+      setMapReady(true);
     });
     return () => {
       cancelled = true;
-      markersRef.current.forEach((m) => m.remove());
-      markersRef.current = [];
       mapRef.current?.remove();
       mapRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [listings]);
+  }, []);
+
+  // Whenever the filtered listings change, refresh the pins and zoom the
+  // (already-mounted) map in on them. No rebuild, no flash.
+  useEffect(() => {
+    if (!mapReady || !mapRef.current || !window.maplibregl) return;
+    const map = mapRef.current;
+    const maplibregl = window.maplibregl;
+    markersRef.current.forEach((m) => m.remove());
+    markersRef.current = [];
+    popupRef.current?.remove();
+    popupRef.current = null;
+
+    const withCoords = listings.filter((l) => l.Latitude && l.Longitude);
+    const bounds = new maplibregl.LngLatBounds();
+    withCoords.forEach((l) => {
+      const sale = isSale(l);
+      const el = document.createElement("button");
+      el.type = "button";
+      el.textContent = shortPrice(l);
+      el.style.cssText = `display:inline-flex;align-items:center;height:28px;padding:0 10px;border:0;border-radius:999px;background:${sale ? "#111" : "#0099cc"};color:#fff;font:700 12px Inter,sans-serif;box-shadow:0 2px 8px rgba(20,20,43,.25);white-space:nowrap;cursor:pointer;`;
+      el.addEventListener("click", (e) => {
+        e.stopPropagation();
+        popupRef.current?.remove();
+        popupRef.current = new maplibregl.Popup({ offset: 12, closeButton: false, maxWidth: "250px", className: "gss-popup" })
+          .setLngLat([l.Longitude, l.Latitude])
+          .setHTML(popupCss() + cardHtml(l))
+          .addTo(map);
+      });
+      const marker = new maplibregl.Marker({ element: el, anchor: "bottom" })
+        .setLngLat([l.Longitude, l.Latitude])
+        .addTo(map);
+      markersRef.current.push(marker);
+      bounds.extend([l.Longitude!, l.Latitude!]);
+    });
+    // Zoom in tight on the filtered cluster. Zero results: leave the
+    // current view alone (nothing to zoom to).
+    if (withCoords.length > 1) map.fitBounds(bounds, { padding: 40, maxZoom: 15, duration: 600 });
+    else if (withCoords.length === 1) map.flyTo({ center: [withCoords[0].Longitude, withCoords[0].Latitude], zoom: 14, duration: 600 });
+  }, [mapReady, listings]);
 
   function useMyLocation() {
     if (!navigator.geolocation) return;
