@@ -5,7 +5,6 @@ import {
   citySlug,
   rawCitiesFor,
   listCities,
-  type PropertyListing,
   type GridListing,
 } from "./mls";
 import { type CityStats } from "./cityStats";
@@ -31,20 +30,6 @@ export function hoodSlug(hood: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
-
-/** property.StructureType is string[] | string | null; normalize to display text. */
-function structureTypeText(v: string[] | string | null | undefined): string | null {
-  if (!v) return null;
-  if (Array.isArray(v)) return v.filter(Boolean).join(", ") || null;
-  const t = v.trim();
-  if (t.startsWith("[")) {
-    try {
-      const arr = JSON.parse(t);
-      if (Array.isArray(arr)) return arr.filter(Boolean).join(", ") || null;
-    } catch { /* not JSON, use raw */ }
-  }
-  return t || null;
-}
 
 /** Minimum active listings for a neighbourhood to get its own page. */
 export const HOOD_MIN_LISTINGS = 5;
@@ -378,7 +363,8 @@ export const getHoodStats = cache(async (city: string, hood: string): Promise<Ci
   return result;
 });
 
-/** Paginated listings for a neighbourhood page (property table, newest first).
+/** Paginated listings for a neighbourhood page (grid table, newest first).
+ *  Requires CityRegion/SubdivisionName columns on grid (sync + backfill).
  *  Mapped to GridListing so ListingCard can be reused. */
 export interface HoodFilters {
   type?: string;
@@ -403,9 +389,9 @@ export async function getHoodListings(
   const from = (page - 1) * perPage;
 
   let q = mls
-    .from("property")
+    .from("grid")
     .select(
-      "ListingKey,ListingId,OfficeName,ListPrice,TotalActualRent,PhotosCount,Media,UnparsedAddress,City,Province,PostalCode,Latitude,Longitude,ParkingTotal,BathroomsTotalInteger,BedroomsTotal,AboveGradeFinishedArea,StructureType,OriginalEntryTimestamp",
+      "ListingKey,ListingId,OfficeName,ListPrice,TotalActualRent,PhotosCount,Media,UnparsedAddress,City,Province,PostalCode,Latitude,Longitude,ParkingTotal,BathroomsTotalInteger,BedroomsTotal,AboveGradeFinishedArea,StructureTypeText,OriginalEntryTimestamp",
       { count: "exact" }
     )
     .in("City", cities)
@@ -417,7 +403,7 @@ export async function getHoodListings(
   if (f.baths) q = q.gte("BathroomsTotalInteger", Number(f.baths));
   if (f.homeType) {
     const safe = f.homeType.replace(/[^a-zA-Z0-9 /-]/g, "").slice(0, 40);
-    if (safe) q = q.ilike("StructureType", `%"${safe}"%`);
+    if (safe) q = q.ilike("StructureTypeText", `%${safe}%`);
   }
   const priceCol = f.type === "rent" ? "TotalActualRent" : "ListPrice";
   if (f.minPrice) q = q.gte(priceCol, Number(f.minPrice));
@@ -426,14 +412,9 @@ export async function getHoodListings(
     .order("OriginalEntryTimestamp", { ascending: false })
     .range(from, from + perPage - 1);
   if (error) throw new Error(`getHoodListings: ${error.message}`);
-  const listings = ((data ?? []) as PropertyListing[]).map(
-    (p) =>
-      ({
-        ...p,
-        StructureTypeText: structureTypeText(p.StructureType as string[] | string | null),
-        Media: Array.isArray(p.Media) ? p.Media[0]?.MediaURL ?? null : (p.Media as string | null),
-      } as GridListing)
-  );
+  // grid.Media is already a single thumbnail URL and grid.StructureTypeText
+  // is already the display string — no mapping needed.
+  const listings = (data ?? []) as GridListing[];
   return { listings, total: count ?? 0 };
 }
 
@@ -444,28 +425,17 @@ export async function getHoodTypeCounts(city: string, hood: string): Promise<Rec
   const unknownVariants = await unknownCityVariants();
   const cities = [...new Set([...variants, ...unknownVariants])];
   const { data } = await mls
-    .from("property")
-    .select("StructureType")
+    .from("grid")
+    .select("StructureTypeText")
     .in("City", cities)
     .or(`CityRegion.eq.${hood},SubdivisionName.eq.${hood}`)
     .limit(10000);
+  // grid.StructureTypeText is a single display string per listing (the sync
+  // takes the first StructureType) — one count per listing.
   const counts: Record<string, number> = {};
-  for (const r of (data ?? []) as { StructureType: unknown }[]) {
-    const raw = r.StructureType;
-    let vals: string[] = [];
-    if (Array.isArray(raw)) vals = raw as string[];
-    else if (typeof raw === "string") {
-      try {
-        const parsed = JSON.parse(raw);
-        vals = Array.isArray(parsed) ? parsed : [raw];
-      } catch {
-        vals = [raw];
-      }
-    }
-    for (const v of vals) {
-      const t = String(v).trim() || "Other";
-      counts[t] = (counts[t] || 0) + 1;
-    }
+  for (const r of (data ?? []) as { StructureTypeText: string | null }[]) {
+    const t = (r.StructureTypeText ?? "").trim() || "Other";
+    counts[t] = (counts[t] || 0) + 1;
   }
   return counts;
 }
