@@ -1,5 +1,6 @@
 import { ImageResponse } from "next/og";
 import { getPage, getSvgs } from "@/lib/cms";
+import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
@@ -90,6 +91,17 @@ export async function GET(_req: Request, { params }: { params: Promise<{ slug?: 
     // Same title rule as the page's own metadata (seo_title wins), so the
     // card never disagrees with the shared title text.
     if (p) pageTitle = p.seo_title || p.title || pageTitle;
+    // Forms share through the same card: no CMS page exists for a form
+    // slug, so fall back to the form's name for the title card.
+    if (!p) {
+      try {
+        const supabase = await createClient();
+        const { data } = await supabase.from("forms").select("name").eq("slug", toSlug(slug)).eq("is_active", true).maybeSingle();
+        if (data?.name) pageTitle = data.name;
+      } catch {
+        // Keep the generic brand title.
+      }
+    }
     const heroSection = (result?.sections ?? []).find((s: any) => s?.block_type === "hero");
     const d = heroSection?.data ?? {};
     if (typeof d.heading === "string" && d.heading.trim()) {

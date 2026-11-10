@@ -19,9 +19,34 @@ async function getForm(slug: string) {
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const form = await getForm(slug);
+  const [form, settings] = await Promise.all([getForm(slug), getSettings()]);
   if (!form) return { title: "Form not found" };
-  return { title: form.name, description: form.description ?? undefined, alternates: { canonical: `/forms/${slug}` } };
+  const title = form.name;
+  const description = form.description ?? undefined;
+  // Same social preview treatment as CMS pages: the site default OG image
+  // when one is set, otherwise the branded title card from /api/og (which
+  // renders the form's name — see the form lookup in that route), so no
+  // form ever shares without an image.
+  const ogImage = settings.seo_defaults?.og_image || `/api/og/${slug}`;
+  return {
+    title,
+    description,
+    alternates: { canonical: `/forms/${slug}` },
+    openGraph: {
+      title,
+      description,
+      url: `/forms/${slug}`,
+      siteName: settings.site_name,
+      type: "website",
+      images: [{ url: ogImage, width: 1200, height: 630, alt: title }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [ogImage],
+    },
+  };
 }
 
 export default async function FormPage({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams: Promise<{ t?: string }> }) {
