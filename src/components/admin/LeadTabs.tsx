@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import type { Lead, LeadFlow, LeadFlowEnrollment } from "@/lib/types";
+import type { Lead, LeadFlow, LeadFlowEnrollment, LeadReminder } from "@/lib/types";
 import { LEAD_FLOW_CATEGORIES, LEAD_STATUSES } from "@/lib/types";
 import { AttachedForms } from "./AttachedForms";
 import { FormSubmissionCard } from "./FormSubmissionCard";
@@ -313,7 +313,87 @@ const LEAD_TYPES = [
   { id: "investor", label: "Investor" },
 ] as const;
 
-function OverviewPanel({ lead, activities }: { lead: Lead; activities: Activity[] }) {
+/** Property-type tags for what the lead is looking for — multi-select, plus custom tags. */
+const LEAD_TAGS = [
+  { id: "detached", label: "Detached" },
+  { id: "townhouse", label: "Townhouse" },
+  { id: "apartment", label: "Apartment" },
+  { id: "condo", label: "Condo" },
+] as const;
+
+const tagLabel = (t: string) => LEAD_TAGS.find((lt) => lt.id === t)?.label ?? t;
+
+/** Manual follow-up reminders on a lead: set a date + note, mark done. */
+function RemindersCard({ leadId, initial }: { leadId: string; initial: LeadReminder[] }) {
+  const [reminders, setReminders] = useState<LeadReminder[]>(initial);
+  const [date, setDate] = useState("");
+  const [note, setNote] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState("");
+  const pending = reminders.filter((r) => !r.done);
+
+  async function addReminder() {
+    if (!date) return;
+    setSaving(true); setMsg("");
+    const { data, error } = await createClient().from("lead_reminders").insert({
+      lead_id: leadId,
+      remind_at: new Date(date).toISOString(),
+      note: note.trim(),
+    }).select("*").single();
+    setSaving(false);
+    if (error) { setMsg(error.message); return; }
+    if (data) setReminders([data as LeadReminder, ...reminders]);
+    setDate(""); setNote(""); setMsg("Reminder set");
+  }
+
+  async function markDone(id: string) {
+    const { error } = await createClient().from("lead_reminders").update({ done: true }).eq("id", id);
+    if (!error) setReminders(reminders.map((r) => (r.id === id ? { ...r, done: true } : r)));
+  }
+
+  async function deleteReminder(id: string) {
+    const { error } = await createClient().from("lead_reminders").delete().eq("id", id);
+    if (!error) setReminders(reminders.filter((r) => r.id !== id));
+  }
+
+  return (
+    <div className="card flex flex-col gap-3">
+      <strong>Reminders</strong>
+      <div className="flex flex-col gap-2">
+        <label className="label">Remind me on
+          <input className="input" type="datetime-local" value={date} onChange={(e) => setDate(e.target.value)} />
+        </label>
+        <label className="label">Note
+          <input className="input" value={note} onChange={(e) => setNote(e.target.value)} placeholder="e.g. Call about the viewing" />
+        </label>
+        <div>
+          <button className="btn-primary" disabled={!date || saving} onClick={addReminder}>{saving ? "Saving…" : "Set reminder"}</button>
+        </div>
+        {msg ? <p className="text-sm text-muted" role="status">{msg}</p> : null}
+      </div>
+      {pending.length ? (
+        <ul className="flex flex-col gap-2">
+          {pending.map((r) => (
+            <li key={r.id} className="flex items-start justify-between gap-3 rounded-lg bg-ground p-3">
+              <div>
+                <div className="text-[14px] font-medium">{r.note || "Follow up"}</div>
+                <div className="text-xs text-muted">{new Date(r.remind_at).toLocaleString()}</div>
+              </div>
+              <div className="flex shrink-0 gap-1">
+                <button className="btn h-8 px-3 text-[12px]" onClick={() => markDone(r.id)}>Done</button>
+                <button className="btn h-8 px-3 text-[12px]" onClick={() => deleteReminder(r.id)}>Delete</button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="text-[13px] text-muted">No reminders set.</p>
+      )}
+    </div>
+  );
+}
+
+function OverviewPanel({ lead, activities, reminders }: { lead: Lead; activities: Activity[]; reminders: LeadReminder[] }) {
   const name = [lead.first_name, lead.last_name].filter(Boolean).join(" ") || "Unnamed lead";
   const [editing, setEditing] = useState(false);
   const [firstName, setFirstName] = useState(lead.first_name ?? "");
@@ -322,6 +402,8 @@ function OverviewPanel({ lead, activities }: { lead: Lead; activities: Activity[
   const [phone, setPhone] = useState(lead.phone ?? "");
   const [status, setStatus] = useState(lead.status);
   const [types, setTypes] = useState<string[]>(Array.isArray(lead.types) ? lead.types : []);
+  const [tags, setTags] = useState<string[]>(Array.isArray(lead.tags) ? lead.tags : []);
+  const [customTag, setCustomTag] = useState("");
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState("");
 
@@ -334,6 +416,7 @@ function OverviewPanel({ lead, activities }: { lead: Lead; activities: Activity[
       phone: phone.trim() || null,
       status,
       types,
+      tags,
     }).eq("id", lead.id);
     setSaving(false);
     if (error) { setMsg(error.message); return; }
@@ -344,11 +427,23 @@ function OverviewPanel({ lead, activities }: { lead: Lead; activities: Activity[
     setTypes(types.includes(id) ? types.filter((t) => t !== id) : [...types, id]);
   }
 
+  function toggleTag(id: string) {
+    setTags(tags.includes(id) ? tags.filter((t) => t !== id) : [...tags, id]);
+  }
+
+  function addCustomTag() {
+    const t = customTag.trim().toLowerCase().replace(/\s+/g, "-");
+    if (!t || tags.includes(t)) return;
+    setTags([...tags, t]);
+    setCustomTag("");
+  }
+
   async function deleteLead() {
     const label = [lead.first_name, lead.last_name].filter(Boolean).join(" ") || lead.email || lead.phone || "this lead";
     if (!confirm(`Delete ${label}? This removes the lead and its history from the database. This cannot be undone.`)) return;
     const supabase = createClient();
     await supabase.from("lead_activities").delete().eq("lead_id", lead.id);
+    await supabase.from("lead_reminders").delete().eq("lead_id", lead.id);
     await supabase.from("follow_up_queue").delete().eq("lead_id", lead.id);
     await supabase.from("lead_flow_enrollments").delete().eq("lead_id", lead.id);
     await supabase.from("lead_form_attachments").delete().eq("lead_id", lead.id);
@@ -395,6 +490,41 @@ function OverviewPanel({ lead, activities }: { lead: Lead; activities: Activity[
                 ))}
               </div>
             </div>
+            <div>
+              <p className="label">Tags — what they&apos;re looking for</p>
+              <div className="flex flex-wrap gap-2">
+                {LEAD_TAGS.map((t) => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => toggleTag(t.id)}
+                    className={`rounded-full px-4 py-2 text-[13px] font-medium ${tags.includes(t.id) ? "bg-[#0099cc] text-white" : "bg-[#f7f7f7] text-[#333] hover:bg-[#eee]"}`}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+                {tags.filter((t) => !LEAD_TAGS.some((lt) => lt.id === t)).map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => toggleTag(t)}
+                    className="rounded-full bg-[#0099cc] px-4 py-2 text-[13px] font-medium text-white"
+                  >
+                    {t} ×
+                  </button>
+                ))}
+              </div>
+              <div className="mt-2 flex gap-2">
+                <input
+                  className="input h-9 flex-1"
+                  value={customTag}
+                  onChange={(e) => setCustomTag(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCustomTag(); } }}
+                  placeholder="Add a custom tag…"
+                />
+                <button type="button" className="btn h-9" onClick={addCustomTag}>Add tag</button>
+              </div>
+            </div>
             <div className="flex gap-2">
               <button className="btn-primary" disabled={saving} onClick={save}>{saving ? "Saving…" : "Save"}</button>
               <button className="btn" onClick={() => { setEditing(false); setMsg(""); }}>Cancel</button>
@@ -407,6 +537,15 @@ function OverviewPanel({ lead, activities }: { lead: Lead; activities: Activity[
                 {types.map((t) => (
                   <span key={t} className="rounded-full bg-[#111] px-3 py-1 text-[12px] font-medium text-white">
                     {LEAD_TYPES.find((lt) => lt.id === t)?.label ?? t}
+                  </span>
+                ))}
+              </div>
+            ) : null}
+            {tags.length ? (
+              <div className="flex flex-wrap gap-2">
+                {tags.map((t) => (
+                  <span key={t} className="rounded-full bg-[#0099cc] px-3 py-1 text-[12px] font-medium text-white">
+                    {tagLabel(t)}
                   </span>
                 ))}
               </div>
@@ -428,6 +567,7 @@ function OverviewPanel({ lead, activities }: { lead: Lead; activities: Activity[
           </>
         )}
       </div>
+      <RemindersCard leadId={lead.id} initial={reminders} />
       <div className="card flex flex-col gap-3">
         <strong>Recent activity</strong>
         {activities.slice(0, 3).map((a) => (
@@ -724,8 +864,8 @@ function CommunicationPanel({ lead }: { lead: Lead }) {
 const TABS = ["overview", "form", "communication", "opportunities", "subscriptions", "activity", "flows", "matches"] as const;
 type Tab = (typeof TABS)[number];
 
-export function LeadTabs({ lead, activities, queue, enrollments, availableFlows }: {
-  lead: Lead; activities: Activity[]; queue: QueueItem[]; enrollments: LeadFlowEnrollment[]; availableFlows: LeadFlow[];
+export function LeadTabs({ lead, activities, queue, enrollments, availableFlows, reminders }: {
+  lead: Lead; activities: Activity[]; queue: QueueItem[]; enrollments: LeadFlowEnrollment[]; availableFlows: LeadFlow[]; reminders: LeadReminder[];
 }) {
   const [tab, setTab] = useState<Tab>("overview");
   const counts: Record<Tab, number | null> = {
@@ -751,7 +891,7 @@ export function LeadTabs({ lead, activities, queue, enrollments, availableFlows 
           + New Valuation
         </Link>
       </nav>
-      {tab === "overview" ? <OverviewPanel lead={lead} activities={activities} /> : null}
+      {tab === "overview" ? <OverviewPanel lead={lead} activities={activities} reminders={reminders} /> : null}
       {tab === "form" ? <FormSubmissionPanel lead={lead} /> : null}
       {tab === "communication" ? <CommunicationPanel lead={lead} /> : null}
       {tab === "opportunities" ? <Opportunities leadId={lead.id} /> : null}

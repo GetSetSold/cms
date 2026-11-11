@@ -3,6 +3,7 @@ import { requireStaff } from "@/lib/auth";
 import { LEAD_STATUSES, type Lead } from "@/lib/types";
 import { AddLeadButton } from "@/components/admin/AddLeadButton";
 import { LeadLink } from "@/components/admin/LeadLink";
+import { DueReminders, type DueReminder } from "@/components/admin/DueReminders";
 
 // One color per stage — light column tint, a matching dot/border accent — so the board reads at a
 // glance instead of every column looking the same.
@@ -22,8 +23,8 @@ const ago = (iso: string) => {
   return `${Math.round(m / 1440)} d`;
 };
 
-export default async function LeadsPage({ searchParams }: { searchParams: Promise<{ q?: string; form?: string; service?: string; view?: string }> }) {
-  const { q, form, service, view } = await searchParams;
+export default async function LeadsPage({ searchParams }: { searchParams: Promise<{ q?: string; form?: string; service?: string; tag?: string; view?: string }> }) {
+  const { q, form, service, tag, view } = await searchParams;
   const { supabase } = await requireStaff(["admin", "sales"]);
 
   let query = supabase.from("leads").select("*").order("created_at", { ascending: false }).limit(500);
@@ -33,12 +34,25 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
   }
   if (form) query = query.eq("form_key", form);
   if (service) query = query.eq("service", service);
+  if (tag) query = query.contains("tags", [tag]);
   const { data } = await query;
   const leads = (data ?? []) as Lead[];
   const forms = [...new Set(leads.map((l) => l.form_key).filter(Boolean))] as string[];
   const services = [...new Set(leads.map((l) => l.service).filter(Boolean))] as string[];
+  const allTags = [...new Set(leads.flatMap((l) => (Array.isArray(l.tags) ? l.tags : [])))].sort();
   const name = (l: Lead) => [l.first_name, l.last_name].filter(Boolean).join(" ") || l.email || l.phone || "Unnamed";
   const board = view === "board";
+
+  // Follow-ups due today or overdue (manual reminders, not automated sequences).
+  const endOfToday = new Date();
+  endOfToday.setHours(23, 59, 59, 999);
+  const { data: dueData } = await supabase
+    .from("lead_reminders")
+    .select("id, lead_id, remind_at, note, lead:leads(first_name, last_name, email)")
+    .eq("done", false)
+    .lte("remind_at", endOfToday.toISOString())
+    .order("remind_at");
+  const due = (dueData ?? []) as unknown as DueReminder[];
 
   return (
     <div className="flex flex-col gap-5 p-6">
@@ -47,11 +61,12 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
         <div className="ml-auto flex items-center gap-2">
           <AddLeadButton />
           <div className="flex rounded-[10px] bg-soft/70 p-1">
-          <Link href={{ query: { q, form, service, view: "board" } }} className={`flex h-8 items-center rounded-[7px] px-3 ${board ? "bg-white shadow-sm" : "text-muted"}`}>Board</Link>
-          <Link href={{ query: { q, form, service } }} className={`flex h-8 items-center rounded-[7px] px-3 ${!board ? "bg-white shadow-sm" : "text-muted"}`}>List</Link>
+          <Link href={{ query: { q, form, service, tag, view: "board" } }} className={`flex h-8 items-center rounded-[7px] px-3 ${board ? "bg-white shadow-sm" : "text-muted"}`}>Board</Link>
+          <Link href={{ query: { q, form, service, tag } }} className={`flex h-8 items-center rounded-[7px] px-3 ${!board ? "bg-white shadow-sm" : "text-muted"}`}>List</Link>
           </div>
         </div>
       </div>
+      <DueReminders initial={due} />
       <form className="flex gap-2">
         {view ? <input type="hidden" name="view" value={view} /> : null}
         <input name="q" defaultValue={q} placeholder="Search name, email, phone" className="input h-10 flex-1" />
@@ -62,6 +77,10 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
         <select name="service" defaultValue={service ?? ""} className="input h-10 w-44">
           <option value="">All services</option>
           {services.map((s) => <option key={s} value={s}>{s}</option>)}
+        </select>
+        <select name="tag" defaultValue={tag ?? ""} className="input h-10 w-44">
+          <option value="">All tags</option>
+          {allTags.map((t) => <option key={t} value={t}>{t}</option>)}
         </select>
         <button className="btn">Filter</button>
       </form>
@@ -85,6 +104,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
                       {l.sms_opt_in && !l.sms_opted_out ? <span className="rounded-full bg-[#E4F0EE] px-1.5 py-0.5 text-[#0A4540]">SMS ok</span> : null}
                       {l.sms_opted_out ? <span className="rounded-full bg-[#FBEBDD] px-1.5 py-0.5 text-[#8A3F12]">Opted out</span> : null}
                       {l.utm?.utm_source ? <span className="rounded-full bg-soft px-1.5 py-0.5 text-muted">{l.utm.utm_source}</span> : null}
+                      {(Array.isArray(l.tags) ? l.tags : []).map((t) => <span key={t} className="rounded-full bg-[#E0F2F8] px-1.5 py-0.5 text-[#0B5A75]">{t}</span>)}
                     </div>
                   </LeadLink>
                 ))}
@@ -96,13 +116,14 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
         <div className="overflow-hidden rounded-2xl bg-white">
           <table className="w-full text-left">
             <thead className="border-b border-line text-xs uppercase tracking-wide text-muted">
-              <tr><th className="p-3">Name</th><th className="p-3">Email</th><th className="p-3">Phone</th><th className="p-3">Service</th><th className="p-3">Status</th><th className="p-3">Received</th></tr>
+              <tr><th className="p-3">Name</th><th className="p-3">Email</th><th className="p-3">Phone</th><th className="p-3">Service</th><th className="p-3">Tags</th><th className="p-3">Status</th><th className="p-3">Received</th></tr>
             </thead>
             <tbody>
               {leads.map((l) => (
                 <tr key={l.id} className="border-b border-line/60 last:border-0">
                   <td className="p-3 font-medium"><LeadLink id={l.id} className="hover:text-primary">{name(l)}</LeadLink></td>
                   <td className="p-3">{l.email}</td><td className="p-3">{l.phone}</td><td className="p-3">{[l.service, l.form_key].filter(Boolean).join(" · ")}</td>
+                  <td className="p-3"><div className="flex flex-wrap gap-1">{(Array.isArray(l.tags) ? l.tags : []).map((t) => <span key={t} className="rounded-full bg-[#E0F2F8] px-2 py-0.5 text-[11px] text-[#0B5A75]">{t}</span>)}</div></td>
                   <td className="p-3 capitalize">{l.status}</td><td className="p-3 text-muted">{new Date(l.created_at).toLocaleString()}</td>
                 </tr>
               ))}

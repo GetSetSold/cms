@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { requireStaff } from "@/lib/auth";
 import { LeadTabs } from "@/components/admin/LeadTabs";
-import type { Lead, LeadFlow, LeadFlowEnrollment } from "@/lib/types";
+import type { Lead, LeadFlow, LeadFlowEnrollment, LeadReminder } from "@/lib/types";
 
 /** Shared lead-detail body: full page and modal render the same content. */
 export async function LeadDetailView({ id, showBackLink }: { id: string; showBackLink?: boolean }) {
   const { supabase } = await requireStaff(["admin", "sales"]);
-  const [{ data: lead }, { data: activities }, { data: queue }, { data: enrollments }, { data: availableFlows }] =
+  const [{ data: lead }, { data: activities }, { data: queue }, { data: enrollments }, { data: availableFlows }, { data: reminders }] =
     await Promise.all([
       supabase.from("leads").select("*").eq("id", id).maybeSingle(),
       supabase.from("lead_activities").select("*").eq("lead_id", id).order("created_at", { ascending: false }),
@@ -17,6 +17,7 @@ export async function LeadDetailView({ id, showBackLink }: { id: string; showBac
         .eq("lead_id", id)
         .order("created_at", { ascending: false }),
       supabase.from("follow_up_sequences").select("*").eq("is_active", true).order("category").order("name"),
+      supabase.from("lead_reminders").select("*").eq("lead_id", id).order("remind_at"),
     ]);
   if (!lead) return null;
   const l = lead as Lead;
@@ -34,6 +35,7 @@ export async function LeadDetailView({ id, showBackLink }: { id: string; showBac
         queue={queue ?? []}
         enrollments={(enrollments ?? []) as LeadFlowEnrollment[]}
         availableFlows={(availableFlows ?? []) as LeadFlow[]}
+        reminders={(reminders ?? []) as LeadReminder[]}
       />
     </div>
   );

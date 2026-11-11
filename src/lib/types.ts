@@ -199,6 +199,18 @@ export interface Lead {
   sms_opt_in: boolean;
   sms_opted_out: boolean;
   types: string[];
+  /** Property-type tags (Detached, Townhouse, Apartment, Condo, + custom) — multi-select. */
+  tags: string[];
+  created_at: string;
+}
+
+/** Manual follow-up reminder on a lead ("call Tuesday"). */
+export interface LeadReminder {
+  id: string;
+  lead_id: string;
+  remind_at: string;
+  note: string;
+  done: boolean;
   created_at: string;
 }
 
