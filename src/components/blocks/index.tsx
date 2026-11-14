@@ -881,7 +881,11 @@ function IconCard({ data, ctx }: BlockProps) {
       {data.heading ? <h3 className={`font-semibold ${dark ? "text-ground" : ""}`} style={{ fontSize: "var(--font-card-title-size, 1.125rem)" }}>{data.heading}</h3> : null}
       {data.text ? <p className={`leading-relaxed ${dark ? "text-ground/75" : "text-muted"}`} style={{ fontSize: "var(--font-body-size, 0.875rem)" }}>{renderInlineLinks(data.text)}</p> : null}
       {data.link?.label ? (
-        <Link href={data.link.href} className={`mt-1 inline-flex h-10 items-center rounded-[var(--radius-btn)] px-5 text-sm font-medium transition ${btnCls}`}>
+        // In a row group the cards are equal height, so the button pins to
+        // the bottom of the card (mt-auto absorbs the slack) and every
+        // button in the row lines up. Standalone cards are content-height —
+        // no slack to absorb — so they keep the plain mt-1.
+        <Link href={data.link.href} className={`${ctx.inRow ? "mt-auto" : "mt-1"} inline-flex h-10 items-center rounded-[var(--radius-btn)] px-5 text-sm font-medium transition ${btnCls}`}>
           {data.link.label}
         </Link>
       ) : null}
