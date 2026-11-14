@@ -1836,7 +1836,7 @@ export function RenderSections({ sections, ctx }: { sections: Section[]; ctx: Bl
         if (group.length === 1 && !group[0].settings?.row_id) return renderOne(group[0], ctx);
         const cols = group[0].settings?.row_columns ?? Math.min(group.length, 4) as 1 | 2 | 3 | 4;
         return (
-          <div key={group[0].id ?? gi} className={ctx.narrow ? "mx-auto w-full max-w-md grid grid-cols-1 gap-x-8 gap-y-6 px-5 md:gap-y-8 md:px-0" : `mx-auto w-full max-w-7xl grid grid-cols-1 gap-x-8 gap-y-6 px-5 md:gap-y-8 md:px-10 ${ROW_COLS[cols]}`}>
+          <div key={group[0].id ?? gi} className={ctx.narrow ? "row-group mx-auto w-full max-w-md grid grid-cols-1 gap-x-8 gap-y-6 px-5 md:gap-y-8 md:px-0" : `row-group mx-auto w-full max-w-7xl grid grid-cols-1 gap-x-8 gap-y-6 px-5 md:gap-y-8 md:px-10 ${ROW_COLS[cols]}`}>
             {group.map((s) => renderOne(s, { ...ctx, inRow: true }))}
           </div>
         );

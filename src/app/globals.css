@@ -197,6 +197,15 @@ section[data-block] > div {
   padding-top: 50px !important;
   padding-bottom: 50px !important;
 }
+/* Row groups are the exception: when blocks are grouped into a row, the grid
+   gap owns the spacing between them. Without this exemption every grouped
+   card still carried the universal 50px above and below, so cards stacked
+   on mobile sat ~124px apart (50 + grid gap + 50) no matter what the
+   component's own padding classes said. */
+.row-group > section[data-block] > div {
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
 /* A second-level "> div > div" padding rule used to live here, meant for boxed-card wrappers.
    Removed: the selector isn't scoped to cards specifically, so it was grabbing whatever a block's
    first nested div happened to be (Hero's eyebrow, in your screenshot) and forcing 50px of padding
