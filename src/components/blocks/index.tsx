@@ -1750,7 +1750,10 @@ function renderOne(s: Section, ctx: BlockCtx) {
         // No box: render directly without extra wrap to avoid double-wrapping.
         // Blocks with internal wrap get correct single padding; blocks without
         // are full-width (unified, not narrow). Keep vertical rhythm.
-        <div className={ctx.narrow ? "py-3" : "py-5 md:py-12"}>{content}</div>
+        // Inside a row group the grid gap owns the spacing — the standalone
+        // vertical padding stays OFF, otherwise the two stack and grouped
+        // cards sit ~2-3x too far apart (very visible stacked on mobile).
+        <div className={ctx.inRow ? "py-0" : ctx.narrow ? "py-3" : "py-5 md:py-12"}>{content}</div>
       )}
       {dividerEl}
     </section>
@@ -1833,7 +1836,7 @@ export function RenderSections({ sections, ctx }: { sections: Section[]; ctx: Bl
         if (group.length === 1 && !group[0].settings?.row_id) return renderOne(group[0], ctx);
         const cols = group[0].settings?.row_columns ?? Math.min(group.length, 4) as 1 | 2 | 3 | 4;
         return (
-          <div key={group[0].id ?? gi} className={ctx.narrow ? "mx-auto w-full max-w-md grid grid-cols-1 gap-x-8 gap-y-10 px-5 md:gap-y-8 md:px-0" : `mx-auto w-full max-w-7xl grid grid-cols-1 gap-x-8 gap-y-10 px-5 md:gap-y-8 md:px-10 ${ROW_COLS[cols]}`}>
+          <div key={group[0].id ?? gi} className={ctx.narrow ? "mx-auto w-full max-w-md grid grid-cols-1 gap-x-8 gap-y-6 px-5 md:gap-y-8 md:px-0" : `mx-auto w-full max-w-7xl grid grid-cols-1 gap-x-8 gap-y-6 px-5 md:gap-y-8 md:px-10 ${ROW_COLS[cols]}`}>
             {group.map((s) => renderOne(s, { ...ctx, inRow: true }))}
           </div>
         );
