@@ -1753,7 +1753,10 @@ function renderOne(s: Section, ctx: BlockCtx) {
         // Inside a row group the grid gap owns the spacing — the standalone
         // vertical padding stays OFF, otherwise the two stack and grouped
         // cards sit ~2-3x too far apart (very visible stacked on mobile).
-        <div className={ctx.inRow ? "py-0" : ctx.narrow ? "py-3" : "py-5 md:py-12"}>{content}</div>
+        // h-full so the block's own h-full root (e.g. an icon card's box)
+        // fills the row height the grid stretches this section to — that's
+        // what makes every card in a 2/3/4 group come out equal height.
+        <div className={ctx.inRow ? "h-full py-0" : ctx.narrow ? "py-3" : "py-5 md:py-12"}>{content}</div>
       )}
       {dividerEl}
     </section>
