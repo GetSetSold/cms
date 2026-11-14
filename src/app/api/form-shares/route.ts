@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireStaff } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { randomBytes } from "crypto";
+import { buildContextSections, LEAD_CONTEXT_COLUMNS, type LeadContext, type SnapshotSection } from "@/lib/shareSnapshot";
 
 /** Form shares: create, list, revoke, refresh. */
 
@@ -68,6 +69,7 @@ export async function POST(req: NextRequest) {
   const ttl = EXPIRY_OPTIONS[expiryKey] ?? EXPIRY_OPTIONS["24h"];
 
   let formKey: string, formName: string, answers: Record<string, unknown>, submittedAt: string;
+  let leadCtx: LeadContext | null = null;
 
   if (attachmentId) {
     const { data: att } = await staff.supabase
@@ -80,15 +82,23 @@ export async function POST(req: NextRequest) {
     const a = att as { form_id: string; form_key: string; form_name: string; answers: Record<string, unknown>; created_at: string };
     formKey = a.form_key; formName = a.form_name; answers = a.answers ?? {}; submittedAt = a.created_at;
 
+    const { data: leadRow } = await staff.supabase
+      .from("leads")
+      .select(LEAD_CONTEXT_COLUMNS)
+      .eq("id", leadId)
+      .maybeSingle();
+    leadCtx = (leadRow as LeadContext | null) ?? null;
+
     var formId = a.form_id;
   } else {
     const { data: lead } = await staff.supabase
       .from("leads")
-      .select("id,form_key,custom_fields,created_at")
+      .select("id,form_key,custom_fields,created_at,first_name,last_name,email,phone,source_path")
       .eq("id", leadId)
       .maybeSingle();
     if (!lead) return NextResponse.json({ error: "Lead not found." }, { status: 404 });
     const l = lead as { form_key: string; custom_fields: Record<string, unknown>; created_at: string };
+    leadCtx = lead as LeadContext;
     if (!l.form_key) return NextResponse.json({ error: "Lead has no form submission to share." }, { status: 400 });
     formKey = l.form_key; answers = l.custom_fields ?? {}; submittedAt = l.created_at;
 
@@ -103,7 +113,11 @@ export async function POST(req: NextRequest) {
     const { data: form } = await staff.supabase.from("forms").select("sections").eq("id", formId).maybeSingle();
     sections = ((form as { sections: Section[] } | null)?.sections ?? []) as Section[];
   }
-  const snapshotSections = buildSnapshot(sections, answers);
+  const formSections = buildSnapshot(sections, answers) as unknown as SnapshotSection[];
+  // Prepend Property (listing link) + Contact (name/email/phone) sections —
+  // they live on the lead, not in the form answers, so they'd otherwise be
+  // missing from the shared page.
+  const snapshotSections = [...buildContextSections(leadCtx, formSections), ...formSections];
   const answerCount = snapshotSections.reduce((n, s) => n + (s as { fields: unknown[] }).fields.length, 0);
 
   const token = randomBytes(12).toString("base64url");

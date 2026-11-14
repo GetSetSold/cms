@@ -1,6 +1,6 @@
 "use client";
 
-type Field = { label: string; value: unknown; heading?: boolean };
+type Field = { label: string; value: unknown; heading?: boolean; href?: string };
 type Section = { heading: string; fields: Field[] };
 type Share = {
   expires_at: string;
@@ -163,7 +163,15 @@ export function SharedApplicationView({ share, formName }: { share: Share; formN
                     ) : occupantFields.includes(f) ? null : (
                       <div key={fi} className={f.value && typeof f.value === "object" && "subform" in (f.value as object) ? "sm:col-span-2" : "sm:col-span-1"}>
                         <dt className="text-[12px] uppercase tracking-wide text-[#888]">{f.label}</dt>
-                        <dd className="mt-0.5"><Value value={f.value} fieldLabel={f.label} /></dd>
+                        <dd className="mt-0.5">
+                          {f.href ? (
+                            <a href={f.href} target="_blank" rel="noreferrer" className="break-all text-[15px] font-medium text-[#0099cc] underline">
+                              {String(f.value)}
+                            </a>
+                          ) : (
+                            <Value value={f.value} fieldLabel={f.label} />
+                          )}
+                        </dd>
                       </div>
                     ),
                   )}

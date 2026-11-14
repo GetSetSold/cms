@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireStaff } from "@/lib/auth";
+import { buildContextSections, LEAD_CONTEXT_COLUMNS, type LeadContext } from "@/lib/shareSnapshot";
 
 /** POST: refresh a share — re-snapshots current answers/branding, keeps the same URL. */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ token: string }> }) {
@@ -21,6 +22,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
 
   // Rebuild the snapshot from current data.
   let answers: Record<string, unknown>, formKey: string, formName: string, formId: string, submittedAt: string;
+  let leadCtx: LeadContext | null = null;
   if (s.attachment_id) {
     const { data: att } = await staff.supabase
       .from("lead_form_attachments")
@@ -30,14 +32,21 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
     if (!att) return NextResponse.json({ error: "Attachment not found." }, { status: 404 });
     const a = att as { form_id: string; form_key: string; form_name: string; answers: Record<string, unknown>; created_at: string };
     answers = a.answers ?? {}; formKey = a.form_key; formName = a.form_name; formId = a.form_id; submittedAt = a.created_at;
+    const { data: leadRow } = await staff.supabase
+      .from("leads")
+      .select(LEAD_CONTEXT_COLUMNS)
+      .eq("id", s.lead_id)
+      .maybeSingle();
+    leadCtx = (leadRow as LeadContext | null) ?? null;
   } else {
     const { data: lead } = await staff.supabase
       .from("leads")
-      .select("form_key,custom_fields,created_at")
+      .select("form_key,custom_fields,created_at,first_name,last_name,email,phone,source_path")
       .eq("id", s.lead_id)
       .maybeSingle();
     if (!lead) return NextResponse.json({ error: "Lead not found." }, { status: 404 });
     const l = lead as { form_key: string; custom_fields: Record<string, unknown>; created_at: string };
+    leadCtx = lead as LeadContext;
     answers = l.custom_fields ?? {}; formKey = l.form_key; submittedAt = l.created_at;
     const { data: form } = await staff.supabase.from("forms").select("id,name").eq("form_key", formKey).maybeSingle();
     formName = ((form as { name: string } | null)?.name) ?? formKey;
@@ -64,13 +73,16 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
       .filter(Boolean) as { heading: string; fields: { label: string; value: unknown }[] }[];
   }
 
+  // Same Property + Contact context sections as share creation.
+  const allSections = [...buildContextSections(leadCtx, sections), ...sections];
+
   const { data: settings } = await staff.supabase.from("site_settings").select("doc_branding").eq("id", 1).maybeSingle();
 
   const { error } = await staff.supabase
     .from("form_shares")
     .update({
       branding: (settings as { doc_branding?: unknown } | null)?.doc_branding ?? {},
-      snapshot: { form_name: formName, sections, submitted_at: submittedAt },
+      snapshot: { form_name: formName, sections: allSections, submitted_at: submittedAt },
     })
     .eq("token", token);
 
