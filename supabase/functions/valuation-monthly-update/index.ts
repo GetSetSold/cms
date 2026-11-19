@@ -131,6 +131,11 @@ Deno.serve(async (req) => {
       const address = (r.address as string) ?? "";
       const unsubToken = crypto.randomUUID();
       const unsubUrl = `${siteUrl}/api/valuation-updates/unsubscribe?token=${unsubToken}`;
+      // Selling-intent question: one token per send, one link per answer.
+      // The intent route records the answer and routes follow-ups/alerts.
+      const intentToken = crypto.randomUUID();
+      const intentUrl = (choice: string) =>
+        `${siteUrl}/api/valuation-updates/intent?token=${intentToken}&choice=${choice}`;
 
       const subject = `Your ${citySlug(r.city as string).replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())} market update — ${monthLabel}`;
       const text =
@@ -143,7 +148,14 @@ Since your home valuation for ${address} (${reportMonth}), the ${m.name} benchma
 Your estimated value then: ${fmtMoney(oldValue)}
 Estimated value now: ~${fmtMoney(newValue)}
 
-This is based on the MLS® Home Price Index trend for your area — not a new appraisal. Thinking about selling? Reply to this email and I'll run fresh numbers for your specific property.
+This is based on the MLS® Home Price Index trend for your area — not a new appraisal. For fresh numbers on your specific property, just reply to this email.
+
+Are you thinking of selling? Tap one — it helps me time my follow-up:
+Within 3 months: ${intentUrl("3mo")}
+3-6 months: ${intentUrl("6mo")}
+6-12 months: ${intentUrl("12mo")}
+Just tracking my home's value: ${intentUrl("tracking")}
+Not planning to sell: ${intentUrl("none")}
 
 — Rohit Sharma
 ${siteName} · (416)-605-7488
@@ -162,6 +174,7 @@ Don't want these monthly updates? Unsubscribe: ${unsubUrl}`;
         market_slug: marketSlug,
         market_name: m.name,
         unsubscribe_token: unsubToken,
+        intent_token: intentToken,
       });
       sent++;
     } catch (e) {
