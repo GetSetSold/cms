@@ -7,20 +7,27 @@ function marketNameFromSlug(slug: string): string {
   return slug.split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join("–");
 }
 
-function marketSlugForPost(p: any): string | null {
+/** Market context from the post's market_stats block: its slug and its
+ *  pinned month (YYYY-MM) — the month the post's numbers are actually about.
+ *  The publish date is NOT the market month (posts are often published late),
+ *  so the card date comes from the block, and is hidden when unpinned. */
+function marketInfoForPost(p: any): { slug: string; month: string | null } | null {
   for (const list of [p.blocks_before, p.blocks_after].filter(Array.isArray)) {
     for (const b of list) {
       const slug = b?.data?.market_slug;
-      if ((b?.block_type === "market_stats" || b?.type === "market_stats") && slug) return slug;
+      if ((b?.block_type === "market_stats" || b?.type === "market_stats") && slug) {
+        const month = typeof b?.data?.month === "string" && /^\d{4}-\d{2}$/.test(b.data.month) ? b.data.month : null;
+        return { slug, month };
+      }
     }
   }
   return null;
 }
 
-function monthYear(iso?: string | null): string {
-  if (!iso) return "";
-  const d = new Date(iso);
-  return isNaN(d.getTime()) ? "" : d.toLocaleDateString("en-CA", { month: "long", year: "numeric" });
+function monthLabel(ym: string): string {
+  const [y, mo] = ym.split("-");
+  const d = new Date(Number(y), Number(mo) - 1, 1);
+  return isNaN(d.getTime()) ? ym : d.toLocaleDateString("en-CA", { month: "long", year: "numeric" });
 }
 
 /**
@@ -30,8 +37,12 @@ function monthYear(iso?: string | null): string {
 export function BlogCard({ post, svgs }: { post: any; svgs: Record<string, any> }) {
   const catSlug = post.blog_categories?.slug ?? "post";
   const catName = post.blog_categories?.name ?? "";
-  const mSlug = marketSlugForPost(post);
-  const marketLabel = mSlug ? `${marketNameFromSlug(mSlug)} · ${monthYear(post.publish_at)}` : undefined;
+  const mInfo = marketInfoForPost(post);
+  const marketLabel = mInfo
+    ? mInfo.month
+      ? `${marketNameFromSlug(mInfo.slug)} · ${monthLabel(mInfo.month)}`
+      : marketNameFromSlug(mInfo.slug)
+    : undefined;
 
   return (
     <Link
