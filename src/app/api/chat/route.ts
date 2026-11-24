@@ -1,11 +1,13 @@
 /**
  * Website chat assistant API ("Rohit Sharma Real Estate").
  * Answers from src/lib/chatKnowledge.ts plus LIVE listings pulled from the
- * MLS grid at request time (never from model memory). Powered by Meta's
- * Model API (Muse Spark) — needs the MODEL_API_KEY secret; without it the
- * route returns a graceful fallback that offers a callback instead.
+ * MLS grid at request time (never from model memory). Powered by Cloudflare
+ * Workers AI (free tier) via the AI binding declared in wrangler.jsonc —
+ * no API key, no per-token billing. If the binding is missing the route
+ * returns a graceful fallback that offers a callback instead.
  */
 import { NextRequest, NextResponse } from "next/server";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { createMlsClient, LISTING_CARD_COLUMNS, listingSlug, rawCitiesFor, type GridListing } from "@/lib/mls";
 import { CHAT_SYSTEM_PROMPT } from "@/lib/chatKnowledge";
 
@@ -70,17 +72,27 @@ async function listingsContext(lastUser: string, path: string): Promise<string> 
   return parts.length ? `\n\nLIVE LISTINGS\n${parts.join("\n\n")}` : "";
 }
 
+type WorkersAi = {
+  run: (model: string, input: unknown) => Promise<{ response?: string }>;
+};
+
+function aiBinding(): WorkersAi | null {
+  try {
+    const env = getCloudflareContext().env as unknown as { AI?: WorkersAi };
+    return env.AI ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);
   const messages: ChatMessage[] = Array.isArray(body?.messages) ? body.messages.slice(-10) : [];
   const path = typeof body?.path === "string" ? body.path : "/";
   if (!messages.length) return NextResponse.json({ error: "No messages" }, { status: 400 });
 
-  const apiKey = process.env.MODEL_API_KEY;
-  if (!apiKey) {
-    if (req.headers.get("x-chat-debug") === "gss-debug-2026") {
-      return NextResponse.json({ reply: "debug", debug: { keyPresent: false, upstreamStatus: null, upstreamBody: "" } });
-    }
+  const ai = aiBinding();
+  if (!ai) {
     return NextResponse.json({
       reply:
         "Thanks for reaching out — the assistant is just being set up. Rohit can answer directly: tap below to request a callback, or call (416) 605-7488.\n[[lead:callback]]",
@@ -95,78 +107,29 @@ export async function POST(req: NextRequest) {
     context = "";
   }
 
-  // Meta's Messages surface (Anthropic wire format) — the Chat Completions
-  // surface returned a stock greeting and ignored the system prompt in
-  // live tests (Nov 23); the Messages surface takes system as its own
-  // field, which is how the knowledge actually reaches the model.
-  const res = await fetch("https://api.meta.ai/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: "muse-spark-1.3",
-      max_tokens: 600,
-      system: CHAT_SYSTEM_PROMPT + context,
-      messages: messages.map((m) => ({ role: m.role, content: m.content })),
-    }),
-  }).catch(() => null);
+  // Workers AI chat models take the system prompt as a message in the
+  // array. Llama 3.3 70B is a plain instruction model — no hidden
+  // reasoning tokens are billed or burned before the answer, unlike the
+  // reasoning model this replaced (Nov 24 cost review).
+  let reply = "";
+  try {
+    const out = await ai.run("@cf/meta/llama-3.3-70b-instruct-fp8-fast", {
+      messages: [
+        { role: "system", content: CHAT_SYSTEM_PROMPT + context },
+        ...messages.map((m) => ({ role: m.role, content: m.content })),
+      ],
+      max_tokens: 700,
+    });
+    reply = (out?.response ?? "").trim();
+  } catch {
+    reply = "";
+  }
 
-  if (!res?.ok) {
-    // TEMP DIAGNOSTIC (remove once the key is verified): with the
-    // x-chat-debug header, surface the upstream status + error body so a
-    // rejected key can be told apart from a missing one. Never the key.
-    if (req.headers.get("x-chat-debug") === "gss-debug-2026") {
-      const detail = res ? await res.text().catch(() => "") : "fetch failed (no response)";
-      return NextResponse.json({
-        reply: "debug",
-        debug: { keyPresent: Boolean(apiKey), upstreamStatus: res?.status ?? null, upstreamBody: detail.slice(0, 400) },
-      });
-    }
+  if (!reply) {
     return NextResponse.json({
       reply:
         "Sorry, I couldn't pull that up just now. Rohit can help directly — request a callback below or call (416) 605-7488.\n[[lead:callback]]",
     });
   }
-  const raw = await res.text().catch(() => "");
-  if (req.headers.get("x-chat-debug") === "gss-debug-2026") {
-    let parsed: any = null;
-    try {
-      parsed = JSON.parse(raw);
-    } catch {
-      parsed = null;
-    }
-    const blocks = Array.isArray(parsed?.content) ? parsed.content : [];
-    return NextResponse.json({
-      reply: "debug",
-      debug: {
-        keyPresent: true,
-        upstreamStatus: res.status,
-        model: parsed?.model ?? null,
-        stopReason: parsed?.stop_reason ?? null,
-        usage: parsed?.usage ?? null,
-        blocks: blocks.map((b: any) => ({
-          type: b?.type ?? null,
-          keys: b ? Object.keys(b) : [],
-          text: typeof b?.text === "string" ? b.text.slice(0, 300) : null,
-        })),
-        rawHead: raw.slice(0, 200),
-      },
-    });
-  }
-  let data: any = null;
-  try {
-    data = JSON.parse(raw);
-  } catch {
-    data = null;
-  }
-  const reply = (data?.content ?? [])
-    .filter((b: any) => b?.type === "text")
-    .map((b: any) => b.text)
-    .join("\n")
-    .trim();
-  return NextResponse.json({
-    reply: reply || "Happy to help — could you tell me a bit more about what you're looking for?",
-  });
+  return NextResponse.json({ reply });
 }
