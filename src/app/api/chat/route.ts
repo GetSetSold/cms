@@ -95,7 +95,11 @@ export async function POST(req: NextRequest) {
     context = "";
   }
 
-  const res = await fetch("https://api.meta.ai/v1/chat/completions", {
+  // Meta's Messages surface (Anthropic wire format) — the Chat Completions
+  // surface returned a stock greeting and ignored the system prompt in
+  // live tests (Nov 23); the Messages surface takes system as its own
+  // field, which is how the knowledge actually reaches the model.
+  const res = await fetch("https://api.meta.ai/v1/messages", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -104,10 +108,8 @@ export async function POST(req: NextRequest) {
     body: JSON.stringify({
       model: "muse-spark-1.3",
       max_tokens: 600,
-      messages: [
-        { role: "system", content: CHAT_SYSTEM_PROMPT + context },
-        ...messages.map((m) => ({ role: m.role, content: m.content })),
-      ],
+      system: CHAT_SYSTEM_PROMPT + context,
+      messages: messages.map((m) => ({ role: m.role, content: m.content })),
     }),
   }).catch(() => null);
 
@@ -128,7 +130,11 @@ export async function POST(req: NextRequest) {
     });
   }
   const data = await res.json().catch(() => null);
-  const reply = (data?.choices?.[0]?.message?.content ?? "").trim();
+  const reply = (data?.content ?? [])
+    .filter((b: any) => b?.type === "text")
+    .map((b: any) => b.text)
+    .join("\n")
+    .trim();
   return NextResponse.json({
     reply: reply || "Happy to help — could you tell me a bit more about what you're looking for?",
   });
