@@ -131,9 +131,28 @@ export async function POST(req: NextRequest) {
   }
   const raw = await res.text().catch(() => "");
   if (req.headers.get("x-chat-debug") === "gss-debug-2026") {
+    let parsed: any = null;
+    try {
+      parsed = JSON.parse(raw);
+    } catch {
+      parsed = null;
+    }
+    const blocks = Array.isArray(parsed?.content) ? parsed.content : [];
     return NextResponse.json({
       reply: "debug",
-      debug: { keyPresent: true, upstreamStatus: res.status, upstreamBody: raw.slice(0, 1500) },
+      debug: {
+        keyPresent: true,
+        upstreamStatus: res.status,
+        model: parsed?.model ?? null,
+        stopReason: parsed?.stop_reason ?? null,
+        usage: parsed?.usage ?? null,
+        blocks: blocks.map((b: any) => ({
+          type: b?.type ?? null,
+          keys: b ? Object.keys(b) : [],
+          text: typeof b?.text === "string" ? b.text.slice(0, 300) : null,
+        })),
+        rawHead: raw.slice(0, 200),
+      },
     });
   }
   let data: any = null;
