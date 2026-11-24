@@ -324,7 +324,7 @@ function Subform({ field, id, rows, errors, count, values, resolved, boxed, pill
         const isTrailingSlot = onlyIndex !== undefined && !fixed && i >= rows.length;
         const entry = (
           <div key={i} className={(boxed || pills) ? "flex flex-col gap-4" : "flex flex-col gap-3 rounded-[var(--radius-md)] border border-[var(--fq-line)] p-4"}>
-            {fixed && (!boxed || field.entry_label) ? <div className="text-base font-semibold text-[var(--fq-ink)]">{title(i)}</div> : null}
+            {fixed && (!boxed || field.entry_label) ? <div className="text-base font-bold text-[var(--fq-accent)]">{title(i)}</div> : null}
             {isTrailingSlot ? <p className="text-sm text-muted">Fill this in to add another — or leave it blank and continue.</p> : null}
             <div className={`grid gap-3 sm:grid-cols-2 ${(boxed || pills) ? "gap-4" : ""}`}>
               {subfields.map((sf) => {
@@ -344,7 +344,7 @@ function Subform({ field, id, rows, errors, count, values, resolved, boxed, pill
         );
         return (boxed || pills)
           ? <div key={i} className="rounded-[var(--radius-lg)] border border-l-4 border-[var(--fq-line)] bg-[var(--fq-surface)] p-5 shadow-[var(--fq-shadow)] md:p-6" style={{ borderLeftColor: "var(--fq-accent)" }}>
-              {fixed ? <div className="mb-4 text-base font-bold text-[var(--fq-ink)]">{title(i)}</div> : null}
+              {fixed ? <div className="mb-4 text-base font-bold text-[var(--fq-accent)]">{title(i)}</div> : null}
               {entry}
             </div>
           : entry;
