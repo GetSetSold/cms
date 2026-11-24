@@ -26,6 +26,7 @@ import { MarketStats } from "./MarketStats";
 import { RateUpdate } from "./RateUpdate";
 import DocumentChecklist from "./DocumentChecklist";
 import { CalculatorBlockClient, type CalcType, type CalcStyle } from "./CalculatorBlock";
+import { SavingsCalculatorClient } from "./SavingsCalculator";
 import { ReferralLinkClient } from "./ReferralLink";
 import { DigitalCardClient } from "./DigitalCard";
 import { SwipeRow } from "./SwipeRow";
@@ -1604,6 +1605,7 @@ export const BLOCKS: Record<string, (p: BlockProps) => React.ReactNode> = {
   rate_update: RateUpdate,
   document_checklist: DocumentChecklist,
   calculator: CalculatorBlock,
+  savings_calculator: SavingsCalculatorBlock,
   referral_link: ReferralLink,
   digital_card: DigitalCard,
 };
@@ -1623,6 +1625,20 @@ function CalculatorBlock({ data, ctx }: BlockProps) {
         heading={data.heading}
         description={data.description}
         cfg={cfg}
+      />
+    </div>
+  );
+}
+
+function SavingsCalculatorBlock({ data, ctx }: BlockProps) {
+  return (
+    <div className={bw(ctx)}>
+      <SavingsCalculatorClient
+        heading={data.heading}
+        description={data.description}
+        buttonLabel={data.button_label}
+        successMessage={data.success_message}
+        pageId={ctx.page?.id}
       />
     </div>
   );

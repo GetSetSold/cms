@@ -269,6 +269,12 @@ export const BLOCK_FIELDS: Record<string, Field[]> = {
     t("heading", "Heading"),
     ta("description", "Description"),
   ],
+  savings_calculator: [
+    t("heading", "Heading"),
+    ta("description", "Description"),
+    t("button_label", "Button label"),
+    ta("success_message", "Success message after the visitor submits"),
+  ],
   referral_link: [
     t("heading", "Heading"),
     ta("description", "Description"),
