@@ -389,12 +389,20 @@ function SectionBlock({ section, active, values, errors, resolved, boxed, pills,
           if (f.type === "heading") {
             // Not a question — a plain text header with an underline, breaking a long section into
             // labeled parts. Always full width, regardless of the section's column count.
-            return <h3 key={id} className="col-span-full border-b border-[var(--fq-line)] pb-2 pt-1 text-lg font-semibold text-[var(--fq-ink)] first:pt-0">{pipe(f.label, values, resolved)}</h3>;
+            return <h3 key={id} className="col-span-full mt-6 border-b border-[var(--fq-line)] pb-2 pt-1 text-lg font-semibold text-[var(--fq-ink)] first:mt-0 first:pt-0">{pipe(f.label, values, resolved)}</h3>;
           }
           if (f.type === "subform") {
             const count = repeatCount(f, values, resolved);
             if (count === 0) return null; // size follows an answer that isn't a positive number yet
-            return <Subform key={id} field={f} id={id} rows={rowsFor(values[id] as Row[] | undefined, count)} count={count} errors={errors} values={values} resolved={resolved} boxed={boxed} pills={pills}
+            let rows = rowsFor(values[id] as Row[] | undefined, count);
+            if (count === undefined) {
+              // A free-add group with a minimum (e.g. References: at least 1) opens with that many
+              // entries already showing, instead of an empty group behind an "add" button.
+              // Display only — nothing is stored until the visitor types into an entry.
+              const min = entryBounds(f, values, resolved).min ?? 0;
+              if (rows.length < min) rows = [...rows, ...Array.from({ length: min - rows.length }, () => ({}))];
+            }
+            return <Subform key={id} field={f} id={id} rows={rows} count={count} errors={errors} values={values} resolved={resolved} boxed={boxed} pills={pills}
               onlyIndex={onlyEntry?.fieldKey === f.key ? onlyEntry.entryIndex : undefined}
               onChange={(rows) => onFieldChange(id, rows)} onNumberBlur={onNumberBlur} />;
           }
