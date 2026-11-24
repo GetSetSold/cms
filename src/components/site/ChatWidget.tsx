@@ -104,17 +104,37 @@ export function ChatWidget() {
     const next: Msg[] = [...messages, { from: "user", text }];
     setMessages(next);
 
-    // Lead capture flow runs locally — no API round-trip.
+    // Lead capture flow runs locally — no API round-trip. BUT a visitor who
+    // answers the name/phone prompt with another question (or "no") is not
+    // giving their details — route them back to the assistant instead of
+    // steamrolling them into the form (Nov 24 live test: "Do you have online
+    // evaluation" was taken as the name "Do").
     if (lead) {
-      if (lead.step === "name") {
-        setLead({ ...lead, step: "phone", name: text });
-        push("bot", `Thanks, ${text.split(" ")[0]}. And the best phone number to reach you?`);
-      } else {
-        const done = lead;
-        setLead(null);
-        await submitLead(done.intent, done.name, text, next);
+      const looksLikeQuestion =
+        text.includes("?") ||
+        /^(do|does|can|could|what|how|is|are|was|were|where|when|why|who|will|would|should|i want|i need|i'?m|i am)\b/i.test(text) ||
+        text.split(/\s+/).length > 5;
+      const saysNo = /^(no|nope|cancel|never ?mind|stop|not now)\b/i.test(text);
+      const phoneLike = text.replace(/\D/g, "").length >= 7 && /^[+\d][\d\s().-]+$/.test(text);
+      const derailed = lead.step === "name" ? looksLikeQuestion || saysNo : !phoneLike;
+      if (!derailed) {
+        if (lead.step === "name") {
+          const nameValue = text.match(/^my name is\s+(.+)$/i)?.[1].trim() || text;
+          setLead({ ...lead, step: "phone", name: nameValue });
+          push("bot", `Thanks, ${nameValue.split(" ")[0]}. And the best phone number to reach you?`);
+        } else {
+          const done = lead;
+          setLead(null);
+          await submitLead(done.intent, done.name, text, next);
+        }
+        return;
       }
-      return;
+      setLead(null);
+      if (saysNo) {
+        push("bot", "No problem — happy to keep answering questions here. What else would you like to know?");
+        return;
+      }
+      // Otherwise fall through: the message goes to the assistant as a normal question.
     }
 
     setBusy(true);
