@@ -4,8 +4,9 @@
  * Black-and-white theme with the site accent (#0099cc via --c-accent) used
  * only for the online dot and links. Answers come from /api/chat (site
  * knowledge + live listings). When a visitor wants a viewing, valuation or
- * callback, the widget collects name + phone in the chat and submits a CRM
- * lead through submit-lead with the transcript attached.
+ * callback, the widget shows a short contact form (name, phone, optional
+ * email) and submits a CRM lead through submit-lead with the transcript
+ * attached — no name/phone question-and-answer in the chat itself.
  * Replaces the tawk.to bubble (removed from Settings → Custom code).
  */
 import { useEffect, useRef, useState } from "react";
@@ -26,6 +27,11 @@ const INTENT_LABEL: Record<LeadIntent, string> = {
   viewing: "book a viewing",
   valuation: "a free home valuation",
   callback: "a callback from Rohit",
+};
+const FORM_TITLE: Record<LeadIntent, string> = {
+  viewing: "Book a viewing",
+  valuation: "Free home valuation",
+  callback: "Request a callback",
 };
 
 /** Render bot text with bare URLs turned into links. */
@@ -52,7 +58,10 @@ export function ChatWidget() {
   const [messages, setMessages] = useState<Msg[]>([{ from: "bot", text: GREETING }]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
-  const [lead, setLead] = useState<{ intent: LeadIntent; step: "name" | "phone"; name: string } | null>(null);
+  const [lead, setLead] = useState<LeadIntent | null>(null);
+  const [form, setForm] = useState({ name: "", phone: "", email: "" });
+  const [formError, setFormError] = useState("");
+  const [sending, setSending] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const started = useRef(Date.now());
 
@@ -67,15 +76,17 @@ export function ChatWidget() {
   }
 
   function startLead(intent: LeadIntent) {
-    setLead({ intent, step: "name", name: "" });
-    push("bot", `Happy to set up ${INTENT_LABEL[intent]}. What's your name?`);
+    setLead(intent);
+    setFormError("");
+    push("bot", `Happy to set up ${INTENT_LABEL[intent]} — just fill in the short form below and Rohit will take it from there.`);
   }
 
-  async function submitLead(intent: LeadIntent, name: string, phone: string, transcript: Msg[]) {
+  async function submitLead(intent: LeadIntent, name: string, phone: string, email: string, transcript: Msg[]) {
     const convo = transcript.map((m) => `${m.from === "user" ? "Visitor" : "Assistant"}: ${m.text}`).join("\n");
     const payload = JSON.stringify({
       name,
       phone,
+      ...(email ? { email } : {}),
       message: `Website chat lead — wants ${INTENT_LABEL[intent]}. Page: ${pathname}\n\nConversation:\n${convo}`,
       form_key: "website_chat",
       path: pathname,
@@ -97,45 +108,34 @@ export function ChatWidget() {
     }
   }
 
+  async function onSubmitLead(e: React.FormEvent) {
+    e.preventDefault();
+    if (!lead || sending) return;
+    const name = form.name.trim();
+    const phone = form.phone.trim();
+    if (!name) {
+      setFormError("Please add your name.");
+      return;
+    }
+    if (phone.replace(/\D/g, "").length < 7) {
+      setFormError("Please add a phone number Rohit can reach you at.");
+      return;
+    }
+    setFormError("");
+    setSending(true);
+    const intent = lead;
+    setLead(null);
+    await submitLead(intent, name, phone, form.email.trim(), messages);
+    setSending(false);
+    setForm({ name: "", phone: "", email: "" });
+  }
+
   async function handleUserText(raw: string) {
     const text = raw.trim();
     if (!text || busy) return;
     setInput("");
     const next: Msg[] = [...messages, { from: "user", text }];
     setMessages(next);
-
-    // Lead capture flow runs locally — no API round-trip. BUT a visitor who
-    // answers the name/phone prompt with another question (or "no") is not
-    // giving their details — route them back to the assistant instead of
-    // steamrolling them into the form (Nov 24 live test: "Do you have online
-    // evaluation" was taken as the name "Do").
-    if (lead) {
-      const looksLikeQuestion =
-        text.includes("?") ||
-        /^(do|does|can|could|what|how|is|are|was|were|where|when|why|who|will|would|should|i want|i need|i'?m|i am)\b/i.test(text) ||
-        text.split(/\s+/).length > 5;
-      const saysNo = /^(no|nope|cancel|never ?mind|stop|not now)\b/i.test(text);
-      const phoneLike = text.replace(/\D/g, "").length >= 7 && /^[+\d][\d\s().-]+$/.test(text);
-      const derailed = lead.step === "name" ? looksLikeQuestion || saysNo : !phoneLike;
-      if (!derailed) {
-        if (lead.step === "name") {
-          const nameValue = text.match(/^my name is\s+(.+)$/i)?.[1].trim() || text;
-          setLead({ ...lead, step: "phone", name: nameValue });
-          push("bot", `Thanks, ${nameValue.split(" ")[0]}. And the best phone number to reach you?`);
-        } else {
-          const done = lead;
-          setLead(null);
-          await submitLead(done.intent, done.name, text, next);
-        }
-        return;
-      }
-      setLead(null);
-      if (saysNo) {
-        push("bot", "No problem — happy to keep answering questions here. What else would you like to know?");
-        return;
-      }
-      // Otherwise fall through: the message goes to the assistant as a normal question.
-    }
 
     setBusy(true);
     const res = await fetch("/api/chat", {
@@ -219,6 +219,43 @@ export function ChatWidget() {
               </div>
             ))}
             {busy ? <div className="self-start rounded-[14px] border border-line bg-white p-[9px_12px] text-[14.5px] text-muted">Typing…</div> : null}
+            {lead ? (
+              <form onSubmit={onSubmitLead} className="flex flex-col gap-2 self-stretch rounded-[14px] border border-line bg-white p-3">
+                <p className="text-[14.5px] font-bold">{FORM_TITLE[lead]}</p>
+                <input
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  placeholder="Your name *"
+                  aria-label="Your name"
+                  className="rounded-[10px] border border-line p-[10px_12px] text-[14.5px]"
+                />
+                <input
+                  value={form.phone}
+                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                  placeholder="Phone number *"
+                  aria-label="Phone number"
+                  inputMode="tel"
+                  className="rounded-[10px] border border-line p-[10px_12px] text-[14.5px]"
+                />
+                <input
+                  value={form.email}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  placeholder="Email (optional)"
+                  aria-label="Email (optional)"
+                  inputMode="email"
+                  className="rounded-[10px] border border-line p-[10px_12px] text-[14.5px]"
+                />
+                {formError ? <p className="text-[13px] font-medium text-red-700">{formError}</p> : null}
+                <div className="flex items-center gap-2">
+                  <button type="submit" disabled={sending} className="rounded-[999px] bg-ink p-[10px_18px] text-[14.5px] font-bold text-white disabled:opacity-60">
+                    {sending ? "Sending…" : "Send request"}
+                  </button>
+                  <button type="button" onClick={() => setLead(null)} className="p-[10px_8px] text-[14px] font-semibold text-muted">
+                    No thanks
+                  </button>
+                </div>
+              </form>
+            ) : null}
           </div>
 
           <div className="flex flex-wrap gap-[6px] bg-soft p-[10px_12px_4px]">
@@ -238,7 +275,7 @@ export function ChatWidget() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && void handleUserText(input)}
-              placeholder={lead ? (lead.step === "name" ? "Your name…" : "Your phone number…") : "Type your question…"}
+              placeholder="Type your question…"
               aria-label="Type your message"
               className="min-w-0 flex-1 rounded-[999px] border border-line bg-white p-[11px_12px] text-[14.5px]"
             />

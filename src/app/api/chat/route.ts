@@ -10,6 +10,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { createMlsClient, LISTING_CARD_COLUMNS, listingSlug, rawCitiesFor, type GridListing } from "@/lib/mls";
 import { CHAT_SYSTEM_PROMPT } from "@/lib/chatKnowledge";
+import { siteDirectory, matchedPageContext } from "@/lib/siteKnowledge";
 
 type ChatMessage = { role: "user" | "assistant"; content: string };
 
@@ -67,6 +68,9 @@ async function listingsContext(lastUser: string, path: string): Promise<string> 
     } else {
       parts.push(`A live search found no current ${wantsRent ? "rentals" : "listings"} matching the visitor's question. Say so honestly and offer property alerts or a callback.`);
     }
+    const cityLabel = city.replace(/\b\w/g, (c) => c.toUpperCase());
+    const browseUrl = `${SITE}/${city.replace(/\s+/g, "-")}-real-estate${wantsRent && !wantsBuy ? "?type=rent" : ""}`;
+    parts.push(`Browse all ${wantsRent && !wantsBuy ? "rentals" : "homes for sale"} in ${cityLabel}: ${browseUrl}`);
   }
 
   return parts.length ? `\n\nLIVE LISTINGS\n${parts.join("\n\n")}` : "";
@@ -100,12 +104,12 @@ export async function POST(req: NextRequest) {
   }
 
   const lastUser = [...messages].reverse().find((m) => m.role === "user")?.content ?? "";
-  let context = "";
-  try {
-    context = await listingsContext(lastUser, path);
-  } catch {
-    context = "";
-  }
+  const [listings, directory, pageContent] = await Promise.all([
+    listingsContext(lastUser, path).catch(() => ""),
+    siteDirectory(),
+    matchedPageContext(lastUser, path),
+  ]);
+  const context = directory + pageContent + listings;
 
   // Workers AI chat models take the system prompt as a message in the
   // array. Llama 3.3 70B is a plain instruction model — no hidden
