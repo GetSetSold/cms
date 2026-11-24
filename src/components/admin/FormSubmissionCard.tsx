@@ -23,6 +23,7 @@ export type FormSubmission = {
 
 function renderAnswer(v: unknown): string {
   if (v == null || v === "") return "—";
+  if (typeof v === "string" && v.startsWith("data:image/")) return "Signature on file";
   if (Array.isArray(v)) {
     if (v.length && typeof v[0] === "object") return `${v.length} ${v.length === 1 ? "entry" : "entries"}`;
     return v.map(String).join(", ");
@@ -43,7 +44,10 @@ function SubformTable({ rows, subfields }: { rows: Record<string, unknown>[]; su
               {Object.entries(row).filter(([, v]) => v != null && v !== "").map(([k, v]) => (
                 <tr key={k} className="border-t border-line/60 first:border-0">
                   <td className="w-2/5 bg-[#f7f7f7] px-3 py-1.5 align-top text-[11px] font-medium uppercase tracking-wide text-muted">{labelFor(k)}</td>
-                  <td className="px-3 py-1.5">{String(v)}</td>
+                  <td className="px-3 py-1.5">{typeof v === "string" && v.startsWith("data:image/") ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={v} alt="Signature" className="h-16 rounded border border-line bg-white object-contain" />
+                  ) : String(v)}</td>
                 </tr>
               ))}
             </tbody>
@@ -181,6 +185,9 @@ export function FormSubmissionCard({ submission, bare }: { submission: FormSubmi
                         <dd className="mt-0.5 text-[14px]">
                           {f.type === "subform" && Array.isArray(submission.answers[f.key]) ? (
                             <SubformTable rows={submission.answers[f.key] as Record<string, unknown>[]} subfields={f.subfields} />
+                          ) : f.type === "signature" && typeof submission.answers[f.key] === "string" && (submission.answers[f.key] as string).startsWith("data:image/") ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={submission.answers[f.key] as string} alt="Signature" className="h-20 rounded border border-line bg-white object-contain" />
                           ) : (
                             renderAnswer(submission.answers[f.key])
                           )}

@@ -282,6 +282,8 @@ export interface BlogPost {
 export type FormFieldType =
   | "text" | "email" | "tel" | "url" | "textarea" | "number" | "decimal" | "currency" | "date"
   | "dropdown" | "radio" | "checkbox" | "multiple_choice" | "address" | "subform"
+  /** Drawn on a canvas pad in the browser; the answer is saved as a PNG data URL string. */
+  | "signature"
   /** Not a question — a text header (with an underline) you can drop in before any question to
    *  break a long section into labeled parts. Uses `label` as its heading text; nothing else applies. */
   | "heading";

@@ -10,7 +10,7 @@ import { Spinner } from "./Spinner";
 
 const FIELD_TYPES: FormFieldType[] = [
   "text", "email", "tel", "url", "textarea", "number", "decimal", "currency", "date",
-  "dropdown", "radio", "checkbox", "multiple_choice", "address", "subform",
+  "dropdown", "radio", "checkbox", "multiple_choice", "address", "subform", "signature",
 ];
 const HAS_OPTIONS: FormFieldType[] = ["dropdown", "radio", "multiple_choice"];
 const slugify = (s: string) => s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");

@@ -112,6 +112,86 @@ function PillChoice({ label, checked, onClick, inputProps }: { label: React.Reac
   );
 }
 
+/** Draw-your-signature pad: a canvas the visitor signs with a mouse or finger. The answer is the
+ *  PNG data URL of the drawing (blank canvas = empty answer). Kept deliberately dependency-free —
+ *  pointer events + a 2d context are all it needs, on desktop and mobile alike. */
+function SignaturePad({ id, value, onChange }: { id: string; value: string; onChange: (v: string) => void }) {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const drawing = useRef(false);
+  const dirty = useRef(false);
+
+  useEffect(() => {
+    const cv = canvasRef.current;
+    if (!cv) return;
+    const rect = cv.getBoundingClientRect();
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    cv.width = Math.max(300, Math.round(rect.width * dpr));
+    cv.height = Math.round(rect.height * dpr);
+    const ctx = cv.getContext("2d");
+    if (!ctx) return;
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, cv.width, cv.height);
+    ctx.lineWidth = 2 * dpr;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.strokeStyle = "#141414";
+    if (value) {
+      const img = new Image();
+      img.onload = () => ctx.drawImage(img, 0, 0, cv.width, cv.height);
+      img.src = value;
+    }
+    // Runs once on mount: size the backing store and restore any saved signature (staff edit mode).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const pos = (e: React.PointerEvent) => {
+    const cv = canvasRef.current!;
+    const r = cv.getBoundingClientRect();
+    return { x: (e.clientX - r.left) * (cv.width / r.width), y: (e.clientY - r.top) * (cv.height / r.height) };
+  };
+  const start = (e: React.PointerEvent) => {
+    e.preventDefault();
+    canvasRef.current?.setPointerCapture(e.pointerId);
+    drawing.current = true;
+    const ctx = canvasRef.current!.getContext("2d")!;
+    const p = pos(e);
+    ctx.beginPath();
+    ctx.moveTo(p.x, p.y);
+  };
+  const move = (e: React.PointerEvent) => {
+    if (!drawing.current) return;
+    const ctx = canvasRef.current!.getContext("2d")!;
+    const p = pos(e);
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+    dirty.current = true;
+  };
+  const end = () => {
+    if (!drawing.current) return;
+    drawing.current = false;
+    if (dirty.current) onChange(canvasRef.current!.toDataURL("image/png"));
+  };
+  const clear = () => {
+    const cv = canvasRef.current!;
+    const ctx = cv.getContext("2d")!;
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, cv.width, cv.height);
+    dirty.current = false;
+    onChange("");
+  };
+  return (
+    <div>
+      <canvas ref={canvasRef} id={id} role="img" aria-label="Signature pad — draw your signature"
+        className="h-40 w-full touch-none rounded-[var(--radius-md)] border border-[var(--fq-line)] bg-white"
+        onPointerDown={start} onPointerMove={move} onPointerUp={end} onPointerCancel={end} />
+      <div className="mt-1.5 flex items-center justify-between">
+        <span className="text-xs text-muted">Draw with your mouse or finger.</span>
+        <button type="button" onClick={clear} className="text-sm font-medium text-[var(--fq-accent)]">Clear</button>
+      </div>
+    </div>
+  );
+}
+
 function BasicField({ field, id, value, onChange, onBlur, error, limits, boxed, pills }: { field: FormField; id: string; value: string; onChange: (v: string) => void; onBlur?: () => void; error?: string; limits?: Limits; boxed?: boolean; pills?: boolean }) {
   const base = "input h-12 text-base";
   const a11y = { "aria-invalid": error ? true : undefined, "aria-required": field.required || undefined, "aria-describedby": error ? `${id}-err` : undefined } as const;
@@ -185,6 +265,8 @@ function BasicField({ field, id, value, onChange, onBlur, error, limits, boxed, 
           <span>{field.label}{field.required ? <span className="text-[var(--fq-accent)]"> *</span> : null}</span>
         </label>
       );
+    case "signature":
+      return <SignaturePad id={id} value={value} onChange={onChange} />;
     default:
       return <input id={id} name={id} type={inputType(field.type)} step={field.type === "decimal" || field.type === "currency" ? "0.01" : field.whole ? 1 : undefined}
         min={limits?.min} max={limits?.max} inputMode={field.whole ? "numeric" : undefined}
