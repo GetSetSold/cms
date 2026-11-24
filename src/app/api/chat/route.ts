@@ -78,6 +78,9 @@ export async function POST(req: NextRequest) {
 
   const apiKey = process.env.MODEL_API_KEY;
   if (!apiKey) {
+    if (req.headers.get("x-chat-debug") === "gss-debug-2026") {
+      return NextResponse.json({ reply: "debug", debug: { keyPresent: false, upstreamStatus: null, upstreamBody: "" } });
+    }
     return NextResponse.json({
       reply:
         "Thanks for reaching out — the assistant is just being set up. Rohit can answer directly: tap below to request a callback, or call (416) 605-7488.\n[[lead:callback]]",
@@ -109,6 +112,16 @@ export async function POST(req: NextRequest) {
   }).catch(() => null);
 
   if (!res?.ok) {
+    // TEMP DIAGNOSTIC (remove once the key is verified): with the
+    // x-chat-debug header, surface the upstream status + error body so a
+    // rejected key can be told apart from a missing one. Never the key.
+    if (req.headers.get("x-chat-debug") === "gss-debug-2026") {
+      const detail = res ? await res.text().catch(() => "") : "fetch failed (no response)";
+      return NextResponse.json({
+        reply: "debug",
+        debug: { keyPresent: Boolean(apiKey), upstreamStatus: res?.status ?? null, upstreamBody: detail.slice(0, 400) },
+      });
+    }
     return NextResponse.json({
       reply:
         "Sorry, I couldn't pull that up just now. Rohit can help directly — request a callback below or call (416) 605-7488.\n[[lead:callback]]",
