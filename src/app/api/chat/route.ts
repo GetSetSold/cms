@@ -129,7 +129,19 @@ export async function POST(req: NextRequest) {
         "Sorry, I couldn't pull that up just now. Rohit can help directly — request a callback below or call (416) 605-7488.\n[[lead:callback]]",
     });
   }
-  const data = await res.json().catch(() => null);
+  const raw = await res.text().catch(() => "");
+  if (req.headers.get("x-chat-debug") === "gss-debug-2026") {
+    return NextResponse.json({
+      reply: "debug",
+      debug: { keyPresent: true, upstreamStatus: res.status, upstreamBody: raw.slice(0, 1500) },
+    });
+  }
+  let data: any = null;
+  try {
+    data = JSON.parse(raw);
+  } catch {
+    data = null;
+  }
   const reply = (data?.content ?? [])
     .filter((b: any) => b?.type === "text")
     .map((b: any) => b.text)
