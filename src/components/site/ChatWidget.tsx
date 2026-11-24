@@ -67,12 +67,41 @@ export function ChatWidget() {
   const [form, setForm] = useState({ name: "", phone: "", email: "" });
   const [formError, setFormError] = useState("");
   const [sending, setSending] = useState(false);
+  const [teaser, setTeaser] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const started = useRef(Date.now());
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
   }, [messages, open, lead]);
+
+  // Attention grabber: after ~45s on the site, if the visitor hasn't opened
+  // the chat, pop a small "need help?" teaser beside the bubble. Once per
+  // session — dismissing it or opening the chat retires it for the session.
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    try {
+      if (!sessionStorage.getItem("gss-chat-teaser-seen")) {
+        timer = setTimeout(() => setTeaser(true), 45000);
+      }
+    } catch {
+      timer = setTimeout(() => setTeaser(true), 45000);
+    }
+    return () => clearTimeout(timer);
+  }, []);
+
+  function retireTeaser() {
+    setTeaser(false);
+    try {
+      sessionStorage.setItem("gss-chat-teaser-seen", "1");
+    } catch {
+      /* private mode — teaser just won't persist */
+    }
+  }
+
+  const teaserText = pathname.includes("/real-estate/")
+    ? "Questions about this home? I can answer them — or book you a viewing."
+    : "Need help? Ask me about homes for sale, selling costs, or a free home valuation.";
 
   if (pathname.startsWith("/admin") || pathname.startsWith("/login") || pathname.startsWith("/builder")) return null;
 
@@ -178,9 +207,35 @@ export function ChatWidget() {
 
   return (
     <>
+      {!open && teaser ? (
+        <div className="fixed bottom-24 right-5 z-50 w-[min(264px,calc(100vw-40px))] rounded-[14px] border border-line bg-white p-[12px_14px] shadow-[0_12px_32px_rgba(0,0,0,0.28)]">
+          <button
+            onClick={retireTeaser}
+            aria-label="Dismiss"
+            className="absolute right-2 top-2 p-1 text-muted"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M18 6 6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          </button>
+          <button
+            onClick={() => {
+              retireTeaser();
+              setOpen(true);
+            }}
+            className="block pr-5 text-left text-[14px] font-medium leading-snug text-ink"
+          >
+            {teaserText}
+          </button>
+        </div>
+      ) : null}
+
       {!open ? (
         <button
-          onClick={() => setOpen(true)}
+          onClick={() => {
+            retireTeaser();
+            setOpen(true);
+          }}
           aria-label="Chat with Rohit Sharma Real Estate"
           className="fixed bottom-5 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-[999px] bg-ink text-white shadow-[0_8px_24px_rgba(0,0,0,0.35)]"
         >
