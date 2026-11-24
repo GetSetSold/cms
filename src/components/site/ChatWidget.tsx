@@ -33,6 +33,11 @@ const FORM_TITLE: Record<LeadIntent, string> = {
   valuation: "Free home valuation",
   callback: "Request a callback",
 };
+const FORM_INTRO: Record<LeadIntent, string> = {
+  viewing: "Happy to help you book a viewing",
+  valuation: "Happy to set up a free home valuation",
+  callback: "Happy to arrange a callback from Rohit",
+};
 
 /** Render bot text with bare URLs turned into links. */
 function RichText({ text }: { text: string }) {
@@ -78,7 +83,7 @@ export function ChatWidget() {
   function startLead(intent: LeadIntent) {
     setLead(intent);
     setFormError("");
-    push("bot", `Happy to set up ${INTENT_LABEL[intent]} — just fill in the short form below and Rohit will take it from there.`);
+    push("bot", `${FORM_INTRO[intent]} — just fill in the short form below and Rohit will take it from there.`);
   }
 
   async function submitLead(intent: LeadIntent, name: string, phone: string, email: string, transcript: Msg[]) {
