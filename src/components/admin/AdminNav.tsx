@@ -14,6 +14,7 @@ const ITEMS: { href: string; label: string; roles: Role[]; icon: string }[] = [
   { href: "/admin/precon-broadcast", label: "Pre-Con Broadcast", roles: ["admin", "editor"], icon: "M22 2L11 13 M22 2l-7 20-4-9-9-4z" },
   { href: "/admin/rate-broadcast", label: "Rate Updates", roles: ["admin", "editor"], icon: "M12 2v20 M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" },
   { href: "/admin/leads", label: "Leads", roles: ["admin", "sales"], icon: "M9 11.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6 M16 5.5a3 3 0 0 1 0 5.5 M18 14c2 .8 3 2.8 3 6" },
+  { href: "/admin/visitors", label: "Visitors", roles: ["admin", "editor", "sales"], icon: "M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" },
   { href: "/admin/svgs", label: "SVG library", roles: ["admin", "editor"], icon: "M3 4h18v16H3z M21 16l-5-5-9 9" },
   { href: "/admin/forms", label: "Forms", roles: ["admin", "editor"], icon: "M4 5h16v3H4z M4 12h16v7H4z M8 15h2" },
   { href: "/admin/sequences", label: "Follow-ups", roles: ["admin"], icon: "M4 5h16v11H8l-4 4z" },

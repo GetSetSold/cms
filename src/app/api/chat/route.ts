@@ -1,9 +1,9 @@
 /**
  * Website chat assistant API ("Rohit Sharma Real Estate").
  * Answers from src/lib/chatKnowledge.ts plus LIVE listings pulled from the
- * MLS grid at request time (never from model memory). Needs the
- * ANTHROPIC_API_KEY secret; without it the route returns a graceful
- * fallback that offers a callback instead of failing.
+ * MLS grid at request time (never from model memory). Powered by Meta's
+ * Model API (Muse Spark) — needs the MODEL_API_KEY secret; without it the
+ * route returns a graceful fallback that offers a callback instead.
  */
 import { NextRequest, NextResponse } from "next/server";
 import { createMlsClient, LISTING_CARD_COLUMNS, listingSlug, rawCitiesFor, type GridListing } from "@/lib/mls";
@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
   const path = typeof body?.path === "string" ? body.path : "/";
   if (!messages.length) return NextResponse.json({ error: "No messages" }, { status: 400 });
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.MODEL_API_KEY;
   if (!apiKey) {
     return NextResponse.json({
       reply:
@@ -92,18 +92,19 @@ export async function POST(req: NextRequest) {
     context = "";
   }
 
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
+  const res = await fetch("https://api.meta.ai/v1/chat/completions", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "x-api-key": apiKey,
-      "anthropic-version": "2023-06-01",
+      Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: "claude-haiku-4-5",
+      model: "muse-spark-1.3",
       max_tokens: 600,
-      system: CHAT_SYSTEM_PROMPT + context,
-      messages: messages.map((m) => ({ role: m.role, content: m.content })),
+      messages: [
+        { role: "system", content: CHAT_SYSTEM_PROMPT + context },
+        ...messages.map((m) => ({ role: m.role, content: m.content })),
+      ],
     }),
   }).catch(() => null);
 
@@ -114,11 +115,7 @@ export async function POST(req: NextRequest) {
     });
   }
   const data = await res.json().catch(() => null);
-  const reply = (data?.content ?? [])
-    .filter((b: any) => b?.type === "text")
-    .map((b: any) => b.text)
-    .join("\n")
-    .trim();
+  const reply = (data?.choices?.[0]?.message?.content ?? "").trim();
   return NextResponse.json({
     reply: reply || "Happy to help — could you tell me a bit more about what you're looking for?",
   });

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Instrument_Serif } from "next/font/google";
 import { CustomCodeSlot } from "@/components/site/CustomCodeInjector";
 import { ChatWidget } from "@/components/site/ChatWidget";
+import { VisitorTracker } from "@/components/site/VisitorTracker";
 import "./globals.css";
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-geist", display: "swap" });
@@ -66,6 +67,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         {children}
         <CustomCodeSlot code={customCode} />
         <ChatWidget />
+        <VisitorTracker />
       </body>
     </html>
   );
