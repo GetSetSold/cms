@@ -87,27 +87,33 @@ export default async function VisitorsPage() {
   const since = new Date(Date.now() - 24 * 3600_000).toISOString();
   // Geo columns arrive with the 20261124000001 migration; until it runs,
   // fall back to the base columns so the page keeps working.
+  // PostgREST returns at most 1,000 rows per request, so page through
+  // newest-first chunks (up to 5,000 events). The original single
+  // ascending fetch silently pinned every stat to the day's FIRST
+  // 1,000 views — the page looked frozen once traffic passed that.
+  const fetchEvents = async (cols: string) => {
+    const rows: Record<string, unknown>[] = [];
+    for (let offset = 0; offset < 5000; offset += 1000) {
+      const r = await supabase
+        .from("visitor_events")
+        .select(cols)
+        .gte("created_at", since)
+        .order("created_at", { ascending: false })
+        .range(offset, offset + 999);
+      if (r.error) return { rows: null as Record<string, unknown>[] | null, error: r.error };
+      const chunk = (r.data ?? []) as unknown as Record<string, unknown>[];
+      rows.push(...chunk);
+      if (chunk.length < 1000) break;
+    }
+    return { rows: rows as Record<string, unknown>[] | null, error: null as null };
+  };
   let geoMissing = false;
-  const first = await supabase
-    .from("visitor_events")
-    .select("session_id,path,referrer,utm_source,utm_campaign,device,city,region,country,created_at")
-    .gte("created_at", since)
-    .order("created_at", { ascending: true })
-    .limit(8000);
-  let data = first.data as unknown as Record<string, unknown>[] | null;
-  let error = first.error;
+  let { rows: data, error } = await fetchEvents("session_id,path,referrer,utm_source,utm_campaign,device,city,region,country,created_at");
   if (error && /city|region|country/.test(error.message ?? "")) {
     geoMissing = true;
-    const second = await supabase
-      .from("visitor_events")
-      .select("session_id,path,referrer,utm_source,utm_campaign,device,created_at")
-      .gte("created_at", since)
-      .order("created_at", { ascending: true })
-      .limit(8000);
-    data = second.data as unknown as Record<string, unknown>[] | null;
-    error = second.error;
+    ({ rows: data, error } = await fetchEvents("session_id,path,referrer,utm_source,utm_campaign,device,created_at"));
   }
-  const events = (data ?? []).map((e) => ({
+  const events = (data ?? []).slice().reverse().map((e) => ({
     ...e,
     city: (e.city as string | null) ?? null,
     region: (e.region as string | null) ?? null,

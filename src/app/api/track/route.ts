@@ -56,6 +56,23 @@ export async function POST(req: Request) {
     const geo = geoOf();
     const nowIso = new Date().toISOString();
 
+    // Presence writes use update-then-insert, NOT upsert: Postgres'
+    // ON CONFLICT path demands read access for the anonymous role,
+    // which we deliberately don't grant (the live list stays private).
+    // Plain insert/update/delete are covered by the write policies.
+    const touchPresence = async (row: Record<string, unknown>, patch: Record<string, unknown>) => {
+      const { data } = await supabase
+        .from("visitor_presence")
+        .update(patch)
+        .eq("session_id", sessionId)
+        .select("session_id");
+      if (!data || data.length === 0) {
+        // No live row yet — create it. A duplicate-key error here just
+        // means a racing request created it first; safe to ignore.
+        await supabase.from("visitor_presence").insert(row);
+      }
+    };
+
     if (type === "view") {
       await supabase.from("visitor_events").insert({
         session_id: sessionId,
@@ -83,15 +100,12 @@ export async function POST(req: Request) {
       if (utmSource) presence.utm_source = utmSource;
       const utmCampaign = str(body.utm_campaign, 120);
       if (utmCampaign) presence.utm_campaign = utmCampaign;
-      await supabase.from("visitor_presence").upsert(presence, { onConflict: "session_id" });
+      await touchPresence(presence, presence);
     } else {
       // ping — refresh the live row only (first_seen and the landing
-      // source stay from the original view; the upsert touches just the
-      // columns sent here).
-      await supabase.from("visitor_presence").upsert(
-        { session_id: sessionId, path, ...geo, last_seen: nowIso },
-        { onConflict: "session_id" },
-      );
+      // source stay from the original view).
+      const patch = { path, ...geo, last_seen: nowIso };
+      await touchPresence({ session_id: sessionId, ...patch }, patch);
     }
   } catch {
     // Swallow — a tracking failure must never surface to the visitor.
