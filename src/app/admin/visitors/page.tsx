@@ -16,6 +16,7 @@ type Event = {
   utm_source: string | null;
   utm_campaign: string | null;
   device: string | null;
+  user_agent: string | null;
   city: string | null;
   region: string | null;
   country: string | null;
@@ -28,9 +29,46 @@ type Session = {
   last: number;
   pages: string[];
   device: string | null;
+  agent: string;
   source: string;
   location: string;
+  country: string | null;
 };
+
+/** Friendly browser / bot label from a raw user-agent string. Crawlers
+ *  name themselves; headless browsers are scrapers in practice. */
+function agentLabel(ua: string | null | undefined): string {
+  if (!ua) return "—";
+  if (/googlebot/i.test(ua)) return "Googlebot";
+  if (/bingbot/i.test(ua)) return "Bingbot";
+  if (/GPTBot|ChatGPT-User|ClaudeBot|anthropic-ai|PerplexityBot|CCBot/i.test(ua)) return "AI crawler";
+  if (/headlesschrome/i.test(ua)) return "Headless (bot)";
+  if (/bot|crawler|spider|scraper|curl|wget|python-requests/i.test(ua)) return "Bot";
+  if (/Edg\//.test(ua)) return "Edge";
+  if (/Chrome\//.test(ua)) return "Chrome";
+  if (/Firefox\//.test(ua)) return "Firefox";
+  if (/Safari\//.test(ua)) return "Safari";
+  return "Other";
+}
+
+function deviceAgent(device: string | null, agent: string): string {
+  const parts = [device, agent !== "—" ? agent : null].filter(Boolean);
+  return parts.length ? parts.join(" · ") : "—";
+}
+
+/** Flag emoji for an ISO country code (CA → 🇨🇦), from the regional
+ *  indicator symbols — no images needed. */
+function flagFor(country: string | null | undefined): string {
+  if (!country || country.trim().length !== 2) return "";
+  const cc = country.trim().toUpperCase();
+  return String.fromCodePoint(...[...cc].map((c) => 127397 + c.charCodeAt(0)));
+}
+
+function locText(location: string, country: string | null | undefined): string {
+  if (!location) return "—";
+  const f = flagFor(country);
+  return f ? `${f} ${location}` : location;
+}
 
 type Presence = {
   session_id: string;
@@ -108,10 +146,10 @@ export default async function VisitorsPage() {
     return { rows: rows as Record<string, unknown>[] | null, error: null as null };
   };
   let geoMissing = false;
-  let { rows: data, error } = await fetchEvents("session_id,path,referrer,utm_source,utm_campaign,device,city,region,country,created_at");
+  let { rows: data, error } = await fetchEvents("session_id,path,referrer,utm_source,utm_campaign,device,user_agent,city,region,country,created_at");
   if (error && /city|region|country/.test(error.message ?? "")) {
     geoMissing = true;
-    ({ rows: data, error } = await fetchEvents("session_id,path,referrer,utm_source,utm_campaign,device,created_at"));
+    ({ rows: data, error } = await fetchEvents("session_id,path,referrer,utm_source,utm_campaign,device,user_agent,created_at"));
   }
   const events = (data ?? []).slice().reverse().map((e) => ({
     ...e,
@@ -130,6 +168,7 @@ export default async function VisitorsPage() {
       s.last = t;
       s.pages.push(e.path);
       if (!s.location && loc) s.location = loc;
+      if (!s.country && e.country) s.country = e.country;
     } else {
       bySession.set(e.session_id, {
         id: e.session_id,
@@ -137,8 +176,10 @@ export default async function VisitorsPage() {
         last: t,
         pages: [e.path],
         device: e.device,
+        agent: agentLabel(e.user_agent),
         source: sourceOf(e),
         location: loc,
+        country: e.country,
       });
     }
   }
@@ -163,9 +204,15 @@ export default async function VisitorsPage() {
   for (const e of events) pageCounts.set(e.path, (pageCounts.get(e.path) ?? 0) + 1);
   const topPages = [...pageCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10);
 
-  const locCounts = new Map<string, number>();
-  for (const s of sessions) if (s.location) locCounts.set(s.location, (locCounts.get(s.location) ?? 0) + 1);
-  const topLocations = [...locCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8);
+  const locCounts = new Map<string, { n: number; country: string | null }>();
+  for (const s of sessions) {
+    if (!s.location) continue;
+    const cur = locCounts.get(s.location);
+    if (cur) cur.n++;
+    else locCounts.set(s.location, { n: 1, country: s.country });
+  }
+  const topLocations = [...locCounts.entries()].sort((a, b) => b[1].n - a[1].n).slice(0, 8);
+  const agentBySession = new Map(sessions.map((s) => [s.id, s.agent]));
 
   const card = "rounded-[var(--radius-lg)] border border-line bg-white p-5";
   const th = "py-2 pr-4 text-left text-[12px] font-semibold uppercase tracking-wide text-muted";
@@ -180,8 +227,8 @@ export default async function VisitorsPage() {
         </span>
       </td>
       <td className={td}>{s.source}</td>
-      <td className={td}>{s.location || "—"}</td>
-      <td className={td}>{s.device ?? "—"}</td>
+      <td className={td}>{locText(s.location, s.country)}</td>
+      <td className={td}>{deviceAgent(s.device, s.agent)}</td>
       <td className={td}>{duration(s.last - s.first)}</td>
       <td className={td}>{ago(now - s.last)}</td>
     </tr>
@@ -198,8 +245,8 @@ export default async function VisitorsPage() {
           <span className="block text-[12.5px] text-muted">arrived {timeFmt.format(new Date(first))}</span>
         </td>
         <td className={td}>{sourceOf(p)}</td>
-        <td className={td}>{loc || "—"}</td>
-        <td className={td}>{p.device ?? "—"}</td>
+        <td className={td}>{locText(loc, p.country)}</td>
+        <td className={td}>{deviceAgent(p.device, agentBySession.get(p.session_id) ?? "—")}</td>
         <td className={td}>{duration(now - first)}</td>
         <td className={td}>{ago(now - last)}</td>
       </tr>
@@ -321,10 +368,10 @@ export default async function VisitorsPage() {
               <p className="mt-6 text-[15px] font-semibold">Top locations · 24h</p>
               {topLocations.length ? (
                 <ul className="mt-2 divide-y divide-line">
-                  {topLocations.map(([loc, count]) => (
+                  {topLocations.map(([loc, info]) => (
                     <li key={loc} className="flex items-baseline justify-between py-2 text-[14px]">
-                      <span className="font-medium">{loc}</span>
-                      <span className="text-muted">{count} visit{count === 1 ? "" : "s"}</span>
+                      <span className="font-medium">{locText(loc, info.country)}</span>
+                      <span className="text-muted">{info.n} visit{info.n === 1 ? "" : "s"}</span>
                     </li>
                   ))}
                 </ul>
