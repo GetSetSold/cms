@@ -3,9 +3,10 @@ import { VisitorsAutoRefresh } from "@/components/admin/VisitorsAutoRefresh";
 
 /**
  * Admin → Visitors — the SalesIQ LiveView replacement.
- * Reads public.visitor_events (written by the site's VisitorTracker).
- * "Live now" = a session with a page view in the last 5 minutes.
- * Everything else is the last 24 hours. Auto-refreshes every 30s.
+ * "Live now" reads public.visitor_presence (heartbeat-kept: a ping in
+ * the last 45 seconds), falling back to recent visitor_events until the
+ * presence migration runs. History is the last 24 hours of
+ * visitor_events. Auto-refreshes every 10s.
  */
 
 type Event = {
@@ -31,9 +32,24 @@ type Session = {
   location: string;
 };
 
-const LIVE_MS = 5 * 60_000;
+type Presence = {
+  session_id: string;
+  path: string;
+  referrer: string | null;
+  utm_source: string | null;
+  utm_campaign: string | null;
+  device: string | null;
+  city: string | null;
+  region: string | null;
+  country: string | null;
+  first_seen: string;
+  last_seen: string;
+};
 
-function sourceOf(e: Event): string {
+const LIVE_MS = 5 * 60_000;
+const PRESENT_MS = 45_000;
+
+function sourceOf(e: Pick<Event, "utm_source" | "utm_campaign" | "referrer">): string {
   if (e.utm_source) return e.utm_campaign ? `${e.utm_source} / ${e.utm_campaign}` : e.utm_source;
   if (e.referrer) {
     try {
@@ -124,6 +140,19 @@ export default async function VisitorsPage() {
   const live = sessions.filter((s) => now - s.last < LIVE_MS);
   const recent = sessions.filter((s) => now - s.last >= LIVE_MS).slice(0, 20);
 
+  // Truly-live presence (heartbeat rows). Until the 20261124000002
+  // migration runs, this query errors and the page falls back to the
+  // recent-events approximation above.
+  const presenceRes = await supabase
+    .from("visitor_presence")
+    .select("session_id,path,referrer,utm_source,utm_campaign,device,city,region,country,first_seen,last_seen")
+    .order("last_seen", { ascending: false })
+    .limit(200);
+  const presenceMissing = !!presenceRes.error;
+  const present = ((presenceRes.data ?? []) as Presence[]).filter(
+    (p) => now - new Date(p.last_seen).getTime() < PRESENT_MS,
+  );
+
   const pageCounts = new Map<string, number>();
   for (const e of events) pageCounts.set(e.path, (pageCounts.get(e.path) ?? 0) + 1);
   const topPages = [...pageCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10);
@@ -152,13 +181,33 @@ export default async function VisitorsPage() {
     </tr>
   );
 
+  const presenceRow = (p: Presence) => {
+    const first = new Date(p.first_seen).getTime();
+    const last = new Date(p.last_seen).getTime();
+    const loc = [p.city, p.region, p.country].filter(Boolean).join(", ");
+    return (
+      <tr key={p.session_id} className="border-t border-line">
+        <td className={td}>
+          <span className="font-medium">{p.path}</span>
+          <span className="block text-[12.5px] text-muted">arrived {timeFmt.format(new Date(first))}</span>
+        </td>
+        <td className={td}>{sourceOf(p)}</td>
+        <td className={td}>{loc || "—"}</td>
+        <td className={td}>{p.device ?? "—"}</td>
+        <td className={td}>{duration(now - first)}</td>
+        <td className={td}>{ago(now - last)}</td>
+      </tr>
+    );
+  };
+
   return (
     <div className="mx-auto w-full max-w-6xl p-5 md:p-8">
       <VisitorsAutoRefresh />
       <h1 className="font-display text-[26px] font-bold tracking-tight">Visitors</h1>
       <p className="mt-1 text-[14px] text-muted">
-        Who is on getsetsold.ca right now and in the last 24 hours. Refreshes every 30 seconds.
+        Who is on getsetsold.ca right now and in the last 24 hours. Refreshes every 10 seconds.
         {geoMissing ? " Locations appear once the 20261124000001_visitor_geo migration has run." : ""}
+        {presenceMissing ? " The live view sharpens once the 20261124000002_visitor_presence migration has run." : ""}
       </p>
 
       {error ? (
@@ -174,8 +223,8 @@ export default async function VisitorsPage() {
           <div className="mt-6 grid gap-4 sm:grid-cols-3">
             <div className={card}>
               <p className="text-[12px] font-semibold uppercase tracking-wide text-muted">Live now</p>
-              <p className="mt-1 text-[34px] font-extrabold leading-none">{live.length}</p>
-              <p className="mt-1 text-[13px] text-muted">active in the last 5 minutes</p>
+              <p className="mt-1 text-[34px] font-extrabold leading-none">{presenceMissing ? live.length : present.length}</p>
+              <p className="mt-1 text-[13px] text-muted">{presenceMissing ? "active in the last 5 minutes" : "on the site right now"}</p>
             </div>
             <div className={card}>
               <p className="text-[12px] font-semibold uppercase tracking-wide text-muted">Sessions · 24h</p>
@@ -191,7 +240,25 @@ export default async function VisitorsPage() {
 
           <div className={`${card} mt-6 overflow-x-auto`}>
             <p className="text-[15px] font-semibold">On the site now</p>
-            {live.length ? (
+            {!presenceMissing ? (
+              present.length ? (
+                <table className="mt-2 w-full border-collapse">
+                  <thead>
+                    <tr>
+                      <th className={th}>Viewing</th>
+                      <th className={th}>Source</th>
+                      <th className={th}>Location</th>
+                      <th className={th}>Device</th>
+                      <th className={th}>Time on site</th>
+                      <th className={th}>Last active</th>
+                    </tr>
+                  </thead>
+                  <tbody>{present.map(presenceRow)}</tbody>
+                </table>
+              ) : (
+                <p className="mt-2 text-[14px] text-muted">No one is on the site right now.</p>
+              )
+            ) : live.length ? (
               <table className="mt-2 w-full border-collapse">
                 <thead>
                   <tr>
