@@ -15,6 +15,9 @@ type Event = {
   utm_source: string | null;
   utm_campaign: string | null;
   device: string | null;
+  city: string | null;
+  region: string | null;
+  country: string | null;
   created_at: string;
 };
 
@@ -25,6 +28,7 @@ type Session = {
   pages: string[];
   device: string | null;
   source: string;
+  location: string;
 };
 
 const LIVE_MS = 5 * 60_000;
@@ -65,22 +69,45 @@ const timeFmt = new Intl.DateTimeFormat("en-CA", {
 export default async function VisitorsPage() {
   const { supabase } = await requireStaff(["admin", "editor", "sales"]);
   const since = new Date(Date.now() - 24 * 3600_000).toISOString();
-  const { data, error } = await supabase
+  // Geo columns arrive with the 20261124000001 migration; until it runs,
+  // fall back to the base columns so the page keeps working.
+  let geoMissing = false;
+  const first = await supabase
     .from("visitor_events")
-    .select("session_id,path,referrer,utm_source,utm_campaign,device,created_at")
+    .select("session_id,path,referrer,utm_source,utm_campaign,device,city,region,country,created_at")
     .gte("created_at", since)
     .order("created_at", { ascending: true })
     .limit(8000);
-  const events = (data ?? []) as Event[];
+  let data = first.data as unknown as Record<string, unknown>[] | null;
+  let error = first.error;
+  if (error && /city|region|country/.test(error.message ?? "")) {
+    geoMissing = true;
+    const second = await supabase
+      .from("visitor_events")
+      .select("session_id,path,referrer,utm_source,utm_campaign,device,created_at")
+      .gte("created_at", since)
+      .order("created_at", { ascending: true })
+      .limit(8000);
+    data = second.data as unknown as Record<string, unknown>[] | null;
+    error = second.error;
+  }
+  const events = (data ?? []).map((e) => ({
+    ...e,
+    city: (e.city as string | null) ?? null,
+    region: (e.region as string | null) ?? null,
+    country: (e.country as string | null) ?? null,
+  })) as Event[];
   const now = Date.now();
 
   const bySession = new Map<string, Session>();
   for (const e of events) {
     const t = new Date(e.created_at).getTime();
+    const loc = [e.city, e.region, e.country].filter(Boolean).join(", ");
     const s = bySession.get(e.session_id);
     if (s) {
       s.last = t;
       s.pages.push(e.path);
+      if (!s.location && loc) s.location = loc;
     } else {
       bySession.set(e.session_id, {
         id: e.session_id,
@@ -89,6 +116,7 @@ export default async function VisitorsPage() {
         pages: [e.path],
         device: e.device,
         source: sourceOf(e),
+        location: loc,
       });
     }
   }
@@ -99,6 +127,10 @@ export default async function VisitorsPage() {
   const pageCounts = new Map<string, number>();
   for (const e of events) pageCounts.set(e.path, (pageCounts.get(e.path) ?? 0) + 1);
   const topPages = [...pageCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10);
+
+  const locCounts = new Map<string, number>();
+  for (const s of sessions) if (s.location) locCounts.set(s.location, (locCounts.get(s.location) ?? 0) + 1);
+  const topLocations = [...locCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8);
 
   const card = "rounded-[var(--radius-lg)] border border-line bg-white p-5";
   const th = "py-2 pr-4 text-left text-[12px] font-semibold uppercase tracking-wide text-muted";
@@ -113,6 +145,7 @@ export default async function VisitorsPage() {
         </span>
       </td>
       <td className={td}>{s.source}</td>
+      <td className={td}>{s.location || "—"}</td>
       <td className={td}>{s.device ?? "—"}</td>
       <td className={td}>{duration(s.last - s.first)}</td>
       <td className={td}>{ago(now - s.last)}</td>
@@ -125,6 +158,7 @@ export default async function VisitorsPage() {
       <h1 className="font-display text-[26px] font-bold tracking-tight">Visitors</h1>
       <p className="mt-1 text-[14px] text-muted">
         Who is on getsetsold.ca right now and in the last 24 hours. Refreshes every 30 seconds.
+        {geoMissing ? " Locations appear once the 20261124000001_visitor_geo migration has run." : ""}
       </p>
 
       {error ? (
@@ -163,6 +197,7 @@ export default async function VisitorsPage() {
                   <tr>
                     <th className={th}>Viewing</th>
                     <th className={th}>Source</th>
+                    <th className={th}>Location</th>
                     <th className={th}>Device</th>
                     <th className={th}>Time on site</th>
                     <th className={th}>Last active</th>
@@ -184,6 +219,7 @@ export default async function VisitorsPage() {
                     <tr>
                       <th className={th}>Last page</th>
                       <th className={th}>Source</th>
+                      <th className={th}>Location</th>
                       <th className={th}>Device</th>
                       <th className={th}>Duration</th>
                       <th className={th}>Last active</th>
@@ -208,6 +244,19 @@ export default async function VisitorsPage() {
                 </ul>
               ) : (
                 <p className="mt-2 text-[14px] text-muted">No page views yet.</p>
+              )}
+              <p className="mt-6 text-[15px] font-semibold">Top locations · 24h</p>
+              {topLocations.length ? (
+                <ul className="mt-2 divide-y divide-line">
+                  {topLocations.map(([loc, count]) => (
+                    <li key={loc} className="flex items-baseline justify-between py-2 text-[14px]">
+                      <span className="font-medium">{loc}</span>
+                      <span className="text-muted">{count} visit{count === 1 ? "" : "s"}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="mt-2 text-[14px] text-muted">No locations recorded yet — they are stamped on new visits.</p>
               )}
             </div>
           </div>

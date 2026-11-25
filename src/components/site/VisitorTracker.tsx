@@ -37,15 +37,13 @@ export function VisitorTracker() {
         device: /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) ? "mobile" : "desktop",
         user_agent: navigator.userAgent.slice(0, 300),
       });
-      void fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/visitor_events`, {
+      // Posted to our own /api/track route (not Supabase directly) so the
+      // server can stamp the visitor's city / region / country from
+      // Cloudflare's connection data before saving the row.
+      void fetch("/api/track", {
         method: "POST",
         keepalive: true,
-        headers: {
-          "Content-Type": "application/json",
-          apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-          Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
-          Prefer: "return=minimal",
-        },
+        headers: { "Content-Type": "application/json" },
         body,
       }).catch(() => null);
     } catch {
