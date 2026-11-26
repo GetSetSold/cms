@@ -31,7 +31,7 @@ type Session = {
   pages: string[];
   device: string | null;
   agent: string;
-  source: string;
+  source: SourceInfo;
   location: string;
   country: string | null;
 };
@@ -85,16 +85,74 @@ type Presence = {
 const LIVE_MS = 5 * 60_000;
 const PRESENT_MS = 45_000;
 
-function sourceOf(e: Pick<Event, "utm_source" | "utm_campaign" | "referrer">): string {
-  if (e.utm_source) return e.utm_campaign ? `${e.utm_source} / ${e.utm_campaign}` : e.utm_source;
+/** Friendly traffic source: search engines and socials get their
+ *  brand name (+ favicon domain), other referrers show their hostname,
+ *  and no referrer at all is Direct. */
+const KNOWN_SOURCES: { match: RegExp; label: string; domain: string }[] = [
+  { match: /(^|\.)google\./, label: "Google", domain: "google.com" },
+  { match: /bing\.com$/, label: "Bing", domain: "bing.com" },
+  { match: /duckduckgo\.com$/, label: "DuckDuckGo", domain: "duckduckgo.com" },
+  { match: /(^|\.)yahoo\./, label: "Yahoo", domain: "yahoo.com" },
+  { match: /facebook\.com$|fb\.com$/, label: "Facebook", domain: "facebook.com" },
+  { match: /instagram\.com$/, label: "Instagram", domain: "instagram.com" },
+  { match: /linkedin\.com$/, label: "LinkedIn", domain: "linkedin.com" },
+  { match: /(^|\.)x\.com$|twitter\.com$|(^|\.)t\.co$/, label: "X", domain: "x.com" },
+  { match: /youtube\.com$|youtu\.be$/, label: "YouTube", domain: "youtube.com" },
+  { match: /tiktok\.com$/, label: "TikTok", domain: "tiktok.com" },
+  { match: /realtor\.ca$/, label: "Realtor.ca", domain: "realtor.ca" },
+];
+const UTM_SOURCES: Record<string, { label: string; domain: string | null }> = {
+  google: { label: "Google", domain: "google.com" },
+  bing: { label: "Bing", domain: "bing.com" },
+  facebook: { label: "Facebook", domain: "facebook.com" },
+  fb: { label: "Facebook", domain: "facebook.com" },
+  instagram: { label: "Instagram", domain: "instagram.com" },
+  linkedin: { label: "LinkedIn", domain: "linkedin.com" },
+  twitter: { label: "X", domain: "x.com" },
+  x: { label: "X", domain: "x.com" },
+  youtube: { label: "YouTube", domain: "youtube.com" },
+  tiktok: { label: "TikTok", domain: "tiktok.com" },
+  newsletter: { label: "Email", domain: null },
+  email: { label: "Email", domain: null },
+};
+
+type SourceInfo = { label: string; domain: string | null };
+
+function sourceInfo(e: Pick<Event, "utm_source" | "utm_campaign" | "referrer">): SourceInfo {
+  if (e.utm_source) {
+    const known = UTM_SOURCES[e.utm_source.toLowerCase()];
+    const base = known ?? { label: e.utm_source, domain: null };
+    return { label: e.utm_campaign ? `${base.label} / ${e.utm_campaign}` : base.label, domain: base.domain };
+  }
   if (e.referrer) {
     try {
-      return new URL(e.referrer).hostname.replace(/^www\./, "");
+      const host = new URL(e.referrer).hostname.replace(/^www\./, "");
+      const known = KNOWN_SOURCES.find((k) => k.match.test(host));
+      return known ? { label: known.label, domain: known.domain } : { label: host, domain: host };
     } catch {
-      return "Referral";
+      return { label: "Referral", domain: null };
     }
   }
-  return "Direct";
+  return { label: "Direct", domain: null };
+}
+
+function SourceCell({ source }: { source: SourceInfo }) {
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      {source.domain ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={`https://www.google.com/s2/favicons?domain=${source.domain}&sz=32`}
+          alt=""
+          width={16}
+          height={16}
+          className="rounded-[4px]"
+          loading="lazy"
+        />
+      ) : null}
+      {source.label}
+    </span>
+  );
 }
 
 function ago(ms: number): string {
@@ -185,7 +243,7 @@ export default async function VisitorsPage({ searchParams }: { searchParams: Pro
         pages: [e.path],
         device: e.device,
         agent: agentLabel(e.user_agent),
-        source: sourceOf(e),
+        source: sourceInfo(e),
         location: loc,
         country: e.country,
       });
@@ -234,7 +292,7 @@ export default async function VisitorsPage({ searchParams }: { searchParams: Pro
           {s.pages.length} page{s.pages.length === 1 ? "" : "s"} · started {timeFmt.format(new Date(s.first))}
         </span>
       </td>
-      <td className={td}>{s.source}</td>
+      <td className={td}><SourceCell source={s.source} /></td>
       <td className={td}>{locText(s.location, s.country)}</td>
       <td className={td}>{deviceAgent(s.device, s.agent)}</td>
       <td className={td}>{duration(s.last - s.first)}</td>
@@ -252,7 +310,7 @@ export default async function VisitorsPage({ searchParams }: { searchParams: Pro
           <span className="font-medium">{p.path}</span>
           <span className="block text-[12.5px] text-muted">arrived {timeFmt.format(new Date(first))}</span>
         </td>
-        <td className={td}>{sourceOf(p)}</td>
+        <td className={td}><SourceCell source={sourceInfo(p)} /></td>
         <td className={td}>{locText(loc, p.country)}</td>
         <td className={td}>{deviceAgent(p.device, agentBySession.get(p.session_id) ?? "—")}</td>
         <td className={td}>{duration(now - first)}</td>
