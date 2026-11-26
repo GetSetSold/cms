@@ -5,6 +5,73 @@ import { admin, corsHeaders, json, sendEmail, toE164 } from "../_shared/utils.ts
 const clip = (v: unknown, n: number) =>
   (typeof v === "string" ? v.trim().slice(0, n) : "") || null;
 
+/** Render every submitted answer as plain-text lines for the staff
+ *  notification email, using the form definition's labels when we have
+ *  them (subforms become numbered entries with their subfields).
+ *  Anything the definition doesn't cover still prints as key: value,
+ *  so the email always carries the complete submission. */
+function formatAnswers(customFields: Record<string, unknown>, sections: any): string {
+  const fmt = (v: unknown): string | null => {
+    if (v === null || v === undefined) return null;
+    if (typeof v === "string") {
+      if (!v.trim()) return null;
+      if (v.startsWith("data:image")) return "[drawn signature]";
+      return v.trim();
+    }
+    if (typeof v === "boolean") return v ? "Yes" : "No";
+    if (typeof v === "number") return String(v);
+    if (Array.isArray(v)) {
+      const parts = v.map(fmt).filter(Boolean);
+      return parts.length ? parts.join(", ") : null;
+    }
+    return null;
+  };
+  const seen = new Set<string>();
+  const lines: string[] = [];
+  const walkField = (f: any, answers: Record<string, unknown>, out: string[], indent: string) => {
+    const key = f?.key;
+    if (!key || typeof key !== "string") return;
+    const label = typeof f.label === "string" && f.label ? f.label : key;
+    const v = answers[key];
+    if (f.type === "subform" && Array.isArray(v)) {
+      const entries = v.filter((e) => e && typeof e === "object") as Record<string, unknown>[];
+      if (!entries.length) { seen.add(key); return; }
+      out.push(`${indent}${label}:`);
+      entries.forEach((entry, i) => {
+        out.push(`${indent}  ${i + 1}.`);
+        for (const sub of f.fields ?? []) walkField(sub, entry, out, `${indent}    `);
+        for (const [k, val] of Object.entries(entry)) {
+          if ((f.fields ?? []).some((s: any) => s.key === k)) continue;
+          const s = fmt(val);
+          if (s) out.push(`${indent}    ${k}: ${s}`);
+        }
+      });
+      seen.add(key);
+      return;
+    }
+    const s = fmt(v);
+    if (s) out.push(`${indent}${label}: ${s}`);
+    if (v !== undefined) seen.add(key);
+  };
+  if (Array.isArray(sections)) {
+    for (const sec of sections) {
+      const secLines: string[] = [];
+      for (const f of sec?.fields ?? []) walkField(f, customFields, secLines, "");
+      if (secLines.length) {
+        if (typeof sec?.title === "string" && sec.title) lines.push("", sec.title);
+        lines.push(...secLines);
+      }
+    }
+  }
+  for (const [k, v] of Object.entries(customFields)) {
+    if (seen.has(k)) continue;
+    const s = fmt(v);
+    if (s) lines.push(`${k}: ${s}`);
+    else if (v && typeof v === "object") lines.push(`${k}: ${JSON.stringify(v).slice(0, 500)}`);
+  }
+  return lines.join("\n").trim().slice(0, 20000);
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders(req) });
   if (req.method !== "POST") return json(req, { error: "Method not allowed" }, 405);
@@ -125,12 +192,23 @@ Deno.serve(async (req) => {
   if (queue.length) await db.from("follow_up_queue").insert(queue);
   if (matched.length) await db.from("lead_flow_enrollments").insert(matched.map((s) => ({ lead_id: leadId, flow_id: s.id })));
 
-  // Notify staff (best effort)
+  // Notify staff (best effort) — the email carries the COMPLETE
+  // submission (every form answer, labelled from the form definition),
+  // not just the contact basics, so staff don't have to open the admin
+  // to see what was sent.
   const { data: settings } = await db.from("site_settings").select("lead_settings, email_provider").single();
   const notify: string[] = settings?.lead_settings?.notify_emails ?? [];
   if (notify.length) {
+    let answersText = "";
+    try {
+      const { data: formDef } = await db.from("forms").select("sections").eq("form_key", formKey).maybeSingle();
+      answersText = formatAnswers(customFields, (formDef as { sections?: unknown } | null)?.sections);
+    } catch { /* the basics still go out */ }
+    const message = clip(body.message, 5000);
     sendEmail(notify, `New ${isNewLead ? "lead" : "submission"}: ${name || email || phone}`,
-      `Form: ${formKey}\nName: ${name || "-"}\nEmail: ${email ?? "-"}\nPhone: ${phone ?? "-"}\nPage: ${clip(body.path, 500) ?? "-"}\n\n${clip(body.message, 5000) ?? ""}`,
+      `Form: ${formKey}\nName: ${name || "-"}\nEmail: ${email ?? "-"}\nPhone: ${phone ?? "-"}\nPage: ${clip(body.path, 500) ?? "-"}` +
+      (message ? `\n\nMessage:\n${message}` : "") +
+      (answersText ? `\n\n— All form answers —\n${answersText}` : ""),
       undefined, settings?.email_provider ?? "zeptomail")
       .catch((e) => console.error("notify failed", e));
   }

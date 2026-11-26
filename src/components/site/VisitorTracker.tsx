@@ -11,6 +11,7 @@
  */
 import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
+import { isBotUA } from "@/lib/botDetect";
 
 const UTM_KEYS = ["utm_source", "utm_medium", "utm_campaign"];
 const STAFF = (p: string) => p.startsWith("/admin") || p.startsWith("/login") || p.startsWith("/builder");
@@ -43,7 +44,7 @@ export function VisitorTracker() {
 
   // Page views.
   useEffect(() => {
-    if (STAFF(pathname)) return;
+    if (STAFF(pathname) || isBotUA(navigator.userAgent)) return;
     const sid = getSid();
     if (!sid) return;
     try {
@@ -69,6 +70,7 @@ export function VisitorTracker() {
 
   // Heartbeat + leave signal (mounted once).
   useEffect(() => {
+    if (isBotUA(navigator.userAgent)) return;
     const ping = () => {
       if (document.visibilityState !== "visible" || STAFF(window.location.pathname)) return;
       const sid = getSid();

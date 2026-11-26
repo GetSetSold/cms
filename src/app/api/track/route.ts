@@ -13,6 +13,7 @@
  */
 import { createClient } from "@supabase/supabase-js";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
+import { isBotUA } from "@/lib/botDetect";
 
 export const dynamic = "force-dynamic";
 
@@ -34,6 +35,9 @@ function geoOf(): { city: string | null; region: string | null; country: string 
 }
 
 export async function POST(req: Request) {
+  // Self-identified bots and crawlers aren't recorded at all — they
+  // were drowning the real visitors (and the storage) in noise.
+  if (isBotUA(req.headers.get("user-agent"))) return new Response(null, { status: 204 });
   try {
     const body = JSON.parse(await req.text().catch(() => "")) as Record<string, unknown>;
     const sessionId = str(body.session_id, 64);

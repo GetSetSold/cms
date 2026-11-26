@@ -1,5 +1,6 @@
 import { requireStaff } from "@/lib/auth";
 import { VisitorsAutoRefresh } from "@/components/admin/VisitorsAutoRefresh";
+import { botKind } from "@/lib/botDetect";
 
 /**
  * Admin → Visitors — the SalesIQ LiveView replacement.
@@ -39,11 +40,8 @@ type Session = {
  *  name themselves; headless browsers are scrapers in practice. */
 function agentLabel(ua: string | null | undefined): string {
   if (!ua) return "—";
-  if (/googlebot/i.test(ua)) return "Googlebot";
-  if (/bingbot/i.test(ua)) return "Bingbot";
-  if (/GPTBot|ChatGPT-User|ClaudeBot|anthropic-ai|PerplexityBot|CCBot/i.test(ua)) return "AI crawler";
-  if (/headlesschrome/i.test(ua)) return "Headless (bot)";
-  if (/bot|crawler|spider|scraper|curl|wget|python-requests/i.test(ua)) return "Bot";
+  const bot = botKind(ua);
+  if (bot) return bot;
   if (/Edg\//.test(ua)) return "Edge";
   if (/Chrome\//.test(ua)) return "Chrome";
   if (/Firefox\//.test(ua)) return "Firefox";
@@ -120,8 +118,9 @@ const timeFmt = new Intl.DateTimeFormat("en-CA", {
   minute: "2-digit",
 });
 
-export default async function VisitorsPage() {
+export default async function VisitorsPage({ searchParams }: { searchParams: Promise<{ bots?: string }> }) {
   const { supabase } = await requireStaff(["admin", "editor", "sales"]);
+  const showBots = (await searchParams)?.bots === "1";
   const since = new Date(Date.now() - 24 * 3600_000).toISOString();
   // Geo columns arrive with the 20261124000001 migration; until it runs,
   // fall back to the base columns so the page keeps working.
@@ -159,8 +158,17 @@ export default async function VisitorsPage() {
   })) as Event[];
   const now = Date.now();
 
+  // People-only by default: self-identified bot sessions are filtered
+  // out of every stat and table (they're still in the data, and the
+  // ?bots=1 toggle shows them). New bot traffic isn't recorded at all
+  // anymore — /api/track drops it — this filter covers the history.
+  const uaBySession = new Map<string, string | null>();
+  for (const e of events) if (!uaBySession.has(e.session_id)) uaBySession.set(e.session_id, e.user_agent);
+  const botSessionCount = [...uaBySession.values()].filter((ua) => botKind(ua)).length;
+  const visibleEvents = showBots ? events : events.filter((e) => !botKind(e.user_agent));
+
   const bySession = new Map<string, Session>();
-  for (const e of events) {
+  for (const e of visibleEvents) {
     const t = new Date(e.created_at).getTime();
     const loc = [e.city, e.region, e.country].filter(Boolean).join(", ");
     const s = bySession.get(e.session_id);
@@ -197,11 +205,11 @@ export default async function VisitorsPage() {
     .limit(200);
   const presenceMissing = !!presenceRes.error;
   const present = ((presenceRes.data ?? []) as Presence[]).filter(
-    (p) => now - new Date(p.last_seen).getTime() < PRESENT_MS,
+    (p) => now - new Date(p.last_seen).getTime() < PRESENT_MS && (showBots || !botKind(uaBySession.get(p.session_id))),
   );
 
   const pageCounts = new Map<string, number>();
-  for (const e of events) pageCounts.set(e.path, (pageCounts.get(e.path) ?? 0) + 1);
+  for (const e of visibleEvents) pageCounts.set(e.path, (pageCounts.get(e.path) ?? 0) + 1);
   const topPages = [...pageCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10);
 
   const locCounts = new Map<string, { n: number; country: string | null }>();
@@ -258,7 +266,15 @@ export default async function VisitorsPage() {
       <VisitorsAutoRefresh />
       <h1 className="font-display text-[26px] font-bold tracking-tight">Visitors</h1>
       <p className="mt-1 text-[14px] text-muted">
-        Who is on getsetsold.ca right now and in the last 24 hours. Refreshes every 10 seconds.
+        Who is on getsetsold.ca right now and in the last 24 hours. Refreshes every 10 seconds.{" "}
+        {showBots ? (
+          <a className="underline" href="/admin/visitors">Hide bots</a>
+        ) : (
+          <>
+            <a className="underline" href="/admin/visitors?bots=1">Show bots too</a>
+            {botSessionCount > 0 ? ` — ${botSessionCount} bot visit${botSessionCount === 1 ? "" : "s"} hidden in the last 24h.` : ""}
+          </>
+        )}
         {geoMissing ? " Locations appear once the 20261124000001_visitor_geo migration has run." : ""}
         {presenceMissing ? " The live view sharpens once the 20261124000002_visitor_presence migration has run." : ""}
       </p>
@@ -286,7 +302,7 @@ export default async function VisitorsPage() {
             </div>
             <div className={card}>
               <p className="text-[12px] font-semibold uppercase tracking-wide text-muted">Page views · 24h</p>
-              <p className="mt-1 text-[34px] font-extrabold leading-none">{events.length}</p>
+              <p className="mt-1 text-[34px] font-extrabold leading-none">{visibleEvents.length}</p>
               <p className="mt-1 text-[13px] text-muted">pages opened</p>
             </div>
           </div>
